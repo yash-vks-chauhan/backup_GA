@@ -151,6 +151,8 @@
     <string name="op_submit_manual">Use Vehicle Number</string>
     <string name="op_back_to_scan">Back to Scanner</string>
     <string name="op_enter_vehicle_hint">e.g. MH 04 AB 1234</string>
+    <string name="op_spot_id_label">Spot ID (optional)</string>
+    <string name="op_spot_id_hint">e.g. SPOT-12</string>
     <string name="op_enter_vehicle_error">Enter vehicle number</string>
     <string name="op_invalid_vehicle_error">Invalid vehicle number</string>
     <string name="op_switched_to">Switched to %1$s</string>

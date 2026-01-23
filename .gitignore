@@ -1,0 +1,94 @@
+############################
+# Git
+############################
+.git
+.gitignore
+.gitattributes
+
+############################
+# Gradle
+############################
+.gradle/
+build/
+!gradle/
+!gradlew
+!gradlew.bat
+
+############################
+# IDEs
+############################
+.idea
+*.iml
+*.iws
+*.ipr
+.vscode
+.classpath
+.project
+.settings
+.sts4-cache
+bin/
+out/
+
+############################
+# OS files
+############################
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+*.temp
+
+############################
+# Logs
+############################
+logs
+*.log
+
+############################
+# Environment & secrets
+############################
+.env
+.env.*
+application-local.properties
+application-secrets.properties
+
+############################
+# Test reports (NOT SOURCE)
+############################
+allure-results
+**/test-results
+**/reports
+
+############################
+# Runtime data
+############################
+uploads
+files
+temp
+
+############################
+# Docker compose overrides
+############################
+docker-compose.override.yml
+
+############################
+# IMPORTANT:
+# DO NOT IGNORE THESE
+# - src/
+# - gradle/
+# - gradlew
+# - build.gradle
+# - settings.gradle
+############################
+# Firebase secrets
+src/main/resources/firebase-service-account.json
+
+# Legacy static html (local only)
+src/main/resources/static/html/
+
+# Additional Gradle caches
+.gradle-j17/
+*.zip

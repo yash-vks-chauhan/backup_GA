@@ -234,6 +234,8 @@ class OperatorDashboardActivity : AppCompatActivity() {
             it.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
             val vehicleNumber = binding.etVehicleNumberClean.text.toString().trim()
             val normalizedVehicle = normalizeVehicleNumber(vehicleNumber)
+            val spotIdRaw = binding.etSpotId.text?.toString()?.trim().orEmpty()
+            val spotId = if (spotIdRaw.isBlank()) null else spotIdRaw
             
             when {
                 normalizedVehicle.isBlank() -> {
@@ -246,8 +248,8 @@ class OperatorDashboardActivity : AppCompatActivity() {
                 }
                 else -> {
                     when (currentMode) {
-                        OperatorMode.CHECK_IN -> viewModel.checkInByVehicleNumber(normalizedVehicle)
-                        OperatorMode.CHECK_OUT -> viewModel.checkOutByVehicleNumber(normalizedVehicle)
+                        OperatorMode.CHECK_IN -> viewModel.checkInByVehicleNumber(normalizedVehicle, spotId)
+                        OperatorMode.CHECK_OUT -> viewModel.checkOutByVehicleNumber(normalizedVehicle, spotId)
                     }
                 }
             }

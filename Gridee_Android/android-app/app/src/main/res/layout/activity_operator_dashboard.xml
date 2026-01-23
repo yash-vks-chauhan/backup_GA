@@ -344,6 +344,35 @@
                                     android:importantForAutofill="no"
                                     android:letterSpacing="0.05" />
 
+                                <!-- Spot ID (optional) -->
+                                <TextView
+                                    android:id="@+id/tv_spot_id_label"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="20dp"
+                                    android:text="@string/op_spot_id_label"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/text_secondary"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:gravity="center" />
+
+                                <EditText
+                                    android:id="@+id/et_spot_id"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="56dp"
+                                    android:hint="@string/op_spot_id_hint"
+                                    android:textSize="18sp"
+                                    android:textColor="@color/text_primary"
+                                    android:textColorHint="#D1D5DB"
+                                    android:inputType="textCapCharacters"
+                                    android:maxLines="1"
+                                    android:gravity="center"
+                                    android:background="@drawable/bg_input_clean"
+                                    android:padding="16dp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:importantForAutofill="no"
+                                    android:letterSpacing="0.02" />
+
                                 <!-- Submit Button -->
                                 <com.google.android.material.button.MaterialButton
                                     android:id="@+id/btn_submit_manual"

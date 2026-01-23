@@ -17,7 +17,10 @@ data class CheckInRequest(
     val vehicleNumber: String? = null,
     
     @SerializedName("pin")
-    val pin: String? = null
+    val pin: String? = null,
+
+    @SerializedName("parkingSpotId")
+    val parkingSpotId: String? = null
 ) {
     init {
         // Validate that appropriate field is provided for the mode
