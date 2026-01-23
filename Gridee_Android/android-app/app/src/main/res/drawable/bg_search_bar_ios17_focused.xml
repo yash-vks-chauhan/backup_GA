@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Enhanced Focused State - Stronger presence -->
+    
+    <!-- Stronger shadow when focused -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="100dp"
+                android:centerX="50%"
+                android:centerY="50%"
+                android:startColor="#18000000"
+                android:centerColor="#0C000000"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- White base -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- Subtle inner glow -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <solid android:color="#05000000" />
+        </shape>
+    </item>
+
+    <!-- Dark grey border when focused -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <stroke 
+                android:width="1.5dp" 
+                android:color="#404040" />
+        </shape>
+    </item>
+
+</layer-list>

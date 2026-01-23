@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gridee</string>
+    <string name="camera_permission_required">கேமரா அனுமதி தேவை</string>
+    <string name="scan_to_check_in">செக்-இன் செய்ய ஸ்கேன் செய்யவும்</string>
+    <string name="scan_to_check_out">செக்-அவுட் செய்ய ஸ்கேன் செய்யவும்</string>
+    <string name="validating_qr">QR சரிபார்க்கப்படுகிறது…</string>
+    <string name="processing_check_in">செக்-இன் செயலாக்கப்படுகிறது…</string>
+    <string name="processing_check_out">செக்-அவுட் செயலாக்கப்படுகிறது…</string>
+    <string name="vehicle_scan_hint">உரிமத் தகடு சட்டத்திற்குள் சீரமைக்கவும்</string>
+    <string name="vehicle_scan_detecting">வாகன எண்ணை ஸ்கேன் செய்கிறது…</string>
+    <string name="vehicle_scan_detected">%1$s கண்டறியப்பட்டது</string>
+    <string name="vehicle_scan_not_clear">ஃபோகஸ் சரிசெய்யப்படுகிறது…</string>
+    <string name="vehicle_scan_not_clear_hint">தெளிவாக ஸ்கேன் செய்ய அருகில் சென்று வெளிச்சத்தைக் குறைக்கவும்.</string>
+    <string name="vehicle_scan_timeout_title">ஸ்கேன் நேரம் முடிந்தது</string>
+    <string name="vehicle_scan_timeout_message">எங்களால் தகட்டினைப் படிக்க முடியவில்லை. வாகனத்தை சீரமைத்து மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="vehicle_scan_retry_button">மீண்டும் ஸ்கேன் செய்யவும்</string>
+    <string name="vehicle_scan_error_camera">கேமரா கிடைக்கவில்லை. மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="vehicle_scan_error_generic">தகட்டைக் கண்டுபிடிக்க முடியவில்லை. விளக்கைச் சரிசெய்து மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="vehicle_scan_success_toast">வாகனம் %1$s கண்டறியப்பட்டது</string>
+    <string name="vehicle_scan_success_title">வாகனம் கண்டறியப்பட்டது</string>
+    <string name="vehicle_scan_success_message">வாகனம் %1$s கண்டறியப்பட்டது, செக்-இன் செய்யத் தயார்.</string>
+    <string name="scanner_corner">ஸ்கேனர் சட்ட மூலை</string>
+    <string name="vehicle_scan_best_guess">சாத்தியமான பொருத்தம்: %1$s</string>
+    <string name="vehicle_scan_flash_on">ஃபிளாஷ் ஆன்</string>
+    <string name="vehicle_scan_flash_off">ஃபிளாஷ் ஆஃப்</string>
+    <string name="vehicle_scan_hint_move_closer">அருகில் சென்று சட்டத்திற்குள் சீரமைக்கவும்</string>
+    <string name="vehicle_sheet_status_fetching">செயலில் உள்ள முன்பதிவைப் பெறுகிறது…</string>
+    <string name="vehicle_sheet_status_not_found">%1$s உடன் எந்த முன்பதிவும் இணைக்கப்படவில்லை.</string>
+    <string name="vehicle_sheet_status_error">முன்பதிவைப் பெறுவதில் தோல்வி. %1$s</string>
+    <string name="vehicle_sheet_status_checkin_ready">%1$s-க்கான செக்-இன் முன்பதிவு கண்டறியப்பட்டது</string>
+    <string name="vehicle_sheet_status_checkout_ready">வாகனம் %1$s தற்போது செக்-இன் செய்யப்பட்டுள்ளது</string>
+    <string name="vehicle_sheet_status_info_generic">%1$s-க்கான முன்பதிவு கண்டறியப்பட்டது</string>
+    <string name="vehicle_sheet_processing_checkin">வாகனம் செக்-இன் செய்யப்படுகிறது…</string>
+    <string name="vehicle_sheet_processing_checkout">வாகனம் செக்-அவுட் செய்யப்படுகிறது…</string>
+    <string name="vehicle_sheet_check_in">வாகனத்தை செக்-இன் செய்யவும்</string>
+    <string name="vehicle_sheet_check_out">வாகனத்தை செக்-அவுட் செய்யவும்</string>
+    <string name="vehicle_sheet_scan_again">மீண்டும் ஸ்கேன் செய்யவும்</string>
+    <string name="vehicle_sheet_booking_status">நிலை: %1$s</string>
+    <string name="vehicle_sheet_booking_location">இடம் %1$s • ஸ்பாட் %2$s</string>
+    <string name="vehicle_sheet_booking_window">%1$s - %2$s</string>
+    <string name="vehicle_sheet_manual_label">வாகன எண்ணை கைமுறையாக உள்ளிடவும்</string>
+    <string name="vehicle_sheet_manual_hint">வாகன எண்</string>
+    <string name="vehicle_sheet_manual_submit">வாகன எண்ணைப் பயன்படுத்தவும்</string>
+    <string name="vehicle_sheet_manual_button">கைமுறையாக உள்ளிடவும்</string>
+    <string name="vehicle_sheet_manual_error">சரியான வாகன எண்ணை உள்ளிடவும்</string>
+    <string name="vehicle_sheet_checkin_success">%1$s செக்-இன் முடிந்தது</string>
+    <string name="vehicle_sheet_checkout_success">%1$s செக்-அவுட் முடிந்தது</string>
+    <string name="vehicle_sheet_status_ready">வாகனம் %1$s கண்டறியப்பட்டது</string>
+    <string name="qr_invalid">தவறான QR குறியீடு</string>
+    <string name="qr_validation_message">%1$s</string>
+    <string name="back">திரும்பப் பெறு</string>
+
+    <!-- Operator Dashboard -->
+    <string name="op_nav_drawer_open">வழிசெலுத்தல் டிராயரைத் திறக்கவும்</string>
+    <string name="op_scanner_tab">ஸ்கேனர்</string>
+    <string name="op_dashboard_tab">டேஷ்போர்டு</string>
+    <string name="op_check_in">செக்-இன்</string>
+    <string name="op_check_out">செக்-அவுட்</string>
+    <string name="op_tap_to_scan">ஸ்கேன் செய்ய தட்டவும்</string>
+    <string name="op_btn_check_in">செக் இன்</string>
+    <string name="op_btn_check_out">செக் அவுட்</string>
+    <string name="op_manual_entry_label">அல்லது வாகன எண்ணை உள்ளிடவும்</string>
+    <string name="op_submit_manual">வாகன எண்ணைப் பயன்படுத்தவும்</string>
+    <string name="op_back_to_scan">ஸ்கேனருக்குத் திரும்பவும்</string>
+    <string name="op_enter_vehicle_hint">எ.கா. MH 04 AB 1234</string>
+    <string name="op_enter_vehicle_error">வாகன எண்ணை உள்ளிடவும்</string>
+    <string name="op_invalid_vehicle_error">தவறான வாகன எண்</string>
+    <string name="op_switched_to">%1$s-க்கு மாற்றப்பட்டது</string>
+    <string name="op_settings_soon">அமைப்புகள் விரைவில் வரும்</string>
+    <string name="op_help_soon">உதவி மற்றும் ஆதரவு விரைவில் வரும்</string>
+    <string name="op_logout_title">வெளியேறு</string>
+    <string name="op_logout_message">நிச்சயமாக வெளியேற விரும்புகிறீர்களா?</string>
+    <string name="op_cancel">ரத்துசெய்</string>
+    <string name="op_confirm_logout">வெளியேறு</string>
+    <string name="op_session_info">ஆபரேட்டர்: %1$s\nஇடம்: %2$s\nஅமர்வு: செயலில் உள்ளது</string>
+    <string name="select_language">மொழியைத் தேர்ந்தெடுங்கள்</string>
+
+    <!-- Sidebar Menu -->
+    <string name="menu_language">மொழி</string>
+    <string name="menu_settings">அமைப்புகள்</string>
+    <string name="menu_help">உதவி மற்றும் ஆதரவு</string>
+    <string name="menu_account">கணக்கு</string>
+    <string name="menu_logout">வெளியேறு</string>
+</resources>

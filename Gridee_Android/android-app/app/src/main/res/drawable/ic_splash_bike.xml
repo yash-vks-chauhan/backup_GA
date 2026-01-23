@@ -1,0 +1,73 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- Road -->
+    <path
+        android:fillColor="#303030"
+        android:pathData="M0,80 L120,80 L120,100 L0,100 Z" />
+    
+    <!-- Road lines -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M10,89 L25,89 L25,91 L10,91 Z" />
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M35,89 L50,89 L50,91 L35,91 Z" />
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M60,89 L75,89 L75,91 L60,91 Z" />
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M85,89 L100,89 L100,91 L85,91 Z" />
+    
+    <!-- Motorcycle Body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M45,50 L75,50 L78,60 L70,60 L65,55 L55,55 L50,60 L42,60 Z" />
+    
+    <!-- Seat -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M50,48 L70,48 Q72,48 72,50 L72,53 Q72,55 70,55 L50,55 Q48,55 48,53 L48,50 Q48,48 50,48 Z" />
+    
+    <!-- Front Wheel -->
+    <circle
+        android:fillColor="#424242"
+        android:pathData=""
+        cx="70"
+        cy="68"
+        r="10" />
+    <circle
+        android:fillColor="#BDBDBD"
+        android:pathData=""
+        cx="70"
+        cy="68"
+        r="6" />
+    
+    <!-- Rear Wheel -->
+    <circle
+        android:fillColor="#424242"
+        android:pathData=""
+        cx="45"
+        cy="68"
+        r="10" />
+    <circle
+        android:fillColor="#BDBDBD"
+        android:pathData=""
+        cx="45"
+        cy="68"
+        r="6" />
+    
+    <!-- Handlebars -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M72,52 L76,45 L78,45 L74,52 Z" />
+    
+    <!-- Exhaust -->
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M42,60 L40,62 L38,62 L40,60 Z" />
+</vector>

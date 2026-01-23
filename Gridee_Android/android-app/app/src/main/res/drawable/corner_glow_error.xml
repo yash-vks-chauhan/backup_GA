@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Subtle red glow for error state - barely visible, not alarming -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Error glow layer -->
+    <item
+        android:width="34dp"
+        android:height="34dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/scanner_v2_glow_error" />
+        </shape>
+    </item>
+    
+    <!-- White hairline stays visible -->
+    <item
+        android:width="32dp"
+        android:height="1.5dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/scanner_v2_white_85" />
+        </shape>
+    </item>
+</layer-list>

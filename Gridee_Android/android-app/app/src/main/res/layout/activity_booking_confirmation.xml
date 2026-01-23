@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5"
+    android:fitsSystemWindows="false">
+
+    <ScrollView
+        android:id="@+id/contentScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:paddingBottom="24dp"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/actionButtons"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="60dp"
+            android:paddingBottom="24dp">
+            
+            <!-- Success Header -->
+            <LinearLayout
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:orientation="vertical"
+                 android:gravity="center"
+                 android:padding="24dp">
+                 
+                 <ImageView
+                     android:layout_width="80dp"
+                     android:layout_height="80dp"
+                     android:src="@drawable/ic_check_circle"
+                     android:tint="#10B981" /> 
+                     
+                 <TextView
+                     android:id="@+id/tvTitle"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:layout_marginTop="16dp"
+                     android:text="Booking Confirmed"
+                     android:textColor="#111827"
+                     android:textSize="28sp"
+                     android:textStyle="bold"
+                     android:fontFamily="@font/inter_bold"
+                     android:textAlignment="center" />
+                     
+                 <TextView
+                     android:id="@+id/tvSubtitle"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:layout_marginTop="8dp"
+                     android:text="Your parking spot has been successfully booked."
+                     android:textColor="#6B7280"
+                     android:textSize="16sp"
+                     android:fontFamily="@font/inter_medium"
+                     android:textAlignment="center" />
+            </LinearLayout>
+
+            <!-- Important Info Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="10dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+                    
+                    <!-- Parking Spot -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/ic_location"
+                            android:background="@drawable/circle_background_grey_light" 
+                            android:padding="12dp"
+                            android:tint="#111827"/>
+                            
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:layout_gravity="center_vertical"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:id="@+id/tvParkingSpotName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Parking Name"
+                                android:textColor="#111827"
+                                android:textSize="18sp"
+                                android:fontFamily="@font/inter_bold" />
+                                
+                            <TextView
+                                android:id="@+id/tvParkingAddress"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Address"
+                                android:textColor="#6B7280"
+                                android:textSize="14sp"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/inter_medium" />
+                        </LinearLayout>
+                    </LinearLayout>
+                    
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#F3F4F6"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="16dp"/>
+
+                    <!-- Date & Time Grid -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false">
+                        
+                        <!-- Date -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Date"
+                                android:textColor="#6B7280"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/inter_medium" />
+                                
+                            <TextView
+                                android:id="@+id/tvParkingDate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="#111827"
+                                android:textSize="15sp"
+                                android:layout_marginTop="4dp"
+                                android:fontFamily="@font/inter_bold" />
+                        </LinearLayout>
+                        
+                        <!-- Time -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Time"
+                                android:textColor="#6B7280"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/inter_medium" />
+                                
+                            <TextView
+                                android:id="@+id/tvStartTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="#111827"
+                                android:textSize="15sp"
+                                android:layout_marginTop="4dp"
+                                android:fontFamily="@font/inter_bold" />
+                        </LinearLayout>
+                        
+                        <!-- Duration -->
+                         <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Duration"
+                                android:textColor="#6B7280"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/inter_medium" />
+                                
+                            <TextView
+                                android:id="@+id/tvDuration"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="#111827"
+                                android:textSize="15sp"
+                                android:layout_marginTop="4dp"
+                                android:fontFamily="@font/inter_bold" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                    
+                    <TextView
+                         android:id="@+id/tvEndTime"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:visibility="gone"
+                         tools:text="End Time"/>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+            
+            <!-- Section Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vehicle &amp; Spot"
+                android:textColor="#6B7280"
+                android:textSize="14sp"
+                android:fontFamily="@font/inter_bold"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- Vehicle Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp">
+                 <LinearLayout
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:orientation="vertical"
+                     android:padding="20dp">
+                     
+                     <!-- Vehicle -->
+                     <LinearLayout
+                         android:id="@+id/rowVehicle"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:orientation="horizontal"
+                         android:gravity="center_vertical">
+                         
+                         <ImageView
+                             android:layout_width="24dp"
+                             android:layout_height="24dp"
+                             android:src="@drawable/ic_car_outlined"
+                             android:tint="#6B7280"/>
+                             
+                         <TextView
+                             android:layout_width="0dp"
+                             android:layout_height="wrap_content"
+                             android:layout_weight="1"
+                             android:text="Vehicle Number"
+                             android:textColor="#374151"
+                             android:textSize="15sp"
+                             android:fontFamily="@font/inter_medium"
+                             android:layout_marginStart="12dp"/>
+                             
+                         <TextView
+                             android:id="@+id/tvVehicleNumber"
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:text="--"
+                             android:textColor="#111827"
+                             android:textSize="16sp"
+                             android:fontFamily="@font/inter_bold" />
+                     </LinearLayout>
+                     
+                     <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#F3F4F6"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="12dp"/>
+
+                     <!-- Spot -->
+                     <LinearLayout
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:orientation="horizontal"
+                         android:gravity="center_vertical">
+                         
+                         <ImageView
+                             android:layout_width="24dp"
+                             android:layout_height="24dp"
+                             android:src="@drawable/ic_parking_spot"
+                             android:tint="#6B7280"/>
+                             
+                         <TextView
+                             android:layout_width="0dp"
+                             android:layout_height="wrap_content"
+                             android:layout_weight="1"
+                             android:text="Allocated Spot"
+                             android:textColor="#374151"
+                             android:textSize="15sp"
+                             android:fontFamily="@font/inter_medium"
+                             android:layout_marginStart="12dp"/>
+                             
+                         <TextView
+                             android:id="@+id/tvSelectedSpot"
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:text="--"
+                             android:textColor="#111827"
+                             android:textSize="16sp"
+                             android:fontFamily="@font/inter_bold" />
+                     </LinearLayout>
+                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
+            
+            
+            <!-- Section Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Payment"
+                android:textColor="#6B7280"
+                android:textSize="14sp"
+                android:fontFamily="@font/inter_bold"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"/>
+                
+            <!-- Payment Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp">
+                 <LinearLayout
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:orientation="vertical"
+                     android:padding="20dp">
+                     
+                     <LinearLayout
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:orientation="horizontal"
+                         android:gravity="center_vertical">
+                         
+                         <TextView
+                             android:layout_width="0dp"
+                             android:layout_height="wrap_content"
+                             android:layout_weight="1"
+                             android:text="Total Paid"
+                             android:textColor="#374151"
+                             android:textSize="16sp"
+                             android:fontFamily="@font/inter_medium"/>
+                             
+                         <TextView
+                             android:id="@+id/tvTotalAmount"
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:text="₹0.00"
+                             android:textColor="#111827"
+                             android:textSize="20sp"
+                             android:fontFamily="@font/inter_bold" />
+                     </LinearLayout>
+                     
+                     <LinearLayout
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:layout_marginTop="8dp"
+                         android:orientation="horizontal"
+                         android:gravity="center_vertical">
+                         
+                         <TextView
+                             android:id="@+id/tvPaymentMethod"
+                             android:layout_width="0dp"
+                             android:layout_height="wrap_content"
+                             android:layout_weight="1"
+                             android:text="Wallet"
+                             android:textColor="#6B7280"
+                             android:textSize="14sp"
+                             android:fontFamily="@font/inter_medium"/>
+                             
+                         <TextView
+                             android:id="@+id/tvPaymentStatus"
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:text="Confirmed"
+                             android:textColor="#10B981"
+                             android:textSize="14sp"
+                             android:fontFamily="@font/inter_bold" />
+                     </LinearLayout>
+                     
+                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
+            
+            <!-- Reference Section Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reference"
+                android:textColor="#6B7280"
+                android:textSize="14sp"
+                android:fontFamily="@font/inter_bold"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"/>
+                
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp">
+                 <LinearLayout
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:orientation="vertical"
+                     android:padding="20dp">
+                     
+                     <TextView
+                         android:id="@+id/tvBookingId"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:text="Booking ID: --"
+                         android:textColor="#6B7280"
+                         android:textSize="13sp"
+                         android:fontFamily="sans-serif-monospace" />
+                         
+                     <TextView
+                         android:id="@+id/tvTransactionId"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:text="Transaction ID: --"
+                         android:textColor="#6B7280"
+                         android:layout_marginTop="4dp"
+                         android:textSize="13sp"
+                         android:fontFamily="sans-serif-monospace" />
+                         
+                     <TextView
+                         android:id="@+id/tvBookingTime"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:text="Booked on --"
+                         android:textColor="#9CA3AF"
+                         android:layout_marginTop="8dp"
+                         android:textSize="12sp"
+                         android:fontFamily="@font/inter_regular" />
+                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Buttons -->
+    <LinearLayout
+        android:id="@+id/actionButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#FFFFFF"
+        android:padding="20dp"
+        android:elevation="16dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+        
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewBooking"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="View Booking Details"
+            android:backgroundTint="#000000"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:fontFamily="@font/inter_bold"
+            app:cornerRadius="28dp"
+            android:stateListAnimator="@null"
+            />
+            
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:orientation="horizontal"
+             android:layout_marginTop="12dp">
+             
+             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnShareReceipt"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Share Receipt"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:textColor="#111827"
+                app:strokeColor="#E5E7EB"
+                app:strokeWidth="1dp"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:fontFamily="@font/inter_bold"
+                app:cornerRadius="28dp"
+                android:layout_marginEnd="8dp"
+                />
+                
+             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDone"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Done"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:textColor="#111827"
+                app:strokeColor="#E5E7EB"
+                app:strokeWidth="1dp"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:fontFamily="@font/inter_bold"
+                app:cornerRadius="28dp"
+                android:layout_marginStart="8dp"
+                />
+         </LinearLayout>
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/circle_white_background"
+        android:src="@drawable/ic_close"
+        android:tint="#111827"
+        android:visibility="visible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+        
+</androidx.constraintlayout.widget.ConstraintLayout>

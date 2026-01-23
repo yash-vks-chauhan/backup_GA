@@ -1,0 +1,292 @@
+:root {
+    --primary: #111;
+    --primary-light: #222;
+    --accent: #2563eb;
+    --bg: #f5f6fa;
+    --surface: #fff;
+    --text: #222;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    --radius: 18px;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+header.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary);
+    padding: 0 2rem;
+    min-height: 80px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+header.navbar nav {
+    display: flex;
+    gap: 1rem;
+}
+
+header.navbar button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.7em 1.6em;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+    outline: none;
+    position: relative;
+}
+header.navbar button.active,
+header.navbar button:focus {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    border: 2px solid var(--accent);
+}
+header.navbar button:hover {
+    background: #333;
+    color: #fff;
+    transform: translateY(-2px) scale(1.03);
+}
+
+.navbar-logo {
+    height: 56px;
+    margin: 8px 0 8px 24px;
+    border-radius: 12px;
+    background: #fff;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.section {
+    background: var(--surface);
+    margin: 2.5rem auto;
+    padding: 2.5rem 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    max-width: 950px;
+    display: block;
+    transition: box-shadow 0.2s;
+    position: relative;
+}
+
+.section.hidden {
+    display: none;
+}
+
+h2 {
+    margin-top: 0;
+    color: var(--primary);
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+h3 {
+    margin-bottom: 0.5em;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+label {
+    font-weight: 500;
+    color: var(--muted);
+    margin-right: 0.5em;
+    margin-bottom: 0.2em;
+    display: inline-block;
+    min-width: 120px;
+}
+
+input, select, textarea {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6em 1em;
+    font-size: 1rem;
+    margin-bottom: 1em;
+    background: var(--bg);
+    color: var(--text);
+    transition: border 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px #1112;
+}
+
+select {
+    appearance: none;
+    background: var(--surface) url("data:image/svg+xml,%3Csvg width='16' height='16' fill='none' stroke='%236b7280' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 1em center/1.2em;
+    padding-right: 2.5em;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+option {
+    background: #fff;
+    color: var(--text);
+    font-size: 1rem;
+    padding: 0.5em 1em;
+}
+
+button, .section button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7em 1.4em;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-right: 0.5em;
+    margin-bottom: 0.5em;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    outline: none;
+}
+
+button:active, .section button:active {
+    transform: scale(0.98);
+}
+
+.fab {
+    position: fixed;
+    right: 2.5rem;
+    bottom: 2.5rem;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+    cursor: pointer;
+    z-index: 100;
+    border: none;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+}
+.fab:hover {
+    background: #333;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+    transform: scale(1.07);
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.5em 0;
+    background: var(--surface);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+th, td {
+    padding: 0.9em 1.1em;
+    text-align: left;
+}
+
+th {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+    border-bottom: 2px solid var(--accent);
+}
+
+tr:nth-child(even) {
+    background: var(--bg);
+}
+
+tr:hover {
+    background: #e0e7ff;
+    transition: background 0.2s;
+}
+
+.response, .error {
+    margin: 1em 0;
+    padding: 0.9em 1.1em;
+    border-radius: 10px;
+    font-size: 1.08em;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.response {
+    background: #d1fae5;
+    color: #065f46;
+}
+.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+th {
+    background: #fff !important;
+    color: #111 !important;
+    font-weight: 700;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+
+.qrcode {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    background: #eee;
+    border-radius: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 8px;
+}
+
+@media (max-width: 700px) {
+    .section {
+        padding: 1rem;
+        max-width: 98vw;
+    }
+    header.navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+    .navbar-logo {
+        margin: 8px 0 0 0;
+        height: 40px;
+    }
+    table, th, td {
+        font-size: 0.95em;
+    }
+    .fab {
+        right: 1rem;
+        bottom: 1rem;
+        width: 52px;
+        height: 52px;
+        font-size: 1.5rem;
+    }
+}

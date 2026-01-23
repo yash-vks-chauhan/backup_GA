@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Focused glass surface - Enhanced Premium Glass Morphism FAB -->
+    <item>
+        <layer-list>
+
+            <!-- Contextual backdrop with brand color -->
+            <item>
+                <shape android:shape="oval">
+                    <solid android:color="#0D1976D2" />
+                </shape>
+            </item>
+
+            <!-- Frosted glass base - Brighter with enhanced saturation -->
+            <item>
+                <shape android:shape="oval">
+                    <gradient
+                        android:type="linear"
+                        android:angle="135"
+                        android:startColor="#E0EDF4FF"
+                        android:centerColor="#D8EDF4FF"
+                        android:endColor="#D0EDF4FF" />
+                </shape>
+            </item>
+
+            <!-- Multi-layer frosted overlay -->
+            <item android:inset="4dp">
+                <shape android:shape="oval">
+                    <gradient
+                        android:type="radial"
+                        android:gradientRadius="50%"
+                        android:centerX="45%"
+                        android:centerY="45%"
+                        android:startColor="#30FFFFFF"
+                        android:endColor="#00FFFFFF" />
+                </shape>
+            </item>
+
+            <!-- Enhanced primary highlight -->
+            <item android:top="6dp" android:left="6dp">
+                <shape android:shape="oval">
+                    <gradient
+                        android:type="radial"
+                        android:gradientRadius="65%"
+                        android:centerX="20%"
+                        android:centerY="20%"
+                        android:startColor="#55FFFFFF"
+                        android:endColor="#00FFFFFF" />
+                </shape>
+            </item>
+
+            <!-- Edge luminosity with brand color tint -->
+            <item android:top="2dp" android:left="2dp" android:bottom="36dp" android:right="36dp">
+                <shape android:shape="oval">
+                    <stroke
+                        android:width="2dp"
+                        android:color="#991976D2" />
+                </shape>
+            </item>
+
+            <!-- Gradient focus border -->
+            <item>
+                <shape android:shape="oval">
+                    <stroke
+                        android:width="1.5dp"
+                        android:color="#CC1976D2" />
+                </shape>
+            </item>
+
+        </layer-list>
+    </item>
+
+</layer-list>

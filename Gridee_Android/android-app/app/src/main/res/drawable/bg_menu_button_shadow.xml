@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Soft Shadow Layer 1 (Wide, Transparent) -->
+    <item
+        android:top="2dp"
+        android:left="1dp"
+        android:right="1dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp"/>
+            <solid android:color="#0D000000"/> <!-- 5% Black -->
+        </shape>
+    </item>
+
+    <!-- Soft Shadow Layer 2 (Closer, Slightly Darker) -->
+    <item
+        android:top="3dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp"/>
+            <solid android:color="#14000000"/> <!-- 8% Black -->
+        </shape>
+    </item>
+
+    <!-- Main Button Surface -->
+    <item
+        android:bottom="4dp"
+        android:left="0dp"
+        android:right="0dp"
+        android:top="0dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp"/>
+            <solid android:color="#F9FFFFFF"/> <!-- 98% White (Ceramic look) -->
+            <!-- Subtle Inner Glow/Border -->
+            <stroke
+                android:width="1dp"
+                android:color="#FFFFFF"/>
+        </shape>
+    </item>
+
+</layer-list>

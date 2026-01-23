@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawer_root"
+    android:layout_width="320dp"
+    android:layout_height="match_parent"
+    android:layout_gravity="start"
+    android:background="#F5F5F5"
+    android:orientation="vertical"
+    android:fitsSystemWindows="false"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Header Area -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="52dp" 
+        android:paddingHorizontal="24dp"
+        android:paddingBottom="24dp">
+        
+        <!-- Branding -->
+        <TextView
+            android:id="@+id/tv_drawer_brand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gridee"
+            android:textSize="26sp"
+            android:textColor="#111827"
+            android:textStyle="bold"
+            android:fontFamily="@font/inter_bold"
+            android:letterSpacing="-0.03"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Profile Section (Centered, No Card Container) -->
+        <LinearLayout
+            android:id="@+id/card_drawer_profile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintTop_toBottomOf="@id/tv_drawer_brand"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- Avatar -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_drawer_avatar_container"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                app:cardCornerRadius="40dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="#4CAF50">
+
+                <TextView
+                    android:id="@+id/tv_drawer_initials"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="O"
+                    android:textColor="#FFFFFF"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:fontFamily="@font/inter_bold" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Name -->
+            <TextView
+                android:id="@+id/tv_drawer_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Operator"
+                android:textColor="#111827"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold"
+                android:layout_marginTop="16dp" />
+
+            <!-- Subtitle -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="View Profile"
+                android:textColor="#6B7280"
+                android:textSize="14sp"
+                android:fontFamily="@font/inter_medium"
+                android:layout_marginTop="4dp" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Scrollable Menu Items -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="24dp">
+
+            <!-- Section: Manage -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="General"
+                android:textColor="#6B7280"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- History -->
+                    <LinearLayout
+                        android:id="@+id/btn_drawer_history"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="20dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_history_doc" app:tint="#6B7280" android:layout_marginEnd="16dp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="History" android:textColor="#111827" android:textSize="16sp" android:fontFamily="@font/inter_medium" />
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_arrow_right" app:tint="#6B7280" />
+                    </LinearLayout>
+                    
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F3F4F6" android:layout_marginStart="60dp" />
+
+                    <!-- Settings -->
+                     <LinearLayout
+                        android:id="@+id/btn_drawer_settings"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="20dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_settings_enhanced" app:tint="#6B7280" android:layout_marginEnd="16dp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Settings" android:textColor="#111827" android:textSize="16sp" android:fontFamily="@font/inter_medium" />
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_arrow_right" app:tint="#6B7280" />
+                    </LinearLayout>
+
+                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F3F4F6" android:layout_marginStart="60dp" />
+
+                    <!-- Language -->
+                    <LinearLayout
+                        android:id="@+id/btn_drawer_language"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="20dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_language" app:tint="#6B7280" android:layout_marginEnd="16dp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Language" android:textColor="#111827" android:textSize="16sp" android:fontFamily="@font/inter_medium" />
+                        <TextView android:id="@+id/tv_current_lang" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="English" android:textColor="#9CA3AF" android:textSize="12sp" android:fontFamily="@font/inter_regular" android:layout_marginEnd="8dp"/>
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_arrow_right" app:tint="#6B7280" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+
+             <!-- Section: Support -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Support"
+                android:textColor="#6B7280"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Help -->
+                     <LinearLayout
+                        android:id="@+id/btn_drawer_help"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="20dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_help" app:tint="#6B7280" android:layout_marginEnd="16dp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Help &amp; Support" android:textColor="#111827" android:textSize="16sp" android:fontFamily="@font/inter_medium" />
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_arrow_right" app:tint="#6B7280" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Logout -->
+             <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FEF2F2"
+                android:layout_marginTop="8dp">
+
+                <LinearLayout
+                    android:id="@+id/btn_drawer_logout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="20dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true">
+                    
+                    <ImageView 
+                        android:layout_width="24dp" 
+                        android:layout_height="24dp" 
+                        android:src="@drawable/ic_logout" 
+                        app:tint="#EF4444" 
+                        android:layout_marginEnd="16dp" />
+                        
+                    <TextView 
+                        android:layout_width="0dp" 
+                        android:layout_height="wrap_content" 
+                        android:layout_weight="1" 
+                        android:text="Log Out" 
+                        android:textColor="#EF4444" 
+                        android:textSize="16sp" 
+                        android:fontFamily="@font/inter_bold" />
+                        
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+             <!-- Version -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="v2.4.0 • Gridee Operator"
+                android:textColor="#D1D5DB"
+                android:textSize="11sp"
+                android:fontFamily="@font/inter_medium"
+                android:gravity="center"
+                android:layout_marginTop="24dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

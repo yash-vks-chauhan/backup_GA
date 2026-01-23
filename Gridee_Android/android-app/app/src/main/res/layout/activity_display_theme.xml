@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5"
+    android:fitsSystemWindows="true"
+    tools:context=".ui.profile.DisplayThemeActivity">
+
+    <!-- AppBarLayout with Toolbar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:elevation="0dp"
+        app:elevation="0dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Light">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:layout_gravity="center_horizontal"
+            app:title=""
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Display &amp; Theme"
+                android:textColor="#111827"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold"
+                android:layout_gravity="center" />
+                
+        </androidx.appcompat.widget.Toolbar>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Scrollable Content -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:paddingBottom="100dp"
+        android:clipToPadding="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="8dp">
+
+            <!-- Hero Gradient Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Appearance"
+                android:textColor="#6B7280"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold"
+                android:layout_marginStart="24dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="12dp" />
+
+            <!-- Accordion Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Accordion Header -->
+                    <FrameLayout
+                        android:id="@+id/btn_hero_gradient_accordion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#FFFFFF"
+                        android:elevation="4dp"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:padding="20dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_hero_home_modern"
+                                android:tint="#6B7280"
+                                android:layout_marginEnd="16dp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Hero Gradient"
+                                    android:textColor="#111827"
+                                    android:textSize="16sp"
+                                    android:fontFamily="@font/inter_medium" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Customize homepage look"
+                                    android:textColor="#6B7280"
+                                    android:textSize="14sp"
+                                    android:fontFamily="@font/inter_regular"
+                                    android:layout_marginTop="2dp" />
+
+                            </LinearLayout>
+
+                            <ImageView
+                                android:id="@+id/iv_accordion_arrow"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_arrow_down"
+                                android:tint="#6B7280"
+                                android:rotation="180" />
+
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <!-- Expanded Content (Open by default) -->
+                    <LinearLayout
+                        android:id="@+id/layout_hero_gradient_expanded"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="visible">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#F3F4F6"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginEnd="20dp"
+                            android:layout_marginBottom="8dp" />
+
+                        <RadioGroup
+                            android:id="@+id/radioGroupGradients"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="60dp"
+                            android:paddingEnd="20dp">
+
+                            <RadioButton
+                                android:id="@+id/rbMidnightSlate"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Midnight Slate"
+                                android:textColor="#111827"
+                                android:textSize="16sp"
+                                android:fontFamily="@font/inter_medium"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp"
+                                android:paddingTop="14dp"
+                                android:paddingBottom="14dp"
+                                android:layout_marginBottom="4dp"
+                                android:background="?attr/selectableItemBackground"
+                                android:buttonTint="#000000" />
+
+                            <RadioButton
+                                android:id="@+id/rbObsidianDip"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Obsidian Dip (Default)"
+                                android:textColor="#111827"
+                                android:textSize="16sp"
+                                android:fontFamily="@font/inter_medium"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp"
+                                android:paddingTop="14dp"
+                                android:paddingBottom="14dp"
+                                android:layout_marginBottom="4dp"
+                                android:background="?attr/selectableItemBackground"
+                                android:buttonTint="#000000" />
+
+                            <RadioButton
+                                android:id="@+id/rbCarbonMist"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Carbon Mist"
+                                android:textColor="#111827"
+                                android:textSize="16sp"
+                                android:fontFamily="@font/inter_medium"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp"
+                                android:paddingTop="14dp"
+                                android:paddingBottom="14dp"
+                                android:layout_marginBottom="4dp"
+                                android:background="?attr/selectableItemBackground"
+                                android:buttonTint="#000000" />
+
+                            <RadioButton
+                                android:id="@+id/rbLavenderWhisper"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Lavender Whisper"
+                                android:textColor="#111827"
+                                android:textSize="16sp"
+                                android:fontFamily="@font/inter_medium"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp"
+                                android:paddingTop="14dp"
+                                android:paddingBottom="14dp"
+                                android:layout_marginBottom="4dp"
+                                android:background="?attr/selectableItemBackground"
+                                android:buttonTint="#000000" />
+
+                        </RadioGroup>
+                        
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Theme Accordion Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Accordion Header -->
+                    <FrameLayout
+                        android:id="@+id/btn_theme_accordion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#FFFFFF"
+                        android:elevation="4dp"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:padding="20dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_app_theme_modern"
+                                android:tint="#6B7280"
+                                android:layout_marginEnd="16dp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="App Theme"
+                                    android:textColor="#111827"
+                                    android:textSize="16sp"
+                                    android:fontFamily="@font/inter_medium" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Dark mode &amp; light mode"
+                                    android:textColor="#6B7280"
+                                    android:textSize="14sp"
+                                    android:fontFamily="@font/inter_regular"
+                                    android:layout_marginTop="2dp" />
+
+                            </LinearLayout>
+
+                            <ImageView
+                                android:id="@+id/iv_theme_arrow"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_arrow_down"
+                                android:tint="#6B7280"
+                                android:rotation="180" />
+
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <!-- Expanded Content -->
+                    <LinearLayout
+                        android:id="@+id/layout_theme_expanded"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="visible">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#F3F4F6"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginEnd="20dp"
+                            android:layout_marginBottom="24dp" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Coming Soon..."
+                            android:textColor="#9CA3AF"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/inter_medium"
+                            android:gravity="center"
+                            android:layout_marginBottom="24dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Floating Save Button -->
+    <LinearLayout
+        android:id="@+id/layoutSaveContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="center"
+        android:padding="24dp"
+        android:visibility="gone">
+    
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBackToProfile"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Save"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:fontFamily="@font/inter_bold"
+            app:backgroundTint="#000000"
+            app:cornerRadius="28dp"
+            app:rippleColor="#33FFFFFF"
+            android:elevation="6dp" />
+            
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

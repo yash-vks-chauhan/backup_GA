@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- LEVEL 1: The Midnight Slate Base (Professional Dark Blue-Grey) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:centerY="0.5"
+                android:startColor="#37474F"
+                android:centerColor="#CFD8DC"
+                android:endColor="#F5F5F5"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- LEVEL 2: The "Breath of Life" (Subtle Top-Center Glow) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:gradientRadius="800dp"
+                android:centerX="0.5"
+                android:centerY="0.0"
+                android:type="radial"
+                android:startColor="#15FFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+
+</layer-list>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/segmentContainer"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:background="@drawable/bg_segment_track"
+    android:padding="2dp"
+    android:clipToPadding="false"
+    android:clipChildren="false">
+
+    <!-- The white slider pill (Initially invisible, positioned by code) -->
+    <View
+        android:id="@+id/segmentSlider"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_segment_slider"
+        android:visibility="invisible" />
+
+    <!-- Text Labels Container -->
+    <LinearLayout
+        android:id="@+id/segmentGroup"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="3"
+        android:elevation="4dp"
+        android:translationZ="4dp">
+
+        <!-- Active Segment -->
+        <FrameLayout
+            android:id="@+id/segmentActive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <TextView
+                android:id="@+id/textActive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Active"
+                android:textSize="14sp"
+                android:textColor="@color/segment_text_selected"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.01" />
+
+            <TextView
+                android:id="@+id/badgeActive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/segment_badge_background"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="0"
+                android:textColor="@color/segment_badge_text"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif-medium"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <!-- Pending Segment -->
+        <FrameLayout
+            android:id="@+id/segmentPending"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <TextView
+                android:id="@+id/textPending"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Pending"
+                android:textSize="14sp"
+                android:textColor="@color/segment_text_unselected"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.01" />
+
+            <TextView
+                android:id="@+id/badgePending"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/segment_badge_background"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="0"
+                android:textColor="@color/segment_badge_text"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif-medium"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <!-- Completed Segment -->
+        <FrameLayout
+            android:id="@+id/segmentCompleted"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <TextView
+                android:id="@+id/textCompleted"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Completed"
+                android:textSize="14sp"
+                android:textColor="@color/segment_text_unselected"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.01" />
+
+            <TextView
+                android:id="@+id/badgeCompleted"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/segment_badge_background"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="0"
+                android:textColor="@color/segment_badge_text"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif-medium"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

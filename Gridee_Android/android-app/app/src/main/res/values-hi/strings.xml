@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gridee</string>
+    <string name="camera_permission_required">कैमरा अनुमति आवश्यक है</string>
+    <string name="scan_to_check_in">चेक-इन करने के लिए स्कैन करें</string>
+    <string name="scan_to_check_out">चेक-आउट करने के लिए स्कैन करें</string>
+    <string name="validating_qr">QR की जांच हो रही है…</string>
+    <string name="processing_check_in">चेक-इन संसाधित हो रहा है…</string>
+    <string name="processing_check_out">चेक-आउट संसाधित हो रहा है…</string>
+    <string name="vehicle_scan_hint">लाइसेंस प्लेट को फ्रेम के भीतर संरेखित करें</string>
+    <string name="vehicle_scan_detecting">लाइसेंस प्लेट स्कैन हो रही है…</string>
+    <string name="vehicle_scan_detected">%1$s का पता चला</string>
+    <string name="vehicle_scan_not_clear">फोकस समायोजित किया जा रहा है…</string>
+    <string name="vehicle_scan_not_clear_hint">स्पष्ट स्कैन के लिए करीब जाएं और चमक कम करें।</string>
+    <string name="vehicle_scan_timeout_title">स्कैन टाइमआउट</string>
+    <string name="vehicle_scan_timeout_message">हम समय पर प्लेट नहीं पढ़ सके। वाहन को संरेखित करें और पुनः प्रयास करें।</string>
+    <string name="vehicle_scan_retry_button">फिर से स्कैन करें</string>
+    <string name="vehicle_scan_error_camera">कैमरा अनुपलब्ध है। कृपया पुन: प्रयास करें।</string>
+    <string name="vehicle_scan_error_generic">प्लेट का पता लगाने में असमर्थ। प्रकाश व्यवस्था समायोजित करें और पुनः प्रयास करें।</string>
+    <string name="vehicle_scan_success_toast">वाहन %1$s का पता चला</string>
+    <string name="vehicle_scan_success_title">वाहन का पता चला</string>
+    <string name="vehicle_scan_success_message">वाहन %1$s मिला और चेक-इन के लिए तैयार है।</string>
+    <string name="scanner_corner">स्कैनर फ्रेम कोना</string>
+    <string name="vehicle_scan_best_guess">संभावित मिलान: %1$s</string>
+    <string name="vehicle_scan_flash_on">फ्लैश चालू</string>
+    <string name="vehicle_scan_flash_off">फ्लैश बंद</string>
+    <string name="vehicle_scan_hint_move_closer">करीब जाएं और फ्रेम के भीतर संरेखित करें</string>
+    <string name="vehicle_sheet_status_fetching">सक्रिय बुकिंग प्राप्त की जा रही है…</string>
+    <string name="vehicle_sheet_status_not_found">%1$s से कोई बुकिंग नहीं जुड़ी है।</string>
+    <string name="vehicle_sheet_status_error">बुकिंग प्राप्त करने में विफल। %1$s</string>
+    <string name="vehicle_sheet_status_checkin_ready">%1$s के लिए चेक-इन बुकिंग मिली</string>
+    <string name="vehicle_sheet_status_checkout_ready">वाहन %1$s वर्तमान में चेक-इन है</string>
+    <string name="vehicle_sheet_status_info_generic">%1$s के लिए बुकिंग मिली</string>
+    <string name="vehicle_sheet_processing_checkin">वाहन चेक-इन किया जा रहा है…</string>
+    <string name="vehicle_sheet_processing_checkout">वाहन चेक-आउट किया जा रहा है…</string>
+    <string name="vehicle_sheet_check_in">वाहन चेक-इन</string>
+    <string name="vehicle_sheet_check_out">वाहन चेक-आउट</string>
+    <string name="vehicle_sheet_scan_again">फिर से स्कैन करें</string>
+    <string name="vehicle_sheet_booking_status">स्थिति: %1$s</string>
+    <string name="vehicle_sheet_booking_location">लॉट %1$s • स्पॉट %2$s</string>
+    <string name="vehicle_sheet_booking_window">%1$s - %2$s</string>
+    <string name="vehicle_sheet_manual_label">वाहन संख्या मैन्युअल रूप से दर्ज करें</string>
+    <string name="vehicle_sheet_manual_hint">वाहन संख्या</string>
+    <string name="vehicle_sheet_manual_submit">वाहन संख्या का उपयोग करें</string>
+    <string name="vehicle_sheet_manual_button">मैन्युअल रूप से दर्ज करें</string>
+    <string name="vehicle_sheet_manual_error">एक वैध वाहन संख्या दर्ज करें</string>
+    <string name="vehicle_sheet_checkin_success">%1$s के लिए चेक-इन पूरा हुआ</string>
+    <string name="vehicle_sheet_checkout_success">%1$s के लिए चेक-आउट पूरा हुआ</string>
+    <string name="vehicle_sheet_status_ready">वाहन %1$s का पता चला</string>
+    <string name="qr_invalid">अमान्य QR कोड</string>
+    <string name="qr_validation_message">%1$s</string>
+    <string name="back">पीछे</string>
+    
+    <!-- Operator Dashboard -->
+    <string name="op_nav_drawer_open">नेविगेशन मेनू खोलें</string>
+    <string name="op_scanner_tab">स्कैनर</string>
+    <string name="op_dashboard_tab">डैशबोर्ड</string>
+    <string name="op_check_in">चेक-इन</string>
+    <string name="op_check_out">चेक-आउट</string>
+    <string name="op_tap_to_scan">स्कैन करने के लिए टैप करें</string>
+    <string name="op_btn_check_in">चेक इन</string>
+    <string name="op_btn_check_out">चेक आउट</string>
+    <string name="op_manual_entry_label">या वाहन संख्या मैन्युअल रूप से दर्ज करें</string>
+    <string name="op_submit_manual">वाहन संख्या उपयोग करें</string>
+    <string name="op_back_to_scan">स्कैनर पर वापस जाएं</string>
+    <string name="op_enter_vehicle_hint">उदा. MH 04 AB 1234</string>
+    <string name="op_enter_vehicle_error">वाहन संख्या दर्ज करें</string>
+    <string name="op_invalid_vehicle_error">अमान्य वाहन संख्या</string>
+    <string name="op_switched_to">%1$s पर स्विच किया गया</string>
+    <string name="op_settings_soon">सेटिंग्स जल्द ही आ रही हैं</string>
+    <string name="op_help_soon">सहायता और समर्थन जल्द ही आ रहा है</string>
+    <string name="op_logout_title">लॉग आउट</string>
+    <string name="op_logout_message">क्या आप वाकई लॉग आउट करना चाहते हैं?</string>
+    <string name="op_cancel">रद्द करें</string>
+    <string name="op_confirm_logout">लॉग आउट</string>
+    <string name="op_session_info">ऑपरेटर: %1$s\nस्थान: %2$s\nसत्र: सक्रिय</string>
+    <string name="select_language">भाषा चुनें</string>
+
+    <!-- Sidebar Menu -->
+    <string name="menu_language">भाषा</string>
+    <string name="menu_settings">सेटिंग्स</string>
+    <string name="menu_help">सहायता और समर्थन</string>
+    <string name="menu_account">खाता</string>
+    <string name="menu_logout">लॉग आउट</string>
+</resources>

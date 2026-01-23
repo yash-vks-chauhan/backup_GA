@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Glass container - Premium Glass Morphism FAB with all 10 enhancements -->
+    <item>
+        <layer-list>
+
+            <!-- 8. Contextual contrast backdrop -->
+            <item>
+                <shape android:shape="oval">
+                    <solid android:color="#08000000" />
+                </shape>
+            </item>
+
+            <!-- 1. Enhanced opacity (75-82%) - Frosted glass base with saturated cool blue -->
+            <item>
+                <shape android:shape="oval">
+                    <gradient
+                        android:type="linear"
+                        android:angle="135"
+                        android:startColor="#D4EDF4FF"
+                        android:centerColor="#CCEDF4FF"
+                        android:endColor="#C2EDF4FF" />
+                </shape>
+            </item>
+
+            <!-- 2. Multi-layer frosted overlay for depth -->
+            <item android:inset="4dp">
+                <shape android:shape="oval">
+                    <gradient
+                        android:type="radial"
+                        android:gradientRadius="45%"
+                        android:centerX="50%"
+                        android:centerY="50%"
+                        android:startColor="#20FFFFFF"
+                        android:endColor="#00FFFFFF" />
+                </shape>
+            </item>
+
+            <!-- 9. Enhanced primary radial highlight - Top-left -->
+            <item android:top="8dp" android:left="8dp">
+                <shape android:shape="oval">
+                    <gradient
+                        android:type="radial"
+                        android:gradientRadius="60%"
+                        android:centerX="25%"
+                        android:centerY="25%"
+                        android:startColor="#45F5F8FF"
+                        android:endColor="#00F5F8FF" />
+                </shape>
+            </item>
+
+            <!-- 9. Secondary highlight - Bottom-right for organic feel -->
+            <item android:bottom="8dp" android:right="8dp">
+                <shape android:shape="oval">
+                    <gradient
+                        android:type="radial"
+                        android:gradientRadius="45%"
+                        android:centerX="75%"
+                        android:centerY="75%"
+                        android:startColor="#28F5F8FF"
+                        android:endColor="#00F5F8FF" />
+                </shape>
+            </item>
+
+            <!-- 5. Inner shadow for depth -->
+            <item android:bottom="0dp" android:right="0dp">
+                <shape android:shape="oval">
+                    <gradient
+                        android:type="radial"
+                        android:gradientRadius="70%"
+                        android:centerX="80%"
+                        android:centerY="80%"
+                        android:startColor="#00000000"
+                        android:endColor="#0A000000" />
+                </shape>
+            </item>
+
+            <!-- 7. Edge luminosity - Arc lighting on top-left -->
+            <item android:top="2dp" android:left="2dp" android:bottom="32dp" android:right="32dp">
+                <shape android:shape="oval">
+                    <stroke
+                        android:width="1.5dp"
+                        android:color="#45FFFFFF" />
+                </shape>
+            </item>
+
+            <!-- 10. Enhanced gradient border - Better visibility -->
+            <item>
+                <shape android:shape="oval">
+                    <stroke
+                        android:width="1dp"
+                        android:color="#66FFFFFF" />
+                </shape>
+            </item>
+
+        </layer-list>
+    </item>
+
+</layer-list>

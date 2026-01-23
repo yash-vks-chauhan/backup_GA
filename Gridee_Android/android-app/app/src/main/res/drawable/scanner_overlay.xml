@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Subtle vignette effect - darker edges, transparent center -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <gradient
+        android:type="radial"
+        android:gradientRadius="75%p"
+        android:centerColor="@android:color/transparent"
+        android:endColor="@color/scanner_overlay_dark" />
+
+</shape>

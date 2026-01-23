@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Status bar height for proper spacing -->
+    <dimen name="status_bar_height">32dp</dimen>
+    
+    <!-- General spacing -->
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_medium">16dp</dimen>
+    <dimen name="margin_large">24dp</dimen>
+    
+    <!-- Card spacing -->
+    <dimen name="card_margin">12dp</dimen>
+    <dimen name="card_corner_radius">12dp</dimen>
+    
+    <!-- Button dimensions -->
+    <dimen name="button_height">48dp</dimen>
+    <dimen name="button_corner_radius">8dp</dimen>
+
+    <!-- Segmented control sizing -->
+    <dimen name="segmented_control_height">56dp</dimen>
+    <dimen name="segmented_control_padding">6dp</dimen>
+    <dimen name="segmented_control_item_padding">16dp</dimen>
+
+    <!-- Transaction header animation - Enhanced for smoother professional transitions -->
+    <dimen name="transaction_header_collapse_range">48dp</dimen>
+    <dimen name="transaction_header_padding_reduction">6dp</dimen>
+    <dimen name="transaction_header_title_horizontal_shift">2dp</dimen>
+    <dimen name="transaction_header_count_spacing">6dp</dimen>
+    <dimen name="transaction_header_filter_collapsed_spacing">8dp</dimen>
+
+    <!-- Close button dimensions -->
+    <dimen name="close_button_size">52dp</dimen>
+    <dimen name="close_button_radius">26dp</dimen>
+    <dimen name="close_button_elevation">4dp</dimen>
+    <dimen name="close_button_top_margin">16dp</dimen>
+    <dimen name="close_button_bottom_margin">16dp</dimen>
+    <dimen name="close_icon_size">22dp</dimen>
+</resources>

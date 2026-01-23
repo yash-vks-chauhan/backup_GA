@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- LEVEL 1: The Deep Obsidian Base (Your solid foundation) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:centerY="0.35"
+                android:startColor="#0F172A"
+                android:centerColor="#64748B"
+                android:endColor="#F5F5F5"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- LEVEL 2: The "Breath of Life" (Subtle Top-Center Glow) -->
+    <!-- This mimics light hitting dark glass, removing the "flatness" -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:gradientRadius="800dp"
+                android:centerX="0.5"
+                android:centerY="0.0"
+                android:type="radial"
+                android:startColor="#15FFFFFF" 
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+
+</layer-list>

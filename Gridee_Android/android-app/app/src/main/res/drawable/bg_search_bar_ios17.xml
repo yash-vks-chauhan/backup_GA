@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Enhanced Minimal Search Bar - Professional & Clean -->
+    
+    <!-- Elevated shadow for depth -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="100dp"
+                android:centerX="50%"
+                android:centerY="50%"
+                android:startColor="#12000000"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Clean white base -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- Subtle top highlight for depth -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#0AFFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- Minimal grey border -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <stroke 
+                android:width="0.5dp" 
+                android:color="#E5E5E5" />
+        </shape>
+    </item>
+
+</layer-list>

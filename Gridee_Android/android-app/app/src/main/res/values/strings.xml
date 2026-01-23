@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gridee</string>
+    <string name="camera_permission_required">Camera permission required</string>
+    <string name="scan_to_check_in">Scan to Check-In</string>
+    <string name="scan_to_check_out">Scan to Check-Out</string>
+    <string name="validating_qr">Validating QR…</string>
+    <string name="processing_check_in">Processing check-in…</string>
+    <string name="processing_check_out">Processing check-out…</string>
+    <string name="vehicle_scan_hint">Align the license plate within the frame</string>
+    <string name="vehicle_scan_detecting">Scanning license plate…</string>
+    <string name="vehicle_scan_detected">Detected %1$s</string>
+    <string name="vehicle_scan_not_clear">Adjusting focus…</string>
+    <string name="vehicle_scan_not_clear_hint">Move closer and reduce glare for a clear scan.</string>
+    <string name="vehicle_scan_timeout_title">Scan timeout</string>
+    <string name="vehicle_scan_timeout_message">We couldn’t read the plate in time. Align the vehicle and try again.</string>
+    <string name="vehicle_scan_retry_button">Scan again</string>
+    <string name="vehicle_scan_error_camera">Camera unavailable. Please try again.</string>
+    <string name="vehicle_scan_error_generic">Unable to detect the plate. Adjust lighting and retry.</string>
+    <string name="vehicle_scan_success_toast">Vehicle %1$s detected</string>
+    <string name="vehicle_scan_success_title">Vehicle detected</string>
+    <string name="vehicle_scan_success_message">Vehicle %1$s found and ready for check-in.</string>
+    <string name="scanner_corner">Scanner frame corner</string>
+    <string name="vehicle_scan_best_guess">Possible match: %1$s</string>
+    <string name="vehicle_scan_flash_on">Flash on</string>
+    <string name="vehicle_scan_flash_off">Flash off</string>
+    <string name="vehicle_scan_hint_move_closer">Move closer and align within the frame</string>
+    <string name="vehicle_sheet_status_fetching">Fetching active booking…</string>
+    <string name="vehicle_sheet_status_not_found">No booking is linked to %1$s.</string>
+    <string name="vehicle_sheet_status_error">Failed to fetch booking. %1$s</string>
+    <string name="vehicle_sheet_status_checkin_ready">Check-in booking found for %1$s</string>
+    <string name="vehicle_sheet_status_checkout_ready">Vehicle %1$s is currently checked in</string>
+    <string name="vehicle_sheet_status_info_generic">Booking found for %1$s</string>
+    <string name="vehicle_sheet_processing_checkin">Checking in vehicle…</string>
+    <string name="vehicle_sheet_processing_checkout">Checking out vehicle…</string>
+    <string name="vehicle_sheet_check_in">Check in vehicle</string>
+    <string name="vehicle_sheet_check_out">Check out vehicle</string>
+    <string name="vehicle_sheet_scan_again">Scan again</string>
+    <string name="vehicle_sheet_booking_status">Status: %1$s</string>
+    <string name="vehicle_sheet_booking_location">Lot %1$s • Spot %2$s</string>
+    <string name="vehicle_sheet_booking_window">%1$s - %2$s</string>
+    <string name="vehicle_sheet_manual_label">Enter vehicle number manually</string>
+    <string name="vehicle_sheet_manual_hint">Vehicle number</string>
+    <string name="vehicle_sheet_manual_submit">Use vehicle number</string>
+    <string name="vehicle_sheet_manual_button">Enter manually</string>
+    <string name="vehicle_sheet_manual_error">Enter a valid vehicle number</string>
+    <string name="vehicle_sheet_checkin_success">Check-in completed for %1$s</string>
+    <string name="vehicle_sheet_checkout_success">Check-out completed for %1$s</string>
+    <string name="vehicle_sheet_status_ready">Vehicle %1$s detected</string>
+    <string name="qr_invalid">Invalid QR code</string>
+    <string name="qr_validation_message">%1$s</string>
+    <string name="registration_title">Create Account</string>
+    <string name="registration_subtitle">Join Gridee for smart parking</string>
+    <string name="login_link">Already have an account? Login</string>
+    <string name="name_hint">Full Name</string>
+    <string name="email_hint">Email Address</string>
+    <string name="phone_hint">Phone Number</string>
+    <string name="password_hint">Password</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="vehicle_label">Vehicle Numbers (Optional)</string>
+    <string name="vehicle_hint_1">Vehicle Number 1</string>
+    <string name="vehicle_hint_2">Vehicle Number 2</string>
+    <string name="create_account">Create Account</string>
+    
+    <!-- Login Screen -->
+    <string name="welcome_back">Welcome Back</string>
+    <string name="sign_in_subtitle">Sign in to your account</string>
+    <string name="email_or_phone_label">Email or Phone</string>
+    <string name="password_label">Password</string>
+    <string name="email_phone_hint">Enter your email or phone</string>
+    <string name="login_password_hint">Enter your password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="sign_in">Sign In</string>
+    <string name="or">or</string>
+    <string name="sign_in_with_apple">Sign in with Apple</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_up_link">Don\'t have an account? Sign Up</string>
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+    <string name="cancel_booking">Cancel</string>
+    <string name="booking_details">Booking Details</string>
+    <string name="booking_directions">Directions</string>
+    <string name="booking_share">Share</string>
+    <string name="extend_booking">Extend Booking</string>
+    <string name="current_end_time">Current end time: %s</string>
+    <string name="select_new_end_time">Select new end time:</string>
+    <string name="additional_charges">Additional charges: ₹%1$d</string>
+    <string name="confirm_extend_title">Confirm Extension</string>
+    <string name="confirm_extend_message">Are you sure you want to extend this booking?&#x0A;&#x0A;Additional charges will be deducted from your wallet.</string>
+    <string name="booking_extended_success">Booking extended successfully!</string>
+    <string name="insufficient_wallet_balance">Insufficient wallet balance. Please top up.</string>
+    <string name="spot_not_available_extended">Parking spot not available for selected time</string>
+    <string name="new_time_must_be_later">New end time must be after current end time</string>
+    <string name="extend_failed_default">Failed to extend booking</string>
+    <string name="cancel">Cancel</string>
+    <string name="content_desc_filter_bookings">Filter and sort bookings</string>
+    <string name="sort_sheet_title">Sort &amp; Filter</string>
+    <string name="sort_sheet_subtitle">Choose how your bookings are ordered</string>
+    <string name="sort_option_newest">Latest to oldest</string>
+    <string name="sort_option_oldest">First to last</string>
+    <string name="sort_option_spot">Parking spot (A-Z)</string>
+    <string name="spot_filter_heading">Filter by parking spot</string>
+    <string name="spot_filter_all">All spots</string>
+    <string name="spot_filter_no_data">Parking spots will appear once bookings are loaded.</string>
+
+    <!-- Wallet -->
+    <string name="wallet_transaction_icon_content_description">Transaction type icon</string>
+    <string name="wallet_transaction_after">After: ₹%1$.2f</string>
+    <string name="payment_filter_button_default">Payment Method</string>
+    <string name="payment_filter_title">Payment Method</string>
+    <string name="payment_filter_subtitle">Choose how you want to see transactions</string>
+    <string name="payment_filter_option_all">All payment methods</string>
+    <string name="payment_filter_option_upi">UPI</string>
+    <string name="payment_filter_option_card">Debit / Credit Card</string>
+    <string name="payment_filter_apply">Apply filter</string>
+    <string name="payment_filter_cancel">Cancel</string>
+
+    <!-- Search -->
+    <string name="transition_search_bar">home_search_bar</string>
+    <string name="search_expanded_hint">Search parking spots, zones or locations</string>
+    <string name="search_home_hint">Search for parking spots...</string>
+    <string name="search_recent_header">Recent searches</string>
+    <string name="search_popular_header">Popular near you</string>
+    <string name="search_clear_recent">Clear history</string>
+    <string name="content_description_close_search">Close search</string>
+    <string name="content_description_clear_query">Clear search query</string>
+    <string name="search_empty_state">Start typing to find parking zones, garages, and offers around you.</string>
+
+    <!-- Google Sign In -->
+    <string name="default_web_client_id">961075110838-610clma0pt3hk1ml56rcht1r90mtver8.apps.googleusercontent.com</string>
+    
+    <!-- Razorpay Key ID fallback. Prefer backend-supplied keyId; do not hardcode live keys. -->
+    <string name="razorpay_key_id">razorpay_key_id_placeholder</string>
+    
+    <!-- Splash Screen -->
+    <string name="app_name_gridee">Gridee</string>
+    <string name="card_on_road">Card on road</string>
+    <string name="bike_on_road">Bike on road</string>
+    <string name="content_desc_no_bookings">No bookings illustration</string>
+
+    <!-- Operator Dashboard -->
+    <string name="op_nav_drawer_open">Open navigation drawer</string>
+    <string name="op_scanner_tab">Scanner</string>
+    <string name="op_dashboard_tab">Dashboard</string>
+    <string name="op_check_in">Check-In</string>
+    <string name="op_check_out">Check-Out</string>
+    <string name="op_tap_to_scan">Tap to Scan Vehicle</string>
+    <string name="op_btn_check_in">Check In</string>
+    <string name="op_btn_check_out">Check Out</string>
+    <string name="op_manual_entry_label">Or enter vehicle number manually</string>
+    <string name="op_submit_manual">Use Vehicle Number</string>
+    <string name="op_back_to_scan">Back to Scanner</string>
+    <string name="op_enter_vehicle_hint">e.g. MH 04 AB 1234</string>
+    <string name="op_enter_vehicle_error">Enter vehicle number</string>
+    <string name="op_invalid_vehicle_error">Invalid vehicle number</string>
+    <string name="op_switched_to">Switched to %1$s</string>
+    <string name="op_settings_soon">Settings coming soon</string>
+    <string name="op_help_soon">Help &amp; Support coming soon</string>
+    <string name="op_logout_title">Logout</string>
+    <string name="op_logout_message">Are you sure you want to log out?</string>
+    <string name="op_cancel">Cancel</string>
+    <string name="op_confirm_logout">Logout</string>
+    <string name="op_session_info">Operator: %1$s\nLocation: %2$s\nSession: Active</string>
+    <string name="select_language">Select Language</string>
+    
+    <!-- Sidebar Menu -->
+    <string name="menu_language">Language</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_help">Help &amp; Support</string>
+    <string name="menu_account">Account</string>
+    <string name="menu_logout">Logout</string>
+</resources>

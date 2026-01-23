@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer glow effect for selected state -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="6dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#50007AFF"
+                android:endColor="#00007AFF"
+                android:type="radial"
+                android:gradientRadius="90dp" />
+            <corners android:radius="32dp" />
+        </shape>
+    </item>
+    
+    <!-- Shadow layer -->
+    <item android:top="2dp" android:left="2dp" android:right="2dp" android:bottom="8dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#35000000" />
+            <corners android:radius="30dp" />
+        </shape>
+    </item>
+    
+    <!-- Main selected background -->
+    <item android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#FFFFFF"
+                android:centerColor="#FEFEFE"
+                android:endColor="#FBFCFD"
+                android:angle="135" />
+            <corners android:radius="32dp" />
+            <stroke
+                android:width="1.8dp"
+                android:color="#007AFF" />
+        </shape>
+    </item>
+    
+    <!-- Inner highlight for premium feel -->
+    <item android:bottom="4dp" android:top="2dp" android:left="3dp" android:right="3dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#70FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="90" />
+            <corners android:radius="29dp" />
+        </shape>
+    </item>
+    
+    <!-- Subtle inner glow -->
+    <item android:bottom="4dp" android:top="14dp" android:left="10dp" android:right="10dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#30007AFF"
+                android:endColor="#00007AFF"
+                android:angle="270" />
+            <corners android:radius="22dp" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer glow effect -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="3dp">
+        <shape android:shape="oval">
+            <gradient
+                android:startColor="#60FF3B30"
+                android:endColor="#00FF3B30"
+                android:type="radial"
+                android:gradientRadius="20dp" />
+        </shape>
+    </item>
+    
+    <!-- Shadow -->
+    <item android:top="1dp" android:left="1dp" android:right="1dp" android:bottom="4dp">
+        <shape android:shape="oval">
+            <solid android:color="#40000000" />
+        </shape>
+    </item>
+    
+    <!-- Main badge background -->
+    <item android:bottom="2dp">
+        <shape android:shape="oval">
+            <gradient
+                android:startColor="#FF3B30"
+                android:centerColor="#FF2D20"
+                android:endColor="#E53E3E"
+                android:angle="135" />
+        </shape>
+    </item>
+    
+    <!-- Inner highlight -->
+    <item android:bottom="2dp" android:top="3dp" android:left="4dp" android:right="10dp">
+        <shape android:shape="oval">
+            <solid android:color="#60FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

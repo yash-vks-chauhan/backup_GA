@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "961075110838",
+    "project_id": "braided-tracker-480615-v5",
+    "storage_bucket": "braided-tracker-480615-v5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:961075110838:android:406a2dec5d6986ed2f9717",
+        "android_client_info": {
+          "package_name": "com.gridee.parking"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "961075110838-gs9ipupjnpnee6o0v8h9am6657d56aji.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gridee.parking",
+            "certificate_hash": "56a702416d16d20b1192cc5c58a3130b9498a0b4"
+          }
+        },
+        {
+          "client_id": "961075110838-610clma0pt3hk1ml56rcht1r90mtver8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDN63teqDI3fvPQRY2NUyGbmiCklbLgkls"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "961075110838-610clma0pt3hk1ml56rcht1r90mtver8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

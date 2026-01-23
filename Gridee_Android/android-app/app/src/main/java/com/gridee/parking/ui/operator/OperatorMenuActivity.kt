@@ -1,0 +1,200 @@
+package com.gridee.parking.ui.operator
+
+import android.app.Dialog
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.button.MaterialButton
+import com.gridee.parking.R
+import com.gridee.parking.ui.auth.LoginActivity
+import com.gridee.parking.utils.AuthSession
+import com.gridee.parking.utils.NotificationHelper
+
+class OperatorMenuActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_operator_menu)
+        
+        // --- UI SETUP ---
+        setupUserProfile()
+        setupClickListeners()
+        setupBackNavigation()
+    }
+
+    private fun setupBackNavigation() {
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                finish()
+                overridePendingTransition(R.anim.fade_in, R.anim.slide_out_left)
+            }
+        })
+    }
+
+    private fun setupUserProfile() {
+        // Set Profile Name
+        val sharedPref = getSharedPreferences("gridee_prefs", MODE_PRIVATE)
+        val operatorName = sharedPref.getString("user_name", "Operator")
+        findViewById<TextView>(R.id.tv_menu_name)?.text = operatorName
+
+        // Set Profile Initials
+        val initials = if (operatorName.isNullOrBlank()) "O" else operatorName.first().toString().uppercase()
+        findViewById<TextView>(R.id.tv_menu_initials)?.text = initials
+
+        // Set Current Language
+        val langCode = sharedPref.getString("app_language", "en") ?: "en"
+        val langName = when(langCode) {
+            "hi" -> "Hindi"
+            "ta" -> "Tamil"
+            else -> "English"
+        }
+        findViewById<TextView>(R.id.tv_current_lang)?.text = langName
+    }
+
+    private fun setupClickListeners() {
+        // Close Button
+        findViewById<View>(R.id.btn_close_menu).setOnClickListener {
+            finish()
+            overridePendingTransition(R.anim.fade_in, R.anim.slide_out_left) 
+        }
+
+        // History
+        findViewById<View>(R.id.btn_menu_history).setOnClickListener {
+            showNotification("History Feature Coming Soon", NotificationType.INFO)
+        }
+
+        // Settings
+        findViewById<View>(R.id.btn_menu_settings).setOnClickListener {
+            showNotification(getString(R.string.op_settings_soon), NotificationType.INFO)
+        }
+
+        // Language
+        findViewById<View>(R.id.btn_menu_language).setOnClickListener {
+            showLanguageSelectionDialog()
+        }
+
+        // Help
+        findViewById<View>(R.id.btn_menu_help).setOnClickListener {
+            showNotification(getString(R.string.op_help_soon), NotificationType.INFO)
+        }
+
+        // Logout
+        findViewById<View>(R.id.btn_menu_logout).setOnClickListener {
+            showLogoutConfirmation()
+        }
+    }
+
+    private fun showLanguageSelectionDialog() {
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+        
+        dialog.setOnShowListener {
+            val bottomSheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as? FrameLayout
+            bottomSheet?.setBackgroundResource(android.R.color.transparent)
+        }
+        
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_language_selector, null)
+        dialog.setContentView(view)
+
+        view.findViewById<View>(R.id.btn_close)?.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        view.findViewById<View>(R.id.btn_english)?.setOnClickListener {
+            setAppLocale("en")
+            dialog.dismiss()
+        }
+        view.findViewById<View>(R.id.btn_hindi)?.setOnClickListener {
+            setAppLocale("hi")
+            dialog.dismiss()
+        }
+        view.findViewById<View>(R.id.btn_tamil)?.setOnClickListener {
+            setAppLocale("ta")
+            dialog.dismiss()
+        }
+        
+        dialog.show()
+    }
+
+    private fun setAppLocale(languageCode: String) {
+        val locale = java.util.Locale(languageCode)
+        java.util.Locale.setDefault(locale)
+        val config = resources.configuration
+        config.setLocale(locale)
+        createConfigurationContext(config)
+        resources.updateConfiguration(config, resources.displayMetrics)
+
+        // Save to prefs
+        getSharedPreferences("gridee_prefs", MODE_PRIVATE).edit().putString("app_language", languageCode).apply()
+
+        // Restart App (Go to Dashboard)
+        val intent = Intent(this, OperatorDashboardActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+
+    private fun showLogoutConfirmation() {
+        val dialog = Dialog(this)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.setContentView(R.layout.dialog_logout_confirmation)
+        
+        val btnCancel = dialog.findViewById<MaterialButton>(R.id.btn_cancel)
+        val btnLogout = dialog.findViewById<MaterialButton>(R.id.btn_logout)
+        
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        btnLogout.setOnClickListener {
+            dialog.dismiss()
+            logout()
+        }
+        
+        dialog.show()
+    }
+
+    private fun logout() {
+        AuthSession.clearSession(this)
+
+        // Navigate to login
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+
+    // --- NOTIFICATION HELPERS ---
+    enum class NotificationType {
+        SUCCESS, ERROR, INFO
+    }
+
+    private fun showNotification(message: String, type: NotificationType) {
+        when (type) {
+            NotificationType.SUCCESS -> {
+                NotificationHelper.showSuccess(
+                    parent = findViewById(android.R.id.content),
+                    message = message,
+                    duration = 3000L
+                )
+            }
+            NotificationType.ERROR -> {
+                NotificationHelper.showError(
+                    parent = findViewById(android.R.id.content),
+                    message = message,
+                    duration = 3000L
+                )
+            }
+            NotificationType.INFO -> {
+                NotificationHelper.showInfo(
+                    parent = findViewById(android.R.id.content),
+                    message = message,
+                    duration = 3000L
+                )
+            }
+        }
+    }
+}

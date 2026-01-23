@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    
+    <!-- Alternative 2: Slate Grey (Elegant & Modern) -->
+    <gradient
+        android:angle="135"
+        android:startColor="#424242"
+        android:centerColor="#2C2C2C"
+        android:endColor="#1A1A1A"
+        android:type="linear" />
+    
+    <corners android:radius="20dp" />
+    
+</shape>

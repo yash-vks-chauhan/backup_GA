@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Glassmorphism Focused - Vibrant Glow -->
+    
+    <!-- Colorful outer glow -->
+    <item android:top="2dp" android:left="2dp" android:right="2dp" android:bottom="5dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="110dp"
+                android:centerX="50%"
+                android:centerY="50%"
+                android:startColor="#251976D2"
+                android:centerColor="#151976D2"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Frosted glass background -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="#FFFFFF"
+                android:centerColor="#FEFEFE"
+                android:endColor="#FCFCFC" />
+        </shape>
+    </item>
+
+    <!-- Blue tinted highlight -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="#121976D2"
+                android:centerColor="#061976D2"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Vibrant blue border -->
+    <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <stroke 
+                android:width="1.2dp" 
+                android:color="#661976D2" />
+        </shape>
+    </item>
+
+</layer-list>

@@ -1,0 +1,217 @@
+package com.gridee.parking.ui.auth
+
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import com.gridee.parking.databinding.ActivityLoginBinding
+import com.gridee.parking.ui.MainActivity
+
+/**
+ * Example implementation of JWT-based login using JwtLoginViewModel
+ * 
+ * This is a reference implementation showing how to integrate JWT authentication
+ * into your login screen.
+ * 
+ * Features:
+ * - JWT token-based authentication
+ * - Automatic token storage
+ * - Error handling and validation
+ * - Auto-login check on startup
+ * 
+ * Usage:
+ * 1. Copy this code to your actual LoginActivity
+ * 2. Update binding references to match your layout
+ * 3. Customize navigation and UI as needed
+ */
+class JwtLoginActivityExample : AppCompatActivity() {
+    
+    // Use JwtLoginViewModel instead of regular LoginViewModel
+    private val viewModel: JwtLoginViewModel by viewModels()
+    private lateinit var binding: ActivityLoginBinding
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
+        // Check if user is already logged in
+        checkExistingAuthentication()
+        
+        setupObservers()
+        setupClickListeners()
+    }
+    
+    /**
+     * Check if user is already authenticated with valid JWT token
+     * If yes, skip login and go directly to main screen
+     */
+    private fun checkExistingAuthentication() {
+        if (viewModel.checkAuthentication(this)) {
+            // User already has valid JWT token
+            Toast.makeText(this, "Already logged in", Toast.LENGTH_SHORT).show()
+            navigateToMain()
+        }
+    }
+    
+    /**
+     * Setup observers for authentication state changes
+     */
+    private fun setupObservers() {
+        // Observe authentication state
+        viewModel.authState.observe(this) { state ->
+            when (state) {
+                is JwtAuthState.Idle -> {
+                    showLoading(false)
+                }
+                
+                is JwtAuthState.Loading -> {
+                    showLoading(true)
+                    clearErrors()
+                }
+                
+                is JwtAuthState.Success -> {
+                    showLoading(false)
+                    
+                    // Show success message
+                    val authResponse = state.authResponse
+                    Toast.makeText(
+                        this,
+                        "Welcome back, ${authResponse.name}!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    
+                    // Navigate to main screen
+                    navigateToMain()
+                }
+                
+                is JwtAuthState.Error -> {
+                    showLoading(false)
+                    showError(state.message)
+                }
+                
+                is JwtAuthState.LoggedOut -> {
+                    // User logged out, stay on login screen
+                    showLoading(false)
+                }
+            }
+        }
+        
+        // Observe validation errors
+        viewModel.validationErrors.observe(this) { errors ->
+            errors["emailOrPhone"]?.let { 
+                binding.emailInputLayout.error = it 
+            }
+            errors["password"]?.let { 
+                binding.passwordInputLayout.error = it 
+            }
+        }
+    }
+    
+    /**
+     * Setup click listeners for buttons
+     */
+    private fun setupClickListeners() {
+        // Login button
+        binding.loginButton.setOnClickListener {
+            val emailOrPhone = binding.emailEditText.text.toString()
+            val password = binding.passwordEditText.text.toString()
+            
+            // Call JWT login
+            viewModel.loginWithJwt(this, emailOrPhone, password)
+        }
+        
+        // Register button (navigate to registration)
+        binding.registerButton.setOnClickListener {
+            // Navigate to registration screen
+            // startActivity(Intent(this, RegistrationActivity::class.java))
+        }
+        
+        // Forgot password button
+        binding.forgotPasswordButton.setOnClickListener {
+            // Navigate to forgot password screen
+            // startActivity(Intent(this, ForgotPasswordActivity::class.java))
+        }
+    }
+    
+    /**
+     * Navigate to main screen after successful login
+     */
+    private fun navigateToMain() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+    
+    /**
+     * Show/hide loading indicator
+     */
+    private fun showLoading(show: Boolean) {
+        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
+        binding.loginButton.isEnabled = !show
+        binding.emailEditText.isEnabled = !show
+        binding.passwordEditText.isEnabled = !show
+    }
+    
+    /**
+     * Show error message
+     */
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+    
+    /**
+     * Clear input field errors
+     */
+    private fun clearErrors() {
+        binding.emailInputLayout.error = null
+        binding.passwordInputLayout.error = null
+    }
+}
+
+/* ============================================
+   MIGRATION CHECKLIST
+   ============================================
+   
+   □ Replace LoginViewModel with JwtLoginViewModel
+   □ Update imports
+   □ Add checkExistingAuthentication() call in onCreate
+   □ Update state handling from LoginState to JwtAuthState
+   □ Update method call from loginUser() to loginWithJwt()
+   □ Test login flow
+   □ Test auto-login on app restart
+   □ Test error handling
+   □ Test logout and re-login
+   
+   ============================================
+*/
+
+/* ============================================
+   KEY DIFFERENCES FROM OLD LOGIN
+   ============================================
+   
+   1. ViewModel:
+      OLD: LoginViewModel with LoginState
+      NEW: JwtLoginViewModel with JwtAuthState
+   
+   2. Login Method:
+      OLD: viewModel.loginUser(email, password)
+      NEW: viewModel.loginWithJwt(context, email, password)
+   
+   3. Success State:
+      OLD: LoginState.Success(user: User)
+      NEW: JwtAuthState.Success(authResponse: AuthResponse)
+   
+   4. Token Management:
+      OLD: Manual SharedPreferences storage
+      NEW: Automatic via JwtTokenManager
+   
+   5. Auto-Login:
+      OLD: Check SharedPreferences for user data
+      NEW: viewModel.checkAuthentication(context)
+   
+   ============================================
+*/

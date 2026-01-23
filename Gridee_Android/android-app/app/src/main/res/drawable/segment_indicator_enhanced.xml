@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="2dp" android:start="2dp" android:end="2dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="@color/segment_glow"
+                android:endColor="#00667EEA"
+                android:type="radial"
+                android:gradientRadius="20dp" />
+            <corners android:radius="22dp" />
+        </shape>
+    </item>
+    
+    <item android:top="1dp" android:start="1dp" android:end="1dp" android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/segment_indicator_shadow" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+    
+    <item android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#FFFFFF"
+                android:centerColor="#FAFBFC"
+                android:endColor="#F5F7FA"
+                android:angle="135"
+                android:type="linear" />
+            <corners android:radius="18dp" />
+            <stroke 
+                android:width="0.5dp" 
+                android:color="#E8EAED" />
+        </shape>
+    </item>
+    
+    <item android:inset="1dp" android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#30FFFFFF"
+                android:centerColor="#10FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="135"
+                android:type="linear" />
+            <corners android:radius="17dp" />
+        </shape>
+    </item>
+</layer-list>

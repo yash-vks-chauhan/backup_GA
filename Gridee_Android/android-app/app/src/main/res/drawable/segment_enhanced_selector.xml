@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/segment_hover" />
+                    <corners android:radius="12dp" />
+                </shape>
+            </item>
+            <item android:inset="2dp">
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:startColor="#10667EEA"
+                        android:endColor="#00667EEA"
+                        android:angle="135" />
+                    <corners android:radius="10dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</selector>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvParkingName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:fontFamily="sans-serif-medium"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="14dp"
+        android:text="Parking Lot Name"
+        android:textColor="#111827"
+        android:textSize="15sp" />
+    
+    <!-- Separator (Optional, maybe for clean look keep it invisible or very subtle) -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F3F4F6"
+        android:layout_marginHorizontal="16dp" 
+        android:visibility="gone"/>
+
+</LinearLayout>

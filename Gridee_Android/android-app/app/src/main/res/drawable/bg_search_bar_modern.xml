@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Apple-style Clean Glass Morphism -->
+    <item>
+        <layer-list>
+            <!-- Frosted glass background - Apple translucent -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="28dp" />
+                    <solid android:color="#CCFFFFFF" />
+                </shape>
+            </item>
+            
+            <!-- Glass shine overlay -->
+            <item android:top="0dp" android:bottom="50dp">
+                <shape android:shape="rectangle">
+                    <corners 
+                        android:topLeftRadius="28dp" 
+                        android:topRightRadius="28dp"
+                        android:bottomLeftRadius="2dp"
+                        android:bottomRightRadius="2dp" />
+                    <gradient
+                        android:type="linear"
+                        android:angle="90"
+                        android:startColor="#18FFFFFF"
+                        android:centerColor="#08FFFFFF"
+                        android:endColor="#00FFFFFF" />
+                </shape>
+            </item>
+            
+            <!-- Glass border -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="28dp" />
+                    <stroke 
+                        android:width="0.5dp" 
+                        android:color="#30000000" />
+                </shape>
+            </item>
+            
+            <!-- Inner highlight ring -->
+            <item android:inset="0.5dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="27.5dp" />
+                    <stroke 
+                        android:width="0.5dp" 
+                        android:color="#40FFFFFF" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    
+</layer-list>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Focus ring for accessibility and TV navigation -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Focus ring background -->
+    <item>
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="2dp"
+                android:color="#4D81C7FF" />
+            <corners android:radius="27dp" />
+        </shape>
+    </item>
+    
+    <!-- Inner glow for focus ring -->
+    <item android:top="2dp" android:left="2dp" android:right="2dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="1dp"
+                android:color="#6681C7FF" />
+            <corners android:radius="25dp" />
+        </shape>
+    </item>
+    
+</layer-list>

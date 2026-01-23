@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    
+    <style name="Theme.Gridee" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">#000000</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#F5F5F5</item>
+        <item name="colorOnPrimaryContainer">#000000</item>
+        
+        <item name="colorSecondary">#526350</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">#D4E8D1</item>
+        <item name="colorOnSecondaryContainer">#0F1F0F</item>
+        
+        <item name="colorSurface">@color/background_primary</item>
+        <item name="colorOnSurface">#000000</item>
+        <item name="colorSurfaceVariant">@color/background_card</item>
+        <item name="colorOnSurfaceVariant">#666666</item>
+        
+        <item name="colorError">#F44336</item>
+        <item name="colorOnError">#FFFFFF</item>
+        
+        <!-- Default font family -->
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="fontFamily">sans-serif</item>
+        
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        
+        <!-- Enable edge-to-edge -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:fitsSystemWindows">false</item>
+        
+        <!-- Prevent navigation bar contrast enforcement (API 29+) -->
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        
+        <!-- Force Navigation Drawer to be square -->
+        <item name="drawerLayoutCornerSize">0dp</item>
+    </style>
+    
+    <style name="Theme.Gridee.NoActionBar" parent="Theme.Gridee">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Gridee.Search" parent="Theme.Gridee.NoActionBar">
+        <item name="android:windowContentTransitions">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+    
+    <!-- Login/Auth Theme with System UI -->
+    <style name="Theme.Gridee.Auth" parent="Theme.Gridee.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+    
+    <!-- Bottom Sheet Dialog Theme -->
+    <style name="BottomSheetDialogTheme" parent="Theme.Material3.DayNight.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.4</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:navigationBarDividerColor" tools:targetApi="p">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="bottomSheetDragHandleStyle">@null</item>
+    </style>
+    
+    <style name="BottomSheetStyle" parent="Widget.Material3.BottomSheet">
+        <item name="shapeAppearanceOverlay">@style/BottomSheetShapeAppearance</item>
+        <item name="android:elevation">8dp</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+    </style>
+    
+    <style name="BottomSheetShapeAppearance" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">40dp</item>
+        <item name="cornerSizeTopRight">40dp</item>
+    </style>
+
+    <style name="BottomSheetSpringAnimation">
+        <item name="android:windowEnterAnimation">@anim/bottom_sheet_enter</item>
+        <item name="android:windowExitAnimation">@anim/bottom_sheet_exit</item>
+    </style>
+
+    <!-- Collapsing Toolbar Text Styles -->
+    <style name="ExpandedTitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">32sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="CollapsedTitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <!-- Popup Menu Style with White Background -->
+    <style name="PopupMenuStyle" parent="Widget.Material3.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+        <item name="android:popupElevation">8dp</item>
+        <item name="android:overlapAnchor">false</item>
+    </style>
+    
+    <!-- Popup Menu Theme with forced light colors -->
+    <style name="PopupMenuTheme" parent="Theme.Material3.Light">
+        <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+        <item name="android:textColorPrimary">#000000</item>
+        <item name="android:textColorSecondary">#666666</item>
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorOnSurface">#000000</item>
+        <item name="android:colorBackground">#FFFFFF</item>
+        <item name="android:textColor">#000000</item>
+        <item name="android:overlapAnchor">false</item>
+        <item name="android:dropDownSelector">@android:color/transparent</item>
+    </style>
+
+    <style name="ShapeAppearance.Gridee.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+    
+    <!-- Custom Material Date Picker Theme - White & Grey with Black Buttons -->
+    <style name="CustomDatePickerTheme" parent="ThemeOverlay.Material3.MaterialCalendar">
+        <!-- Primary color (selected date) - Black -->
+        <item name="colorPrimary">#1A1A1A</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        
+        <!-- Container colors - White & Light Grey -->
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorOnSurface">#1A1A1A</item>
+        <item name="colorSurfaceVariant">#F5F5F5</item>
+        <item name="colorOnSurfaceVariant">#666666</item>
+        
+        <!-- Header background - Light Grey -->
+        <item name="colorPrimaryContainer">#F8F8F8</item>
+        <item name="colorOnPrimaryContainer">#1A1A1A</item>
+        
+        <!-- Secondary colors for today indicator -->
+        <item name="colorSecondary">#757575</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">#E8E8E8</item>
+        <item name="colorOnSecondaryContainer">#424242</item>
+        
+        <!-- Outline color - Grey border -->
+        <item name="colorOutline">#D0D0D0</item>
+        <item name="colorOutlineVariant">#E8E8E8</item>
+        
+        <!-- Background -->
+        <item name="android:colorBackground">#FFFFFF</item>
+        
+        <!-- Ripple color for date cells - Subtle black -->
+        <item name="colorControlHighlight">#1A000000</item>
+        
+        <!-- Button colors - Black for action buttons -->
+        <item name="materialButtonStyle">@style/Widget.DatePicker.BlackButton</item>
+        <item name="borderlessButtonStyle">@style/Widget.DatePicker.BlackTextButton</item>
+        
+        <!-- Smooth animations -->
+        <item name="android:windowEnterAnimation">@anim/date_picker_enter</item>
+        <item name="android:windowExitAnimation">@anim/date_picker_exit</item>
+        
+        <!-- Text appearance -->
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.DatePicker.Body</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.DatePicker.Body</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.DatePicker.Label</item>
+        
+        <!-- Shape and corners -->
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.DatePicker.MediumComponent</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.DatePicker.SmallComponent</item>
+    </style>
+    
+    <!-- Text Appearances for Date Picker -->
+    <style name="TextAppearance.DatePicker.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">#1A1A1A</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+    
+    <style name="TextAppearance.DatePicker.Label" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textColor">#666666</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    
+    <!-- Shape Appearances for Date Picker -->
+    <style name="ShapeAppearance.DatePicker.MediumComponent" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+    
+    <style name="ShapeAppearance.DatePicker.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    
+    <!-- Black Button Styles for Date Picker -->
+    <style name="Widget.DatePicker.BlackButton" parent="Widget.Material3.Button">
+        <item name="backgroundTint">#1A1A1A</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="rippleColor">#33000000</item>
+    </style>
+    
+    <style name="Widget.DatePicker.BlackTextButton" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">#1A1A1A</item>
+        <item name="rippleColor">#1A000000</item>
+    </style>
+    
+    <!-- Date Picker Dialog Animation Style -->
+    <style name="DatePickerDialogAnimation" parent="Animation.AppCompat.Dialog">
+        <item name="android:windowEnterAnimation">@anim/date_picker_enter</item>
+        <item name="android:windowExitAnimation">@anim/date_picker_exit</item>
+    </style>
+    
+    <style name="ShapeAppearance.Gridee.Sidebar" parent="ShapeAppearance.Material3.Corner.None">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
+    
+</resources>

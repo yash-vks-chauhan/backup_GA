@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- iOS-style Pressed State - Subtle Gray Overlay -->
+    <item>
+        <layer-list>
+
+            <!-- Soft shadow for depth -->
+            <item android:top="1dp" android:left="0.5dp" android:right="0.5dp" android:bottom="3dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="16dp" />
+                    <gradient
+                        android:type="radial"
+                        android:gradientRadius="50dp"
+                        android:centerX="50%"
+                        android:centerY="50%"
+                        android:startColor="#18000000"
+                        android:endColor="#00000000" />
+                </shape>
+            </item>
+
+            <!-- Solid white base -->
+            <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="16dp" />
+                    <solid android:color="#FFFFFF" />
+                </shape>
+            </item>
+
+            <!-- Subtle gray overlay when pressed (iOS style) -->
+            <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="16dp" />
+                    <solid android:color="#08000000" />
+                </shape>
+            </item>
+
+            <!-- Border -->
+            <item android:top="0dp" android:left="0dp" android:right="0dp" android:bottom="2dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="16dp" />
+                    <stroke 
+                        android:width="0.5dp" 
+                        android:color="#18000000" />
+                </shape>
+            </item>
+
+        </layer-list>
+    </item>
+
+</layer-list>

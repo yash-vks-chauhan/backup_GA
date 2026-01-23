@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Alternative Gradient Options -->
+<!-- Copy and rename to wallet_card_gradient.xml to use any of these -->
+
+<resources>
+    
+    <!-- OPTION 1: Professional Blue (Current) -->
+    <!-- 
+    <gradient
+        android:angle="135"
+        android:startColor="#1976D2"
+        android:centerColor="#1565C0"
+        android:endColor="#0D47A1"
+        android:type="linear" />
+    -->
+    
+    <!-- OPTION 2: Teal to Blue (Modern) -->
+    <!-- 
+    <gradient
+        android:angle="135"
+        android:startColor="#00ACC1"
+        android:centerColor="#0288D1"
+        android:endColor="#01579B"
+        android:type="linear" />
+    -->
+    
+    <!-- OPTION 3: Purple to Blue (Premium) -->
+    <!-- 
+    <gradient
+        android:angle="135"
+        android:startColor="#5E35B1"
+        android:centerColor="#3949AB"
+        android:endColor="#1976D2"
+        android:type="linear" />
+    -->
+    
+    <!-- OPTION 4: Green Success (Eco-friendly) -->
+    <!-- 
+    <gradient
+        android:angle="135"
+        android:startColor="#43A047"
+        android:centerColor="#388E3C"
+        android:endColor="#2E7D32"
+        android:type="linear" />
+    -->
+    
+    <!-- OPTION 5: Dark Elegant -->
+    <!-- 
+    <gradient
+        android:angle="135"
+        android:startColor="#37474F"
+        android:centerColor="#263238"
+        android:endColor="#1B1B1B"
+        android:type="linear" />
+    -->
+    
+    <!-- OPTION 6: Orange to Red (Energetic) -->
+    <!-- 
+    <gradient
+        android:angle="135"
+        android:startColor="#FB8C00"
+        android:centerColor="#F4511E"
+        android:endColor="#D84315"
+        android:type="linear" />
+    -->
+    
+</resources>

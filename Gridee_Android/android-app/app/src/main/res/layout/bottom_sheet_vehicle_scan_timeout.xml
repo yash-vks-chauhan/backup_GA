@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="20dp"
+    android:paddingBottom="28dp"
+    android:background="@drawable/bottom_sheet_background">
+
+    <ImageView
+        android:id="@+id/iv_timeout_icon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/ic_pending_status"
+        android:contentDescription="@string/vehicle_scan_timeout_title" />
+
+    <TextView
+        android:id="@+id/tv_timeout_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/vehicle_scan_timeout_title"
+        android:textAlignment="center"
+        android:textColor="@color/scanner_text_primary"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/tv_timeout_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/vehicle_scan_timeout_message"
+        android:textAlignment="center"
+        android:textColor="@color/scanner_text_secondary"
+        android:textSize="14sp"
+        android:fontFamily="sans-serif"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/tv_timeout_tip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/vehicle_scan_hint_move_closer"
+        android:textAlignment="center"
+        android:textColor="@color/scanner_text_primary"
+        android:textSize="13sp"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginTop="12dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_timeout_retry"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/vehicle_scan_retry_button"
+        app:cornerRadius="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_timeout_manual"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@android:string/cancel"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/tv_timeout_manual_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/vehicle_sheet_manual_label"
+        android:textColor="@color/scanner_text_primary"
+        android:textSize="14sp"
+        android:layout_marginTop="20dp"
+        android:fontFamily="sans-serif-medium" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/timeout_manual_input_container"
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/input_timeout_manual_plate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/vehicle_sheet_manual_hint"
+            android:inputType="textCapCharacters" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_timeout_manual_submit"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/vehicle_sheet_manual_submit"
+        android:layout_marginTop="6dp" />
+
+</LinearLayout>

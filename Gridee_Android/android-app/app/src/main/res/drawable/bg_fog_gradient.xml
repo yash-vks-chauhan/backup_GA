@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base Gradient: Smooth fade out -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="#F5F5F5"
+                android:centerColor="#D9F5F5F5"
+                android:endColor="#00F5F5F5"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Top Densitizer: Keeps the top part richer for longer -->
+    <item android:bottom="80dp">
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="#F5F5F5"
+                android:endColor="#00F5F5F5"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>

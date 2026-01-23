@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginTop="16dp">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilVehicleAdditional"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxStrokeColor="#E5E7EB"
+        app:boxStrokeWidth="1dp"
+        app:hintEnabled="false"
+        app:endIconDrawable="@drawable/ic_close"
+        app:endIconMode="custom">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etVehicleAdditional"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/input_background"
+            android:hint="Enter vehicle number"
+            android:inputType="textCapCharacters"
+            android:maxLines="1"
+            android:paddingStart="16dp"
+            android:paddingEnd="48dp"
+            android:textColor="#000000"
+            android:textColorHint="#9CA3AF"
+            android:textSize="16sp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>

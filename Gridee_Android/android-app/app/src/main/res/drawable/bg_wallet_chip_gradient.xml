@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Main Surface with soft gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#FFFFFF"
+                android:endColor="#F1F5F9"
+                android:type="linear" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    
+    <!-- Top "Inner Highlight" to mimic rim light - elegant polish -->
+    <item android:top="0.5dp" android:left="0.5dp" android:right="0.5dp" android:bottom="0dp">
+         <shape android:shape="rectangle">
+            <stroke 
+                android:width="0.5dp" 
+                android:color="#80FFFFFF" /> <!-- 50% White top edge -->
+            <corners android:radius="28dp" />
+             <solid android:color="@android:color/transparent"/>
+        </shape>
+    </item>
+</layer-list>

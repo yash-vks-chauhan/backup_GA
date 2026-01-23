@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:interpolator/decelerate_quad">
+    
+    <!-- Smooth fade in -->
+    <alpha
+        android:duration="300"
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0" />
+    
+    <!-- Gentle slide up from below -->
+    <translate
+        android:duration="300"
+        android:fromYDelta="5%"
+        android:toYDelta="0%" />
+    
+    <!-- Subtle scale in -->
+    <scale
+        android:duration="300"
+        android:fromXScale="0.97"
+        android:fromYScale="0.97"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="1.0"
+        android:toYScale="1.0" />
+    
+</set>

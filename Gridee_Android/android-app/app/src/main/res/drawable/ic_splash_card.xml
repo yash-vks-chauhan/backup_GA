@@ -1,0 +1,56 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- Road -->
+    <path
+        android:fillColor="#303030"
+        android:pathData="M0,80 L120,80 L120,100 L0,100 Z" />
+    
+    <!-- Road lines -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M10,89 L25,89 L25,91 L10,91 Z" />
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M35,89 L50,89 L50,91 L35,91 Z" />
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M60,89 L75,89 L75,91 L60,91 Z" />
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M85,89 L100,89 L100,91 L85,91 Z" />
+    
+    <!-- Credit Card -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,35 L90,35 L90,70 L30,70 Z
+                     M30,35 Q28,35 28,37 L28,68 Q28,70 30,70
+                     L90,70 Q92,70 92,68 L92,37 Q92,35 90,35 Z" />
+    
+    <!-- Card magnetic strip -->
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M30,45 L90,45 L90,52 L30,52 Z" />
+    
+    <!-- Card chip -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M38,57 L50,57 L50,65 L38,65 Z" />
+    
+    <!-- Card numbers -->
+    <path
+        android:fillColor="#757575"
+        android:pathData="M55,58 L58,58 L58,60 L55,60 Z" />
+    <path
+        android:fillColor="#757575"
+        android:pathData="M60,58 L63,58 L63,60 L60,60 Z" />
+    <path
+        android:fillColor="#757575"
+        android:pathData="M65,58 L68,58 L68,60 L65,60 Z" />
+    <path
+        android:fillColor="#757575"
+        android:pathData="M70,58 L73,58 L73,60 L70,60 Z" />
+</vector>

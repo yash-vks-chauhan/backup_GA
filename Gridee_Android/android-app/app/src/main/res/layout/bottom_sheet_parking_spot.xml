@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_bottom_sheet_universal"
+    android:fitsSystemWindows="false">
+
+    <!-- Drag Handle -->
+    <View
+        android:id="@+id/drag_handle"
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/handle_pill_minimal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Close Button -->
+    <ImageView
+        android:id="@+id/btn_close"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/bg_close_circle"
+        android:contentDescription="Close"
+        android:padding="9dp"
+        android:src="@drawable/ic_close"
+        app:tint="#5C5C5C"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Header Section -->
+    <LinearLayout
+        android:id="@+id/header_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="vertical"
+        android:gravity="start"
+        app:layout_constraintEnd_toStartOf="@id/btn_close"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/drag_handle">
+
+        <TextView
+            android:id="@+id/tvParkingName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter_bold"
+            android:text="Phoenix Mall"
+            android:textColor="#1A1A1A"
+            android:textSize="26sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Combined Subtitle: Address • Rate -->
+        <TextView
+            android:id="@+id/tvParkingMeta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:fontFamily="@font/inter_medium"
+            android:text="Viman Nagar • ₹150/hr"
+            android:textColor="#6B7280"
+            android:textSize="15sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+    
+    <!-- Hidden legacy fields to prevent crashes if binding references them directly -->
+    <TextView android:id="@+id/tvParkingAddress" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+    <TextView android:id="@+id/tvHourlyRate" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="32dp"
+        android:clipToPadding="false"
+        android:paddingBottom="100dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/bookingSummary"
+        app:layout_constraintTop_toBottomOf="@id/header_container">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp">
+
+            <!-- Title for Section 1 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:fontFamily="@font/inter_bold"
+                android:letterSpacing="0.05"
+                android:text="SCHEDULE"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp" 
+                android:layout_marginStart="4dp"/>
+
+            <!-- Schedule Container -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_container_outline_28"
+                android:padding="20dp"
+                android:layout_marginBottom="32dp">
+
+                <!-- Connector Line -->
+                <View
+                    android:id="@+id/timeline_connector"
+                    android:layout_width="2dp"
+                    android:layout_height="0dp"
+                    android:background="#E5E7EB"
+                    app:layout_constraintTop_toBottomOf="@id/iv_start_icon"
+                    app:layout_constraintBottom_toTopOf="@id/iv_end_icon"
+                    app:layout_constraintStart_toStartOf="@id/iv_start_icon"
+                    app:layout_constraintEnd_toEndOf="@id/iv_start_icon"
+                    android:layout_marginVertical="4dp"/>
+
+                <!-- Check In Item -->
+                <ImageView
+                    android:id="@+id/iv_start_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_start_time"
+                    app:tint="#111827"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:layout_marginTop="8dp"/>
+
+                <LinearLayout
+                    android:id="@+id/cardStartTime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:orientation="vertical"
+                    android:background="?attr/selectableItemBackground"
+                    app:layout_constraintStart_toEndOf="@id/iv_start_icon"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_medium"
+                        android:text="Start Time"
+                        android:textColor="#6B7280"
+                        android:textSize="13sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="2dp">
+                        
+                        <TextView
+                            android:id="@+id/tvStartTime"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/inter_bold"
+                            android:textColor="#111827"
+                            android:textSize="18sp"
+                            tools:text="Today, 10:00 AM" />
+                            
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="#D1D5DB" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Check Out Item -->
+                <ImageView
+                    android:id="@+id/iv_end_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_end_time"
+                    app:tint="#111827"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/cardStartTime"
+                    android:layout_marginTop="24dp"/>
+
+                <LinearLayout
+                    android:id="@+id/cardEndTime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:orientation="vertical"
+                    android:background="?attr/selectableItemBackground"
+                    app:layout_constraintStart_toEndOf="@id/iv_end_icon"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/iv_end_icon">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_medium"
+                        android:text="End Time"
+                        android:textColor="#6B7280"
+                        android:textSize="13sp" />
+
+                     <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="2dp">
+
+                        <TextView
+                            android:id="@+id/tvEndTime"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/inter_bold"
+                            android:textColor="#111827"
+                            android:textSize="18sp"
+                            tools:text="Today, 12:00 PM" />
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="#D1D5DB" />
+                    </LinearLayout>
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/tvBookingNotice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/bg_rounded_error_light"
+                android:fontFamily="@font/inter_medium"
+                android:padding="12dp"
+                android:textColor="#DC2626"
+                android:textSize="13sp"
+                android:visibility="gone"
+                tools:text="Booking notice text" />
+
+            <!-- Title for Section 2 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:fontFamily="@font/inter_bold"
+                android:letterSpacing="0.05"
+                android:text="DETAILS"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp" 
+                android:layout_marginStart="4dp"/>
+
+            <!-- Details Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_container_outline_28"
+                android:padding="20dp">
+
+                <!-- Vehicle Selection -->
+                <LinearLayout
+                    android:id="@+id/cardVehicleSelection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="24dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_car_outlined"
+                        app:tint="#111827" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_medium"
+                            android:text="Vehicle"
+                            android:textColor="#6B7280"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvSelectedVehicle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:fontFamily="@font/inter_bold"
+                            android:textColor="#111827"
+                            android:textSize="16sp"
+                            tools:text="MH 12 AB 1234" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="#D1D5DB" />
+                </LinearLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F3F4F6"
+                    android:layout_marginBottom="24dp"
+                    android:layout_marginStart="40dp"/>
+
+                <!-- Wallet -->
+                <LinearLayout
+                    android:id="@+id/cardWallet"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_wallet"
+                        app:tint="#111827" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_medium"
+                            android:text="Payment Method"
+                            android:textColor="#6B7280"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvWalletBalance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:fontFamily="@font/inter_bold"
+                            android:textColor="#111827"
+                            android:textSize="16sp"
+                            tools:text="Wallet (₹150.00)" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/btnAddMoney"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_bold"
+                        android:text="Add Funds"
+                        android:textColor="#1A1A1A"
+                        android:textSize="13sp"
+                        android:padding="8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"/>
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Footer -->
+    <LinearLayout
+        android:id="@+id/bookingSummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_footer_rounded_top"
+        android:elevation="15dp"
+        android:outlineAmbientShadowColor="#1A000000"
+        android:outlineSpotShadowColor="#40000000"
+        android:outlineProvider="background"
+        android:orientation="vertical"
+        android:padding="24dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_medium"
+                    android:text="Total"
+                    android:textColor="#6B7280"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvTotalPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_bold"
+                    android:textColor="#1A1A1A"
+                    android:textSize="24sp"
+                    tools:text="₹150.00" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_medium"
+                android:gravity="bottom"
+                android:textColor="#6B7280"
+                android:textSize="15sp"
+                tools:text="2h" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:background="@drawable/bg_slider_track"
+            android:clipChildren="false">
+
+            <TextView
+                android:id="@+id/tvSlideToBook"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Slide to Book"
+                android:textColor="#FFFFFF"
+                android:fontFamily="@font/inter_bold"
+                android:textSize="18sp"
+                android:letterSpacing="0.05"
+                android:alpha="0.8" />
+
+            <SeekBar
+                android:id="@+id/sbSlideToBook"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:thumb="@drawable/thumb_slider"
+                android:progressDrawable="@android:color/transparent"
+                android:splitTrack="false"
+                android:max="100"
+                android:progress="0"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:thumbOffset="0dp" />
+
+        </FrameLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

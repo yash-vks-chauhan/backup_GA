@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1. The 3D Base/Shadow (Visible at the bottom to create depth) -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#E5E7EB"/> <!-- Cool Grey 200 for realistic depth -->
+            <corners android:radius="100dp"/>
+        </shape>
+    </item>
+
+    <!-- 2. The Main Ceramic Body (Shifted up to reveal base) -->
+    <item android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <!-- Subtle gradient to mimic extensive polishing -->
+            <gradient
+                android:angle="270"
+                android:startColor="#FFFFFF"
+                android:endColor="#F3F4F6"
+                android:type="linear"/> <!-- White to Cool Grey 50 -->
+            <corners android:radius="100dp"/>
+        </shape>
+    </item>
+
+    <!-- 3. Specular Highlight (The "Glossy" top reflection) -->
+    <item android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#CCFFFFFF"
+                android:endColor="#00FFFFFF"
+                android:centerY="0.5"
+                android:type="linear"/>
+            <corners android:radius="100dp"/>
+            <!-- Subtle inner rim light -->
+            <stroke android:width="0.5dp" android:color="#80FFFFFF"/>
+        </shape>
+    </item>
+
+</layer-list>

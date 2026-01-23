@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Enhanced shadow with multiple layers for ultra-premium depth -->
+    <item android:top="3dp" android:left="2dp" android:right="2dp" android:bottom="5dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#25000000" />
+            <corners android:radius="22dp" />
+        </shape>
+    </item>
+    
+    <item android:top="2dp" android:left="1dp" android:right="1dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#15000000" />
+            <corners android:radius="23dp" />
+        </shape>
+    </item>
+    
+    <!-- Main ultra-white background -->
+    <item android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+            <corners android:radius="21dp" />
+            <stroke
+                android:width="1dp"
+                android:color="#E0E0E5" />
+        </shape>
+    </item>
+    
+    <!-- Premium glass effect highlight -->
+    <item android:bottom="3dp" android:top="0dp" android:left="3dp" android:right="3dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#30FFFFFF"
+                android:centerColor="#15FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="90" />
+            <corners android:radius="19dp" />
+        </shape>
+    </item>
+    
+    <!-- Subtle inner glow for luxury feel -->
+    <item android:bottom="3dp" android:top="16dp" android:left="6dp" android:right="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#10007AFF" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+</layer-list>

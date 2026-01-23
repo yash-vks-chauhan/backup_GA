@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Neumorphic circular button - minimal soft shadow -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer shadow (bottom/right) for depth -->
+    <item
+        android:top="0dp"
+        android:left="0dp"
+        android:right="6dp"
+        android:bottom="6dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/scanner_v2_shadow_outer" />
+        </shape>
+    </item>
+    
+    <!-- Main surface - ghost white circle -->
+    <item
+        android:top="0dp"
+        android:left="0dp"
+        android:right="6dp"
+        android:bottom="6dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/scanner_v2_ghost_white" />
+        </shape>
+    </item>
+    
+    <!-- Top highlight - subtle white edge -->
+    <item
+        android:top="0dp"
+        android:left="0dp"
+        android:right="6dp"
+        android:bottom="6dp">
+        <shape android:shape="oval">
+            <stroke
+                android:width="1dp"
+                android:color="@color/scanner_v2_highlight" />
+        </shape>
+    </item>
+    
+    <!-- Inner shadow (top/left) for softness -->
+    <item
+        android:top="1dp"
+        android:left="1dp"
+        android:right="7dp"
+        android:bottom="7dp">
+        <shape android:shape="oval">
+            <stroke
+                android:width="0.5dp"
+                android:color="@color/scanner_v2_shadow_inner" />
+        </shape>
+    </item>
+</layer-list>

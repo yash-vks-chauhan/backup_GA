@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- State list for segment backgrounds with focus support -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Focused state (keyboard/TV) -->
+    <item android:state_focused="true">
+        <layer-list>
+            <!-- Focus ring -->
+            <item android:top="-2dp" android:left="-2dp" android:right="-2dp" android:bottom="-2dp">
+                <shape android:shape="rectangle">
+                    <stroke
+                        android:width="2dp"
+                        android:color="#4D81C7FF" />
+                    <corners android:radius="27dp" />
+                </shape>
+            </item>
+            <!-- Transparent content area -->
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="25dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    
+    <!-- Pressed state -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#1A000000" />
+            <corners android:radius="25dp" />
+        </shape>
+    </item>
+    
+    <!-- Default state -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="25dp" />
+        </shape>
+    </item>
+    
+</selector>

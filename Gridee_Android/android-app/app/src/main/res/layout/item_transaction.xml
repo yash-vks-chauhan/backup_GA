@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="20dp"
+    android:background="@drawable/bg_transaction_item"
+    android:layout_marginBottom="16dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Icon Container -->
+    <FrameLayout
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/circle_background_grey_light">
+
+        <ImageView
+            android:id="@+id/iv_transaction_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/wallet_transaction_icon_content_description"
+            android:src="@drawable/ic_wallet_outline"
+            app:tint="#4B5563" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="20dp">
+
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wallet Top-up"
+            android:textColor="#111827"
+            android:textSize="16sp"
+            android:fontFamily="@font/inter_bold"
+            android:textStyle="normal" />
+
+        <com.gridee.parking.ui.views.RelativeTimeTextView
+            android:id="@+id/tv_timestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="8 hours ago"
+            android:textColor="#9CA3AF"
+            android:textSize="13sp"
+            android:fontFamily="@font/inter_medium" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end">
+
+        <LinearLayout
+            android:id="@+id/layout_status_pill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="6dp"
+            android:background="@drawable/status_soft_active">
+
+            <View
+                android:id="@+id/view_status_dot"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:background="@drawable/shape_status_dot_active"
+                android:layout_marginEnd="6dp"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/tv_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+₹100.00"
+                android:textColor="#059669"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="#F8F9FA"
+    android:foreground="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+
+        <!-- Vehicle Icon -->
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_car"
+            android:tint="#1976D2"
+            android:layout_marginEnd="16dp" />
+
+        <!-- Vehicle Info -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_vehicle_number"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="MH01AB1234"
+                android:textColor="#333333"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif" />
+
+            <TextView
+                android:id="@+id/tv_vehicle_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Personal Vehicle"
+                android:textColor="#666666"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Options Icon -->
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_options_vertical"
+            android:tint="#999999" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
