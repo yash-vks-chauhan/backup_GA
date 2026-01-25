@@ -43,9 +43,11 @@ class ParkingSpotSelectionActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = ParkingSpotSelectionAdapter { parkingSpot ->
-            onParkingSpotSelected(parkingSpot)
-        }
+        adapter = ParkingSpotSelectionAdapter(
+            onItemClick = { parkingSpot ->
+                onParkingSpotSelected(parkingSpot)
+            }
+        )
         
         binding.recyclerViewParkingSpots.layoutManager = LinearLayoutManager(this)
         binding.recyclerViewParkingSpots.adapter = adapter

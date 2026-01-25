@@ -2,9 +2,9 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/segmentContainer"
     android:layout_width="match_parent"
-    android:layout_height="60dp"
+    android:layout_height="match_parent"
     android:background="@drawable/bg_segment_track"
-    android:padding="2dp"
+    android:padding="3dp"
     android:clipToPadding="false"
     android:clipChildren="false">
 
@@ -14,6 +14,8 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:background="@drawable/bg_segment_slider"
+        android:elevation="2dp"
+        android:outlineProvider="background"
         android:visibility="invisible" />
 
     <!-- Text Labels Container -->
@@ -22,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:weightSum="3"
+        android:weightSum="2"
         android:elevation="4dp"
         android:translationZ="4dp">
 
@@ -42,10 +44,23 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="Active"
-                android:textSize="14sp"
-                android:textColor="@color/segment_text_selected"
-                android:fontFamily="sans-serif-medium"
+                android:textSize="15sp"
+                android:textColor="@color/segment_text_unselected"
+                android:fontFamily="@font/inter_medium"
                 android:letterSpacing="0.01" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Active"
+                android:textSize="15sp"
+                android:textColor="@color/segment_text_selected"
+                android:fontFamily="@font/inter_bold"
+                android:textStyle="bold"
+                android:letterSpacing="0.01"
+                android:alpha="0"
+                android:tag="textActiveBold" />
 
             <TextView
                 android:id="@+id/badgeActive"
@@ -82,53 +97,26 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="Pending"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textColor="@color/segment_text_unselected"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/inter_medium"
                 android:letterSpacing="0.01" />
 
             <TextView
-                android:id="@+id/badgePending"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/segment_badge_background"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:text="0"
-                android:textColor="@color/segment_badge_text"
-                android:textSize="10sp"
-                android:fontFamily="sans-serif-medium"
-                android:visibility="gone" />
-
-        </FrameLayout>
-
-        <!-- Completed Segment -->
-        <FrameLayout
-            android:id="@+id/segmentCompleted"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless">
-
-            <TextView
-                android:id="@+id/textCompleted"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Completed"
-                android:textSize="14sp"
-                android:textColor="@color/segment_text_unselected"
-                android:fontFamily="sans-serif-medium"
-                android:letterSpacing="0.01" />
+                android:text="Pending"
+                android:textSize="15sp"
+                android:textColor="@color/segment_text_selected"
+                android:fontFamily="@font/inter_bold"
+                android:textStyle="bold"
+                android:letterSpacing="0.01"
+                android:alpha="0"
+                android:tag="textPendingBold" />
 
             <TextView
-                android:id="@+id/badgeCompleted"
+                android:id="@+id/badgePending"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|end"

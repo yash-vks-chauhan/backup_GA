@@ -40,6 +40,9 @@ class LoginActivity : AppCompatActivity() {
             is GoogleSignInResult.Error -> {
                 viewModel.handleSignInError(signInResult.message)
             }
+            is GoogleSignInResult.Cancelled -> {
+                // User cancelled Google sign-in; no UI message needed.
+            }
         }
     }
     
@@ -152,6 +155,8 @@ class LoginActivity : AppCompatActivity() {
                         .putString("user_email", state.user.email)
                         .putString("user_phone", state.user.phone)
                         .putString("user_role", normalizedRole)
+                        .putString("parking_lot_id", state.user.parkingLotId)
+                        .putString("parking_lot_name", state.user.parkingLotName)
                         .putBoolean("is_logged_in", true)
                         .apply()
                     

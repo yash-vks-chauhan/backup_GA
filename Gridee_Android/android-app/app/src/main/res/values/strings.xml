@@ -84,7 +84,7 @@
     <string name="extend_booking">Extend Booking</string>
     <string name="current_end_time">Current end time: %s</string>
     <string name="select_new_end_time">Select new end time:</string>
-    <string name="additional_charges">Additional charges: ₹%1$d</string>
+    <string name="additional_charges">Charges: ₹%1$s</string>
     <string name="confirm_extend_title">Confirm Extension</string>
     <string name="confirm_extend_message">Are you sure you want to extend this booking?&#x0A;&#x0A;Additional charges will be deducted from your wallet.</string>
     <string name="booking_extended_success">Booking extended successfully!</string>
@@ -151,8 +151,13 @@
     <string name="op_submit_manual">Use Vehicle Number</string>
     <string name="op_back_to_scan">Back to Scanner</string>
     <string name="op_enter_vehicle_hint">e.g. MH 04 AB 1234</string>
-    <string name="op_spot_id_label">Spot ID (optional)</string>
-    <string name="op_spot_id_hint">e.g. SPOT-12</string>
+    <string name="op_spot_id_label">Selected spot</string>
+    <string name="op_spot_id_hint">Tap to choose a spot</string>
+    <string name="op_select_spot_title">Select parking spot</string>
+    <string name="op_select_spot_subtitle">Choose the spot you will manage for this session.</string>
+    <string name="op_select_spot_button">Select spot</string>
+    <string name="op_select_spot_empty">No parking spots found.</string>
+    <string name="op_select_spot_required">Please select a parking spot to continue.</string>
     <string name="op_enter_vehicle_error">Enter vehicle number</string>
     <string name="op_invalid_vehicle_error">Invalid vehicle number</string>
     <string name="op_switched_to">Switched to %1$s</string>

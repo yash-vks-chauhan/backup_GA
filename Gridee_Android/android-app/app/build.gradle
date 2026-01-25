@@ -25,8 +25,8 @@ android {
         applicationId "com.gridee.parking"
         minSdk 24
         targetSdk 35
-        versionCode 40
-        versionName "1.40"
+        versionCode 42
+        versionName "1.42"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -234,6 +234,8 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
                 // Set user info
                 binding.etName.setText(it.name)
                 binding.etEmail.setText(it.email)
+                binding.etEmail.isEnabled = false // Disable editing since it's used for login
+                binding.etEmail.alpha = 0.6f
                 binding.etPhone.setText(it.phone)
             }
         }

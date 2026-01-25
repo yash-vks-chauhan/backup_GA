@@ -8,13 +8,13 @@
         android:id="@+id/tvParkingName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
+        android:background="@drawable/bg_menu_item_apple"
         android:fontFamily="sans-serif-medium"
         android:paddingHorizontal="20dp"
         android:paddingVertical="14dp"
         android:text="Parking Lot Name"
         android:textColor="#111827"
-        android:textSize="15sp" />
+        android:textSize="16sp" />
     
     <!-- Separator (Optional, maybe for clean look keep it invisible or very subtle) -->
     <View

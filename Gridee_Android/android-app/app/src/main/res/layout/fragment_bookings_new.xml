@@ -67,44 +67,7 @@
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/button_filter"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:layout_marginEnd="24dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:contentDescription="@string/content_desc_filter_bookings"
-                        app:cardBackgroundColor="@color/white"
-                        app:cardCornerRadius="24dp"
-                        app:cardElevation="2dp"
-                        app:cardMaxElevation="4dp"
-                        app:cardUseCompatPadding="false"
-                        app:strokeWidth="1dp"
-                        app:strokeColor="#E5E7EB"
-                        app:rippleColor="#10000000"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintTop_toTopOf="parent">
 
-                        <FrameLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="?attr/selectableItemBackgroundBorderless">
-
-                            <ImageView
-                                android:id="@+id/icon_filter"
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_filter_search_new"
-                                android:tint="#6B7280"
-                                android:contentDescription="@string/content_desc_filter_bookings"
-                                android:scaleType="centerInside" />
-
-                        </FrameLayout>
-
-                    </com.google.android.material.card.MaterialCardView>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -125,7 +88,7 @@
             android:id="@+id/segmented_control_container"
             layout="@layout/segment_bookings_ios"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="56dp"
             android:layout_marginStart="24dp"
             android:layout_marginTop="24dp"
             android:layout_marginEnd="24dp"
@@ -188,7 +151,7 @@
                 android:layout_width="180dp"
                 android:layout_height="180dp"
                 android:src="@drawable/ic_bookings_filled"
-                app:tint="#E5E7EB"
+                app:tint="@color/segment_track_color"
                 android:layout_marginBottom="32dp"
                 android:contentDescription="@string/content_desc_no_bookings" />
 

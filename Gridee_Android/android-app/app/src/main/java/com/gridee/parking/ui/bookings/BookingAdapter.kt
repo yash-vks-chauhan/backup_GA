@@ -184,19 +184,29 @@ class BookingAdapter(
                 when (booking.status) {
                     BookingStatus.ACTIVE -> {
                         // Should not happen here given getItemViewType
-                        tvStatus.text = "ACTIVE"
+                        tvStatus.text = booking.statusLabelOverride ?: "ACTIVE"
                         tvStatus.setBackgroundResource(R.drawable.status_outlined_active)
                         tvStatus.setTextColor(android.graphics.Color.parseColor("#2E7D32"))
                     }
                     BookingStatus.PENDING -> {
-                        tvStatus.text = "PENDING"
+                        tvStatus.text = booking.statusLabelOverride ?: "PENDING"
                         tvStatus.setBackgroundResource(R.drawable.status_outlined_pending)
                         tvStatus.setTextColor(android.graphics.Color.parseColor("#E65100"))
                     }
                     BookingStatus.COMPLETED -> {
-                        tvStatus.text = "COMPLETED"
+                        tvStatus.text = booking.statusLabelOverride ?: "COMPLETED"
                         tvStatus.setBackgroundResource(R.drawable.status_outlined_completed)
                         tvStatus.setTextColor(android.graphics.Color.parseColor("#616161"))
+                    }
+                    BookingStatus.CANCELLED -> {
+                        tvStatus.text = booking.statusLabelOverride ?: "CANCELLED"
+                        tvStatus.setBackgroundResource(R.drawable.status_soft_cancelled) // Using soft for consistency or outlined if available
+                        tvStatus.setTextColor(android.graphics.Color.parseColor("#DC2626"))
+                    }
+                    BookingStatus.NO_SHOW -> {
+                        tvStatus.text = booking.statusLabelOverride ?: "NO SHOW"
+                        tvStatus.setBackgroundResource(R.drawable.status_soft_noshow) // Using soft for consistency or outlined if available
+                        tvStatus.setTextColor(android.graphics.Color.parseColor("#2563EB"))
                     }
                 }
             }

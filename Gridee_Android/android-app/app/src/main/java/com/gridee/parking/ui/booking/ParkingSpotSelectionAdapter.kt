@@ -11,7 +11,8 @@ import com.gridee.parking.data.model.ParkingSpot
 import com.gridee.parking.databinding.ItemParkingSpotSelectionBinding
 
 class ParkingSpotSelectionAdapter(
-    private val onItemClick: (ParkingSpot) -> Unit
+    private val onItemClick: (ParkingSpot) -> Unit,
+    private val allowUnavailableSelection: Boolean = false
 ) : ListAdapter<ParkingSpot, ParkingSpotSelectionAdapter.ParkingSpotViewHolder>(ParkingSpotDiffCallback()) {
 
     private var selectedSpotId: String? = null
@@ -71,33 +72,17 @@ class ParkingSpotSelectionAdapter(
                 val isSelected = parkingSpot.id == selectedSpotId
                 println("ParkingSpotAdapter: Binding spot ${parkingSpot.id}, selected: $isSelected (selectedSpotId: $selectedSpotId)")
                 
+                val hasAvailability = parkingSpot.available > 0
+                val isSelectable = allowUnavailableSelection || hasAvailability
+
                 // Set availability colors and selection state
-                if (parkingSpot.available > 0) {
+                if (hasAvailability) {
                     tvAvailability.setTextColor(
                         ContextCompat.getColor(itemView.context, R.color.primary_green)
                     )
                     tvStatus.setTextColor(
                         ContextCompat.getColor(itemView.context, R.color.primary_green)
                     )
-                    
-                    // Set radio button state
-                    val radioButton = binding.ivRadioButton
-                    radioButton.alpha = 1.0f // Ensure full opacity for available spots
-                    if (isSelected) {
-                        radioButton.setImageResource(R.drawable.ic_radio_button_checked)
-                        println("ParkingSpotAdapter: Applied radio checked to ${parkingSpot.id}")
-                    } else {
-                        radioButton.setImageResource(R.drawable.ic_radio_button_unchecked)
-                    }
-                    
-                    // Remove background styling - keep cards consistent
-                    cardSpot.setCardBackgroundColor(
-                        ContextCompat.getColor(itemView.context, android.R.color.white)
-                    )
-                    cardSpot.cardElevation = 2f
-                    
-                    root.isEnabled = true
-                    root.alpha = 1.0f
                 } else {
                     tvAvailability.setTextColor(
                         ContextCompat.getColor(itemView.context, R.color.error)
@@ -105,22 +90,31 @@ class ParkingSpotSelectionAdapter(
                     tvStatus.setTextColor(
                         ContextCompat.getColor(itemView.context, R.color.error)
                     )
-                    
-                    // Disable radio button for unavailable spots
-                    val radioButton = binding.ivRadioButton
-                    radioButton.setImageResource(R.drawable.ic_radio_button_unchecked)
-                    radioButton.alpha = 0.3f
-                    
-                    cardSpot.setCardBackgroundColor(
-                        ContextCompat.getColor(itemView.context, R.color.light_gray)
-                    )
-                    cardSpot.cardElevation = 1f
-                    root.isEnabled = false
-                    root.alpha = 0.6f
                 }
+
+                // Set radio button state
+                val radioButton = binding.ivRadioButton
+                radioButton.alpha = if (isSelectable) 1.0f else 0.3f
+                if (isSelected) {
+                    radioButton.setImageResource(R.drawable.ic_radio_button_checked)
+                    println("ParkingSpotAdapter: Applied radio checked to ${parkingSpot.id}")
+                } else {
+                    radioButton.setImageResource(R.drawable.ic_radio_button_unchecked)
+                }
+
+                // Background + enabled state
+                cardSpot.setCardBackgroundColor(
+                    ContextCompat.getColor(
+                        itemView.context,
+                        if (isSelectable) android.R.color.white else R.color.light_gray
+                    )
+                )
+                cardSpot.cardElevation = if (isSelectable) 2f else 1f
+                root.isEnabled = isSelectable
+                root.alpha = if (isSelectable) 1.0f else 0.6f
                 
-                // Click listener (only if available)
-                if (parkingSpot.available > 0) {
+                // Click listener (only if selectable)
+                if (isSelectable) {
                     root.setOnClickListener {
                         // Set new selection
                         setSelectedSpot(parkingSpot.id)
@@ -128,6 +122,8 @@ class ParkingSpotSelectionAdapter(
                         // Notify the callback
                         onItemClick(parkingSpot)
                     }
+                } else {
+                    root.setOnClickListener(null)
                 }
             }
         }

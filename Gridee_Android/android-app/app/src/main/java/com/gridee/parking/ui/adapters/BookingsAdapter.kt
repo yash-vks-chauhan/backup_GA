@@ -25,49 +25,69 @@ data class Booking(
     val status: BookingStatus,
     val bookingDate: String,
     val checkInTimestamp: Long = 0,
-    val checkOutTimestamp: Long = 0
+    val checkOutTimestamp: Long = 0,
+    val statusLabelOverride: String? = null
 ) : Serializable
 
 enum class BookingStatus : Serializable {
     ACTIVE,
     PENDING,
-    COMPLETED
+    COMPLETED,
+    CANCELLED,
+    NO_SHOW
 }
 
 class BookingsAdapter(
     private var bookings: List<Booking>,
-    private val onBookingClick: (Booking) -> Unit
+    private val onBookingClick: (Booking) -> Unit,
+    private val onExtendClick: (Booking) -> Unit,
+    private val useCompactHistory: Boolean = false
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         const val TYPE_ACTIVE_PASS = 1
         const val TYPE_DEFAULT = 2
+        const val TYPE_HISTORY = 3
         const val PAYLOAD_TIMER_UPDATE = "payload_timer_update"
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (bookings[position].status == BookingStatus.ACTIVE) {
+        val status = bookings[position].status
+        return if (status == BookingStatus.ACTIVE) {
             TYPE_ACTIVE_PASS
+        } else if (useCompactHistory) {
+            TYPE_HISTORY
         } else {
             TYPE_DEFAULT
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return if (viewType == TYPE_ACTIVE_PASS) {
-            val binding = ItemBookingActivePassBinding.inflate(
-                LayoutInflater.from(parent.context),
-                parent,
-                false
-            )
-            ActivePassViewHolder(binding)
-        } else {
-            val binding = ItemBookingBinding.inflate(
-                LayoutInflater.from(parent.context),
-                parent,
-                false
-            )
-            StandardBookingViewHolder(binding)
+        return when (viewType) {
+            TYPE_ACTIVE_PASS -> {
+                val binding = ItemBookingActivePassBinding.inflate(
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false
+                )
+                ActivePassViewHolder(binding)
+            }
+            TYPE_HISTORY -> {
+                val binding = com.gridee.parking.databinding.ItemBookingHistoryBinding.inflate(
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false
+                )
+                HistoryBookingViewHolder(binding)
+            }
+            else -> {
+                val binding = ItemBookingBinding.inflate(
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false
+                )
+                StandardBookingViewHolder(binding)
+            }
         }
     }
 
@@ -75,6 +95,7 @@ class BookingsAdapter(
         val booking = bookings[position]
         when (holder) {
             is ActivePassViewHolder -> holder.bind(booking)
+            is HistoryBookingViewHolder -> holder.bind(booking)
             is StandardBookingViewHolder -> holder.bind(booking)
         }
     }
@@ -105,6 +126,7 @@ class BookingsAdapter(
         fun bind(booking: Booking) {
             binding.apply {
                 root.setOnClickListener { onBookingClick(booking) }
+                btnExtend.setOnClickListener { onExtendClick(booking) }
                 
                 tvParkingSpot.text = booking.spotName
                 tvLocationSub.text = booking.locationName
@@ -217,27 +239,88 @@ class BookingsAdapter(
                 when (booking.status) {
                     BookingStatus.ACTIVE -> {
                         // Should be handled by generic view type, but fallback just in case
-                        tvStatus.text = "Active"
+                        tvStatus.text = booking.statusLabelOverride ?: "Active"
                         layoutStatusPill.setBackgroundResource(R.drawable.status_soft_active)
                         tvStatus.setTextColor(android.graphics.Color.parseColor("#059669"))
                         viewStatusDot.visibility = View.VISIBLE
                         viewStatusDot.setBackgroundResource(R.drawable.shape_status_dot_active)
                     }
                     BookingStatus.PENDING -> {
-                        tvStatus.text = "Pending"
+                        tvStatus.text = booking.statusLabelOverride ?: "Pending"
                         layoutStatusPill.setBackgroundResource(R.drawable.status_soft_pending)
                         tvStatus.setTextColor(android.graphics.Color.parseColor("#D97706"))
                         viewStatusDot.visibility = View.GONE
                     }
                     BookingStatus.COMPLETED -> {
-                        tvStatus.text = "Completed"
+                        tvStatus.text = booking.statusLabelOverride ?: "Completed"
                         layoutStatusPill.setBackgroundResource(R.drawable.status_soft_completed)
                         tvStatus.setTextColor(android.graphics.Color.parseColor("#374151"))
+                        viewStatusDot.visibility = View.GONE
+                    }
+                    BookingStatus.CANCELLED -> {
+                        tvStatus.text = booking.statusLabelOverride ?: "Cancelled"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_cancelled)
+                        tvStatus.setTextColor(android.graphics.Color.parseColor("#DC2626"))
+                        viewStatusDot.visibility = View.GONE
+                    }
+                    BookingStatus.NO_SHOW -> {
+                        tvStatus.text = booking.statusLabelOverride ?: "No Show"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_noshow)
+                        tvStatus.setTextColor(android.graphics.Color.parseColor("#1E40AF"))
                         viewStatusDot.visibility = View.GONE
                     }
                 }
 
                 cardBooking.setOnClickListener {
+                    onBookingClick(booking)
+                }
+            }
+        }
+    }
+
+    inner class HistoryBookingViewHolder(
+        private val binding: com.gridee.parking.databinding.ItemBookingHistoryBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(booking: Booking) {
+            binding.apply {
+                tvParkingSpot.text = booking.spotName
+                
+                // Date and Price separated
+                tvDate.text = booking.bookingDate
+                tvPrice.text = booking.amount
+
+                // Status Styling
+                when (booking.status) {
+                    BookingStatus.COMPLETED -> {
+                        tvStatus.text = booking.statusLabelOverride ?: "Completed"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_completed)
+                        tvStatus.setTextColor(android.graphics.Color.parseColor("#374151"))
+                    }
+                    BookingStatus.CANCELLED -> {
+                        tvStatus.text = booking.statusLabelOverride ?: "Cancelled"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_cancelled)
+                        tvStatus.setTextColor(android.graphics.Color.parseColor("#DC2626"))
+                    }
+                    BookingStatus.NO_SHOW -> {
+                        tvStatus.text = booking.statusLabelOverride ?: "No Show"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_noshow)
+                        tvStatus.setTextColor(android.graphics.Color.parseColor("#1E40AF"))
+                    }
+                    BookingStatus.ACTIVE -> {
+                        tvStatus.text = booking.statusLabelOverride ?: "Active"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_active)
+                        tvStatus.setTextColor(android.graphics.Color.parseColor("#059669"))
+                    }
+                    else -> {
+                        // Pending / Other
+                        tvStatus.text = booking.statusLabelOverride ?: "Pending"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_pending)
+                        tvStatus.setTextColor(android.graphics.Color.parseColor("#D97706"))
+                    }
+                }
+
+                root.setOnClickListener {
                     onBookingClick(booking)
                 }
             }

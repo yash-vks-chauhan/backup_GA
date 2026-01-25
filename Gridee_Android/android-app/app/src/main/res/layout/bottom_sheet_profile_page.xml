@@ -274,10 +274,13 @@
                         android:layout_height="wrap_content"
                         android:inputType="textEmailAddress"
                         android:textSize="16sp"
-                        android:textColor="#1A1A1A"
+                        android:textColor="#9E9E9E"
                         android:fontFamily="@font/inter_medium"
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp"
+                        android:enabled="false"
+                        android:focusable="false"
+                        android:backgroundTint="#FAFAFA"
                         android:hint="Enter email address"
                         android:textColorHint="#9E9E9E"/>
 

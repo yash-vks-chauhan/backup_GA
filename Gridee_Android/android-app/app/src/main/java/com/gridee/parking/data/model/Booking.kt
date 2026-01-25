@@ -33,6 +33,12 @@ data class Booking(
     
     @SerializedName("createdAt")
     val createdAt: Date? = null,
+
+    @SerializedName("updatedAt")
+    val updatedAt: Date? = null,
+
+    @SerializedName("cancelledAt")
+    val cancelledAt: Date? = null,
     
     @SerializedName("vehicleNumber")
     val vehicleNumber: String? = null,
@@ -44,6 +50,30 @@ data class Booking(
     @SerializedName("actualCheckInTime")
     val actualCheckInTime: Date? = null,
 
+    @SerializedName("actualCheckOutTime")
+    val actualCheckOutTime: Date? = null,
+
     @SerializedName("autoCompleted")
-    val autoCompleted: Boolean? = false
+    val autoCompleted: Boolean? = false,
+
+    @SerializedName("checkInOperatorId")
+    val checkInOperatorId: String? = null,
+
+    @SerializedName("checkOutOperatorId")
+    val checkOutOperatorId: String? = null,
+
+    @SerializedName("lotName")
+    val lotName: String? = null,
+
+    @SerializedName("endingReminderSent")
+    val endingReminderSent: Boolean? = null,
+
+    @SerializedName("endingReminderSentAt")
+    val endingReminderSentAt: Date? = null,
+
+    @SerializedName("balanceSettled")
+    val balanceSettled: Boolean? = null,
+
+    @SerializedName("archivedAt")
+    val archivedAt: Date? = null
 )

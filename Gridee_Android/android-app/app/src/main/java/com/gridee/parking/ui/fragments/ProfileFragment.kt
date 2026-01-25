@@ -182,6 +182,10 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
             startActivity(Intent(requireContext(), NotificationsActivity::class.java))
         }
 
+        binding.btnBookingHistory.setOnClickListener {
+             startActivity(Intent(requireContext(), com.gridee.parking.ui.profile.BookingHistoryPlaceholderActivity::class.java))
+        }
+
         // Vehicle Management category - Accordion Animation
         binding.btnMyVehicles.setOnClickListener {
             if (isAnimating) return@setOnClickListener
@@ -208,18 +212,12 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
             toggleVehiclesAccordion()
         }
 
-        binding.btnParkingPreferences.setOnClickListener {
-            showToast("Parking Preferences - Coming Soon!")
-        }
-
         // App Preferences category
         binding.btnDisplayTheme.setOnClickListener {
             startActivity(Intent(requireContext(), DisplayThemeActivity::class.java))
         }
 
-        binding.btnSoundsVibration.setOnClickListener {
-            showToast("Sounds & Vibration - Coming Soon!")
-        }
+
 
         binding.btnLanguageRegion.setOnClickListener {
             showToast("Language & Region - Coming Soon!")

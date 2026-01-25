@@ -25,6 +25,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.ColorInt
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -78,6 +79,8 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     private var sliderDragOffset = 0f
     private val selectedLabelColor by lazy { ContextCompat.getColor(requireContext(), R.color.text_primary) }
     private val unselectedLabelColor by lazy { ContextCompat.getColor(requireContext(), R.color.segment_button_text_unchecked) }
+    private val typefaceBold by lazy { ResourcesCompat.getFont(requireContext(), R.font.inter_bold) }
+    private val typefaceMedium by lazy { ResourcesCompat.getFont(requireContext(), R.font.inter_medium) }
     private var currentSortOption = BookingSortOption.NEWEST_FIRST
     private var sortBottomSheetDialog: BottomSheetDialog? = null
     private var selectedSpotFilter: String? = null
@@ -168,7 +171,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     override fun setupUI() {
         setupRecyclerView()
         setupPullToRefresh()
-        setupFilterButton()
+        // setupFilterButton() removed
         setupSegmentedControl()
         loadUserBookings() // Use real API instead of sample data
     }
@@ -180,28 +183,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         }
     }
 
-    private fun setupFilterButton() {
-        binding.buttonFilter.setOnClickListener {
-            // Add haptic feedback
-            it.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-            
-            // Add subtle scale animation
-            it.animate()
-                .scaleX(0.92f)
-                .scaleY(0.92f)
-                .setDuration(100)
-                .withEndAction {
-                    it.animate()
-                        .scaleX(1f)
-                        .scaleY(1f)
-                        .setDuration(100)
-                        .start()
-                }
-                .start()
-            
-            showSortBottomSheet()
-        }
-    }
+    // Filter button setup removed
 
     private fun showSortBottomSheet() {
         if (sortBottomSheetDialog?.isShowing == true) return
@@ -411,13 +393,24 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     }
 
     private fun setupRecyclerView() {
-        val statuses = listOf(BookingStatus.ACTIVE, BookingStatus.PENDING, BookingStatus.COMPLETED)
+        val statuses = listOf(BookingStatus.ACTIVE, BookingStatus.PENDING)
         currentTab = statuses.first()
 
-        bookingsAdapter = BookingsAdapter(emptyList()) { booking ->
-            // Handle booking click (e.g., show details)
-            showBookingDetails(booking)
-        }
+        bookingsAdapter = BookingsAdapter(
+            emptyList(),
+            onBookingClick = { booking ->
+                // Handle booking click (e.g., show details)
+                showBookingDetails(booking)
+            },
+            onExtendClick = { booking ->
+                val backendBooking = userBookings.firstOrNull { it.id == booking.id }
+                if (backendBooking != null) {
+                    showExtendBookingDialog(backendBooking)
+                } else {
+                    showToast("Booking details not found")
+                }
+            }
+        )
         binding.rvBookings.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = bookingsAdapter
@@ -446,7 +439,6 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         return when (status) {
             BookingStatus.ACTIVE -> binding.segmentedControlContainer.textActive.text.toString()
             BookingStatus.PENDING -> binding.segmentedControlContainer.textPending.text.toString()
-            BookingStatus.COMPLETED -> binding.segmentedControlContainer.textCompleted.text.toString()
             else -> "Unknown" // Handle other cases
         }
     }
@@ -463,10 +455,6 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             BookingStatus.PENDING -> {
                 title = "No pending bookings"
                 subtitle = "Your upcoming parking reservations that are waiting for approval will appear here."
-            }
-            BookingStatus.COMPLETED -> {
-                title = "No completed bookings"
-                subtitle = "Your past parking history and receipts will be stored here for easy access."
             }
             else -> {
                 title = "No bookings found"
@@ -508,14 +496,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         if (newStatus != currentTab) {
             if (userTriggered) {
                 val rootView = binding.segmentedControlContainer.segmentContainer
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    rootView?.performHapticFeedback(
-                        HapticFeedbackConstants.VIRTUAL_KEY,
-                        HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
-                    )
-                } else {
-                    rootView?.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                }
+                rootView?.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                 showToast("Switched to ${getSegmentTitle(newStatus)}")
             }
             currentTab = newStatus
@@ -552,10 +533,20 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             spotName = spot,
             vehicleNumber = backendBooking.vehicleNumber ?: "",
             amount = "₹${String.format("%.0f", backendBooking.amount ?: 0.0)}",
-            status = when (backendBooking.status?.lowercase(Locale.ROOT)) {
-                "active" -> BookingStatus.ACTIVE
-                "pending" -> BookingStatus.PENDING
-                "completed" -> BookingStatus.COMPLETED
+            status = when {
+                backendBooking.status == null -> BookingStatus.PENDING
+                backendBooking.status.lowercase(Locale.ROOT).contains("cancel") -> BookingStatus.CANCELLED
+                backendBooking.status.lowercase(Locale.ROOT).contains("no_show") || backendBooking.status.lowercase(Locale.ROOT).contains("noshow") -> BookingStatus.NO_SHOW
+                backendBooking.status.lowercase(Locale.ROOT) == "active" -> BookingStatus.ACTIVE
+                backendBooking.status.lowercase(Locale.ROOT) == "pending" -> BookingStatus.PENDING
+                backendBooking.status.lowercase(Locale.ROOT) == "completed" -> BookingStatus.COMPLETED
+                
+                // Fallbacks matching mapBackendStatus logic
+                backendBooking.status.lowercase(Locale.ROOT).contains("check_in") -> BookingStatus.ACTIVE
+                backendBooking.status.lowercase(Locale.ROOT).contains("active") -> BookingStatus.ACTIVE
+                backendBooking.status.lowercase(Locale.ROOT).contains("finish") -> BookingStatus.COMPLETED
+                backendBooking.status.lowercase(Locale.ROOT).contains("complete") -> BookingStatus.COMPLETED
+                
                 else -> BookingStatus.PENDING
             },
             spotId = spot,
@@ -614,12 +605,10 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         val container = binding.segmentedControlContainer
         val segments = listOf(
             container.segmentActive to BookingStatus.ACTIVE,
-            container.segmentPending to BookingStatus.PENDING,
-            container.segmentCompleted to BookingStatus.COMPLETED
+            container.segmentPending to BookingStatus.PENDING
         )
 
         segments.forEach { (segmentView, status) ->
-            applySegmentRipple(segmentView)
             segmentView.setOnClickListener {
                 handleSegmentSelection(status)
             }
@@ -644,8 +633,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         // Animate the previously selected segment out
         val segments = listOf(
             container.segmentActive to isActive,
-            container.segmentPending to isPending,
-            container.segmentCompleted to isCompleted
+            container.segmentPending to isPending
         )
 
         segments.forEach { (segment, shouldBeSelected) ->
@@ -670,7 +658,6 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         return when (status) {
             BookingStatus.ACTIVE -> container.segmentActive
             BookingStatus.PENDING -> container.segmentPending
-            BookingStatus.COMPLETED -> container.segmentCompleted
             else -> container.segmentActive
         }
     }
@@ -764,8 +751,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         val needsLayout = !root.isLaidOut ||
             slider.width == 0 ||
             container.segmentActive.width == 0 ||
-            container.segmentPending.width == 0 ||
-            container.segmentCompleted.width == 0
+            container.segmentPending.width == 0
 
         if (needsLayout) {
             if (allowPostLayout) {
@@ -784,42 +770,42 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         val selection = selectedStatusOverride ?: currentTab
 
         val segments = listOf(
-            Triple(BookingStatus.ACTIVE, container.segmentActive, container.textActive),
-            Triple(BookingStatus.PENDING, container.segmentPending, container.textPending),
-            Triple(BookingStatus.COMPLETED, container.segmentCompleted, container.textCompleted)
+            Quad(BookingStatus.ACTIVE, container.segmentActive, container.textActive, "textActiveBold"),
+            Quad(BookingStatus.PENDING, container.segmentPending, container.textPending, "textPendingBold")
         )
 
-        val selectedColor = ContextCompat.getColor(requireContext(), R.color.segment_text_selected)
-        val unselectedColor = ContextCompat.getColor(requireContext(), R.color.segment_text_unselected)
-
-        segments.forEach { (status, segment, label) ->
+        // Remove unused color defs if strict, but kept for safety
+            
+        segments.forEach { segmentTriple ->
+            val status = segmentTriple.first
+            val segment = segmentTriple.second
+            val label = segmentTriple.third
             val width = segment.width
             if (width == 0) return@forEach
 
             val segmentLeft = segment.left.toFloat()
             val segmentCenter = segmentLeft + width / 2f
 
+            val boldTag = segmentTriple.fourth
+            val boldLabel = if (segment.tag is View) segment.tag as TextView else segment.findViewWithTag<TextView>(boldTag)?.also { segment.tag = it }
+
             val distance = abs(sliderCenter - segmentCenter)
             val influenceRadius = (width * 0.9f).coerceAtLeast(1f)
             val emphasis = (1f - (distance / influenceRadius)).coerceIn(0f, 1f)
 
-            val blendedColor = blendColors(unselectedColor, selectedColor, emphasis)
-            if (label.currentTextColor != blendedColor) {
-                label.setTextColor(blendedColor)
-            }
+            // Cross-fade Alpha
+            // Medium Label (Unselected) fades OUT as emphasis increases
+            label.alpha = 1f - emphasis
+            
+            // Bold Label (Selected) fades IN as emphasis increases
+            boldLabel?.alpha = emphasis
+            
+            // Ensure visibility (optimization)
+            if (label.alpha > 0) label.visibility = View.VISIBLE else label.visibility = View.INVISIBLE
+            if ((boldLabel?.alpha ?: 0f) > 0) boldLabel?.visibility = View.VISIBLE else boldLabel?.visibility = View.INVISIBLE
+
             label.isSelected = status == selection
         }
-    }
-
-    @ColorInt
-    private fun blendColors(@ColorInt fromColor: Int, @ColorInt toColor: Int, ratio: Float): Int {
-        val clamped = ratio.coerceIn(0f, 1f)
-        val inverse = 1f - clamped
-        val a = (Color.alpha(fromColor) * inverse + Color.alpha(toColor) * clamped).roundToInt()
-        val r = (Color.red(fromColor) * inverse + Color.red(toColor) * clamped).roundToInt()
-        val g = (Color.green(fromColor) * inverse + Color.green(toColor) * clamped).roundToInt()
-        val b = (Color.blue(fromColor) * inverse + Color.blue(toColor) * clamped).roundToInt()
-        return Color.argb(a, r, g, b)
     }
 
     private fun animateSegmentIn(segment: View) {
@@ -900,8 +886,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         val container = binding.segmentedControlContainer
         val centers = listOf(
             BookingStatus.ACTIVE to container.segmentActive,
-            BookingStatus.PENDING to container.segmentPending,
-            BookingStatus.COMPLETED to container.segmentCompleted
+            BookingStatus.PENDING to container.segmentPending
         )
         return centers.minByOrNull { (_, view) ->
              // View left is relative to the segment group; sliderCenter is in the same local coordinates.
@@ -961,10 +946,6 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
                     binding.tvEmptyTitle.text = "No Pending Bookings"
                     binding.tvEmptySubtitle.text = "Your pending bookings will appear here"
                 }
-                BookingStatus.COMPLETED -> {
-                    binding.tvEmptyTitle.text = "No Completed Bookings"
-                    binding.tvEmptySubtitle.text = "Your booking history will appear here"
-                }
                 else -> {
                     binding.tvEmptyTitle.text = "No Bookings"
                     binding.tvEmptySubtitle.text = "Your bookings will appear here"
@@ -984,12 +965,10 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     private fun updateSegmentBadges() {
         val active = userBookings.count { mapBackendStatus(it.status) == BookingStatus.ACTIVE }
         val pending = userBookings.count { mapBackendStatus(it.status) == BookingStatus.PENDING }
-        val completed = userBookings.count { mapBackendStatus(it.status) == BookingStatus.COMPLETED }
 
         val container = binding.segmentedControlContainer
         setBadgeState(container.badgeActive, active)
         setBadgeState(container.badgePending, pending)
-        setBadgeState(container.badgeCompleted, completed)
     }
 
     private fun sortBookings(bookings: List<BackendBooking>): List<BackendBooking> {
@@ -1704,6 +1683,8 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
                 BookingStatus.ACTIVE -> Quad("Active", R.drawable.status_soft_active, android.graphics.Color.parseColor("#059669"), true)
                 BookingStatus.PENDING -> Quad("Pending", R.drawable.status_soft_pending, android.graphics.Color.parseColor("#D97706"), false)
                 BookingStatus.COMPLETED -> Quad("Completed", R.drawable.status_soft_completed, android.graphics.Color.parseColor("#374151"), false)
+                BookingStatus.CANCELLED -> Quad("Cancelled", R.drawable.status_soft_cancelled, android.graphics.Color.parseColor("#DC2626"), false)
+                BookingStatus.NO_SHOW -> Quad("No Show", R.drawable.status_soft_noshow, android.graphics.Color.parseColor("#1E40AF"), false)
             }
             
             textStatusChip.text = statusLabel
@@ -1725,20 +1706,9 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
 
         }
 
-        // Show extend button for ACTIVE bookings only
-        if (booking.status == BookingStatus.ACTIVE) {
-            sheetBinding.btnExtendBooking.visibility = View.VISIBLE
-            sheetBinding.btnExtendBooking.setOnClickListener {
-                val backendBooking = userBookings.firstOrNull { it.id == booking.id }
-                if (backendBooking != null) {
-                    showExtendBookingDialog(backendBooking)
-                } else {
-                    showToast("Booking details not found")
-                }
-            }
-        } else {
-            sheetBinding.btnExtendBooking.visibility = View.GONE
-        }
+        // Extend booking is not available from the details sheet.
+        sheetBinding.btnExtendBooking.visibility = View.GONE
+        sheetBinding.btnExtendBooking.setOnClickListener(null)
 
         val showCancel = booking.status == BookingStatus.PENDING
         sheetBinding.actionCancel.visibility = if (showCancel) View.VISIBLE else View.GONE
@@ -1788,8 +1758,8 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
                 BookingStatus.ACTIVE -> {
                     showToast("Active bookings cannot be cancelled. Please check out.")
                 }
-                BookingStatus.COMPLETED -> {
-                    showToast("This booking is already completed.")
+                BookingStatus.COMPLETED, BookingStatus.CANCELLED, BookingStatus.NO_SHOW -> {
+                    showToast("This booking is already finished.")
                 }
             }
         }
@@ -1801,20 +1771,10 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
                 sheetBinding.buttonScanQr.setOnClickListener(null)
             }
             BookingStatus.ACTIVE -> {
-                sheetBinding.buttonScanQr.visibility = View.VISIBLE
-                sheetBinding.buttonScanQr.text = getString(R.string.scan_to_check_out)
-                sheetBinding.buttonScanQr.setOnClickListener {
-                    pendingScanBookingId = booking.id
-                    pendingScanType = ScanType.CHECK_OUT
-                    val intent = Intent(requireContext(), QrScannerActivity::class.java).apply {
-                        putExtra(QrScannerActivity.EXTRA_BOOKING_ID, booking.id)
-                        putExtra(QrScannerActivity.EXTRA_SCAN_TYPE, ScanType.CHECK_OUT.name)
-                    }
-                    dialog.dismiss()
-                    qrScanLauncher.launch(intent)
-                }
+                sheetBinding.buttonScanQr.visibility = View.GONE
+                sheetBinding.buttonScanQr.setOnClickListener(null)
             }
-            BookingStatus.COMPLETED -> {
+            BookingStatus.COMPLETED, BookingStatus.CANCELLED, BookingStatus.NO_SHOW -> {
                 sheetBinding.buttonScanQr.visibility = View.GONE
             }
         }
@@ -1857,6 +1817,28 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         val dateFormat = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
         tvCurrentEndTime.text = getString(R.string.current_end_time, dateFormat.format(currentEndTime))
 
+        tvAdditionalCharges.text = getString(R.string.additional_charges, "--")
+        lifecycleScope.launch {
+            val bookingId = booking.id ?: return@launch
+            val result = bookingRepository.getPriceBreakup(bookingId)
+            result.fold(
+                onSuccess = { breakup ->
+                    val bookingCharge = (breakup["bookingCharge"] as? Number)?.toDouble()
+                        ?: (breakup["subtotal"] as? Number)?.toDouble()
+                        ?: (breakup["totalDeducted"] as? Number)?.toDouble()
+                    if (bookingCharge != null) {
+                        val formatted = String.format(Locale.getDefault(), "%.2f", bookingCharge)
+                        tvAdditionalCharges.text = getString(R.string.additional_charges, formatted)
+                    } else {
+                        tvAdditionalCharges.text = getString(R.string.additional_charges, "--")
+                    }
+                },
+                onFailure = {
+                    tvAdditionalCharges.text = getString(R.string.additional_charges, "--")
+                }
+            )
+        }
+
         val calendar = Calendar.getInstance().apply { time = currentEndTime }
         datePicker.minDate = currentEndTime.time
         datePicker.updateDate(
@@ -1871,25 +1853,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             // ignore for older APIs
         }
 
-        fun updateCharges() {
-            val newCal = Calendar.getInstance()
-            val selHour = try { timePicker.hour } catch (_: Throwable) { calendar.get(Calendar.HOUR_OF_DAY) }
-            val selMin = try { timePicker.minute } catch (_: Throwable) { calendar.get(Calendar.MINUTE) }
-            newCal.set(datePicker.year, datePicker.month, datePicker.dayOfMonth, selHour, selMin)
-
-            val diffMillis = (newCal.timeInMillis - currentEndTime.time).coerceAtLeast(0L)
-            val durationHours = (diffMillis / (1000 * 60 * 60)).toInt()
-            val additionalCharge = durationHours * 100 // Adjust per pricing rules
-            tvAdditionalCharges.text = getString(R.string.additional_charges, additionalCharge)
-        }
-
-        // initialize charges
-        updateCharges()
-
-        datePicker.setOnDateChangedListener { _, _, _, _ -> updateCharges() }
-        try {
-            timePicker.setOnTimeChangedListener { _, _, _ -> updateCharges() }
-        } catch (_: Throwable) { }
+        // Charges are calculated on the backend; display current charges from the breakup API.
 
         btnCancel.setOnClickListener { dialog.dismiss() }
         btnExtend.setOnClickListener {
@@ -1930,8 +1894,11 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         showLoading(true)
         val result = bookingRepository.extendBooking(bookingId, newCheckOutTime)
         result.fold(
-            onSuccess = {
+            onSuccess = { updated ->
                 showLoading(false)
+                if (updated.id != null) {
+                    applyUpdatedBooking(updated)
+                }
                 showToast(getString(R.string.booking_extended_success))
                 refreshCurrentTab()
             },
@@ -1949,6 +1916,19 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
                 }
             }
         )
+    }
+
+    private fun applyUpdatedBooking(updated: BackendBooking) {
+        val updatedId = updated.id ?: return
+        val index = userBookings.indexOfFirst { it.id == updatedId }
+        if (index >= 0) {
+            userBookings[index] = updated
+        } else {
+            userBookings.add(updated)
+        }
+        ensureSpotFilterIsValid()
+        updateActiveBookingNotification(userBookings)
+        showBookingsForStatus(currentTab)
     }
 
     private fun showLoading(show: Boolean) {

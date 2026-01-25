@@ -287,7 +287,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Parking &amp; Vehicles"
+            android:text="Bookings &amp; Vehicles"
             android:textColor="#757575"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -311,6 +311,42 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
+
+                <!-- Booking History -->
+                <LinearLayout
+                    android:id="@+id/btn_booking_history"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="20dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_booking_history_ticket"
+                        android:tint="#6B7280"
+                        android:layout_marginEnd="16dp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Booking History"
+                        android:textColor="#111827"
+                        android:textSize="16sp"
+                        android:fontFamily="@font/inter_medium" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:tint="#6B7280" />
+
+                </LinearLayout>
 
                 <!-- My Vehicles (Accordion) -->
                 <LinearLayout
@@ -396,42 +432,6 @@
 
 
 
-                <!-- Parking Preferences -->
-                <LinearLayout
-                    android:id="@+id/btn_parking_preferences"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_location"
-                        android:tint="#6B7280"
-                        android:layout_marginEnd="16dp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Parking Preferences"
-                        android:textColor="#111827"
-                        android:textSize="16sp"
-                        android:fontFamily="@font/inter_medium" />
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
-
-                </LinearLayout>
-
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
@@ -503,41 +503,7 @@
 
 
 
-                <!-- Sounds & Vibration -->
-                <LinearLayout
-                    android:id="@+id/btn_sounds_vibration"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_volume"
-                        android:tint="#6B7280"
-                        android:layout_marginEnd="16dp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Sounds &amp; Vibration"
-                        android:textColor="#111827"
-                        android:textSize="16sp"
-                        android:fontFamily="@font/inter_medium" />
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
-
-                </LinearLayout>
 
 
 

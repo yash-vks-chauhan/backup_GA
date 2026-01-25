@@ -38,6 +38,9 @@ class WelcomeActivity : AppCompatActivity() {
             is GoogleSignInResult.Error -> {
                 viewModel.handleSignInError(signInResult.message)
             }
+            is GoogleSignInResult.Cancelled -> {
+                // User cancelled Google sign-in; no UI message needed.
+            }
         }
     }
 

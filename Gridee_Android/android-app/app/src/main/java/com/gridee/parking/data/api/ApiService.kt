@@ -89,6 +89,9 @@ interface ApiService {
     @GET("api/parking-lots/list/by-names")
     suspend fun getParkingLotNames(): Response<List<String>>
 
+    @GET("api/parking-lots/search/by-name")
+    suspend fun getParkingLotByName(@Query("name") name: String): Response<ParkingLot>
+
     // ADMIN-only on backend; avoid using from app for regular users
     @GET("api/parking-spots")
     suspend fun getParkingSpots(): Response<List<ParkingSpot>>

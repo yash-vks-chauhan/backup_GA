@@ -40,14 +40,24 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.gridee.parking.R
+import com.gridee.parking.data.model.ParkingSpot
+import com.gridee.parking.data.repository.ParkingRepository
 import com.gridee.parking.databinding.ActivityOperatorDashboardBinding
+import com.gridee.parking.databinding.BottomSheetOperatorSpotSelectionBinding
 import com.gridee.parking.ui.auth.LoginActivity
+import com.gridee.parking.ui.booking.ParkingSpotSelectionAdapter
 import com.gridee.parking.ui.qr.QrScannerActivity
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.InAppUpdateController
 import com.gridee.parking.utils.NotificationHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Dashboard for parking lot operators
@@ -61,6 +71,10 @@ class OperatorDashboardActivity : AppCompatActivity() {
     private var currentMode = OperatorMode.CHECK_IN
     private var isManualEntryMode = false
     private var inAppUpdateController: InAppUpdateController? = null
+    private val parkingRepository = ParkingRepository()
+    private var selectedSpot: ParkingSpot? = null
+    private var selectedSpotId: String? = null
+    private var spotSelectionDialog: BottomSheetDialog? = null
 
     // Animation properties
     private var typefaceBold: Typeface? = null
@@ -85,10 +99,16 @@ class OperatorDashboardActivity : AppCompatActivity() {
         if (result.resultCode == QrScannerActivity.RESULT_QR_SCANNED) {
             val scannedData = result.data?.getStringExtra(QrScannerActivity.EXTRA_QR_CODE)
             scannedData?.let { vehicleNumber ->
+                val spotId = selectedSpotId
+                if (spotId.isNullOrBlank()) {
+                    showSpotSelectionSheet()
+                    showToast(getString(R.string.op_select_spot_required))
+                    return@let
+                }
                 // Auto-process based on current mode
                 when (currentMode) {
-                    OperatorMode.CHECK_IN -> viewModel.checkInByVehicleNumber(vehicleNumber)
-                    OperatorMode.CHECK_OUT -> viewModel.checkOutByVehicleNumber(vehicleNumber)
+                    OperatorMode.CHECK_IN -> viewModel.checkInByVehicleNumber(vehicleNumber, spotId)
+                    OperatorMode.CHECK_OUT -> viewModel.checkOutByVehicleNumber(vehicleNumber, spotId)
                 }
             }
         }
@@ -127,6 +147,7 @@ class OperatorDashboardActivity : AppCompatActivity() {
         setupSegmentedControl()
         observeViewModel()
         setupWindowInsets()
+        showSpotSelectionSheet()
         
         // Initialize with Check-In mode
         updateUIForMode(OperatorMode.CHECK_IN, animate = false)
@@ -195,6 +216,8 @@ class OperatorDashboardActivity : AppCompatActivity() {
     override fun onDestroy() {
         inAppUpdateController?.onDestroy()
         inAppUpdateController = null
+        spotSelectionDialog?.dismiss()
+        spotSelectionDialog = null
         super.onDestroy()
     }
 
@@ -208,6 +231,7 @@ class OperatorDashboardActivity : AppCompatActivity() {
         // Circular Scan Button (Primary CTA)
         binding.btnScanCircular.setOnClickListener {
             it.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+            if (!ensureSpotSelected()) return@setOnClickListener
             animateButtonPress(it) {
                 if (checkCameraPermission()) {
                     openVehicleScanner()
@@ -232,10 +256,10 @@ class OperatorDashboardActivity : AppCompatActivity() {
         // Submit Manual Button
         binding.btnSubmitManual.setOnClickListener {
             it.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+            if (!ensureSpotSelected()) return@setOnClickListener
             val vehicleNumber = binding.etVehicleNumberClean.text.toString().trim()
             val normalizedVehicle = normalizeVehicleNumber(vehicleNumber)
-            val spotIdRaw = binding.etSpotId.text?.toString()?.trim().orEmpty()
-            val spotId = if (spotIdRaw.isBlank()) null else spotIdRaw
+            val spotId = selectedSpotId
             
             when {
                 normalizedVehicle.isBlank() -> {
@@ -254,6 +278,15 @@ class OperatorDashboardActivity : AppCompatActivity() {
                 }
             }
         }
+
+        // Selected spot field opens the selection sheet
+        binding.etSpotId.apply {
+            isFocusable = false
+            isFocusableInTouchMode = false
+            isCursorVisible = false
+            setOnClickListener { showSpotSelectionSheet() }
+        }
+        binding.tvSpotIdLabel.setOnClickListener { showSpotSelectionSheet() }
 
         // Auto-format vehicle number
         binding.etVehicleNumberClean.addTextChangedListener(object : TextWatcher {
@@ -292,6 +325,191 @@ class OperatorDashboardActivity : AppCompatActivity() {
         binding.swipeRefresh.setColorSchemeColors(
             ContextCompat.getColor(this, android.R.color.black)
         )
+    }
+
+    private fun ensureSpotSelected(): Boolean {
+        if (!selectedSpotId.isNullOrBlank()) return true
+        showSpotSelectionSheet()
+        showToast(getString(R.string.op_select_spot_required))
+        return false
+    }
+
+    private fun showSpotSelectionSheet() {
+        if (spotSelectionDialog?.isShowing == true || isFinishing || isDestroyed) return
+
+        val dialog = BottomSheetDialog(this, R.style.BottomSheetDialogTheme)
+        spotSelectionDialog = dialog
+
+        val sheetBinding = BottomSheetOperatorSpotSelectionBinding.inflate(layoutInflater)
+        dialog.setContentView(sheetBinding.root)
+        dialog.setCancelable(false)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setOnShowListener {
+            val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
+            bottomSheet?.setBackgroundResource(android.R.color.transparent)
+            dialog.behavior.isDraggable = false
+            dialog.behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+        }
+        dialog.setOnDismissListener { spotSelectionDialog = null }
+
+        var tempSelection: ParkingSpot? = selectedSpot
+        val logBuffer = StringBuilder()
+        fun pushLog(message: String) {
+            if (logBuffer.isNotEmpty()) logBuffer.append('\n')
+            logBuffer.append(message)
+            sheetBinding.tvLog.text = logBuffer.toString()
+            sheetBinding.tvLog.visibility = View.VISIBLE
+        }
+
+        val adapter = ParkingSpotSelectionAdapter(
+            onItemClick = { spot ->
+                tempSelection = spot
+                sheetBinding.btnSelectSpot.isEnabled = true
+            },
+            allowUnavailableSelection = true
+        )
+
+        sheetBinding.rvSpots.layoutManager = LinearLayoutManager(this)
+        sheetBinding.rvSpots.adapter = adapter
+        if (!selectedSpotId.isNullOrBlank()) {
+            adapter.setSelectedSpot(selectedSpotId)
+            sheetBinding.btnSelectSpot.isEnabled = true
+        }
+
+        sheetBinding.btnSelectSpot.setOnClickListener {
+            val chosenSpot = tempSelection
+            if (chosenSpot == null) {
+                showToast(getString(R.string.op_select_spot_required))
+                return@setOnClickListener
+            }
+            applySelectedSpot(chosenSpot)
+            dialog.dismiss()
+        }
+
+        sheetBinding.progressBar.visibility = View.VISIBLE
+        sheetBinding.tvEmptyState.visibility = View.GONE
+        sheetBinding.rvSpots.visibility = View.GONE
+        pushLog("Loading parking spots…")
+
+        lifecycleScope.launch {
+            val spots = loadAllParkingSpots(::pushLog)
+            if (spotSelectionDialog !== dialog || !dialog.isShowing) return@launch
+            sheetBinding.progressBar.visibility = View.GONE
+
+            if (spots.isEmpty()) {
+                sheetBinding.tvEmptyState.visibility = View.VISIBLE
+                sheetBinding.rvSpots.visibility = View.GONE
+                sheetBinding.btnSelectSpot.isEnabled = tempSelection != null
+            } else {
+                sheetBinding.tvEmptyState.visibility = View.GONE
+                sheetBinding.rvSpots.visibility = View.VISIBLE
+                adapter.submitList(spots)
+                val previewNames = spots.take(5).joinToString { getSpotDisplayName(it) }
+                pushLog("Spots loaded: ${spots.size}. First: $previewNames")
+                if (!selectedSpotId.isNullOrBlank()) {
+                    adapter.setSelectedSpot(selectedSpotId)
+                }
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun applySelectedSpot(spot: ParkingSpot) {
+        selectedSpot = spot
+        selectedSpotId = spot.id
+        binding.etSpotId.setText(getSpotDisplayName(spot))
+    }
+
+    private suspend fun loadAllParkingSpots(
+        log: ((String) -> Unit)? = null
+    ): List<ParkingSpot> = withContext(Dispatchers.IO) {
+        try {
+            val prefs = getSharedPreferences("gridee_prefs", MODE_PRIVATE)
+            val assignedLotId = prefs.getString("parking_lot_id", null)?.trim().orEmpty()
+            val assignedLotName = prefs.getString("parking_lot_name", null)?.trim().orEmpty()
+
+            suspend fun logOnMain(message: String) {
+                log ?: return
+                withContext(Dispatchers.Main) { log(message) }
+            }
+
+            if (assignedLotId.isNotEmpty()) {
+                logOnMain("Using assigned lot id: $assignedLotId")
+                val spotsResp = parkingRepository.getParkingSpotsByLot(assignedLotId)
+                if (spotsResp.isSuccessful) {
+                    val spots = spotsResp.body().orEmpty()
+                    logOnMain("Loaded ${spots.size} spots from assigned lot.")
+                    if (spots.isNotEmpty()) {
+                        return@withContext spots
+                    }
+                } else {
+                    logOnMain("Failed to load spots for assigned lot (HTTP ${spotsResp.code()}).")
+                }
+            }
+
+            if (assignedLotName.isNotEmpty()) {
+                logOnMain("Searching lot by name: $assignedLotName")
+                val lotByNameResponse = parkingRepository.getParkingLotByName(assignedLotName)
+                val lot = if (lotByNameResponse.isSuccessful) lotByNameResponse.body() else null
+                val lotId = lot?.id?.trim().orEmpty()
+                if (lotId.isNotEmpty()) {
+                    logOnMain("Resolved lot id: $lotId")
+                    val spotsResp = parkingRepository.getParkingSpotsByLot(lotId)
+                    if (spotsResp.isSuccessful) {
+                        val spots = spotsResp.body().orEmpty()
+                        logOnMain("Loaded ${spots.size} spots from resolved lot.")
+                        if (spots.isNotEmpty()) {
+                            return@withContext spots
+                        }
+                    } else {
+                        logOnMain("Failed to load spots for resolved lot (HTTP ${spotsResp.code()}).")
+                    }
+                } else {
+                    logOnMain("Lot name not found on server.")
+                }
+            }
+
+            logOnMain("Falling back to all lots…")
+            val lotsResponse = parkingRepository.getParkingLots()
+            if (!lotsResponse.isSuccessful) {
+                logOnMain("Failed to load parking lots (HTTP ${lotsResponse.code()}).")
+                return@withContext emptyList()
+            }
+
+            val lots = lotsResponse.body() ?: emptyList()
+            val combined = mutableListOf<ParkingSpot>()
+            for (lot in lots) {
+                val lotId = lot.id.trim()
+                if (lotId.isEmpty()) continue
+                val spotsResp = parkingRepository.getParkingSpotsByLot(lotId)
+                if (spotsResp.isSuccessful) {
+                    combined.addAll(spotsResp.body().orEmpty())
+                }
+            }
+
+            val byId = LinkedHashMap<String, ParkingSpot>()
+            for (spot in combined) {
+                if (spot.id.isNotBlank()) {
+                    byId[spot.id] = spot
+                }
+            }
+
+            logOnMain("Total spots loaded from all lots: ${byId.size}")
+            return@withContext byId.values.sortedBy { getSpotDisplayName(it).lowercase() }
+        } catch (_: Exception) {
+            if (log != null) {
+                withContext(Dispatchers.Main) { log("Error loading parking spots.") }
+            }
+            return@withContext emptyList()
+        }
+    }
+
+    private fun getSpotDisplayName(spot: ParkingSpot): String {
+        return spot.name
+            ?: spot.zoneName
+            ?: spot.spotCode
+            ?: spot.id
     }
 
     private fun setupBottomNavigation() {
@@ -924,6 +1142,10 @@ class OperatorDashboardActivity : AppCompatActivity() {
                 )
             }
         }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun checkCameraPermission(): Boolean {

@@ -96,7 +96,7 @@ class GoogleSignInManager(private val activity: Activity) {
         
         if (data == null) {
             Log.e(TAG, "❌ Intent data is NULL - user might have cancelled")
-            return GoogleSignInResult.Error("Sign in cancelled - no data received")
+            return GoogleSignInResult.Cancelled
         }
         
         return try {
@@ -135,8 +135,11 @@ class GoogleSignInManager(private val activity: Activity) {
                 else -> "Unknown error code"
             }
             Log.e(TAG, "  - Explanation: $errorExplanation")
-            
-            GoogleSignInResult.Error("Google sign in failed: ${e.statusCode} - $errorExplanation")
+            if (e.statusCode == 12501) {
+                GoogleSignInResult.Cancelled
+            } else {
+                GoogleSignInResult.Error("Google sign in failed: ${e.statusCode} - $errorExplanation")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "❌ Unexpected exception during sign-in: ${e.message}", e)
             GoogleSignInResult.Error("Unexpected error: ${e.message}")
@@ -179,4 +182,5 @@ class GoogleSignInManager(private val activity: Activity) {
 sealed class GoogleSignInResult {
     data class Success(val account: GoogleSignInAccount) : GoogleSignInResult()
     data class Error(val message: String) : GoogleSignInResult()
+    object Cancelled : GoogleSignInResult()
 }

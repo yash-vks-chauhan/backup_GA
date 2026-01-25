@@ -3,7 +3,9 @@ package com.gridee.parking.ui.auth
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -180,29 +182,45 @@ class RegistrationActivity : AppCompatActivity() {
     private fun showParkingDropdown(anchor: View, items: List<String>) {
         val popupView = layoutInflater.inflate(R.layout.window_parking_dropdown, null)
         
-        val width = anchor.width
-        val popupWindow = android.widget.PopupWindow(
+        // Calculate padding for shadow breathing room (24dp from XML)
+        val density = resources.displayMetrics.density
+        val paddingPx = (24 * density).toInt() // Must match XML padding
+        
+        // Popup needs to be wider than anchor to accommodate the transparent padding
+        val width = anchor.width + (paddingPx * 2)
+        
+        val popupWindow = PopupWindow(
             popupView, 
             width, 
-            android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
+            ViewGroup.LayoutParams.WRAP_CONTENT, 
             true
         )
         
-        popupWindow.elevation = 16f
+        // Remove window shadow, rely on CardView shadow inside
+        popupWindow.elevation = 0f 
         popupWindow.isOutsideTouchable = true
         popupWindow.setBackgroundDrawable(ContextCompat.getDrawable(this, android.R.color.transparent))
         
-        // Toggle arrow icon
-        binding.tilParkingLot.setEndIconDrawable(R.drawable.ic_arrow_up_filled_rounded)
+        // Mechanical "Click" Rotation (Precision Snap)
+        val endIcon = binding.tilParkingLot.findViewById<View>(com.google.android.material.R.id.text_input_end_icon)
+        endIcon?.animate()
+            ?.rotation(180f)
+            ?.setDuration(300)
+            ?.setInterpolator(android.view.animation.OvershootInterpolator(1.2f)) 
+            ?.start()
+        
+        // Tactile Feedback
+        anchor.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK)
+
         popupWindow.setOnDismissListener { 
-            binding.tilParkingLot.setEndIconDrawable(R.drawable.ic_arrow_down_filled_rounded)
+            endIcon?.animate()?.rotation(0f)?.setDuration(250)?.setInterpolator(androidx.interpolator.view.animation.FastOutSlowInInterpolator())?.start()
         }
         
         val recyclerView = popupView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         
         recyclerView.adapter = object : androidx.recyclerview.widget.RecyclerView.Adapter<ParkingViewHolder>() {
-            override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): ParkingViewHolder {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ParkingViewHolder {
                 val view = layoutInflater.inflate(R.layout.item_parking_option, parent, false)
                 return ParkingViewHolder(view)
             }
@@ -213,19 +231,121 @@ class RegistrationActivity : AppCompatActivity() {
                 holder.itemView.setOnClickListener {
                     binding.etParkingLot.setText(item)
                     binding.tilParkingLot.error = null
-                    popupWindow.dismiss()
+                    
+                    // Fluid Press (Subtle)
+                    holder.itemView.animate()
+                        .scaleX(0.98f).scaleY(0.98f)
+                        .setDuration(80)
+                        .start()
+
+                    closeDropdown(popupWindow, popupView, endIcon)
                 }
             }
 
             override fun getItemCount() = items.size
         }
         
-        val controller = android.view.animation.AnimationUtils.loadLayoutAnimation(this, R.anim.layout_animation_waterfall)
-        recyclerView.layoutAnimation = controller
-        recyclerView.scheduleLayoutAnimation()
+        // ... (Existing setup code remains here) ...
         
-        // Show with a slight offset
-        popupWindow.showAsDropDown(anchor, 0, 8)
+        // Initial State for "Liquid Glass" telescope
+        popupView.alpha = 0f
+        popupView.scaleY = 0.9f 
+        popupView.translationY = -24f 
+        
+        popupView.pivotX = width / 2f
+        popupView.pivotY = paddingPx.toFloat() 
+
+        val yOffset = -paddingPx + (8 * density).toInt() 
+        
+        popupWindow.showAsDropDown(anchor, -paddingPx, yOffset)
+
+        // Dim Background
+        try {
+            val container = popupWindow.contentView.rootView
+            val wm = getSystemService(android.content.Context.WINDOW_SERVICE) as android.view.WindowManager
+            val p = container.layoutParams as android.view.WindowManager.LayoutParams
+            p.flags = p.flags or android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND
+            p.dimAmount = 0.15f 
+            wm.updateViewLayout(container, p)
+        } catch (e: Exception) {}
+
+        // 1. Alpha
+        popupView.animate()
+            .alpha(1f)
+            .setDuration(100)
+            .setInterpolator(androidx.interpolator.view.animation.LinearOutSlowInInterpolator())
+            .start()
+
+        // 2. Spring Scale
+        val springY = androidx.dynamicanimation.animation.SpringAnimation(popupView, androidx.dynamicanimation.animation.DynamicAnimation.SCALE_Y, 1f)
+        springY.spring.dampingRatio = 0.82f 
+        springY.spring.stiffness = 450f 
+        springY.start()
+        
+        // 3. Spring Translation
+        val springTransY = androidx.dynamicanimation.animation.SpringAnimation(popupView, androidx.dynamicanimation.animation.DynamicAnimation.TRANSLATION_Y, 0f)
+        springTransY.spring.dampingRatio = 0.85f 
+        springTransY.spring.stiffness = 500f
+        springTransY.start()
+    }
+
+    private fun closeDropdown(window: PopupWindow, view: View, arrow: View?) {
+        // Prevent double-close
+        window.setOnDismissListener(null)
+
+        // 1. Retract Arrow (Snappy sync)
+        arrow?.animate()
+            ?.rotation(0f)
+            ?.setDuration(200)
+            ?.setInterpolator(androidx.interpolator.view.animation.FastOutSlowInInterpolator())
+            ?.start()
+
+        // 2. Fade Out Dim (Snappy sync)
+        val container = window.contentView.rootView
+        val wm = getSystemService(android.content.Context.WINDOW_SERVICE) as android.view.WindowManager
+        val p = container.layoutParams as android.view.WindowManager.LayoutParams
+        
+        val dimAnimator = android.animation.ValueAnimator.ofFloat(0.15f, 0f)
+        dimAnimator.duration = 200
+        dimAnimator.addUpdateListener {
+            try {
+                p.dimAmount = it.animatedValue as Float
+                wm.updateViewLayout(container, p)
+            } catch (e: Exception) {}
+        }
+        dimAnimator.start()
+
+        // 3. Physics Retraction ("Apple Friction" - High Damping, Snappy Stiffness)
+        
+        // Alpha: Accelerate (Fade out faster at the end, staying visible during initial shrink)
+        view.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .setInterpolator(android.view.animation.AccelerateInterpolator())
+            .start()
+
+        // Scale: Shrink slightly to 0.95f (Apple standard)
+        val springScale = androidx.dynamicanimation.animation.SpringAnimation(view, androidx.dynamicanimation.animation.DynamicAnimation.SCALE_Y, 0.95f)
+        springScale.spring.dampingRatio = 1f // Critical Damping (No bounce, pure friction)
+        springScale.spring.stiffness = 400f // Stiffer (Snappier response)
+        springScale.start()
+
+        // Translation: Slide back up to -24f (Origin)
+        val springTrans = androidx.dynamicanimation.animation.SpringAnimation(view, androidx.dynamicanimation.animation.DynamicAnimation.TRANSLATION_Y, -24f)
+        springTrans.spring.dampingRatio = 1f 
+        springTrans.spring.stiffness = 400f 
+        
+        // Dismiss when physics settle
+        springTrans.addEndListener { _, _, _, _ -> 
+             window.dismiss()
+        }
+        
+        // Safety Fallback (Reduced to match new speed)
+        view.postDelayed({
+            if (window.isShowing) window.dismiss()
+        }, 250)
+        
+        springTrans.start()
     }
     
     class ParkingViewHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {

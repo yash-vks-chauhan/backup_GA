@@ -17,6 +17,10 @@ class ParkingRepository {
     suspend fun getParkingLotNames(): Response<List<String>> {
         return apiService.getParkingLotNames()
     }
+
+    suspend fun getParkingLotByName(name: String): Response<ParkingLot> {
+        return apiService.getParkingLotByName(name)
+    }
     
     suspend fun getParkingSpots(): Response<List<ParkingSpot>> {
         return apiService.getParkingSpots()

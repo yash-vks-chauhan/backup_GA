@@ -333,12 +333,14 @@ class BookingFlowActivity : AppCompatActivity() {
         var isAnySpotSelected = currentSelectedSpotText == "Any available spot"
         
         // Set up RecyclerView
-        val spotAdapter = ParkingSpotSelectionAdapter { spot ->
-            selectedSpot = spot
-            isAnySpotSelected = false
-            updateSpotSelection(ivAnySpotSelected, false)
-            showToast("Selected spot: ${spot.name ?: spot.zoneName ?: spot.spotCode ?: spot.id}")
-        }
+        val spotAdapter = ParkingSpotSelectionAdapter(
+            onItemClick = { spot ->
+                selectedSpot = spot
+                isAnySpotSelected = false
+                updateSpotSelection(ivAnySpotSelected, false)
+                showToast("Selected spot: ${spot.name ?: spot.zoneName ?: spot.spotCode ?: spot.id}")
+            }
+        )
         
         recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         recyclerView.adapter = spotAdapter
