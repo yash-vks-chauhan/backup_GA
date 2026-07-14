@@ -85,5 +85,7 @@ class WalletTransactionsAdapter(
         return position in 0 until items.size && items[position] is WalletTransactionListItem.Header
     }
 
+    fun getItems(): List<WalletTransactionListItem> = items
+
     private class LoadingViewHolder(view: android.view.View) : RecyclerView.ViewHolder(view)
 }

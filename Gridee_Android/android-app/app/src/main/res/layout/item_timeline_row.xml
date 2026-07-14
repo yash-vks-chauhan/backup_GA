@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/line_top"
+        android:layout_width="1dp"
+        android:layout_height="0dp"
+        android:background="@color/border_light"
+        app:layout_constraintBottom_toTopOf="@id/iv_dot"
+        app:layout_constraintEnd_toEndOf="@id/iv_dot"
+        app:layout_constraintStart_toStartOf="@id/iv_dot"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/line_bottom"
+        android:layout_width="1dp"
+        android:layout_height="0dp"
+        android:background="@color/border_light"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/iv_dot"
+        app:layout_constraintStart_toStartOf="@id/iv_dot"
+        app:layout_constraintTop_toBottomOf="@id/iv_dot" />
+
+    <View
+        android:id="@+id/iv_dot"
+        android:layout_width="7dp"
+        android:layout_height="7dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="13dp"
+        android:background="@drawable/shape_timeline_dot_outlined"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="18dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="14dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/iv_dot"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/inter_medium"
+            android:maxLines="1"
+            android:text="Checked In"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            tools:text="Checked In" />
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:fontFamily="@font/inter_regular"
+            android:text="10:00 AM, 24 Oct"
+            android:textColor="@color/text_tertiary"
+            android:textSize="11sp"
+            tools:text="10:00 AM, 24 Oct" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

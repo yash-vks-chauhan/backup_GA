@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">Gridee</string>
     <string name="camera_permission_required">Camera permission required</string>
+    <string name="camera_permission_granted">Camera permission granted</string>
     <string name="scan_to_check_in">Scan to Check-In</string>
     <string name="scan_to_check_out">Scan to Check-Out</string>
     <string name="validating_qr">Validating QR…</string>
@@ -24,7 +25,45 @@
     <string name="vehicle_scan_best_guess">Possible match: %1$s</string>
     <string name="vehicle_scan_flash_on">Flash on</string>
     <string name="vehicle_scan_flash_off">Flash off</string>
+    <string name="vehicle_scan_voice_input">Speak vehicle number</string>
+    <string name="vehicle_scan_voice_prompt">Speak the vehicle registration number in English letters and digits, for example M H 12 A B 1234</string>
+    <string name="vehicle_scan_voice_unavailable">Voice input is not available on this device</string>
+    <string name="vehicle_scan_voice_no_match">Could not detect a valid vehicle registration number from speech</string>
+    <string name="vehicle_scan_voice_start_error">Unable to start voice input</string>
+    <string name="vehicle_scan_voice_listening">Listening for vehicle plate… Tap the mic again to stop</string>
+    <string name="vehicle_scan_voice_processing">Matching spoken vehicle plate…</string>
+    <string name="vehicle_scan_voice_permission_required">Microphone permission is required for voice input</string>
+    <string name="vehicle_scan_voice_busy">Voice recognizer is busy. Please try again</string>
+    <string name="vehicle_scan_voice_confirm_title">Confirm vehicle plate</string>
+    <string name="vehicle_scan_voice_confirm_message">Select the plate you spoke</string>
     <string name="vehicle_scan_hint_move_closer">Move closer and align within the frame</string>
+    <string name="scanner_status_ready_title">Ready to scan</string>
+    <string name="scanner_status_failed_title">Action failed</string>
+    <string name="scanner_status_failed_badge">Failed</string>
+    <string name="scanner_status_result_success">%1$s completed</string>
+    <string name="scanner_status_result_failed">%1$s failed</string>
+    <string name="scanner_entry">ENTRY</string>
+    <string name="scanner_exit">EXIT</string>
+    <string name="scanner_plate">Plate</string>
+    <string name="scanner_qr">QR</string>
+    <string name="scanner_entry_ok">ENTRY OK</string>
+    <string name="scanner_exit_ok">EXIT OK</string>
+    <string name="scanner_do_not_allow">DO NOT ALLOW</string>
+    <string name="scanner_check_again">Check again</string>
+    <string name="scanner_scan_plate_title">Scan plate</string>
+    <string name="scanner_scan_qr_title">Scan QR</string>
+    <string name="scanner_processing_title">Processing</string>
+    <string name="scanner_booking_qr">Booking QR</string>
+    <string name="scanner_enter_number">Enter Number</string>
+    <string name="scanner_manual_sheet_hint">Type the vehicle number shown on the plate.</string>
+    <string name="scanner_qr_scan_hint">Align booking QR inside the frame</string>
+    <string name="scanner_qr_required">Booking QR is required</string>
+    <string name="scanner_processing_qr_checkin">Checking in booking QR…</string>
+    <string name="scanner_processing_qr_checkout">Checking out booking QR…</string>
+    <string name="scanner_checked_in_at">Checked in at %1$s</string>
+    <string name="scanner_checked_out_at">Checked out at %1$s</string>
+    <string name="scanner_spot_meta">%1$s</string>
+    <string name="scanner_open">Open Scanner</string>
     <string name="vehicle_sheet_status_fetching">Fetching active booking…</string>
     <string name="vehicle_sheet_status_not_found">No booking is linked to %1$s.</string>
     <string name="vehicle_sheet_status_error">Failed to fetch booking. %1$s</string>
@@ -40,10 +79,11 @@
     <string name="vehicle_sheet_booking_location">Lot %1$s • Spot %2$s</string>
     <string name="vehicle_sheet_booking_window">%1$s - %2$s</string>
     <string name="vehicle_sheet_manual_label">Enter vehicle number manually</string>
-    <string name="vehicle_sheet_manual_hint">Vehicle number</string>
+    <string name="vehicle_sheet_manual_hint">Vehicle registration number</string>
     <string name="vehicle_sheet_manual_submit">Use vehicle number</string>
     <string name="vehicle_sheet_manual_button">Enter manually</string>
-    <string name="vehicle_sheet_manual_error">Enter a valid vehicle number</string>
+    <string name="vehicle_sheet_manual_error">Enter a valid Indian vehicle registration number</string>
+    <string name="vehicle_sheet_processing_timeout">Operator request took too long. Scanner is ready to try again.</string>
     <string name="vehicle_sheet_checkin_success">Check-in completed for %1$s</string>
     <string name="vehicle_sheet_checkout_success">Check-out completed for %1$s</string>
     <string name="vehicle_sheet_status_ready">Vehicle %1$s detected</string>
@@ -134,6 +174,9 @@
     
     <!-- Splash Screen -->
     <string name="app_name_gridee">Gridee</string>
+    <string name="splash_loading_message">Setting things up for you</string>
+    <string name="splash_loading_message_2">Finding parking near you</string>
+    <string name="splash_loading_message_3">Almost ready</string>
     <string name="card_on_road">Card on road</string>
     <string name="bike_on_road">Bike on road</string>
     <string name="content_desc_no_bookings">No bookings illustration</string>
@@ -145,29 +188,46 @@
     <string name="op_check_in">Check-In</string>
     <string name="op_check_out">Check-Out</string>
     <string name="op_tap_to_scan">Tap to Scan Vehicle</string>
+    <string name="op_scan_vehicle_cd">Scan vehicle</string>
+    <string name="op_align_qr_hint">Align QR code within frame</string>
     <string name="op_btn_check_in">Check In</string>
     <string name="op_btn_check_out">Check Out</string>
     <string name="op_manual_entry_label">Or enter vehicle number manually</string>
+    <string name="op_manual_title">Enter Vehicle Number</string>
     <string name="op_submit_manual">Use Vehicle Number</string>
     <string name="op_back_to_scan">Back to Scanner</string>
-    <string name="op_enter_vehicle_hint">e.g. MH 04 AB 1234</string>
+    <string name="op_enter_vehicle_hint">e.g. MH12AB1234 or 22BH1234A</string>
     <string name="op_spot_id_label">Selected spot</string>
     <string name="op_spot_id_hint">Tap to choose a spot</string>
     <string name="op_select_spot_title">Select parking spot</string>
     <string name="op_select_spot_subtitle">Choose the spot you will manage for this session.</string>
     <string name="op_select_spot_button">Select spot</string>
+    <string name="op_change_spot_button">Change spot</string>
+    <string name="op_select_spot_loading">Loading parking spots...</string>
     <string name="op_select_spot_empty">No parking spots found.</string>
     <string name="op_select_spot_required">Please select a parking spot to continue.</string>
     <string name="op_enter_vehicle_error">Enter vehicle number</string>
-    <string name="op_invalid_vehicle_error">Invalid vehicle number</string>
+    <string name="op_invalid_vehicle_error">Enter a valid Indian vehicle registration number</string>
     <string name="op_switched_to">Switched to %1$s</string>
+    <string name="op_dashboard_insights_title">Analytics &amp; Insights</string>
+    <string name="op_dashboard_insights_subtitle">View occupancy trends and performance metrics. Coming soon to your dashboard.</string>
+    <string name="op_menu_title">Operator Menu</string>
+    <string name="op_menu_section_general">General</string>
+    <string name="op_menu_history">History</string>
+    <string name="op_menu_section_support">Support</string>
+    <string name="op_menu_version">v2.4.0 • Gridee Operator</string>
+    <string name="op_history_soon">History feature coming soon</string>
     <string name="op_settings_soon">Settings coming soon</string>
     <string name="op_help_soon">Help &amp; Support coming soon</string>
     <string name="op_logout_title">Logout</string>
     <string name="op_logout_message">Are you sure you want to log out?</string>
+    <string name="logout_sheet_message">Are you sure you want to log out of this account? Your data will be saved securely.</string>
     <string name="op_cancel">Cancel</string>
     <string name="op_confirm_logout">Logout</string>
     <string name="op_session_info">Operator: %1$s\nLocation: %2$s\nSession: Active</string>
+    <string name="language_english">English</string>
+    <string name="language_hindi">Hindi</string>
+    <string name="language_tamil">Tamil</string>
     <string name="select_language">Select Language</string>
     
     <!-- Sidebar Menu -->
@@ -176,4 +236,29 @@
     <string name="menu_help">Help &amp; Support</string>
     <string name="menu_account">Account</string>
     <string name="menu_logout">Logout</string>
+
+    <plurals name="profile_vehicle_count">
+        <item quantity="one">%d vehicle</item>
+        <item quantity="other">%d vehicles</item>
+    </plurals>
+    <string name="profile_vehicle_count_loading">Loading...</string>
+    <string name="profile_vehicle_loading_message">Fetching your vehicles</string>
+    <string name="profile_vehicle_empty_title">No vehicles yet</string>
+    <string name="profile_vehicle_empty_message">Save a vehicle for quicker bookings.</string>
+    <string name="profile_vehicle_add_action">Add vehicle</string>
+    <string name="profile_vehicle_unavailable_title">Vehicles unavailable</string>
+    <string name="profile_vehicle_unavailable_message">Couldn\'t load your vehicles. Please try again.</string>
+    <string name="profile_vehicle_retry_action">Retry</string>
+
+    <!-- STEP ribbon banner (home) -->
+    <string name="step_banner_line">STEP Parking · 8 AM – 5 PM</string>
+
+    <!-- Maintenance screen -->
+    <string name="maintenance_title_default">We\'ll be right back</string>
+    <string name="maintenance_message_default">Gridee is taking a short break for maintenance. We\'ll be back in a few minutes.</string>
+    <string name="maintenance_retry">Try again</string>
+    <string name="maintenance_a11y_mark">Parking gate closed for maintenance</string>
+    <string name="maintenance_caption_checking">Checking…</string>
+    <string name="maintenance_caption_just_now">Checking automatically · last checked just now</string>
+    <string name="maintenance_caption_seconds">Checking automatically · last checked %1$ds ago</string>
 </resources>

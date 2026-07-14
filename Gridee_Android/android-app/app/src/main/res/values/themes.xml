@@ -20,13 +20,14 @@
         <item name="colorError">#F44336</item>
         <item name="colorOnError">#FFFFFF</item>
         
-        <!-- Default font family -->
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="fontFamily">sans-serif</item>
+        <!-- Default font family — real bundled Inter, as a weighted family so
+             android:textStyle="bold" resolves to true Inter Bold (not synthetic). -->
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
         
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/white</item>
         <item name="android:windowLightNavigationBar">true</item>
         
         <!-- Enable edge-to-edge -->
@@ -40,6 +41,8 @@
         
         <!-- Force Navigation Drawer to be square -->
         <item name="drawerLayoutCornerSize">0dp</item>
+        <!-- Ensure all BottomSheetDialog(...) instances use the same non-transparent sheet theme -->
+        <item name="bottomSheetDialogTheme">@style/BottomSheetDialogTheme</item>
     </style>
     
     <style name="Theme.Gridee.NoActionBar" parent="Theme.Gridee">
@@ -47,8 +50,40 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="Theme.Gridee.MainLaunch" parent="Theme.Gridee.NoActionBar">
+        <!-- Keep splash-to-home handoff visually continuous until first frame renders -->
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <style name="Theme.Gridee.PostSplashLaunch" parent="Theme.Gridee.NoActionBar">
+        <!-- Used by activities launched directly from SplashActivity so the first frame
+             is black, matching the splash's exit state and avoiding a light-theme flash. -->
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <style name="Theme.Gridee.LaunchSplash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_transparent</item>
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.Gridee.LaunchSplash.Post</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
+    <style name="Theme.Gridee.LaunchSplash.Post" parent="Theme.Gridee.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
     <style name="Theme.Gridee.Search" parent="Theme.Gridee.NoActionBar">
         <item name="android:windowContentTransitions">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
@@ -69,18 +104,27 @@
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowSoftInputMode">adjustResize</item>
         <item name="android:backgroundDimEnabled">true</item>
-        <item name="android:backgroundDimAmount">0.4</item>
+        <item name="android:backgroundDimAmount">0.6</item>
         <item name="android:background">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:navigationBarDividerColor" tools:targetApi="p">@android:color/transparent</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
         <item name="android:windowLightNavigationBar">true</item>
+        <item name="enableEdgeToEdge">true</item>
+        <item name="paddingBottomSystemWindowInsets">true</item>
+        <item name="paddingLeftSystemWindowInsets">false</item>
+        <item name="paddingRightSystemWindowInsets">false</item>
+        <item name="paddingTopSystemWindowInsets">false</item>
         <item name="bottomSheetDragHandleStyle">@null</item>
+        <item name="android:windowAnimationStyle">@style/BottomSheetSpringAnimation</item>
     </style>
     
     <style name="BottomSheetStyle" parent="Widget.Material3.BottomSheet">
         <item name="shapeAppearanceOverlay">@style/BottomSheetShapeAppearance</item>
         <item name="android:elevation">8dp</item>
-        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="backgroundTint">@color/white</item>
+        <item name="gestureInsetBottomIgnored">true</item>
+        <item name="paddingBottomSystemWindowInsets">true</item>
     </style>
     
     <style name="BottomSheetShapeAppearance" parent="">
@@ -99,7 +143,7 @@
         <item name="android:textSize">32sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/text_primary</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFamily">@font/inter</item>
         <item name="android:letterSpacing">0</item>
     </style>
 
@@ -107,7 +151,7 @@
         <item name="android:textSize">20sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/text_primary</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFamily">@font/inter</item>
         <item name="android:letterSpacing">0</item>
     </style>
 
@@ -143,6 +187,53 @@
     <style name="ShapeAppearance.Gridee.Circle" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="Widget.Gridee.BackButton.IOS26" parent="">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:foreground">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:outlineAmbientShadowColor">@color/ios26_back_button_shadow_ambient</item>
+        <item name="android:outlineSpotShadowColor">@color/ios26_back_button_shadow_spot</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="cardCornerRadius">@dimen/ios26_back_button_radius</item>
+        <item name="cardBackgroundColor">@color/ios26_back_button_surface</item>
+        <item name="cardElevation">@dimen/ios26_back_button_elevation</item>
+        <item name="rippleColor">#0D000000</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="strokeColor">@android:color/transparent</item>
+    </style>
+
+    <!-- Back button shadow variant that matches home parking spot card shadow opacity -->
+    <style name="Widget.Gridee.BackButton.HomeCardShadow" parent="">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:foreground">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="cardCornerRadius">@dimen/ios26_back_button_radius</item>
+        <item name="cardBackgroundColor">@color/ios26_back_button_surface</item>
+        <item name="cardElevation">@dimen/ios26_back_button_elevation</item>
+        <item name="rippleColor">#10000000</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="strokeColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.Gridee.FilterButton.IOS26" parent="">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:outlineAmbientShadowColor">@color/ios26_back_button_shadow_ambient</item>
+        <item name="android:outlineSpotShadowColor">@color/ios26_back_button_shadow_spot</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="cardCornerRadius">100dp</item>
+        <item name="cardBackgroundColor">@color/ios26_back_button_surface</item>
+        <item name="cardElevation">@dimen/ios26_back_button_elevation</item>
+        <item name="rippleColor">#0D000000</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="strokeColor">@android:color/transparent</item>
     </style>
     
     <!-- Custom Material Date Picker Theme - White & Grey with Black Buttons -->
@@ -198,12 +289,12 @@
     <!-- Text Appearances for Date Picker -->
     <style name="TextAppearance.DatePicker.Body" parent="TextAppearance.Material3.BodyLarge">
         <item name="android:textColor">#1A1A1A</item>
-        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:fontFamily">@font/inter_regular</item>
     </style>
     
     <style name="TextAppearance.DatePicker.Label" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textColor">#666666</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFamily">@font/inter_medium</item>
     </style>
     
     <!-- Shape Appearances for Date Picker -->
@@ -243,5 +334,22 @@
         <item name="cornerSizeTopLeft">0dp</item>
         <item name="cornerSizeBottomLeft">0dp</item>
     </style>
+
+    <style name="ShapeAppearance.App.Pill.Left" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">100dp</item>
+        <item name="cornerSizeBottomLeft">100dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+    
+    <style name="ShapeAppearance.App.Pill.Right" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">100dp</item>
+        <item name="cornerSizeBottomRight">100dp</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
+    
     
 </resources>

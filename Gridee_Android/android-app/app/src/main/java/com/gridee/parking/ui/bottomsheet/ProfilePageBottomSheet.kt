@@ -13,8 +13,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.gridee.parking.R
 import com.gridee.parking.databinding.BottomSheetProfilePageBinding
 import com.gridee.parking.ui.profile.EditProfileViewModel
+import com.gridee.parking.utils.AuthSession
 
 class ProfilePageBottomSheet : BottomSheetDialogFragment() {
 
@@ -24,6 +26,7 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
     private lateinit var viewModel: EditProfileViewModel
 
     private var selectedPhotoUri: android.net.Uri? = null
+    private var previousActivityNavBarColor: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,8 +41,8 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
             // Fix for Edge-to-Edge: Ensure the container extends behind nav bar
             val bottomSheet = bottomSheetDialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
             bottomSheet?.let { sheet ->
-                // Remove default background to use ours
-                sheet.background = null 
+                // Keep the sheet surface opaque so nav-area never appears transparent
+                sheet.setBackgroundResource(com.gridee.parking.R.drawable.bg_bottom_sheet_universal)
                 
                 // Force the sheet to extend to the edge
                 sheet.fitsSystemWindows = false
@@ -48,25 +51,20 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
                 val params = sheet.layoutParams as? ViewGroup.MarginLayoutParams
                 params?.setMargins(0, 0, 0, 0)
                 sheet.layoutParams = params
-                
-                // Prevent system from padding the sheet automatically
-                ViewCompat.setOnApplyWindowInsetsListener(sheet) { view, insets ->
-                    view.setPadding(0, 0, 0, 0)
-                    insets
-                }
             }
             
             // Ensure behavior ignores gesture insets
-            bottomSheetDialog.behavior.isGestureInsetBottomIgnored = true
-            
-            // Force fully expanded state
-            bottomSheetDialog.behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
-            bottomSheetDialog.behavior.skipCollapsed = true
+            bottomSheetDialog.behavior.apply {
+                isGestureInsetBottomIgnored = true
+                skipCollapsed = true
+                state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+            }
             
             bottomSheetDialog.window?.let { window ->
                 WindowCompat.setDecorFitsSystemWindows(window, false)
-                val navBarColor = ContextCompat.getColor(requireContext(), com.gridee.parking.R.color.white)
-                window.navigationBarColor = navBarColor
+                window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
                 window.isNavigationBarContrastEnforced = false
                 
                 // Ensure light nav bar (dark icons) since background is white
@@ -91,6 +89,29 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
         return dialog
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Hard fallback: also force the host activity nav bar to white while this sheet is visible.
+        activity?.window?.let { hostWindow ->
+            previousActivityNavBarColor = hostWindow.navigationBarColor
+            hostWindow.navigationBarColor = ContextCompat.getColor(requireContext(), R.color.white)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                hostWindow.isNavigationBarContrastEnforced = false
+            }
+            WindowCompat.getInsetsController(hostWindow, hostWindow.decorView)
+                .isAppearanceLightNavigationBars = true
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        val previousColor = previousActivityNavBarColor
+        if (previousColor != null) {
+            activity?.window?.navigationBarColor = previousColor
+        }
+        previousActivityNavBarColor = null
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -111,6 +132,7 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         
         viewModel = ViewModelProvider(this)[EditProfileViewModel::class.java]
+        renderProfileIdentity(AuthSession.getUserName(requireContext()))
         
         setupUI()
         setupBehaviors()
@@ -145,10 +167,14 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun setupInsets() {
+        // Reduced bottom padding to avoid excessive space (common in Apple-like design)
+        val density = binding.root.context.resources.displayMetrics.density
+        val baseBottomPadding = binding.root.paddingBottom // Get XML padding
+        
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val initialPadding = (32 * view.context.resources.displayMetrics.density).toInt()
-            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, initialPadding + bars.bottom)
+            val extraPadding = (8 * density).toInt() // Keep it clear of nav gestures without over-spacing
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, baseBottomPadding + extraPadding + bars.bottom)
             insets
         }
     }
@@ -202,7 +228,7 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
             val phone = binding.etPhone.text.toString().trim()
 
             if (validateInput(name, email, phone)) {
-                viewModel.updateProfile(name, email, phone)
+                viewModel.updateProfile(requireContext(), name, email, phone)
             }
         }
         
@@ -225,11 +251,8 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
     private fun setupObservers() {
         viewModel.userProfile.observe(viewLifecycleOwner) { user ->
             user?.let {
-                // Set user initials
-                val initials = it.name.split(" ").mapNotNull { name -> 
-                    name.firstOrNull()?.uppercaseChar() 
-                }.take(2).joinToString("")
-                binding.tvUserInitials.text = if (initials.isNotEmpty()) initials else "U"
+                AuthSession.updateCachedUserProfile(requireContext(), it)
+                renderProfileIdentity(it.name)
                 
                 // Set user info
                 binding.etName.setText(it.name)
@@ -247,7 +270,12 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
             binding.progressLoader.isVisible = isInitialLoad
             
             if (mode == Mode.EDIT_PROFILE) {
-                binding.layoutEditProfileForm.isVisible = !isInitialLoad
+                // Keep form in layout during first load to avoid bottom-sheet height jump on open animation.
+                binding.layoutEditProfileForm.alpha = if (isInitialLoad) 0.45f else 1f
+                binding.etName.isEnabled = !isLoading
+                binding.tilName.isEnabled = !isLoading
+                binding.tvChangePhoto.isEnabled = !isLoading
+                binding.tvChangePhoto.isClickable = !isLoading
             }
 
             // Button state for "Saving..."
@@ -271,23 +299,38 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
         viewModel.updateSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
                 parentFragmentManager.setFragmentResult("profile_updated", android.os.Bundle())
-                Toast.makeText(requireContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show()
                 dismiss()
             }
         }
     }
     
     private fun loadUserData() {
+        val context = requireContext()
         val sharedPref = requireActivity().getSharedPreferences("gridee_prefs", android.content.Context.MODE_PRIVATE)
-        val userId = sharedPref.getString("user_id", null)
-        val isLoggedIn = sharedPref.getBoolean("is_logged_in", false)
+        val userId = AuthSession.getUserId(context) ?: sharedPref.getString("user_id", null)
+        val isLoggedIn = AuthSession.isAuthenticated(context) || sharedPref.getBoolean("is_logged_in", false)
         
         if (userId != null && isLoggedIn) {
-            viewModel.loadUserProfile(userId)
+            viewModel.loadUserProfile(context, userId)
         } else {
             Toast.makeText(requireContext(), "User session expired", Toast.LENGTH_SHORT).show()
             dismiss()
         }
+    }
+
+    private fun renderProfileIdentity(name: String?) {
+        val normalizedName = name?.trim().orEmpty()
+        binding.tvUserInitials.text = buildInitials(normalizedName)
+    }
+
+    private fun buildInitials(name: String): String {
+        if (name.isBlank()) return ""
+
+        return name
+            .split(Regex("\\s+"))
+            .mapNotNull { word -> word.firstOrNull()?.uppercaseChar() }
+            .take(2)
+            .joinToString("")
     }
     
     private fun validateInput(name: String, email: String, phone: String): Boolean {

@@ -20,6 +20,33 @@ data class WalletTransaction(
     
     @SerializedName("timestamp")
     val timestamp: String? = null,
+
+    @SerializedName("bookingId")
+    val bookingId: String? = null,
+
+    @SerializedName("lotId")
+    val lotId: String? = null,
+
+    @SerializedName("lotName")
+    val lotName: String? = null,
+
+    @SerializedName("spotId")
+    val spotId: String? = null,
+
+    @SerializedName("referenceId")
+    val referenceId: String? = null,
+
+    @SerializedName("currency")
+    val currency: String? = null,
+
+    @SerializedName("method")
+    val method: String? = null,
+
+    @SerializedName("gateway")
+    val gateway: String? = null,
+
+    @SerializedName("failureReason")
+    val failureReason: String? = null,
     
     @SerializedName("balanceAfter")
     val balanceAfter: Double? = null

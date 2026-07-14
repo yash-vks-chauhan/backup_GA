@@ -1,6 +1,7 @@
 package com.gridee.parking.data.api
 
 import android.content.Context
+import com.gridee.parking.BuildConfig
 import com.gridee.parking.utils.JwtTokenManager
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -34,10 +35,10 @@ class JwtAuthInterceptor(private val context: Context) : Interceptor {
                     .addHeader("Authorization", token)
                     .build()
                 
-                println("JwtAuthInterceptor: Added JWT token to request: $path")
+                debugLog("JwtAuthInterceptor: Added JWT token to request: $path")
                 return chain.proceed(authenticatedRequest)
             } else {
-                println("JwtAuthInterceptor: No valid JWT token found for request: $path")
+                debugLog("JwtAuthInterceptor: No valid JWT token found for request: $path")
             }
         }
         
@@ -70,5 +71,11 @@ class JwtAuthInterceptor(private val context: Context) : Interceptor {
         
         // Return true if path is not public (requires authentication)
         return !isPublicPath
+    }
+
+    private fun debugLog(message: String) {
+        if (BuildConfig.DEBUG) {
+            println(message)
+        }
     }
 }

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.gridee.parking.R
 import com.gridee.parking.data.api.ApiClient
 import com.gridee.parking.data.repository.BookingRepository
+import com.gridee.parking.data.repository.ParkingRepository
 import com.gridee.parking.databinding.ActivityBookingHistoryPlaceholderBinding
 import com.gridee.parking.ui.adapters.Booking as UiBooking
 import com.gridee.parking.ui.adapters.BookingStatus
@@ -19,14 +20,20 @@ import com.gridee.parking.ui.bookings.BookingDetailsActivity
 import com.gridee.parking.data.model.Booking as BackendBooking
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
 class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPlaceholderBinding>() {
 
     private lateinit var bookingsAdapter: BookingsAdapter
     private val bookingRepository by lazy { BookingRepository() }
-    private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    private val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    private val parkingRepository by lazy { ParkingRepository() }
+    private val istTimeZone: TimeZone = TimeZone.getTimeZone("Asia/Kolkata")
+    private val weekdayShortDateFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
+    private val longDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    private val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+    private val bookingSectionTitles = mutableMapOf<String, String>()
     private val parkingLotCache = mutableMapOf<String, String>()
     private val parkingSpotCache = mutableMapOf<String, String>()
     private var isCacheLoaded = false
@@ -39,12 +46,34 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
         super.onCreate(savedInstanceState)
 
         window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+        val isNightMode = resources.configuration.uiMode and
+            android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isNightMode
 
         binding.btnBack.setOnClickListener { finish() }
 
+        setupFrostedToolbar()
         setupRecyclerView()
         loadBookingHistory()
+    }
+
+    private fun setupFrostedToolbar() {
+        val frostView = binding.viewToolbarFrost
+        val titleView = binding.tvHeaderTitle
+
+        // Start state — fully clear, title slightly soft
+        frostView.alpha = 0f
+        titleView.alpha = 0.88f
+
+        // Content top padding — push below the floating header
+        binding.layoutHeader.post {
+            binding.contentContainer.setPadding(0, binding.layoutHeader.height + (4f.dpToPx()).toInt(), 0, 0)
+        }
+
+        binding.scrollContent.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            updateFrostedHeader(scrollY)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -56,7 +85,10 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
             onExtendClick = { _ ->
                 // Extend is not applicable for history items
             },
-            useCompactHistory = true
+            useCompactHistory = true,
+            historySectionProvider = { booking ->
+                bookingSectionTitles[booking.id] ?: ""
+            }
         )
 
         binding.rvBookingHistory.apply {
@@ -85,11 +117,19 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
             val result = bookingRepository.getUserBookingHistory()
             result.onSuccess { bookings ->
                 val sorted = bookings.sortedByDescending { getComparableTimestamp(it) }
-                val uiBookings = sorted.map { convertToUiBooking(it) }
+                bookingSectionTitles.clear()
+                val uiBookings = sorted.map { backend ->
+                    val ui = convertToUiBooking(backend)
+                    bookingSectionTitles[ui.id] = sectionTitleFor(backend)
+                    ui
+                }
 
                 bookingsAdapter.updateBookings(uiBookings)
                 showLoading(false)
                 showEmptyState(uiBookings.isEmpty())
+                if (uiBookings.isNotEmpty()) {
+                    binding.rvBookingHistory.scheduleLayoutAnimation()
+                }
             }.onFailure { error ->
                 showLoading(false)
                 showEmptyState(true)
@@ -107,12 +147,37 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
         if (show) {
             binding.rvBookingHistory.visibility = View.GONE
             binding.layoutEmptyState.visibility = View.GONE
+            updateFrostedHeader(0)
         }
     }
 
     private fun showEmptyState(show: Boolean) {
         binding.layoutEmptyState.visibility = if (show) View.VISIBLE else View.GONE
         binding.rvBookingHistory.visibility = if (show) View.GONE else View.VISIBLE
+        if (show) {
+            updateFrostedHeader(0)
+        } else {
+            updateFrostedHeader(binding.scrollContent.scrollY)
+        }
+    }
+
+    private fun updateFrostedHeader(scrollOffsetPx: Int) {
+        val deadZone = 16f.dpToPx()
+        val activeScroll = (scrollOffsetPx - deadZone).coerceAtLeast(0f)
+
+        val frostRange = 120f.dpToPx()
+        val rawFrost = (activeScroll / frostRange).coerceIn(0f, 1f)
+        val t = 1f - rawFrost
+        binding.viewToolbarFrost.alpha = 1f - (t * t * t)
+
+        val titleRange = 80f.dpToPx()
+        val rawTitle = (activeScroll / titleRange).coerceIn(0f, 1f)
+        binding.tvHeaderTitle.alpha = 0.88f + (0.12f * rawTitle)
+
+        if (scrollOffsetPx <= 0) {
+            binding.viewToolbarFrost.alpha = 0f
+            binding.tvHeaderTitle.alpha = 0.88f
+        }
     }
 
     private fun convertToUiBooking(backendBooking: BackendBooking): UiBooking {
@@ -123,7 +188,7 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
             ?: backendBooking.createdAt
         val checkOutTime = backendBooking.checkOutTime
 
-        val bookingDate = (backendBooking.createdAt ?: checkInTime)?.let { dateFormat.format(it) } ?: "TBD"
+        val bookingDate = getHistoryDisplayDate(backendBooking)?.let { formatRelativeDate(it) } ?: "TBD"
         val startTime = checkInTime?.let { timeFormat.format(it) } ?: "TBD"
         val endTime = checkOutTime?.let { timeFormat.format(it) } ?: "TBD"
 
@@ -137,8 +202,12 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
         val rawSpotId: String? = backendBooking.spotId
         val rawLotId: String? = backendBooking.lotId
         val spotLabel = getSpotLabel(rawSpotId)
-        val lotLabel = getLotLabel(rawLotId)
-        val amountText = "₹${String.format(Locale.getDefault(), "%.2f", backendBooking.amount)}"
+        // Prefer the lot name embedded in the booking response; fall back to cache.
+        val lotLabel = backendBooking.lotName
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: getLotLabel(rawLotId)
+        val amountText = String.format(Locale.getDefault(), "%.2f", backendBooking.amount)
 
         return UiBooking(
             id = backendBooking.id ?: "Unknown",
@@ -190,7 +259,7 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
                     parkingLotCache[lot.id] = lot.name
 
                     try {
-                        val spotsForLot = ApiClient.apiService.getParkingSpotsByLot(lot.id)
+                        val spotsForLot = parkingRepository.getParkingSpotsByLot(lot.id)
                         if (spotsForLot.isSuccessful) {
                             spotsForLot.body()?.forEach { spot ->
                                 if (!parkingSpotCache.containsKey(spot.id)) {
@@ -211,11 +280,109 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
         }
     }
 
+    private fun formatRelativeDate(date: java.util.Date): String {
+        val now = java.util.Calendar.getInstance()
+        val then = java.util.Calendar.getInstance().apply { time = date }
+
+        // Normalize both to start-of-day to get calendar-day differences
+        fun startOfDay(c: java.util.Calendar): java.util.Calendar {
+            val copy = c.clone() as java.util.Calendar
+            copy.set(java.util.Calendar.HOUR_OF_DAY, 0)
+            copy.set(java.util.Calendar.MINUTE, 0)
+            copy.set(java.util.Calendar.SECOND, 0)
+            copy.set(java.util.Calendar.MILLISECOND, 0)
+            return copy
+        }
+
+        val diffDays = ((startOfDay(now).timeInMillis - startOfDay(then).timeInMillis) /
+            (1000L * 60 * 60 * 24)).toInt()
+
+        val timeSuffix = "  ·  ${timeFormat.format(date)}"
+        return when {
+            diffDays == 0 -> "Today$timeSuffix"
+            diffDays == 1 -> "Yesterday$timeSuffix"
+            now.get(java.util.Calendar.YEAR) == then.get(java.util.Calendar.YEAR) ->
+                "${weekdayShortDateFormat.format(date)}$timeSuffix"
+            else -> "${longDateFormat.format(date)}$timeSuffix"
+        }
+    }
+
+    private fun sectionTitleFor(booking: BackendBooking): String {
+        val date = getHistoryDisplayDate(booking) ?: return "Earlier"
+
+        val now = Calendar.getInstance(istTimeZone)
+        val todayStart = startOfDay(now)
+        val yesterdayStart = startOfDay(
+            (now.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -1) }
+        )
+        val thisWeekStart = (now.clone() as Calendar).apply {
+            add(Calendar.DAY_OF_YEAR, -7)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        val bookingCal = Calendar.getInstance(istTimeZone).apply { time = date }
+
+        return when {
+            bookingCal.timeInMillis >= todayStart.timeInMillis -> "Today"
+            bookingCal.timeInMillis >= yesterdayStart.timeInMillis -> "Yesterday"
+            bookingCal.timeInMillis >= thisWeekStart.timeInMillis -> "This Week"
+            else -> {
+                val month = bookingCal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault())
+                val year = bookingCal.get(Calendar.YEAR)
+                "$month $year"
+            }
+        }
+    }
+
+    private fun startOfDay(calendar: Calendar): Calendar {
+        return (calendar.clone() as Calendar).apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+    }
+
     private fun getComparableTimestamp(booking: BackendBooking): Long {
-        return (booking.checkOutTime
-            ?: booking.actualCheckInTime
-            ?: booking.checkInTime
-            ?: booking.createdAt)?.time ?: 0L
+        return getHistoryDisplayDate(booking)?.time ?: 0L
+    }
+
+    private fun getHistoryDisplayDate(booking: BackendBooking): java.util.Date? {
+        return when (mapBackendStatus(booking.status)) {
+            BookingStatus.CANCELLED -> booking.cancelledAt
+                ?: booking.updatedAt
+                ?: booking.archivedAt
+                ?: booking.createdAt
+                ?: booking.actualCheckInTime
+                ?: booking.checkInTime
+                ?: booking.checkOutTime
+
+            BookingStatus.NO_SHOW -> booking.updatedAt
+                ?: booking.archivedAt
+                ?: booking.checkInTime
+                ?: booking.createdAt
+                ?: booking.checkOutTime
+
+            BookingStatus.COMPLETED -> booking.actualCheckOutTime
+                ?: booking.checkOutTime
+                ?: booking.updatedAt
+                ?: booking.archivedAt
+                ?: booking.actualCheckInTime
+                ?: booking.checkInTime
+                ?: booking.createdAt
+
+            BookingStatus.ACTIVE -> booking.actualCheckInTime
+                ?: booking.checkInTime
+                ?: booking.updatedAt
+                ?: booking.createdAt
+
+            BookingStatus.PENDING -> booking.checkInTime
+                ?: booking.createdAt
+                ?: booking.updatedAt
+        }
     }
 
     private fun formatDuration(durationMillis: Long): String {
@@ -223,6 +390,10 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
         val hours = safeDuration / (1000 * 60 * 60)
         val minutes = (safeDuration % (1000 * 60 * 60)) / (1000 * 60)
         return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+    }
+
+    private fun Float.dpToPx(): Float {
+        return this * resources.displayMetrics.density
     }
 
     private fun mapBackendStatus(backendStatus: String?): BookingStatus {

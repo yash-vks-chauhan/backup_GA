@@ -3,6 +3,7 @@ package com.gridee.parking.ui.base
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
+import com.gridee.parking.ui.utils.configureEdgeToEdge
 
 abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     
@@ -12,6 +13,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     abstract fun getViewBinding(): T
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        configureEdgeToEdge()
         super.onCreate(savedInstanceState)
         _binding = getViewBinding()
         setContentView(binding.root)

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tv_today_summary"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="24dp"
+    android:paddingTop="24dp"
+    android:paddingBottom="8dp"
+    android:gravity="center"
+    android:textSize="12sp"
+    android:textColor="@color/text_tertiary"
+    android:fontFamily="@font/inter_medium"
+    android:letterSpacing="0.02"
+    android:includeFontPadding="false"
+    tools:text="Today  ·  2 sessions  ·  3h 30m  ·  40 G"
+    xmlns:tools="http://schemas.android.com/tools" />

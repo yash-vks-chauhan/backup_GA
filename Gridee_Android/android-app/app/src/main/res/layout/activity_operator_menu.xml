@@ -4,26 +4,26 @@
     android:id="@+id/menu_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/background_primary"
     android:orientation="vertical"
     android:fitsSystemWindows="true">
 
-    <!-- Header Area -->
+    <!-- ═══════════ HEADER ═══════════ -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="24dp"
-        android:paddingHorizontal="24dp"
-        android:paddingBottom="24dp">
-        
-        <!-- Branding -->
+        android:paddingTop="20dp"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="8dp">
+
+        <!-- Title -->
         <TextView
             android:id="@+id/tv_menu_brand"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Operator Menu"
+            android:text="Menu"
             android:textSize="20sp"
-            android:textColor="#111827"
+            android:textColor="@color/text_primary"
             android:textStyle="bold"
             android:fontFamily="@font/inter_bold"
             app:layout_constraintStart_toStartOf="parent"
@@ -31,43 +31,41 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-        <!-- Close Button (X) -->
-        <FrameLayout
+        <!-- Close Button -->
+        <ImageView
             android:id="@+id/btn_close_menu"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_close_circle"
+            android:src="@drawable/ic_close"
+            android:padding="9dp"
+            app:tint="@color/text_secondary"
             android:clickable="true"
             android:focusable="true"
+            android:contentDescription="Close"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
-            
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_close"
-                app:tint="#6B7280" />
-        </FrameLayout>
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:elevation="10dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Scrollable Menu Items -->
+    <!-- ═══════════ SCROLLABLE CONTENT ═══════════ -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:clipToPadding="false">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingBottom="24dp">
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="32dp">
 
-            <!-- Profile Section (Centered, No Card Container) -->
+            <!-- ── Profile Section ── -->
             <LinearLayout
                 android:id="@+id/card_menu_profile"
                 android:layout_width="match_parent"
@@ -75,80 +73,27 @@
                 android:orientation="vertical"
                 android:gravity="center"
                 android:paddingTop="24dp"
-                android:paddingBottom="24dp"
+                android:paddingBottom="32dp"
                 android:clipChildren="false"
-                android:clipToPadding="false"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
+                android:clipToPadding="false">
 
-                <!-- Master Identity Container (Holds Avatar + Floating Badge) -->
+                <!-- Avatar (Matches profile page style) -->
                 <FrameLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clipChildren="false"
-                    android:clipToPadding="false">
+                    android:id="@+id/card_menu_avatar_container"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/circle_background_green">
 
-                    <!-- Avatar Card -->
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="104dp"
-                        android:layout_height="104dp"
-                        android:layout_margin="8dp"
-                        app:cardCornerRadius="52dp"
-                        app:cardElevation="10dp"
-                        app:cardMaxElevation="12dp"
-                        app:cardPreventCornerOverlap="false"
-                        app:cardBackgroundColor="#FFFFFF">
-
-                        <!-- Inner Container for White Border -->
-                        <FrameLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_margin="5dp">
-
-                            <FrameLayout
-                                android:id="@+id/card_menu_avatar_container"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/circle_background_green">
-
-                                <TextView
-                                    android:id="@+id/tv_menu_initials"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:text="O"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="36sp"
-                                    android:textStyle="bold"
-                                    android:gravity="center"
-                                    android:fontFamily="@font/inter_bold" />
-
-                            </FrameLayout>
-                        </FrameLayout>
-
-                    </androidx.cardview.widget.CardView>
-
-                    <!-- Floating Badge -->
-                    <FrameLayout
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_gravity="bottom|end"
-                        android:layout_marginEnd="4dp"
-                        android:layout_marginBottom="4dp"
-                        android:background="@drawable/bg_badge_circle_border"
-                        android:clickable="false"
-                        android:focusable="false"
-                        android:elevation="12dp">
-
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_edit_profile"
-                            app:tint="#FFFFFF"
-                            android:importantForAccessibility="no" />
-
-                    </FrameLayout>
+                    <TextView
+                        android:id="@+id/tv_menu_initials"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:text="O"
+                        android:textColor="#FFFFFF"
+                        android:textSize="40sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:fontFamily="@font/inter_bold" />
 
                 </FrameLayout>
 
@@ -158,34 +103,44 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Operator"
-                    android:textColor="#111827"
-                    android:textSize="26sp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="22sp"
                     android:textStyle="bold"
                     android:fontFamily="@font/inter_bold"
-                    android:layout_marginTop="20dp"
-                    android:letterSpacing="0.01" />
+                    android:layout_marginTop="16dp" />
+
+                <!-- Role Label -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Parking Operator"
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter_regular"
+                    android:layout_marginTop="4dp" />
 
             </LinearLayout>
 
-            <!-- Section: Manage -->
+            <!-- ── Section: General ── -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="General"
-                android:textColor="#6B7280"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:fontFamily="@font/inter_bold"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="12dp"
+                android:textColor="@color/text_tertiary"
+                android:textSize="13sp"
+                android:textAllCaps="true"
+                android:letterSpacing="0.05"
+                android:fontFamily="@font/inter_semibold"
+                android:layout_marginStart="4dp"
                 android:layout_marginBottom="8dp" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="28dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@color/background_secondary"
                 android:layout_marginBottom="24dp">
 
                 <LinearLayout
@@ -197,78 +152,160 @@
                     <LinearLayout
                         android:id="@+id/btn_menu_history"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="56dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="20dp"
+                        android:paddingHorizontal="16dp"
                         android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_history_doc" app:tint="#6B7280" android:layout_marginEnd="16dp" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="History" android:textColor="#111827" android:textSize="16sp" android:fontFamily="@font/inter_medium" />
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron_right" app:tint="#6B7280" />
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_history_doc"
+                            app:tint="@color/text_secondary"
+                            android:layout_marginEnd="14dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="History"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter_medium" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/text_tertiary" />
+
                     </LinearLayout>
-                    
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F3F4F6" android:layout_marginStart="60dp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/border_light"
+                        android:layout_marginStart="52dp"
+                        android:layout_marginEnd="16dp"
+                        android:alpha="0.5" />
 
                     <!-- Settings -->
-                     <LinearLayout
+                    <LinearLayout
                         android:id="@+id/btn_menu_settings"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="56dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="20dp"
+                        android:paddingHorizontal="16dp"
                         android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_settings_enhanced" app:tint="#6B7280" android:layout_marginEnd="16dp" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Settings" android:textColor="#111827" android:textSize="16sp" android:fontFamily="@font/inter_medium" />
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron_right" app:tint="#6B7280" />
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_settings_enhanced"
+                            app:tint="@color/text_secondary"
+                            android:layout_marginEnd="14dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Settings"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter_medium" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/text_tertiary" />
+
                     </LinearLayout>
 
-                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F3F4F6" android:layout_marginStart="60dp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/border_light"
+                        android:layout_marginStart="52dp"
+                        android:layout_marginEnd="16dp"
+                        android:alpha="0.5" />
 
                     <!-- Language -->
                     <LinearLayout
                         android:id="@+id/btn_menu_language"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="56dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="20dp"
+                        android:paddingHorizontal="16dp"
                         android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_language" app:tint="#6B7280" android:layout_marginEnd="16dp" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Language" android:textColor="#111827" android:textSize="16sp" android:fontFamily="@font/inter_medium" />
-                        <TextView android:id="@+id/tv_current_lang" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="English" android:textColor="#9CA3AF" android:textSize="12sp" android:fontFamily="@font/inter_regular" android:layout_marginEnd="8dp"/>
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron_right" app:tint="#6B7280" />
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_language"
+                            app:tint="@color/text_secondary"
+                            android:layout_marginEnd="14dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Language"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter_medium" />
+
+                        <TextView
+                            android:id="@+id/tv_current_lang"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="English"
+                            android:textColor="@color/text_tertiary"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/inter_regular"
+                            android:layout_marginEnd="8dp" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/text_tertiary" />
+
                     </LinearLayout>
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
 
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Section: Support -->
+            <!-- ── Section: Support ── -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Support"
-                android:textColor="#6B7280"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:fontFamily="@font/inter_bold"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="12dp"
+                android:textColor="@color/text_tertiary"
+                android:textSize="13sp"
+                android:textAllCaps="true"
+                android:letterSpacing="0.05"
+                android:fontFamily="@font/inter_semibold"
+                android:layout_marginStart="4dp"
                 android:layout_marginBottom="8dp" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="28dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@color/background_secondary"
                 android:layout_marginBottom="24dp">
 
                 <LinearLayout
@@ -276,78 +313,100 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <!-- Help -->
-                     <LinearLayout
+                    <!-- Help & Support -->
+                    <LinearLayout
                         android:id="@+id/btn_menu_help"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="56dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="20dp"
+                        android:paddingHorizontal="16dp"
                         android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_help" app:tint="#6B7280" android:layout_marginEnd="16dp" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Help &amp; Support" android:textColor="#111827" android:textSize="16sp" android:fontFamily="@font/inter_medium" />
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron_right" app:tint="#6B7280" />
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_help"
+                            app:tint="@color/text_secondary"
+                            android:layout_marginEnd="14dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Help &amp; Support"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter_medium" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/text_tertiary" />
+
                     </LinearLayout>
 
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Logout -->
-             <androidx.cardview.widget.CardView
+            <!-- ── Log Out ── -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="28dp"
                 app:cardElevation="0dp"
+                app:strokeWidth="0dp"
                 app:cardBackgroundColor="#FEF2F2"
                 android:layout_marginTop="8dp">
 
                 <LinearLayout
                     android:id="@+id/btn_menu_logout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="56dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
+                    android:paddingHorizontal="16dp"
                     android:background="?attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true">
-                    
-                    <ImageView 
-                        android:layout_width="24dp" 
-                        android:layout_height="24dp" 
-                        android:src="@drawable/ic_logout" 
-                        app:tint="#EF4444" 
-                        android:layout_marginEnd="16dp" />
-                        
-                    <TextView 
-                        android:layout_width="0dp" 
-                        android:layout_height="wrap_content" 
-                        android:layout_weight="1" 
-                        android:text="Log Out" 
-                        android:textColor="#EF4444" 
-                        android:textSize="16sp" 
-                        android:fontFamily="@font/inter_bold" />
-                        
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_logout"
+                        app:tint="#EF4444"
+                        android:layout_marginEnd="14dp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Log Out"
+                        android:textColor="#EF4444"
+                        android:textSize="16sp"
+                        android:fontFamily="@font/inter_semibold" />
+
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-             <!-- Version -->
+            <!-- Version -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="v2.4.0 • Gridee Operator"
-                android:textColor="#D1D5DB"
-                android:textSize="11sp"
-                android:fontFamily="@font/inter_medium"
+                android:text="v2.4.0 · Gridee Operator"
+                android:textColor="@color/text_tertiary"
+                android:textSize="12sp"
+                android:fontFamily="@font/inter_regular"
                 android:gravity="center"
-                android:layout_marginTop="24dp" />
+                android:layout_marginTop="32dp" />
 
         </LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

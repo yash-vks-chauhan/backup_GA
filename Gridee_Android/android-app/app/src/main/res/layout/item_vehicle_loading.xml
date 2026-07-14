@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_vehicle_item"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_vehicle_empty_icon" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="144dp"
+            android:layout_height="14dp"
+            android:background="@drawable/bg_vehicle_loading_bar" />
+
+        <View
+            android:layout_width="88dp"
+            android:layout_height="12dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_vehicle_loading_bar" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@drawable/bg_vehicle_loading_bar" />
+
+</LinearLayout>

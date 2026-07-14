@@ -7,181 +7,554 @@
     android:background="@color/background_primary"
     android:fitsSystemWindows="false">
 
-    <!-- Main Content ScrollView -->
-    <ScrollView
-        android:id="@+id/scroll_content"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:fillViewport="true"
-        android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <ScrollView
+            android:id="@+id/scroll_content"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fitsSystemWindows="false">
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:fillViewport="true">
 
-                <View
-                    android:id="@+id/hero_background"
-                    android:layout_width="0dp"
-                    android:layout_height="340dp"
-                    android:background="@drawable/bg_home_hero"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="18dp">
 
-                <com.airbnb.lottie.LottieAnimationView
-                    android:id="@+id/hero_animation"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:paddingBottom="24dp">
+
+                    <View
+                        android:id="@+id/hero_background"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:background="@drawable/bg_home_hero_obsidian_dip" />
+
+                <LinearLayout
+                    android:id="@+id/logo_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="56dp"
-                    android:layout_marginEnd="8dp"
-                    app:lottie_fileName="hero_animation.json"
-                    app:lottie_autoPlay="true"
-                    app:lottie_loop="true"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:layout_marginStart="24dp"
+                    android:layout_marginEnd="24dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:gravity="center_vertical|start"
+                    android:translationZ="6dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:orientation="horizontal">
 
-                <!-- Search Bar -->
+                    <!-- The wordmark doubles as the Instagram entry point: it rests on
+                         "Gridee" and periodically crossfades to a flowing-gradient
+                         "Follow @_gridee_ ›" in place (see BrandFollowSwitcher). -->
+                    <com.gridee.parking.ui.views.BrandFollowSwitcher
+                        android:id="@+id/brand_follow_switcher"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="68dp"
+                        android:clickable="true"
+                        android:contentDescription="Gridee — tap to follow on Instagram"
+                        android:focusable="true" />
+
+                    <!-- Reward Coin Activity (Apple Circle UX) -->
+                    <FrameLayout
+                        android:id="@+id/btn_hero_reward"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/ripple_white_circle_borderless"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <com.gridee.parking.ui.views.RewardCoinView
+                            android:id="@+id/hero_reward_coin"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:contentDescription="Daily reward" />
+
+                    </FrameLayout>
+                </LinearLayout>
+
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/search_bar_container"
-                    android:transitionName="search_bar_transition"
-                    android:layout_width="0dp"
-                    android:layout_height="68dp"
-                    android:layout_marginHorizontal="24dp"
-                    android:layout_marginBottom="40dp"
-                    android:background="@drawable/bg_search_bar_modern"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginEnd="24dp"
+                    app:layout_constraintTop_toBottomOf="@id/logo_container"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_home_search_pill"
                     android:clickable="true"
+                    android:elevation="3dp"
                     android:focusable="true"
                     android:foreground="@drawable/ripple_search_bar"
-                    android:paddingHorizontal="16dp"
-                    app:layout_constraintBottom_toBottomOf="@id/hero_background"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent">
+                    android:paddingStart="18dp"
+                    android:paddingEnd="8dp">
 
                     <ImageView
                         android:id="@+id/iv_search_icon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_marginStart="2dp"
                         android:src="@drawable/ic_search_modern"
-                        app:tint="#66000000"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:tint="@color/icon_secondary" />
 
-                    <TextView
-                        android:id="@+id/tv_search_hint"
+                    <EditText
+                        android:id="@+id/et_search_input"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="12dp"
-                        android:text="Find a parking spot..."
-                        android:textColor="#99000000"
-                        android:textSize="14sp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@null"
+                        android:fontFamily="@font/inter_regular"
+                        android:hint="Where do you want to park?"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:paddingVertical="0dp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_tertiary"
+                        android:textSize="16sp"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/view_divider"
+                        app:layout_constraintEnd_toStartOf="@id/search_trailing"
                         app:layout_constraintStart_toEndOf="@id/iv_search_icon"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <View
-                        android:id="@+id/view_divider"
-                        android:layout_width="1dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="12dp"
-                        android:background="#15000000"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/iv_mic_icon"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <ImageView
-                        android:id="@+id/iv_mic_icon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_mic"
-                        app:tint="#66000000"
+                    <!-- Trailing slot: mic when empty, clear (×) once text is entered.
+                         Both glyphs share the slot so the field width never jumps. -->
+                    <FrameLayout
+                        android:id="@+id/search_trailing"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <ImageView
+                            android:id="@+id/iv_search_mic"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="?android:attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:contentDescription="Voice search"
+                            android:focusable="true"
+                            android:padding="9dp"
+                            android:src="@drawable/ic_mic"
+                            app:tint="@color/icon_secondary" />
+
+                        <ImageView
+                            android:id="@+id/iv_search_clear"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="?android:attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:contentDescription="Clear search"
+                            android:focusable="true"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_search_clear"
+                            android:visibility="gone"
+                            app:tint="@color/icon_secondary" />
+
+                    </FrameLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <!-- Parking Spots Section -->
-                <TextView
-                    android:id="@+id/tv_parking_spots_title"
+                <!-- STEP ribbon banner — a cloth banner hung from two strings that
+                     flutters like a flag (self-drawn, mesh-warped). Occupies the slot
+                     vacated by the hidden time filter. -->
+                <com.gridee.parking.ui.views.RibbonBannerView
+                    android:id="@+id/layout_step_banner"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginEnd="24dp"
-                    android:layout_marginTop="24dp"
-                    android:text="Nearby Parking"
-                    android:textColor="@color/text_primary"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/inter_bold"
+                    android:layout_height="90dp"
+                    android:layout_marginStart="28dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="28dp"
+                    android:clickable="true"
+                    android:focusable="true"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/hero_background" />
+                    app:layout_constraintTop_toBottomOf="@id/search_bar_container" />
 
-                <TextView
-                    android:id="@+id/tv_parking_spots_subtitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/layout_filter_cards"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
                     android:layout_marginStart="24dp"
+                    android:layout_marginTop="24dp"
                     android:layout_marginEnd="24dp"
-                    android:layout_marginTop="4dp"
-                    android:text="Discover available spots nearby"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_parking_spots_title" />
+                    app:layout_constraintTop_toBottomOf="@id/layout_step_banner"
+                    app:cardBackgroundColor="#33000000"
+                    app:cardCornerRadius="100dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1AFFFFFF">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="3dp">
+
+                        <!-- The Animated Slider Thumb -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/filter_segment_slider"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            app:cardBackgroundColor="@color/segment_slider_fill"
+                            app:cardCornerRadius="100dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp" />
+
+                        <!-- Foreground Options -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal"
+                            android:elevation="5dp"
+                            android:weightSum="2">
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/card_filter_morning"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:background="@android:color/transparent"
+                                app:cardBackgroundColor="@android:color/transparent"
+                                app:rippleColor="@android:color/transparent"
+                                app:cardCornerRadius="100dp"
+                                app:cardElevation="0dp"
+                                app:strokeWidth="0dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="horizontal">
+
+                                    <ImageView
+                                        android:id="@+id/iv_filter_morning"
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:src="@drawable/ic_sun"
+                                        app:tint="@color/border_light" />
+
+                                    <TextView
+                                        android:id="@+id/tv_filter_morning"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:fontFamily="@font/inter_medium"
+                                        android:includeFontPadding="false"
+                                        android:text="Morning"
+                                        android:textColor="@color/border_light"
+                                        android:textSize="14sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/card_filter_evening"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:background="@android:color/transparent"
+                                app:cardBackgroundColor="@android:color/transparent"
+                                app:rippleColor="@android:color/transparent"
+                                app:cardCornerRadius="100dp"
+                                app:cardElevation="0dp"
+                                app:strokeWidth="0dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="horizontal">
+
+                                    <ImageView
+                                        android:id="@+id/iv_filter_evening"
+                                        android:layout_width="14dp"
+                                        android:layout_height="14dp"
+                                        android:src="@drawable/ic_moon"
+                                        app:tint="@color/border_light" />
+
+                                    <TextView
+                                        android:id="@+id/tv_filter_evening"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:fontFamily="@font/inter_medium"
+                                        android:includeFontPadding="false"
+                                        android:text="Afternoon"
+                                        android:textColor="@color/border_light"
+                                        android:textSize="14sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                        </LinearLayout>
+                    </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/layout_morning_mode_toggle"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="24dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/uber_toggle_container_bg"
+                    app:cardCornerRadius="100dp"
+                    app:cardElevation="0dp"
+                    app:layout_constraintTop_toBottomOf="@id/layout_filter_cards"
+                    app:strokeColor="@color/uber_toggle_container_stroke"
+                    app:strokeWidth="1dp"
+                    tools:visibility="visible">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="0dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:elevation="0dp"
+                            android:layout_margin="0dp"
+                            android:orientation="horizontal"
+                            android:weightSum="2">
+
+                            <LinearLayout
+                                android:id="@+id/card_morning_mode_standard"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@color/uber_toggle_selected_bg"
+                                android:clickable="true"
+                                android:focusable="true">
+
+                                <TextView
+                                    android:id="@+id/tv_morning_mode_standard"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:fontFamily="@font/inter_medium"
+                                    android:gravity="center"
+                                    android:includeFontPadding="false"
+                                    android:text="Standard"
+                                    android:textColor="@color/uber_toggle_selected_text"
+                                    android:textSize="14sp" />
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="1dp"
+                                android:layout_height="match_parent"
+                                android:background="@color/uber_toggle_container_stroke" />
+
+                            <LinearLayout
+                                android:id="@+id/card_morning_mode_quick"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@android:color/transparent"
+                                android:clickable="true"
+                                android:focusable="true">
+
+                                <TextView
+                                    android:id="@+id/tv_morning_mode_quick"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:fontFamily="@font/inter_medium"
+                                    android:gravity="center"
+                                    android:includeFontPadding="false"
+                                    android:text="Quick"
+                                    android:textColor="@color/uber_toggle_unselected_text"
+                                    android:textSize="14sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <ProgressBar
                     android:id="@+id/progress_parking_spots"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginStart="20dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="32dp"
+                    android:indeterminateTint="@color/text_primary"
                     android:visibility="gone"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_parking_spots_subtitle"
                     tools:visibility="visible" />
 
                 <TextView
                     android:id="@+id/tv_parking_spots_empty"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
+                    android:layout_marginStart="24dp"
                     android:layout_marginTop="16dp"
+                    android:layout_marginEnd="24dp"
                     android:gravity="center"
                     android:text="No parking spots available"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
+                    android:textSize="15sp"
                     android:visibility="gone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_parking_spots_subtitle"
                     tools:visibility="visible" />
+
+                <LinearLayout
+                    android:id="@+id/layout_parking_spots_error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_marginEnd="24dp"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <FrameLayout
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:background="@drawable/bg_error_icon_circle">
+
+                        <ImageView
+                            android:id="@+id/iv_parking_spots_error"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_no_connection"
+                            android:tint="@color/icon_secondary" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tv_parking_spots_error_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:fontFamily="@font/inter_semibold"
+                        android:gravity="center"
+                        android:text="No Connection"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/tv_parking_spots_error_message"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="@font/inter_regular"
+                        android:gravity="center"
+                        android:text="Please check your internet and try again."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <LinearLayout
+                        android:id="@+id/btn_parking_spots_retry"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:background="@drawable/bg_error_retry_button"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:minHeight="44dp"
+                        android:orientation="horizontal"
+                        android:paddingStart="22dp"
+                        android:paddingTop="11dp"
+                        android:paddingEnd="24dp"
+                        android:paddingBottom="11dp">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_refresh_outline"
+                            android:tint="@color/confirm_btn_text" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:fontFamily="@font/inter_medium"
+                            android:text="Try Again"
+                            android:textColor="@color/confirm_btn_text"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                </LinearLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_parking_spots"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="8dp"
                     android:clipToPadding="false"
-                    android:paddingHorizontal="16dp"
+                    android:paddingBottom="4dp"
                     android:visibility="gone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_parking_spots_subtitle"
                     tools:listitem="@layout/item_parking_spot_home"
                     tools:visibility="visible" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_dot_indicator"
+                    android:layout_width="86dp"
+                    android:layout_height="42dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/background_secondary"
+                    app:cardCornerRadius="21dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="#12000000"
+                    app:strokeWidth="1dp"
+                    tools:visibility="visible">
 
-    </ScrollView>
+                    <LinearLayout
+                        android:id="@+id/layout_dot_indicator"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:animateLayoutChanges="true">
+
+                        <View
+                            android:layout_width="34dp"
+                            android:layout_height="10dp"
+                            android:background="@drawable/bg_dot_active_pill" />
+
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:layout_marginStart="10dp"
+                            android:background="@drawable/bg_dot_inactive" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

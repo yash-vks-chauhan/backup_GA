@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Neutral journey rail used on completed/cancelled bookings — kept to the same
+  geometry as the pending rail so the timeline rhythm stays consistent across
+  card states.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#9CA3AF"
+        android:centerColor="#669CA3AF"
+        android:endColor="#1F9CA3AF"
+        android:type="linear" />
+    <corners android:radius="2dp" />
+</shape>

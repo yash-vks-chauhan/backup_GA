@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Box bottom -->
+    <path
+        android:pathData="M20,58 L100,58 L100,105 C100,108.3 97.3,111 94,111 L26,111 C22.7,111 20,108.3 20,105 Z"
+        android:fillColor="#DAA520" />
+
+    <!-- Box bottom shadow/depth -->
+    <path
+        android:pathData="M20,58 L100,58 L100,68 L20,68 Z"
+        android:fillColor="#C6930A" />
+
+    <!-- Lid -->
+    <path
+        android:pathData="M14,42 C14,38.7 16.7,36 20,36 L100,36 C103.3,36 106,38.7 106,42 L106,58 L14,58 Z"
+        android:fillColor="#FFD700" />
+
+    <!-- Lid bottom edge -->
+    <path
+        android:pathData="M14,52 L106,52 L106,58 L14,58 Z"
+        android:fillColor="#DAA520" />
+
+    <!-- Vertical ribbon on box -->
+    <path
+        android:pathData="M52,58 L68,58 L68,111 L52,111 Z"
+        android:fillColor="#B8860B" />
+
+    <!-- Vertical ribbon on lid -->
+    <path
+        android:pathData="M52,36 L68,36 L68,58 L52,58 Z"
+        android:fillColor="#C6930A" />
+
+    <!-- Horizontal ribbon -->
+    <path
+        android:pathData="M14,42 L106,42 L106,52 L14,52 Z"
+        android:fillColor="#C6930A" />
+
+    <!-- Ribbon cross center -->
+    <path
+        android:pathData="M52,42 L68,42 L68,52 L52,52 Z"
+        android:fillColor="#B8860B" />
+
+    <!-- Left bow loop -->
+    <path
+        android:pathData="M60,36 C60,36 42,18 34,22 C26,26 38,36 60,36 Z"
+        android:fillColor="#FFD700" />
+
+    <!-- Right bow loop -->
+    <path
+        android:pathData="M60,36 C60,36 78,18 86,22 C94,26 82,36 60,36 Z"
+        android:fillColor="#FFD700" />
+
+    <!-- Left bow shadow -->
+    <path
+        android:pathData="M60,36 C60,36 46,24 40,26 C44,30 52,34 60,36 Z"
+        android:fillColor="#DAA520" />
+
+    <!-- Right bow shadow -->
+    <path
+        android:pathData="M60,36 C60,36 74,24 80,26 C76,30 68,34 60,36 Z"
+        android:fillColor="#DAA520" />
+
+    <!-- Bow knot center -->
+    <path
+        android:pathData="M55,30 C55,27.2 57.2,25 60,25 C62.8,25 65,27.2 65,30 C65,32.8 62.8,36 60,36 C57.2,36 55,32.8 55,30 Z"
+        android:fillColor="#C6930A" />
+
+    <!-- Sparkle top-right -->
+    <path
+        android:pathData="M96,16 L98,22 L104,24 L98,26 L96,32 L94,26 L88,24 L94,22 Z"
+        android:fillColor="#FFD700" />
+
+    <!-- Sparkle top-left -->
+    <path
+        android:pathData="M24,12 L25.5,16 L29.5,17.5 L25.5,19 L24,23 L22.5,19 L18.5,17.5 L22.5,16 Z"
+        android:fillColor="#FFD700" />
+
+    <!-- Small sparkle -->
+    <path
+        android:pathData="M104,42 L105,45 L108,46 L105,47 L104,50 L103,47 L100,46 L103,45 Z"
+        android:fillColor="#FFD700" />
+
+</vector>

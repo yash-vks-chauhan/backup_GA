@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The light content surface that rises into the obsidian chamber. Now layered for
+     depth: the flat fill, a warm gold "bleed" where the chamber's glow spills onto
+     the card's top edge, and a crisp 2dp seam highlight so the card reads as a
+     physical surface lifting out of the dark well rather than a flat overlap. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Base surface — fills to the bottom so the nav-inset area stays opaque. -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/background_primary" />
+            <corners
+                android:topLeftRadius="30dp"
+                android:topRightRadius="30dp" />
+        </shape>
+    </item>
+
+    <!-- Warm gold seam bleed — the chamber's halo softly spilling onto the top of
+         the card, tying the dark zone and the light zone into one continuous object.
+         A soft fade only; no hard edge/line at the seam. -->
+    <item
+        android:gravity="top"
+        android:height="96dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:endColor="#00E3B64A"
+                android:startColor="#16E3B64A"
+                android:type="linear" />
+            <corners
+                android:topLeftRadius="30dp"
+                android:topRightRadius="30dp" />
+        </shape>
+    </item>
+
+</layer-list>

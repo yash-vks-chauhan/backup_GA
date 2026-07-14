@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scanner_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:keepScreenOn="true"
-    android:background="@android:color/black">
+    android:background="@android:color/black"
+    android:keepScreenOn="true">
 
     <com.journeyapps.barcodescanner.DecoratedBarcodeView
         android:id="@+id/barcode_scanner"
@@ -16,7 +18,6 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <!-- Dim overlay covering full screen -->
     <View
         android:id="@+id/vehicle_overlay"
         android:layout_width="match_parent"
@@ -24,161 +25,507 @@
         android:background="@drawable/scanner_overlay"
         android:visibility="gone" />
 
-    <!-- Centered scanner content -->
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/scanner_content_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone"
-        android:id="@+id/scanner_content_container">
+        android:paddingHorizontal="20dp"
+        android:visibility="gone">
 
-        <!-- Frosted status chip -->
         <LinearLayout
-            android:id="@+id/vehicle_status_container"
+            android:id="@+id/scanner_top_controls"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="180dp"
-            android:background="@drawable/vehicle_status_background"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="20dp"
-            android:paddingVertical="10dp"
-            android:elevation="4dp"
-            android:visibility="gone">
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <ProgressBar
-                android:id="@+id/pb_vehicle_scanning"
-                style="?android:attr/progressBarStyleSmall"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginEnd="10dp"
-                android:indeterminate="true"
-                android:indeterminateTint="@color/scanner_status_scanning_tint" />
-
-            <TextView
-                android:id="@+id/tv_vehicle_status"
+            <LinearLayout
+                android:id="@+id/scanner_spot_selector"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/vehicle_scan_detecting"
-                android:textColor="@color/scanner_text_primary"
-                android:textSize="14sp"
-                android:fontFamily="sans-serif-medium"
-                android:includeFontPadding="false" />
+                android:layout_height="48dp"
+                android:background="@drawable/bg_scanner_button_pill"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:minWidth="148dp"
+                android:maxWidth="248dp"
+                android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingEnd="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tv_scanner_spot_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/inter_semibold"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:text="@string/op_spot_id_hint"
+                    android:textColor="@color/scanner_text_primary"
+                    android:textSize="14sp" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="@null"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_arrow_down"
+                    android:tint="@color/scanner_text_secondary" />
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- Scanning Frame Container -->
         <FrameLayout
             android:id="@+id/scanning_frame_container"
-            android:layout_width="280dp"
-            android:layout_height="220dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="16dp">
+            android:layout_width="312dp"
+            android:layout_height="208dp"
+            app:layout_constraintBottom_toTopOf="@id/scanner_mode_dock"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/scanner_top_controls"
+            app:layout_constraintVertical_bias="0.52">
 
-            <!-- Subtle vignette inside the frame -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/scanner_frame_background" />
 
-            <!-- Corner brackets -->
             <ImageView
                 android:id="@+id/corner_top_left"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:layout_gravity="top|start"
+                android:contentDescription="@string/scanner_corner"
                 android:src="@drawable/corner_top_left"
-                android:tint="@color/scanner_corner_idle"
-                android:contentDescription="@string/scanner_corner" />
+                android:tint="@color/scanner_corner_idle" />
 
             <ImageView
                 android:id="@+id/corner_top_right"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:layout_gravity="top|end"
+                android:contentDescription="@string/scanner_corner"
                 android:src="@drawable/corner_top_right"
-                android:tint="@color/scanner_corner_idle"
-                android:contentDescription="@string/scanner_corner" />
+                android:tint="@color/scanner_corner_idle" />
 
             <ImageView
                 android:id="@+id/corner_bottom_left"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:layout_gravity="bottom|start"
+                android:contentDescription="@string/scanner_corner"
                 android:src="@drawable/corner_bottom_left"
-                android:tint="@color/scanner_corner_idle"
-                android:contentDescription="@string/scanner_corner" />
+                android:tint="@color/scanner_corner_idle" />
 
             <ImageView
                 android:id="@+id/corner_bottom_right"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:layout_gravity="bottom|end"
+                android:contentDescription="@string/scanner_corner"
                 android:src="@drawable/corner_bottom_right"
-                android:tint="@color/scanner_corner_idle"
-                android:contentDescription="@string/scanner_corner" />
+                android:tint="@color/scanner_corner_idle" />
 
-            <!-- Scan line -->
             <View
                 android:id="@+id/vehicle_scan_line"
-                android:layout_width="240dp"
+                android:layout_width="248dp"
                 android:layout_height="3dp"
                 android:layout_gravity="center"
-                android:background="@drawable/vehicle_scan_line"
-                android:visibility="visible" />
-
+                android:background="@drawable/vehicle_scan_line" />
         </FrameLayout>
 
-        <!-- Hint text -->
         <TextView
             android:id="@+id/tv_vehicle_hint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxWidth="280dp"
-            android:paddingHorizontal="24dp"
-            android:paddingVertical="8dp"
+            android:layout_marginTop="14dp"
+            android:alpha="0"
+            android:fontFamily="@font/inter_medium"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxWidth="304dp"
             android:text="@string/vehicle_scan_hint"
             android:textColor="@color/scanner_text_secondary"
             android:textSize="14sp"
-            android:fontFamily="sans-serif"
-            android:gravity="center"
-            android:includeFontPadding="false"
             android:visibility="gone"
-            android:alpha="0" />
+            app:layout_constraintEnd_toEndOf="@id/scanning_frame_container"
+            app:layout_constraintStart_toStartOf="@id/scanning_frame_container"
+            app:layout_constraintTop_toBottomOf="@id/scanning_frame_container" />
 
-    </LinearLayout>
+        <LinearLayout
+            android:id="@+id/scanner_mode_dock"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/bg_scanner_mode_dock"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="10dp"
+            app:layout_constraintBottom_toTopOf="@id/vehicle_status_container"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintWidth_max="356dp">
 
-    <!-- Minimal flash toggle - neumorphic circular button -->
-    <ImageButton
-        android:id="@+id/btn_flash_toggle"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="20dp"
-        android:background="@drawable/flash_button_ripple"
-        android:padding="14dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_flash_off"
-        android:contentDescription="@string/vehicle_scan_flash_off"
-        android:elevation="0dp"
-        android:stateListAnimator="@null"
-        android:visibility="gone" />
+            <LinearLayout
+                android:id="@+id/scanner_operation_toggle"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_scanner_button_pill"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="4dp"
+                android:visibility="gone">
 
-    <!-- Close scanner button -->
+                <FrameLayout
+                    android:id="@+id/segment_scanner_checkin"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_segment_slider"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <TextView
+                        android:id="@+id/tv_scanner_mode_checkin"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:fontFamily="@font/inter_bold"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:text="@string/scanner_entry"
+                        android:textColor="@color/scanner_toggle_selected_text"
+                        android:textSize="14sp" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/segment_scanner_checkout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <TextView
+                        android:id="@+id/tv_scanner_mode_checkout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:fontFamily="@font/inter_bold"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:text="@string/scanner_exit"
+                        android:textColor="@color/scanner_text_primary"
+                        android:textSize="14sp" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/scanner_input_toggle"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_scanner_button_pill"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="4dp"
+                android:visibility="gone">
+
+                <FrameLayout
+                    android:id="@+id/segment_scanner_plate"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_segment_slider"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <TextView
+                        android:id="@+id/tv_scanner_input_plate"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:fontFamily="@font/inter_semibold"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:text="@string/scanner_plate"
+                        android:textColor="@color/scanner_toggle_selected_text"
+                        android:textSize="13sp" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/segment_scanner_qr"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <TextView
+                        android:id="@+id/tv_scanner_input_qr"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:fontFamily="@font/inter_semibold"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:text="@string/scanner_qr"
+                        android:textColor="@color/scanner_text_primary"
+                        android:textSize="13sp" />
+                </FrameLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/vehicle_status_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_scanner_panel_neutral"
+            android:minHeight="162dp"
+            android:orientation="vertical"
+            android:paddingHorizontal="18dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintWidth_max="356dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:id="@+id/scanner_status_icon_container"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_scanner_status_icon_neutral"
+                    android:padding="10dp">
+
+                    <ImageView
+                        android:id="@+id/iv_scanner_status_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_scanner_filled"
+                        android:tint="@color/scanner_text_primary" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tv_vehicle_status_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/status_outlined_active"
+                    android:fontFamily="@font/inter_bold"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="0.04"
+                    android:paddingStart="12dp"
+                    android:paddingTop="6dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/scanner_entry"
+                    android:textColor="@color/booking_status_active_text"
+                    android:textSize="11sp" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <ProgressBar
+                    android:id="@+id/pb_vehicle_scanning"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/scanner_text_primary" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_vehicle_status_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/inter_bold"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:text="@string/scanner_status_ready_title"
+                android:textColor="@color/scanner_text_primary"
+                android:textSize="26sp" />
+
+            <TextView
+                android:id="@+id/tv_vehicle_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/inter_medium"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="2dp"
+                android:maxLines="2"
+                android:text="@string/vehicle_scan_hint"
+                android:textColor="@color/scanner_text_secondary"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tv_scanner_status_meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/inter_semibold"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:textColor="@color/scanner_text_primary"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/scanner_result_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_scanner_result_scan_again"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/inter_semibold"
+                    android:text="@string/vehicle_sheet_scan_again"
+                    android:textAllCaps="false"
+                    android:textColor="@color/scanner_primary"
+                    android:textSize="14sp"
+                    app:backgroundTint="@color/scanner_text_primary"
+                    app:cornerRadius="16dp"
+                    app:elevation="0dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_scanner_manual_entry"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/inter_semibold"
+                    android:text="@string/scanner_enter_number"
+                    android:textAllCaps="false"
+                    android:textColor="@color/scanner_text_primary"
+                    android:textSize="14sp"
+                    app:cornerRadius="16dp"
+                    app:strokeColor="@color/scanner_glass_border"
+                    app:strokeWidth="1dp" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_scanner_manual_fallback"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="14dp"
+                android:fontFamily="@font/inter_semibold"
+                android:text="@string/scanner_enter_number"
+                android:textAllCaps="false"
+                android:textColor="@color/scanner_text_primary"
+                android:textSize="14sp"
+                app:cornerRadius="16dp"
+                app:strokeColor="@color/scanner_glass_border"
+                app:strokeWidth="1dp" />
+        </LinearLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_inline_manual_entry"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:visibility="gone"
+            app:cardElevation="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_manual_entry_mode_chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_inline_manual_input"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/input_inline_manual_plate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionDone"
+                        android:inputType="textCapCharacters|textNoSuggestions"
+                        android:maxLength="16"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_manual_submit_inline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <ImageButton
         android:id="@+id/btn_close_scanner"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
         android:layout_gravity="top|start"
         android:layout_marginStart="20dp"
         android:layout_marginTop="20dp"
-        android:background="@drawable/bg_close_button"
-        android:padding="10dp"
-        android:src="@drawable/ic_close"
-        android:tint="@color/scanner_text_primary"
+        android:background="@drawable/bg_scanner_button_round"
         android:contentDescription="@string/close"
         android:elevation="0dp"
-        android:stateListAnimator="@null" />
+        android:padding="13dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_close"
+        android:stateListAnimator="@null"
+        android:tint="@android:color/white" />
 
+    <ImageButton
+        android:id="@+id/btn_flash_toggle"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/bg_scanner_button_round"
+        android:contentDescription="@string/vehicle_scan_flash_off"
+        android:elevation="0dp"
+        android:padding="13dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_flash_off"
+        android:stateListAnimator="@null"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_voice_entry"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:layout_gravity="top|start"
+        android:contentDescription="@string/vehicle_scan_voice_input"
+        android:src="@drawable/ic_mic"
+        android:visibility="gone" />
 </FrameLayout>

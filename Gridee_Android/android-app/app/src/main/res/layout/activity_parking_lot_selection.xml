@@ -7,19 +7,24 @@
     android:background="@color/background_primary"
     android:fitsSystemWindows="false">
 
-    <ImageButton
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnBack"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        style="@style/Widget.Gridee.BackButton.IOS26"
+        android:layout_width="@dimen/ios26_back_button_size"
+        android:layout_height="@dimen/ios26_back_button_size"
         android:layout_marginStart="20dp"
         android:layout_marginTop="20dp"
-        android:background="@drawable/bg_close_button"
-        android:contentDescription="@string/back"
-        android:padding="10dp"
-        android:src="@drawable/ic_arrow_back"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/text_primary" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="@dimen/ios26_back_icon_size"
+            android:layout_height="@dimen/ios26_back_icon_size"
+            android:layout_gravity="center"
+            android:contentDescription="@string/back"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/brand_primary" />
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/tvTitle"
@@ -31,7 +36,7 @@
         android:textColor="@color/text_primary"
         android:textSize="28sp"
         android:textStyle="bold"
-        android:fontFamily="sans-serif-medium"
+        android:fontFamily="@font/inter_medium"
         app:layout_constraintStart_toEndOf="@+id/btnBack"
         app:layout_constraintTop_toTopOf="@+id/btnBack"
         app:layout_constraintEnd_toEndOf="parent"
@@ -48,7 +53,7 @@
         android:text="Choose a parking lot to view available spots"
         android:textColor="@color/text_secondary"
         android:textSize="15sp"
-        android:fontFamily="sans-serif"
+        android:fontFamily="@font/inter_regular"
         app:layout_constraintTop_toBottomOf="@id/btnBack"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -100,7 +105,7 @@
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/inter_medium"
             android:layout_marginBottom="8dp" />
 
         <TextView
@@ -109,7 +114,7 @@
             android:text="Please try again later"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/inter_regular"
             android:gravity="center" />
     </LinearLayout>
 

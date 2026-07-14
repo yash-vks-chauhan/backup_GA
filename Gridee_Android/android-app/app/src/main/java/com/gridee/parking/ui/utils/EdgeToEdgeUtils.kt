@@ -1,6 +1,7 @@
 package com.gridee.parking.ui.utils
 
 import android.app.Activity
+import android.graphics.Color as AndroidColor
 import android.os.Build
 import android.view.View
 import android.view.Window
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.gridee.parking.utils.ThemeManager
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
@@ -29,62 +31,73 @@ object EdgeToEdgeUtils {
      * Call this in your Activity's onCreate() method.
      */
     fun setupEdgeToEdge(activity: ComponentActivity) {
-        // Enable edge-to-edge with proper system bar styles
+        val isDarkMode = ThemeManager.isDarkMode(activity)
+        val transparentStyle = SystemBarStyle.auto(
+            lightScrim = AndroidColor.TRANSPARENT,
+            darkScrim = AndroidColor.TRANSPARENT
+        ) { isDarkMode }
+
         activity.enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(
-                scrim = android.graphics.Color.TRANSPARENT,
-                darkScrim = android.graphics.Color.TRANSPARENT
-            ),
-            navigationBarStyle = SystemBarStyle.light(
-                scrim = android.graphics.Color.TRANSPARENT,
-                darkScrim = android.graphics.Color.TRANSPARENT
-            )
+            statusBarStyle = transparentStyle,
+            navigationBarStyle = transparentStyle
         )
-        
-        // Additional configuration
-        WindowCompat.setDecorFitsSystemWindows(activity.window, false)
-        
-        // Disable navigation bar contrast enforcement if available (API 29+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            activity.window.isNavigationBarContrastEnforced = false
-        }
+
+        configureSystemBars(
+            window = activity.window,
+            isDarkMode = isDarkMode,
+            navigationBarColor = AndroidColor.TRANSPARENT
+        )
     }
     
     /**
      * Legacy setup for View-based activities
      */
     fun setupEdgeToEdgeLegacy(activity: Activity) {
+        if (activity is ComponentActivity) {
+            setupEdgeToEdge(activity)
+            return
+        }
+
         val window = activity.window
-        
-        // For API 30+ use the new WindowInsets API
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            
-            // Disable contrast enforcement
-            window.isNavigationBarContrastEnforced = false
-            window.isStatusBarContrastEnforced = false
-            
-            // Set transparent bars
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
-            
-            // Configure light/dark icons
-            val controller = WindowInsetsControllerCompat(window, window.decorView)
-            controller.isAppearanceLightStatusBars = true
-            controller.isAppearanceLightNavigationBars = true
-            
+        val isDarkMode = ThemeManager.isDarkMode(activity)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            configureSystemBars(
+                window = window,
+                isDarkMode = isDarkMode,
+                navigationBarColor = AndroidColor.TRANSPARENT
+            )
         } else {
-            // For older versions
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
             )
-            
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+            window.statusBarColor = AndroidColor.TRANSPARENT
+            window.navigationBarColor = AndroidColor.TRANSPARENT
         }
+    }
+
+    private fun configureSystemBars(
+        window: Window,
+        isDarkMode: Boolean,
+        navigationBarColor: Int
+    ) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+            window.isStatusBarContrastEnforced = false
+        }
+
+        window.statusBarColor = AndroidColor.TRANSPARENT
+        window.navigationBarColor = navigationBarColor
+
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.isAppearanceLightStatusBars = !isDarkMode
+        controller.isAppearanceLightNavigationBars = !isDarkMode
     }
 }
 
@@ -103,7 +116,7 @@ fun ConfigureEdgeToEdgeSystemUI(
     LaunchedEffect(navigationBarColor, statusBarColor, darkIcons) {
         // Configure navigation bar - this is key to preventing gray areas
         systemUiController.setNavigationBarColor(
-            color = Color.Transparent, // Always use transparent
+            color = navigationBarColor,
             darkIcons = darkIcons,
             navigationBarContrastEnforced = false // Critical: disable contrast enforcement
         )

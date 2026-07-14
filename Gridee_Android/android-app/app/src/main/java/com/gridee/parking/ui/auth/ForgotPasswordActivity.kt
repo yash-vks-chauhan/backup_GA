@@ -1,13 +1,15 @@
 package com.gridee.parking.ui.auth
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.gridee.parking.R
 import com.gridee.parking.databinding.ActivityForgotPasswordBinding
+import com.gridee.parking.utils.NotificationHelper
+import com.gridee.parking.utils.ThemeManager
 
 class ForgotPasswordActivity : AppCompatActivity() {
 
@@ -19,8 +21,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
         binding = ActivityForgotPasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        window.statusBarColor = Color.parseColor("#F5F5F5")
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+        window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !ThemeManager.isDarkMode(this)
 
         binding.btnSendReset.setOnClickListener {
             it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
@@ -29,13 +31,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
             viewModel.sendResetEmail(email)
         }
 
-        binding.btnBackToLogin.setOnClickListener {
-            it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
-            finish()
-        }
-
-        binding.btnSuccessBack.setOnClickListener {
-            it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+        binding.btnBack.setOnClickListener {
+            it.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
             finish()
         }
 
@@ -47,7 +44,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
             try {
                 startActivity(android.content.Intent.createChooser(intent, "Open Email App"))
             } catch (e: android.content.ActivityNotFoundException) {
-                Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
+                NotificationHelper.showInfo(binding.rootContainer, message = "No email app found on this device")
             }
         }
 
@@ -68,7 +65,21 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 }
                 is ForgotPasswordState.Error -> {
                     showLoading(false)
-                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    if (state.isRetryable) {
+                        NotificationHelper.showWarning(
+                            binding.rootContainer,
+                            title = state.title,
+                            message = state.message,
+                            onClick = { binding.btnSendReset.performClick() },
+                            actionButtonText = "Try Again"
+                        )
+                    } else {
+                        NotificationHelper.showError(
+                            binding.rootContainer,
+                            title = state.title,
+                            message = state.message
+                        )
+                    }
                 }
             }
         }

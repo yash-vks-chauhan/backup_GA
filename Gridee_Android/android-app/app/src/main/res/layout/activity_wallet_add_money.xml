@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:fitsSystemWindows="false"
+    tools:context=".ui.wallet.WalletAddMoneyActivity">
+
+    <!-- Header -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="10dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_back"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:contentDescription="Back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tv_header_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter_medium"
+            android:text="Add Money"
+            android:textColor="@color/brand_primary"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Notice Banner: Payment Aggregator -->
+    <LinearLayout
+        android:id="@+id/layout_notice_banner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/bg_notice_banner"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="16dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/layout_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="Under development"
+            android:src="@drawable/ic_payment_aggregator_notice"
+            app:tint="@color/status_text_debit" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/inter_medium"
+            android:text="Add Money is temporarily unavailable.\nWe're integrating with our payment aggregator."
+            android:textColor="@color/status_text_debit"
+            android:textSize="12sp"
+            android:lineSpacingExtra="3dp" />
+
+    </LinearLayout>
+
+    <!-- Main Content Area centered -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/layout_action_footer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_notice_banner">
+
+        <!-- Balance Pill -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cv_balance_pill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="40dp"
+            app:cardBackgroundColor="@color/background_secondary"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:text="Current Balance"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:background="@drawable/bg_gridee_coin_brand"
+                    android:text="G"
+                    android:textColor="@color/background_primary"
+                    android:textSize="8sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter_bold"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:paddingTop="1dp"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:id="@+id/tv_current_balance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_bold"
+                    android:text="0.00"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Amount Input -->
+        <LinearLayout
+            android:id="@+id/ll_amount_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.35"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_gridee_coin_brand"
+                android:text="G"
+                android:textColor="@color/background_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingTop="1dp" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="40dp"
+                android:background="@null"
+                android:enabled="false"
+                android:fontFamily="@font/inter_bold"
+                android:hint="0"
+                android:inputType="numberDecimal"
+                android:maxLines="1"
+                android:textColor="@color/brand_primary"
+                android:textColorHint="#D1D5DB"
+                android:textCursorDrawable="@null"
+                android:textSize="54sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:baselineAligned="false">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_medium"
+                android:text="Minimum amount "
+                android:textColor="@color/text_tertiary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:background="@drawable/bg_gridee_coin_tertiary"
+                android:text="G"
+                android:textColor="@color/background_primary"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingTop="1dp"
+                android:layout_marginEnd="3dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_medium"
+                android:text="1"
+                android:textColor="@color/text_tertiary"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_action_footer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/background_primary"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="34dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_add_money_confirm"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:enabled="false"
+                android:fontFamily="@font/inter_semibold"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:stateListAnimator="@animator/touch_scale"
+                android:text="Add Money"
+                android:textAllCaps="false"
+                android:textColor="@color/md3_on_primary"
+                android:textSize="16sp"
+                app:backgroundTint="@color/brand_primary"
+                app:cornerRadius="28dp"
+                app:elevation="0dp" />
+
+            <ProgressBar
+                android:id="@+id/pb_loading"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:indeterminateTint="@color/md3_on_primary"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_gravity="center_horizontal"
+            android:alpha="0.6"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="6dp"
+                android:contentDescription="Secure payment"
+                android:src="@drawable/ic_privacy_policy"
+                app:tint="@color/brand_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:fontFamily="@font/inter_medium"
+                android:includeFontPadding="false"
+                android:text="Secured by"
+                android:textColor="@color/brand_primary"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="4dp"
+                android:contentDescription="Razorpay"
+                android:src="@drawable/ic_razorpay"
+                app:tint="@color/brand_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_bold"
+                android:includeFontPadding="false"
+                android:text="Razorpay"
+                android:textColor="@color/brand_primary"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

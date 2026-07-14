@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pill-shaped input for support forms. Borderless filled pill (no hairline), adaptive light/dark. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/background_secondary" />
+    <corners android:radius="30dp" />
+</shape>

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/background_primary"
     android:padding="24dp"
     tools:context=".ui.profile.AccountSettingsActivity">
 
@@ -33,10 +33,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/inter_medium"
             android:gravity="center"
             android:text="Account settings are almost here"
-            android:textColor="#000000"
+            android:textColor="@color/text_primary"
             android:textSize="24sp" />
 
         <TextView
@@ -47,7 +47,7 @@
             android:gravity="center"
             android:lineSpacingMultiplier="1.2"
             android:text="We’re building a comprehensive way to manage your account details. Stay tuned for updates!"
-            android:textColor="#6B7280"
+            android:textColor="@color/text_secondary"
             android:textSize="16sp" />
 
     </LinearLayout>
@@ -57,15 +57,19 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginBottom="24dp"
+        android:fontFamily="@font/inter_semibold"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:stateListAnimator="@null"
         android:text="Back to Profile"
         android:textAllCaps="false"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/md3_on_primary"
         android:textSize="16sp"
-        app:backgroundTint="#000000"
+        app:backgroundTint="@color/brand_primary"
         app:cornerRadius="28dp"
+        app:elevation="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:rippleColor="#33FFFFFF" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

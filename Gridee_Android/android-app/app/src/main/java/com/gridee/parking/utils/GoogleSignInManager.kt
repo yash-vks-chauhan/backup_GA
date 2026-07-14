@@ -126,7 +126,7 @@ class GoogleSignInManager(private val activity: Activity) {
             Log.e(TAG, "  - Message: ${e.message}")
             Log.e(TAG, "  - Localized Message: ${e.localizedMessage}", e)
             
-            // Common error codes explanation
+            // Common error codes for debugging
             val errorExplanation = when (e.statusCode) {
                 10 -> "DEVELOPER_ERROR - Check SHA-1 fingerprint in Firebase Console"
                 12500 -> "SIGN_IN_FAILED - General sign-in failure"
@@ -138,11 +138,12 @@ class GoogleSignInManager(private val activity: Activity) {
             if (e.statusCode == 12501) {
                 GoogleSignInResult.Cancelled
             } else {
-                GoogleSignInResult.Error("Google sign in failed: ${e.statusCode} - $errorExplanation")
+                val userError = AuthErrorMapper.fromGoogleSignInCode(e.statusCode)
+                GoogleSignInResult.Error(userError.message)
             }
         } catch (e: Exception) {
             Log.e(TAG, "❌ Unexpected exception during sign-in: ${e.message}", e)
-            GoogleSignInResult.Error("Unexpected error: ${e.message}")
+            GoogleSignInResult.Error("Google sign-in failed. Please try again.")
         }
     }
     

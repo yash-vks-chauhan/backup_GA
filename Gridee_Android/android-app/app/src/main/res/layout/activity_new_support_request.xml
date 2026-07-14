@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary"
+    android:fitsSystemWindows="true"
+    tools:context=".ui.profile.NewSupportRequestActivity">
+
+    <!-- ========== HEADER ========== -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_toolbar_frosted"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_back"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:contentDescription="@string/back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tv_header_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter_bold"
+            android:includeFontPadding="false"
+            android:letterSpacing="0"
+            android:text="New request"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="@id/btn_back"
+            app:layout_constraintStart_toEndOf="@id/btn_back"
+            app:layout_constraintTop_toTopOf="@id/btn_back"
+            android:layout_marginStart="13dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- ========== FORM ========== -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_form"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="20dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/bottom_bar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_header">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_bold"
+                android:includeFontPadding="false"
+                android:letterSpacing="0"
+                android:lineSpacingMultiplier="1.08"
+                android:text="Tell us what's going on"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/inter_medium"
+                android:letterSpacing="0"
+                android:lineSpacingMultiplier="1.25"
+                android:text="Share a few details and our team will follow up in the conversation."
+                android:textColor="@color/booking_details_support_text"
+                android:textSize="14sp" />
+
+            <!-- SUBJECT -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:fontFamily="@font/inter_semibold"
+                android:letterSpacing="0"
+                android:text="Subject"
+                android:textColor="@color/booking_details_label_text"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/etSubject"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_support_input_pill"
+                android:fontFamily="@font/inter_medium"
+                android:hint="What's the issue about?"
+                android:importantForAutofill="no"
+                android:inputType="textCapSentences"
+                android:maxLines="1"
+                android:paddingHorizontal="20dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tertiary"
+                android:textSize="15sp" />
+
+            <!-- DESCRIPTION -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/inter_semibold"
+                android:letterSpacing="0"
+                android:text="Description"
+                android:textColor="@color/booking_details_label_text"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/etDescription"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_support_input_pill"
+                android:fontFamily="@font/inter_regular"
+                android:gravity="top|start"
+                android:hint="Describe the issue in a little detail…"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine|textCapSentences"
+                android:lineSpacingMultiplier="1.25"
+                android:minLines="5"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tertiary"
+                android:textSize="15sp" />
+
+            <!-- PRIORITY -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:fontFamily="@font/inter_semibold"
+                android:letterSpacing="0"
+                android:text="Priority"
+                android:textColor="@color/booking_details_label_text"
+                android:textSize="13sp" />
+
+            <FrameLayout
+                android:id="@+id/priorityTrack"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_segment_track"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:padding="3dp">
+
+                <!-- Sliding white pill — sized and positioned in code -->
+                <View
+                    android:id="@+id/prioritySlider"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_segment_slider"
+                    android:elevation="2dp"
+                    android:outlineProvider="background"
+                    android:visibility="invisible" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:elevation="4dp"
+                    android:orientation="horizontal"
+                    android:translationZ="4dp"
+                    android:weightSum="3">
+
+                    <FrameLayout
+                        android:id="@+id/segLow"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:id="@+id/tvSegLow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:fontFamily="@font/inter_medium"
+                            android:letterSpacing="0.01"
+                            android:text="Low"
+                            android:textColor="@color/segment_text_unselected"
+                            android:textSize="14sp" />
+
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/segMedium"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:id="@+id/tvSegMedium"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:fontFamily="@font/inter_medium"
+                            android:letterSpacing="0.01"
+                            android:text="Medium"
+                            android:textColor="@color/segment_text_unselected"
+                            android:textSize="14sp" />
+
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/segHigh"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:id="@+id/tvSegHigh"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:fontFamily="@font/inter_medium"
+                            android:letterSpacing="0.01"
+                            android:text="High"
+                            android:textColor="@color/segment_text_unselected"
+                            android:textSize="14sp" />
+
+                    </FrameLayout>
+
+                </LinearLayout>
+
+            </FrameLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- ========== SUBMIT BAR ========== -->
+    <LinearLayout
+        android:id="@+id/bottom_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/background_primary"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSubmitTicket"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:backgroundTint="@color/brand_primary"
+            android:fontFamily="@font/inter_bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Submit request"
+            android:textAllCaps="false"
+            android:textColor="@color/btn_text_on_brand"
+            android:textSize="15sp"
+            app:cornerRadius="27dp"
+            app:rippleColor="#33FFFFFF" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

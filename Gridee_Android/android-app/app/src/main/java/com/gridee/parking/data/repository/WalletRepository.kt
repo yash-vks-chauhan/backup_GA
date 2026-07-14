@@ -1,6 +1,7 @@
 package com.gridee.parking.data.repository
 
 import android.content.Context
+import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.data.api.ApiClient
 import com.gridee.parking.data.model.WalletDetails
 import com.gridee.parking.data.model.WalletTransaction
@@ -13,6 +14,11 @@ class WalletRepository(private val context: Context) {
     
     suspend fun getWalletDetails(): Result<WalletDetails> {
         return try {
+            RemoteConfigManager.loadCached(context)
+            if (!RemoteConfigManager.isWalletEnabled()) {
+                return Result.failure(Exception("Wallet is temporarily unavailable."))
+            }
+
             val userId = AuthSession.getUserId(context)
             if (userId == null) {
                 println("WalletRepository: No user ID found")
@@ -43,6 +49,11 @@ class WalletRepository(private val context: Context) {
     
     suspend fun getWalletTransactions(): Result<List<WalletTransaction>> {
         return try {
+            RemoteConfigManager.loadCached(context)
+            if (!RemoteConfigManager.isWalletEnabled()) {
+                return Result.failure(Exception("Wallet is temporarily unavailable."))
+            }
+
             val userId = AuthSession.getUserId(context)
             if (userId == null) {
                 println("WalletRepository: No user ID found for transactions")
@@ -50,10 +61,15 @@ class WalletRepository(private val context: Context) {
             }
             
             println("WalletRepository: Getting wallet transactions for user: $userId")
-            val response = apiService.getWalletTransactions(userId)
+            val response = apiService.getWalletTransactions(
+                userId = userId,
+                page = 0,
+                size = 200,
+                sort = listOf("timestamp", "desc")
+            )
             
             if (response.isSuccessful) {
-                val transactions = response.body() ?: emptyList()
+                val transactions = response.body()?.content.orEmpty()
                 println("WalletRepository: Received ${transactions.size} transactions")
                 Result.success(transactions)
             } else {
@@ -68,6 +84,11 @@ class WalletRepository(private val context: Context) {
     
     suspend fun topUpWallet(amount: Double): Result<Map<String, Any>> {
         return try {
+            RemoteConfigManager.loadCached(context)
+            if (!RemoteConfigManager.isWalletEnabled()) {
+                return Result.failure(Exception("Wallet top-up is temporarily unavailable."))
+            }
+
             val userId = AuthSession.getUserId(context)
             if (userId == null) {
                 println("WalletRepository: No user ID found for topup")

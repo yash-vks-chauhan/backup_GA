@@ -1,25 +1,25 @@
 package com.gridee.parking.ui.fragments
 
 import android.content.Intent
-import android.text.TextWatcher
-import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
+import androidx.core.util.Pair
+import androidx.core.view.ViewCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gridee.parking.R
+import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.data.api.ApiClient
 import com.gridee.parking.data.model.WalletTransaction
 import com.gridee.parking.databinding.FragmentWalletNewBinding
-import com.gridee.parking.databinding.BottomSheetTopUpBinding
 import com.gridee.parking.ui.activities.TransactionHistoryActivity
 import com.gridee.parking.ui.adapters.Transaction
 import com.gridee.parking.ui.adapters.TransactionType
@@ -29,13 +29,13 @@ import com.gridee.parking.ui.base.BaseTabFragment
 import com.gridee.parking.ui.compose.DotLottieAnimation
 import com.gridee.parking.ui.compose.DotLottieSource
 import com.gridee.parking.ui.compose.Mode
+import com.gridee.parking.ui.wallet.WalletAddMoneyActivity
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.BackendTimestampParser
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
+import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -43,7 +43,24 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
 
     private lateinit var transactionsAdapter: WalletTransactionsAdapter
     private var currentBalance = 0.0
+    private var displayedBalance = 0.0
+    private var balanceAnimator: android.animation.ValueAnimator? = null
+    private var balanceColorAnimator: android.animation.ValueAnimator? = null
+    private var shimmerAnimator: android.animation.ValueAnimator? = null
+    private var hasLoadedBalance = false
+    private var hasAnimatedCardIn = false
     private var userTransactions = mutableListOf<Transaction>()
+    private val indianLocale = java.util.Locale("en", "IN")
+    private val balanceFormatter = (java.text.NumberFormat.getNumberInstance(indianLocale)
+            as java.text.DecimalFormat).apply {
+        applyPattern("#,##,##0.00")
+        roundingMode = java.math.RoundingMode.HALF_UP
+    }
+    private val integerFormatter = (java.text.NumberFormat.getNumberInstance(indianLocale)
+            as java.text.DecimalFormat).apply {
+        applyPattern("#,##,##0")
+        roundingMode = java.math.RoundingMode.DOWN
+    }
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentWalletNewBinding {
         return FragmentWalletNewBinding.inflate(inflater, container, false)
@@ -62,13 +79,39 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         setupEmptyStateAnimation()
         setupPullToRefresh()
         setupClickListeners()
+        animateCardEntrance()
+        startBalanceShimmer()
         loadWalletData()
+    }
+
+    private fun animateCardEntrance() {
+        if (hasAnimatedCardIn) return
+        hasAnimatedCardIn = true
+        val slideFromPx = 12f.dpToPx()
+        binding.cardWalletBalance.alpha = 0f
+        binding.cardWalletBalance.translationY = slideFromPx
+        binding.cardWalletBalance.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(380)
+            .setInterpolator(android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f))
+            .start()
     }
 
     override fun onResume() {
         super.onResume()
         // Refresh wallet data in case a top-up just completed
         loadWalletData()
+    }
+
+    override fun onDestroyView() {
+        balanceAnimator?.cancel()
+        balanceAnimator = null
+        balanceColorAnimator?.cancel()
+        balanceColorAnimator = null
+        shimmerAnimator?.cancel()
+        shimmerAnimator = null
+        super.onDestroyView()
     }
 
     private fun setupRecyclerView() {
@@ -100,21 +143,60 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
     }
 
     private fun setupPullToRefresh() {
-        binding.swipeRefresh.setColorSchemeResources(R.color.brand_primary)
+        binding.swipeRefresh.setProgressBackgroundColorSchemeResource(R.color.background_secondary)
+        binding.swipeRefresh.setColorSchemeResources(R.color.text_primary)
         binding.swipeRefresh.setOnRefreshListener {
             loadWalletData()
         }
     }
 
     private fun setupClickListeners() {
-        binding.tvViewAll.setOnClickListener {
-            val intent = Intent(requireContext(), TransactionHistoryActivity::class.java)
-            startActivity(intent)
+        applyFeatureSwitches()
+
+        ViewCompat.setTransitionName(
+            binding.tvViewAll,
+            TransactionHistoryActivity.VIEW_ALL_TRANSITION_NAME
+        )
+
+        // View All Activity (Apple Press UX)
+        binding.tvViewAll.setOnClickListener { view ->
+            view.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+            view.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(80)
+                .withEndAction {
+                    view.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(120)
+                        .setInterpolator(android.view.animation.OvershootInterpolator(1.2f))
+                        .withEndAction {
+                            launchTransactionHistory(view)
+                        }
+                        .start()
+                }
+                .start()
         }
         
-        binding.btnAddMoney.setOnClickListener {
+        binding.btnAddMoney.setOnClickListener { view ->
+            if (!RemoteConfigManager.isWalletEnabled()) {
+                showToast("Wallet is temporarily unavailable.")
+                return@setOnClickListener
+            }
+            view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
             android.util.Log.d("WalletFragmentNew", "Add money button clicked")
-            showTopUpDialog()
+            val intent = Intent(requireContext(), WalletAddMoneyActivity::class.java).apply {
+                putExtra(WalletAddMoneyActivity.EXTRA_CURRENT_BALANCE, currentBalance)
+            }
+            startActivity(intent)
+        }
+
+        // Watch Ad (Earn Coins) — hero CTA pill
+        binding.btnWatchAd.setOnClickListener { view ->
+            animateChipBounce(view) {
+                openRewardedAdSheet()
+            }
         }
         
         // Quick Add chip buttons - with bounce animation
@@ -200,7 +282,32 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         return this * resources.displayMetrics.density
     }
 
+    private fun launchTransactionHistory(sourceView: View) {
+        requireActivity().setExitSharedElementCallback(
+            MaterialContainerTransformSharedElementCallback()
+        )
+        requireActivity().window.sharedElementsUseOverlay = false
+
+        val intent = Intent(requireContext(), TransactionHistoryActivity::class.java)
+        val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+            requireActivity(),
+            Pair.create(sourceView, TransactionHistoryActivity.VIEW_ALL_TRANSITION_NAME)
+        )
+        startActivity(intent, options.toBundle())
+    }
+
     private fun loadWalletData() {
+        RemoteConfigManager.loadCached(requireContext())
+        if (!RemoteConfigManager.isWalletEnabled()) {
+            currentBalance = 0.0
+            updateBalanceDisplay()
+            transactionsAdapter.updateItems(emptyList())
+            showToast("Wallet is temporarily unavailable.")
+            setRefreshing(false)
+            applyFeatureSwitches()
+            return
+        }
+
         setRefreshing(true)
         
         val userId = getUserId()
@@ -210,7 +317,10 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
             return
         }
 
-        lifecycleScope.launch {
+        // Bind to the view lifecycle, not the fragment lifecycle: this coroutine touches
+        // the binding (balance display, shimmer, refresh spinner), so it must be cancelled
+        // at onDestroyView rather than living on until onDestroy and resuming into a dead view.
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 android.util.Log.d("WalletFragmentNew", "Loading wallet balance for user: $userId")
                 loadWalletBalance(userId)
@@ -242,10 +352,14 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
                     updateBalanceDisplay()
                     android.util.Log.w("WalletFragmentNew", "Wallet not found (404); showing zero balance")
                 } else {
-                    showToast("Unable to load wallet balance (${response.code()})")
+                    stopBalanceShimmer()
+                    if (!hasLoadedBalance) renderBalance(currentBalance, isAnimating = false)
+                    showToast(walletErrorMessage(response.code(), "Unable to load wallet balance (${response.code()})"))
                 }
             }
         } catch (e: Exception) {
+            stopBalanceShimmer()
+            if (!hasLoadedBalance) renderBalance(currentBalance, isAnimating = false)
             android.util.Log.e("WalletFragmentNew", "Error loading wallet balance", e)
             showToast("Error loading balance: ${e.message}")
         }
@@ -253,10 +367,15 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
 
     private suspend fun loadWalletTransactions(userId: String) {
         try {
-            val transactionResponse = ApiClient.apiService.getWalletTransactions(userId)
+            val transactionResponse = ApiClient.apiService.getWalletTransactions(
+                userId = userId,
+                page = 0,
+                size = 200,
+                sort = listOf("timestamp", "desc")
+            )
             android.util.Log.d("WalletFragmentNew", "Wallet transactions API response: ${transactionResponse.code()}")
             if (transactionResponse.isSuccessful) {
-                val backendTransactions = transactionResponse.body().orEmpty()
+                val backendTransactions = transactionResponse.body()?.content.orEmpty()
                 userTransactions.clear()
                 
                 val convertedTransactions = backendTransactions.map { convertToUITransaction(it) }
@@ -269,10 +388,10 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
                 if (transactionResponse.code() == 401) {
                     handleUnauthorized()
                 } else {
-                    userTransactions.clear()
-                    updateTransactionsDisplay()
-                    showToast("Unable to load transactions (${transactionResponse.code()})")
-                }
+                userTransactions.clear()
+                updateTransactionsDisplay()
+                showToast(walletErrorMessage(transactionResponse.code(), "Unable to load transactions (${transactionResponse.code()})"))
+            }
             }
         } catch (e: Exception) {
             android.util.Log.e("WalletFragmentNew", "Error loading wallet transactions", e)
@@ -324,7 +443,142 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
     }
 
     private fun updateBalanceDisplay() {
-        binding.tvBalanceAmount.text = "₹${String.format("%.2f", currentBalance)}"
+        animateBalanceTo(currentBalance)
+    }
+
+    private fun animateBalanceTo(target: Double) {
+        balanceAnimator?.cancel()
+
+        val isInitialLoad = !hasLoadedBalance
+        hasLoadedBalance = true
+        stopBalanceShimmer()
+
+        val from = displayedBalance
+        if (kotlin.math.abs(from - target) < 0.005) {
+            renderBalance(target, isAnimating = false)
+            displayedBalance = target
+            return
+        }
+
+        val delta = kotlin.math.abs(target - from)
+        val durationMs = when {
+            delta < 10.0 -> 350L
+            delta < 100.0 -> 550L
+            delta < 1000.0 -> 750L
+            else -> 950L
+        }
+
+        if (!isInitialLoad) {
+            flashBalanceColor(isIncrease = target > from)
+        }
+
+        val animator = android.animation.ValueAnimator.ofFloat(from.toFloat(), target.toFloat()).apply {
+            duration = durationMs
+            // Material 3 emphasized decelerate — snappy start, soft settle
+            interpolator = android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f)
+            addUpdateListener { a ->
+                val v = (a.animatedValue as Float).toDouble()
+                renderBalance(v, isAnimating = true)
+            }
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    displayedBalance = target
+                    renderBalance(target, isAnimating = false)
+                    if (!isInitialLoad) {
+                        binding.tvBalanceAmount.performHapticFeedback(
+                            android.view.HapticFeedbackConstants.CLOCK_TICK
+                        )
+                    }
+                }
+            })
+        }
+        balanceAnimator = animator
+        animator.start()
+    }
+
+    private fun flashBalanceColor(isIncrease: Boolean) {
+        balanceColorAnimator?.cancel()
+        val flashColor = if (isIncrease) 0xFF34D399.toInt() else 0xFFF87171.toInt()
+        val baseColor = 0xFFFFFFFF.toInt()
+        val animator = android.animation.ValueAnimator.ofArgb(flashColor, baseColor).apply {
+            duration = 420
+            interpolator = android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f)
+            addUpdateListener { a ->
+                binding.tvBalanceAmount.setTextColor(a.animatedValue as Int)
+            }
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    binding.tvBalanceAmount.setTextColor(baseColor)
+                }
+            })
+        }
+        balanceColorAnimator = animator
+        animator.start()
+    }
+
+    private fun startBalanceShimmer() {
+        if (hasLoadedBalance) return
+        shimmerAnimator?.cancel()
+        binding.tvBalanceAmount.text = "—"
+        binding.tvBalanceAmount.contentDescription = "Loading balance"
+        shimmerAnimator = android.animation.ValueAnimator.ofFloat(0.35f, 0.75f).apply {
+            duration = 900
+            repeatMode = android.animation.ValueAnimator.REVERSE
+            repeatCount = android.animation.ValueAnimator.INFINITE
+            interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+            addUpdateListener { a ->
+                binding.tvBalanceAmount.alpha = a.animatedValue as Float
+            }
+            start()
+        }
+    }
+
+    private fun stopBalanceShimmer() {
+        shimmerAnimator?.cancel()
+        shimmerAnimator = null
+        binding.tvBalanceAmount.alpha = 1f
+    }
+
+    private fun renderBalance(value: Double, isAnimating: Boolean = false) {
+        val safe = if (value.isNaN() || value < 0.0) 0.0 else value
+        val ssb = android.text.SpannableStringBuilder()
+        if (isAnimating) {
+            // During count-up: show integer only + dim ".--" placeholder
+            // to suppress decimal flicker without causing a layout jump on settle.
+            ssb.append(integerFormatter.format(safe.toLong()))
+            val decStart = ssb.length
+            ssb.append(".--")
+            ssb.setSpan(
+                android.text.style.RelativeSizeSpan(0.72f),
+                decStart, ssb.length,
+                android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            ssb.setSpan(
+                android.text.style.ForegroundColorSpan(0x99FFFFFF.toInt()),
+                decStart, ssb.length,
+                android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        } else {
+            // Settled: integer at full weight + decimal slightly smaller/softer
+            val full = balanceFormatter.format(safe)
+            ssb.append(full)
+            val dotIdx = full.lastIndexOf('.')
+            if (dotIdx >= 0) {
+                ssb.setSpan(
+                    android.text.style.RelativeSizeSpan(0.72f),
+                    dotIdx, full.length,
+                    android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                ssb.setSpan(
+                    android.text.style.ForegroundColorSpan(0xE6FFFFFF.toInt()),
+                    dotIdx, full.length,
+                    android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+            binding.tvBalanceAmount.contentDescription =
+                "Balance ${balanceFormatter.format(safe)} Gridee coins"
+        }
+        binding.tvBalanceAmount.text = ssb
     }
 
     private fun updateTransactionsDisplay() {
@@ -372,7 +626,9 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         val backendUiType = when (backendType) {
             "BOOKING_FEE" -> TransactionType.PARKING_PAYMENT
             "BOOKING_REFUND" -> TransactionType.REFUND
-            "WALLET_TOP_UP", "AD_TOP_UP" -> TransactionType.TOP_UP
+            "WALLET_TOP_UP" -> TransactionType.TOP_UP
+            "AD_TOP_UP" -> TransactionType.BONUS
+            "WELCOME_BONUS" -> TransactionType.BONUS
             "REFUND" -> TransactionType.REFUND
             "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> TransactionType.PARKING_PAYMENT
             else -> null
@@ -382,6 +638,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
             "BOOKING_REFUND" -> "Booking Refund"
             "WALLET_TOP_UP" -> "Wallet Top-up"
             "AD_TOP_UP" -> "Ad Top-up"
+            "WELCOME_BONUS" -> "Welcome Bonus"
             "REFUND" -> "Refund"
             "PENALTY_FEE" -> "Penalty Fee"
             "LATE_CHECK_IN_PENALTY" -> "Late Check-in Penalty"
@@ -389,7 +646,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
             else -> null
         }
         val backendIsCredit = when (backendType) {
-            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "REFUND" -> true
+            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "WELCOME_BONUS", "REFUND" -> true
             "BOOKING_FEE", "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> false
             else -> null
         }
@@ -406,6 +663,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         val isRewardByAmount = amountValue > 0 &&
             kotlin.math.abs(amountValue - REWARD_AMOUNT_RUPEES) < 0.01
         val isReward = isRewardByText || isRewardByAmount || typeNorm == "bonus"
+            || typeNorm == "welcome_bonus"
 
         val isTopUpByType = typeNorm in listOf(
             "top_up",
@@ -508,165 +766,41 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
                 else -> normalizedDescription ?: baseDescription
             }
         }
+        val locationLabel = listOfNotNull(
+            backendTransaction.lotName?.trim()?.takeIf { it.isNotEmpty() }
+                ?: backendTransaction.lotId?.trim()?.takeIf { it.isNotEmpty() },
+            backendTransaction.spotId?.trim()?.takeIf { it.isNotEmpty() }?.let { "Spot $it" }
+        ).joinToString(" • ").takeIf { it.isNotEmpty() }
+        val displayDescription = if (locationLabel != null && resolvedBookingRelated) {
+            "$description • $locationLabel"
+        } else {
+            description
+        }
 
         return Transaction(
             id = backendTransaction.id ?: "Unknown",
             type = transactionType,
             amount = displayAmount,
-            description = description,
+            description = displayDescription,
             timestamp = timestamp,
             balanceAfter = backendTransaction.balanceAfter ?: 0.0,
             status = backendTransaction.status
         )
     }
 
-    private fun showTopUpDialog() {
-        try {
-            android.util.Log.d("WalletFragmentNew", "showTopUpDialog called")
-            
-            val bottomSheetDialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme)
-            val bottomSheetBinding = BottomSheetTopUpBinding.inflate(layoutInflater)
-            bottomSheetDialog.setContentView(bottomSheetBinding.root)
-
-            bottomSheetDialog.window?.apply {
-                setWindowAnimations(R.style.BottomSheetSpringAnimation)
-                setDimAmount(0.45f)
-                
-                // Glassmorphism: Blur the screen behind the sheet (Android 12+)
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    attributes.blurBehindRadius = 50 // 50px blur for frosted glass effect
-                    attributes = attributes // Apply changes
-                }
-            }
-
-            bottomSheetDialog.behavior.apply {
-                skipCollapsed = true
-                state = BottomSheetBehavior.STATE_EXPANDED
-                isFitToContents = true
-            }
-
-            bottomSheetDialog.setOnShowListener {
-                val bottomSheet = bottomSheetDialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
-                bottomSheet?.post {
-                    bottomSheet.translationY = 120f
-                    bottomSheet.alpha = 0f
-                    val spring = SpringAnimation(bottomSheet, DynamicAnimation.TRANSLATION_Y, 0f).apply {
-                        spring = SpringForce(0f).apply {
-                            dampingRatio = SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY
-                            stiffness = SpringForce.STIFFNESS_LOW
-                        }
-                    }
-                    bottomSheet.animate()
-                        .alpha(1f)
-                        .setDuration(220)
-                        .start()
-                    spring.start()
-                }
-            }
-            
-            android.util.Log.d("WalletFragmentNew", "Bottom sheet dialog created")
-            
-            // Set current balance
-            bottomSheetBinding.tvCurrentBalance.text = "₹${String.format("%.2f", currentBalance)}"
-            
-            // Setup click listeners for quick amount buttons
-            bottomSheetBinding.btnAmount50.setOnClickListener {
-                bottomSheetBinding.etAmount.setText("50")
-                updateAddButtonState(bottomSheetBinding)
-            }
-            
-            bottomSheetBinding.btnAmount100.setOnClickListener {
-                bottomSheetBinding.etAmount.setText("100")
-                updateAddButtonState(bottomSheetBinding)
-            }
-            
-            bottomSheetBinding.btnAmount200.setOnClickListener {
-                bottomSheetBinding.etAmount.setText("200")
-                updateAddButtonState(bottomSheetBinding)
-            }
-
-            bottomSheetBinding.btnAmount500.setOnClickListener {
-                bottomSheetBinding.etAmount.setText("500")
-                updateAddButtonState(bottomSheetBinding)
-            }
-            
-            // Payment method is fixed to Razorpay; no selection needed
-            
-            // Setup text change listener for amount input
-            bottomSheetBinding.etAmount.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(s: Editable?) {
-                    updateAddButtonState(bottomSheetBinding)
-                }
-            })
-            
-            // Close button
-            bottomSheetBinding.btnClose.setOnClickListener {
-                animateAndDismiss(bottomSheetDialog)
-            }
-            
-            // Add money button
-            bottomSheetBinding.btnAddMoneyConfirm.setOnClickListener {
-                val amountText = bottomSheetBinding.etAmount.text.toString()
-                if (amountText.isNotEmpty()) {
-                    val amount = amountText.toDoubleOrNull()
-                    if (amount != null && amount > 0) {
-                        showToast("Redirecting to Razorpay checkout...")
-                        startRazorpayCheckout(amount)
-                        animateAndDismiss(bottomSheetDialog)
-                    } else {
-                        showToast("Please enter a valid amount")
-                    }
-                }
-            }
-            
-            // No selection state to initialize
-            
-            android.util.Log.d("WalletFragmentNew", "About to show bottom sheet")
-            bottomSheetDialog.show()
-            android.util.Log.d("WalletFragmentNew", "Bottom sheet shown")
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WalletFragmentNew", "Error showing bottom sheet", e)
-            showToast("Error opening top-up dialog: ${e.message}")
-        }
+    private fun openRewardedAdSheet() {
+        // No source coin here, so the sheet reveals its medallion with a scale/fade.
+        val bottomSheet = com.gridee.parking.ui.bottomsheet.RewardBottomSheet.newInstance()
+        bottomSheet.show(parentFragmentManager, com.gridee.parking.ui.bottomsheet.RewardBottomSheet.TAG)
     }
-    
-    // No payment method selection anymore
-    
-    private fun updateAddButtonState(binding: BottomSheetTopUpBinding) {
-        val amountText = binding.etAmount.text.toString()
-        val amount = amountText.toDoubleOrNull()
-        val isValidAmount = amount != null && amount > 0
-        
-        binding.btnAddMoneyConfirm.isEnabled = isValidAmount
-        binding.btnAddMoneyConfirm.text = if (isValidAmount) {
-            "Add ₹${amount?.toInt()}"
-        } else {
-            "Add Money"
-        }
-    }
-    
-    private fun animateAndDismiss(dialog: BottomSheetDialog) {
-        val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
-        if (bottomSheet == null) {
-            dialog.dismiss()
+
+    private fun startRazorpayCheckout(amount: Double) {
+        RemoteConfigManager.loadCached(requireContext())
+        if (!RemoteConfigManager.isWalletEnabled()) {
+            showToast("Wallet top-up is temporarily unavailable.")
             return
         }
-        bottomSheet.animate()
-            .translationY(bottomSheet.height * 0.25f)
-            .alpha(0f)
-            .setDuration(200)
-            .withEndAction {
-                dialog.dismiss()
-                bottomSheet.translationY = 0f
-                bottomSheet.alpha = 1f
-            }
-            .start()
-    }
-    
-    private fun startRazorpayCheckout(amount: Double) {
+
         val userId = getUserId()
         if (userId == null) {
             showToast("Please login to add money")
@@ -686,7 +820,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
                 )
 
                 if (!initResp.isSuccessful) {
-                    showToast("Failed to initiate payment: ${initResp.code()}")
+                    showToast(walletErrorMessage(initResp.code(), "Add money temporarily unavailable during payment integration."))
                     return@launch
                 }
 
@@ -694,7 +828,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
                 val orderId = body?.orderId
                 val keyId = body?.keyId
                 if (orderId.isNullOrBlank()) {
-                    showToast("Invalid payment order from server")
+                    showToast("Add money temporarily unavailable during payment integration.")
                     return@launch
                 }
 
@@ -706,7 +840,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
                 keyId?.let { intent.putExtra("KEY_ID", it) }
                 startActivity(intent)
             } catch (e: Exception) {
-                showToast("Error: ${e.message}")
+                showToast("Add money temporarily unavailable during payment integration.")
             } finally {
                 setRefreshing(false)
             }
@@ -726,12 +860,39 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
     }
 
     private fun setRefreshing(show: Boolean) {
+        // Runs from a coroutine `finally`, which also fires on cancellation while the
+        // view is being torn down (config change / process death). At that point the
+        // binding may already be null, so touch it defensively instead of via binding!!.
+        val swipe = bindingOrNull?.swipeRefresh ?: return
         if (show) {
-            if (!binding.swipeRefresh.isRefreshing) {
-                binding.swipeRefresh.post { binding.swipeRefresh.isRefreshing = true }
+            if (!swipe.isRefreshing) {
+                swipe.post { swipe.isRefreshing = true }
             }
         } else {
-            binding.swipeRefresh.isRefreshing = false
+            swipe.isRefreshing = false
+        }
+    }
+
+    private fun applyFeatureSwitches() {
+        RemoteConfigManager.loadCached(requireContext())
+        val walletEnabled = RemoteConfigManager.isWalletEnabled()
+        val rewardsEnabled = RemoteConfigManager.isFeatureEnabled("rewards")
+
+        listOf(binding.btnAddMoney, binding.btnQuickAdd10, binding.btnQuickAdd20, binding.btnQuickAdd100).forEach {
+            it.isEnabled = walletEnabled
+            it.alpha = if (walletEnabled) 1f else 0.45f
+        }
+
+        binding.btnWatchAd.isEnabled = rewardsEnabled
+        binding.btnWatchAd.alpha = if (rewardsEnabled) 1f else 0.45f
+    }
+
+    private fun walletErrorMessage(code: Int, fallback: String): String {
+        return when (code) {
+            401 -> "Session expired. Please log in again."
+            429 -> "Too many requests. Please wait a moment before trying again."
+            503 -> "Wallet is temporarily unavailable."
+            else -> fallback
         }
     }
     private companion object {

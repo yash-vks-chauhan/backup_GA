@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_queue_connector"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_marginHorizontal="24dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1"
+        android:background="@color/divider" />
+
+    <TextView
+        android:id="@+id/tv_queue_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="STARTS IN 2H 15M"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/inter_bold"
+        android:textColor="@color/text_tertiary"
+        android:letterSpacing="0.12"
+        android:paddingHorizontal="12dp"
+        android:includeFontPadding="false" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1"
+        android:background="@color/divider" />
+
+</LinearLayout>

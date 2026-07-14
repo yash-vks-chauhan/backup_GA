@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.Settings
 import com.google.firebase.messaging.FirebaseMessaging
 import com.gridee.parking.BuildConfig
+import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.data.model.DeviceTokenRegisterRequest
 import com.gridee.parking.data.model.DeviceTokenUnregisterRequest
 import com.gridee.parking.data.repository.NotificationRepository
@@ -16,18 +17,34 @@ object NotificationTokenManager {
 
     private const val PREFS_NAME = "gridee_push_prefs"
     private const val KEY_FCM_TOKEN = "fcm_token"
+    private const val KEY_PUSH_DISABLED_BY_BACKEND = "push_disabled_by_backend"
     private const val PLATFORM = "ANDROID"
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val repository = NotificationRepository()
 
     fun registerCurrentToken(context: Context) {
+        val appContext = context.applicationContext
+        RemoteConfigManager.loadCached(appContext)
+        if (!RemoteConfigManager.areNotificationsEnabled()) {
+            clearCachedToken(appContext)
+            return
+        }
+        clearBackendDisabledMarker(appContext)
+
         FirebaseMessaging.getInstance().token
-            .addOnSuccessListener { token -> registerToken(context, token) }
+            .addOnSuccessListener { token -> registerToken(appContext, token) }
     }
 
     fun registerToken(context: Context, token: String) {
         val appContext = context.applicationContext
+        RemoteConfigManager.loadCached(appContext)
+        if (!RemoteConfigManager.areNotificationsEnabled()) {
+            clearCachedToken(appContext)
+            return
+        }
+        clearBackendDisabledMarker(appContext)
+
         cacheToken(appContext, token)
 
         val authHeader = JwtTokenManager(appContext).getBearerToken() ?: return
@@ -39,7 +56,13 @@ object NotificationTokenManager {
         )
 
         scope.launch {
-            runCatching { repository.registerToken(authHeader, request) }
+            val result = runCatching { repository.registerToken(authHeader, request) }.getOrNull()
+            if (result?.success == true) {
+                setPushDisabledByBackend(appContext, false)
+            } else if (result?.featureDisabled == true) {
+                clearCachedToken(appContext)
+                setPushDisabledByBackend(appContext, true)
+            }
         }
     }
 
@@ -83,6 +106,22 @@ object NotificationTokenManager {
     private fun clearCachedToken(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().remove(KEY_FCM_TOKEN).apply()
+    }
+
+    private fun isPushDisabledByBackend(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_PUSH_DISABLED_BY_BACKEND, false)
+    }
+
+    private fun setPushDisabledByBackend(context: Context, disabled: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_PUSH_DISABLED_BY_BACKEND, disabled).apply()
+    }
+
+    private fun clearBackendDisabledMarker(context: Context) {
+        if (isPushDisabledByBackend(context)) {
+            setPushDisabledByBackend(context, false)
+        }
     }
 
     private fun getDeviceId(context: Context): String? {

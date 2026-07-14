@@ -1,77 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  In-app banner shown above the floating navbar (or above the gesture-nav inset
+  on screens without a navbar). Fixed visual footprint regardless of content:
+  one row, ~60dp tall, title + message both single-line ellipsized.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/notificationCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="16dp"
-    android:layout_marginTop="16dp"
-    android:layout_marginEnd="16dp"
-    android:elevation="8dp"
-    app:cardBackgroundColor="@android:color/white"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="8dp">
+    android:outlineAmbientShadowColor="#40000000"
+    android:outlineSpotShadowColor="#33000000"
+    app:cardBackgroundColor="@color/background_secondary"
+    app:cardCornerRadius="100dp"
+    app:cardElevation="16dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/notification_card_stroke">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:minHeight="68dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
 
-        <!-- Success Icon -->
         <ImageView
             android:id="@+id/ivNotificationIcon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/notification_icon_background"
-            android:padding="8dp"
-            android:src="@drawable/ic_check"
-            android:tint="@android:color/white"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:padding="7dp"
+            android:scaleType="centerInside" />
 
-        <!-- Title -->
         <TextView
-            android:id="@+id/tvNotificationTitle"
-            android:layout_width="0dp"
+            android:id="@+id/tvTransactionSign"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
-            android:text="Success"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/ivClose"
-            app:layout_constraintStart_toEndOf="@id/ivNotificationIcon"
-            app:layout_constraintTop_toTopOf="@id/ivNotificationIcon" />
-
-        <!-- Message -->
-        <TextView
-            android:id="@+id/tvNotificationMessage"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginEnd="8dp"
-            android:text="Vehicle number saved successfully"
-            android:textColor="#666666"
+            android:text="+"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@id/ivNotificationIcon"
-            app:layout_constraintEnd_toStartOf="@id/ivClose"
-            app:layout_constraintStart_toEndOf="@id/ivNotificationIcon"
-            app:layout_constraintTop_toBottomOf="@id/tvNotificationTitle" />
+            android:fontFamily="@font/inter_semibold"
+            android:visibility="gone" />
 
-        <!-- Close Button -->
+        <TextView
+            android:id="@+id/ivGrideeCoin"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/bg_gridee_coin_dark"
+            android:text="G"
+            android:textColor="@color/btn_text_on_brand"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/inter_bold"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:paddingTop="1dp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/llTextContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvNotificationTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Success"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:fontFamily="@font/inter_semibold"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:includeFontPadding="false" />
+
+            <LinearLayout
+                android:id="@+id/llMessageContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="2dp">
+
+                <TextView
+                    android:id="@+id/tvNotificationMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Vehicle number saved successfully"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter_regular"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:includeFontPadding="false" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNotificationAction"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="26dp"
+            android:layout_marginEnd="6dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="View"
+            android:textColor="@color/text_primary"
+            android:textSize="11sp"
+            android:textAllCaps="false"
+            android:fontFamily="@font/inter_semibold"
+            android:visibility="gone"
+            app:backgroundTint="@color/background_grouped"
+            app:cornerRadius="13dp" />
+
         <ImageView
-            android:id="@+id/ivClose"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:id="@+id/btnNotificationClose"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:padding="7dp"
+            android:clickable="true"
+            android:focusable="true"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="4dp"
             android:src="@drawable/ic_close"
-            android:tint="#999999"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:tint="@color/text_tertiary" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

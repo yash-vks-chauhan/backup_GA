@@ -6,7 +6,7 @@
     android:background="@drawable/bg_bottom_sheet_universal"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:paddingBottom="36dp">
+    android:paddingBottom="16dp">
 
     <!-- Drag Handle -->
     <View
@@ -19,7 +19,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Close Button -->
+    <!-- Close Button (page 1 only) -->
     <ImageView
         android:id="@+id/btnClose"
         android:layout_width="32dp"
@@ -29,38 +29,231 @@
         android:background="@drawable/bg_close_circle"
         android:padding="9dp"
         android:src="@drawable/ic_close"
-        app:tint="#5C5C5C"
+        app:tint="@color/text_secondary"
         android:clickable="true"
         android:focusable="true"
         android:elevation="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Title -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="64dp"
-        android:text="Select Vehicle"
-        android:textColor="#1A1A1A"
-        android:textSize="24sp"
-        android:fontFamily="@font/inter_bold"
-        app:layout_constraintEnd_toEndOf="parent"
+    <!-- Back Button (page 2 only) -->
+    <ImageView
+        android:id="@+id/btnBack"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:background="@drawable/bg_close_circle"
+        android:padding="9dp"
+        android:src="@drawable/ic_arrow_back"
+        app:tint="@color/text_secondary"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="10dp"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/dragHandle" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Vehicle List -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvVehicles"
+    <!-- ViewFlipper for page transitions -->
+    <ViewFlipper
+        android:id="@+id/viewFlipper"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:overScrollMode="never"
+        android:layout_marginTop="20dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+        app:layout_constraintTop_toBottomOf="@id/dragHandle">
+
+        <!-- Page 1: Select Vehicle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="64dp"
+                android:layout_marginTop="4dp"
+                android:text="Select Vehicle"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:fontFamily="@font/inter_bold" />
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/emptyStateContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingTop="40dp"
+                android:paddingBottom="24dp"
+                android:visibility="gone">
+
+                <FrameLayout
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:background="@drawable/bg_icon_circle_small"
+                    android:backgroundTint="@color/background_secondary">
+
+                    <ImageView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_car_outlined"
+                        app:tint="@color/text_tertiary" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:fontFamily="@font/inter_bold"
+                    android:text="No vehicles yet"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:gravity="center"
+                    android:paddingHorizontal="48dp"
+                    android:text="Add your vehicle to get started with booking a parking spot."
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="2dp" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvVehicles"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:overScrollMode="never" />
+
+            <!-- Add New Vehicle Button -->
+            <LinearLayout
+                android:id="@+id/btnAddNewVehicle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/button_add_vehicle"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_add_circle_outline"
+                    android:tint="@color/text_primary"
+                    android:contentDescription="Add vehicle icon" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:text="Add New Vehicle"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Page 2: Add Vehicle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvAddTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginTop="36dp"
+                android:text="Add New Vehicle"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:fontFamily="@font/inter_bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginTop="8dp"
+                android:text="Enter an Indian registration number like MH12AB1234 or 22BH1234A"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:fontFamily="@font/inter_medium" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilVehicleNumber"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginTop="28dp"
+                android:hint="Vehicle registration number"
+                app:boxBackgroundColor="@color/background_secondary"
+                app:boxCornerRadiusBottomEnd="28dp"
+                app:boxCornerRadiusBottomStart="28dp"
+                app:boxCornerRadiusTopEnd="28dp"
+                app:boxCornerRadiusTopStart="28dp"
+                app:boxStrokeColor="@color/divider"
+                app:boxStrokeWidth="1dp"
+                app:hintTextColor="@color/text_tertiary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etVehicleNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="textCapCharacters"
+                    android:maxLength="16"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/inter_medium" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddVehicle"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/inter_semibold"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="Add Vehicle"
+                android:textAllCaps="false"
+                android:textColor="@color/md3_on_primary"
+                android:textSize="16sp"
+                android:stateListAnimator="@null"
+                app:backgroundTint="@color/brand_primary"
+                app:cornerRadius="28dp"
+                app:elevation="0dp" />
+
+        </LinearLayout>
+
+    </ViewFlipper>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Layer 1: Full-height dissolve — long gentle tail upward -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="#000000"
+                android:centerColor="#B3000000"
+                android:endColor="#00000000"
+                android:centerY="0.58"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Layer 2: Mid-band reinforcement — soft fill between anchor and tail -->
+    <item android:top="48dp">
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="#CC000000"
+                android:centerColor="#66000000"
+                android:endColor="#00000000"
+                android:centerY="0.45"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Layer 3: Bottom anchor — opaque at bottom for seamless nav transition -->
+    <item android:top="68dp">
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="#000000"
+                android:endColor="#00000000"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>

@@ -6,8 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gridee.parking.data.model.User
 import com.gridee.parking.data.repository.UserRepository
+import com.gridee.parking.utils.AuthErrorMapper
+import com.gridee.parking.utils.VehicleNumberValidator
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 class AddVehicleViewModel : ViewModel() {
 
@@ -20,7 +21,7 @@ class AddVehicleViewModel : ViewModel() {
     val validationErrors: LiveData<Map<String, String>> = _validationErrors
 
     fun addVehicle(userId: String?, vehicleNumber: String) {
-        val normalized = vehicleNumber.trim().uppercase(Locale.ROOT)
+        val normalized = VehicleNumberValidator.normalize(vehicleNumber)
 
         val errors = validate(normalized, userId)
         if (errors.isNotEmpty()) {
@@ -34,12 +35,12 @@ class AddVehicleViewModel : ViewModel() {
             try {
                 val user = userRepository.getUserById(userId.orEmpty())
                 if (user == null) {
-                    _state.value = AddVehicleState.Error("Unable to load your profile. Please try again.")
+                    _state.value = AddVehicleState.Error("Profile Load Failed", "Unable to load your profile. Please try again.", isRetryable = true)
                     return@launch
                 }
 
-                if (user.vehicleNumbers.contains(normalized)) {
-                    _state.value = AddVehicleState.Error("Vehicle number already exists")
+                if (VehicleNumberValidator.containsEquivalent(user.vehicleNumbers, normalized)) {
+                    _state.value = AddVehicleState.Error("Duplicate Vehicle", "This vehicle number is already added.")
                     return@launch
                 }
 
@@ -52,10 +53,11 @@ class AddVehicleViewModel : ViewModel() {
                 if (result) {
                     _state.value = AddVehicleState.Success(updatedUser)
                 } else {
-                    _state.value = AddVehicleState.Error("Failed to save vehicle. Please try again.")
+                    _state.value = AddVehicleState.Error("Save Failed", "Failed to save vehicle. Please try again.", isRetryable = true)
                 }
             } catch (e: Exception) {
-                _state.value = AddVehicleState.Error("Network error: ${e.message}")
+                val error = AuthErrorMapper.fromException(e)
+                _state.value = AddVehicleState.Error(error.title, error.message, error.isRetryable)
             }
         }
     }
@@ -72,13 +74,9 @@ class AddVehicleViewModel : ViewModel() {
             return errors
         }
 
-        if (vehicleNumber.isBlank()) {
-            errors["vehicle"] = "Please enter a vehicle number"
-            return errors
-        }
-
-        if (vehicleNumber.length < 6 || vehicleNumber.length > 15) {
-            errors["vehicle"] = "Vehicle number should be 6-15 characters"
+        val vehicleError = VehicleNumberValidator.getError(vehicleNumber)
+        if (vehicleError != null) {
+            errors["vehicle"] = vehicleError
         }
 
         return errors
@@ -88,5 +86,9 @@ class AddVehicleViewModel : ViewModel() {
 sealed class AddVehicleState {
     object Loading : AddVehicleState()
     data class Success(val user: User) : AddVehicleState()
-    data class Error(val message: String) : AddVehicleState()
+    data class Error(
+        val title: String,
+        val message: String,
+        val isRetryable: Boolean = false
+    ) : AddVehicleState()
 }

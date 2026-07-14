@@ -3,11 +3,11 @@ package com.gridee.parking.ui.auth
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.gridee.parking.databinding.ActivityAddVehicleBinding
+import com.gridee.parking.utils.NotificationHelper
 import com.gridee.parking.ui.main.MainContainerActivity
 import com.gridee.parking.ui.operator.OperatorDashboardActivity
 import com.gridee.parking.utils.AuthSession
@@ -26,21 +26,23 @@ class AddVehicleActivity : AppCompatActivity() {
     private var userId: String? = null
     private var userName: String? = null
     private var userRole: String? = null
+    private var showSignupGift: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddVehicleBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-        window.statusBarColor = android.graphics.Color.parseColor("#F5F5F5")
+        window.statusBarColor = androidx.core.content.ContextCompat.getColor(this, com.gridee.parking.R.color.background_primary)
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
+            !com.gridee.parking.utils.ThemeManager.isDarkMode(this)
 
         userId = intent.getStringExtra(EXTRA_USER_ID) ?: AuthSession.getUserId(this)
         userName = intent.getStringExtra(EXTRA_USER_NAME) ?: AuthSession.getUserName(this)
         userRole = intent.getStringExtra(EXTRA_USER_ROLE) ?: AuthSession.getUserRole(this)
+        showSignupGift = intent.getBooleanExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, false)
 
         if (userId.isNullOrBlank()) {
-            Toast.makeText(this, "Session expired. Please sign in again.", Toast.LENGTH_LONG).show()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
@@ -59,6 +61,11 @@ class AddVehicleActivity : AppCompatActivity() {
             viewModel.addVehicle(userId, vehicleNumber)
         }
 
+        binding.btnSkip.setOnClickListener {
+            it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            navigateToHome(userName, userRole)
+        }
+
         binding.etVehicleNumber.setOnFocusChangeListener { _, _ ->
             viewModel.clearErrors()
         }
@@ -74,7 +81,21 @@ class AddVehicleActivity : AppCompatActivity() {
                 }
                 is AddVehicleState.Error -> {
                     showLoading(false)
-                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    if (state.isRetryable) {
+                        NotificationHelper.showWarning(
+                            binding.rootContainer,
+                            title = state.title,
+                            message = state.message,
+                            onClick = { binding.btnContinue.performClick() },
+                            actionButtonText = "Try Again"
+                        )
+                    } else {
+                        NotificationHelper.showError(
+                            binding.rootContainer,
+                            title = state.title,
+                            message = state.message
+                        )
+                    }
                 }
             }
         }
@@ -82,7 +103,7 @@ class AddVehicleActivity : AppCompatActivity() {
         viewModel.validationErrors.observe(this) { errors ->
             binding.tilVehicleNumber.error = errors["vehicle"]
             if (errors["user"] != null) {
-                Toast.makeText(this, errors["user"], Toast.LENGTH_LONG).show()
+                NotificationHelper.showError(binding.rootContainer, message = errors["user"] ?: "")
             }
         }
     }
@@ -91,6 +112,7 @@ class AddVehicleActivity : AppCompatActivity() {
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
         binding.btnContinue.isEnabled = !show
         binding.btnContinue.text = if (show) "" else "Continue"
+        binding.btnSkip.isEnabled = !show
     }
 
     private fun navigateToHome(name: String?, role: String?) {
@@ -105,6 +127,7 @@ class AddVehicleActivity : AppCompatActivity() {
             else -> {
                 val intent = Intent(this, MainContainerActivity::class.java)
                 resolvedName?.let { intent.putExtra("USER_NAME", it) }
+                intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, showSignupGift)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
             }

@@ -3,7 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="16dp"
+    android:paddingStart="16dp"
+    android:paddingTop="14dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="14dp"
     android:background="@drawable/bg_vehicle_item"
     android:gravity="center_vertical"
     android:clickable="true"
@@ -27,15 +30,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="MH01AB1234"
-                android:textColor="#212121"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_semibold"
+                android:letterSpacing="0.02" />
 
             <ImageView
                 android:id="@+id/iv_default_indicator"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
                 android:src="@drawable/ic_star"
                 android:tint="#FFC107"
                 android:layout_marginStart="6dp"
@@ -49,20 +52,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Vehicle 1"
-            android:textColor="#757575"
-            android:textSize="14sp"
-            android:fontFamily="sans-serif"
-            android:layout_marginTop="4dp" />
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:fontFamily="@font/inter_regular"
+            android:layout_marginTop="2dp" />
 
     </LinearLayout>
 
     <!-- Three Dot Menu -->
     <ImageView
         android:id="@+id/iv_vehicle_menu"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:src="@drawable/ic_options_vertical"
-        android:tint="#9E9E9E"
+        android:tint="@color/icon_secondary"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="4dp"
         android:contentDescription="Vehicle options" />

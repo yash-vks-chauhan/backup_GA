@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    android:fillViewport="true"
+    android:background="@color/background_primary"
     android:fitsSystemWindows="true"
     tools:context=".ui.auth.WelcomeActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -18,10 +23,10 @@
             android:id="@+id/tvBrand"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/welcome_brand_margin_top"
             android:text="@string/app_name"
-            android:textColor="#111827"
-            android:textSize="42sp"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/welcome_brand_text_size"
             android:fontFamily="@font/inter_bold"
             android:textStyle="bold"
             android:letterSpacing="-0.05"
@@ -32,13 +37,13 @@
             android:id="@+id/tvHeadline"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="@dimen/welcome_headline_margin_top"
             android:letterSpacing="-0.01"
             android:lineSpacingExtra="4dp"
-            android:text="Park smarter,\nwherever you go."
+            android:text="Park smarter,\nsave time,\nreduce congestion."
             android:textAlignment="viewStart"
-            android:textColor="#111827"
-            android:textSize="40sp"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/welcome_headline_text_size"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -48,10 +53,10 @@
             android:id="@+id/tvSubheadline"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="The easiest way to find and book parking spots in your city."
-            android:textColor="#6B7280"
-            android:textSize="18sp"
+            android:layout_marginTop="@dimen/welcome_subheadline_margin_top"
+            android:text="The easiest way to find and book parking spots in SRM."
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/welcome_subheadline_text_size"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvHeadline" />
@@ -60,7 +65,7 @@
             android:id="@+id/layoutActions"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="48dp"
+            android:layout_marginTop="@dimen/welcome_actions_margin_top"
             android:layout_marginBottom="24dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -73,18 +78,21 @@
                 android:id="@+id/btnSignUpEmail"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
+                android:fontFamily="@font/inter_semibold"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:stateListAnimator="@null"
                 android:text="Create account with email"
+                android:textAllCaps="false"
+                android:textColor="@color/md3_on_primary"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF"
-                app:backgroundTint="#000000"
-                app:rippleColor="#33FFFFFF"
+                app:backgroundTint="@color/brand_primary"
                 app:cornerRadius="28dp"
                 app:elevation="0dp"
                 app:icon="@drawable/ic_email_outlined"
                 app:iconGravity="textStart"
                 app:iconPadding="12dp"
-                app:iconTint="#FFFFFF" />
+                app:iconTint="@color/md3_on_primary" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -98,7 +106,7 @@
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_weight="1"
-                    android:background="#E5E7EB" />
+                    android:background="@color/divider" />
 
                 <TextView
                     android:id="@+id/tvOr"
@@ -107,14 +115,14 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
                     android:text="or"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
                 <View
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_weight="1"
-                    android:background="#E5E7EB" />
+                    android:background="@color/divider" />
             </LinearLayout>
 
             <FrameLayout
@@ -123,21 +131,24 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnContinueWithGoogle"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
+                    android:fontFamily="@font/inter_semibold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:stateListAnimator="@null"
                     android:text="Continue with Google"
-                    android:textColor="#111827"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
-                    android:textStyle="bold"
-                    app:backgroundTint="#FFFFFF"
+                    app:backgroundTint="@color/background_secondary"
                     app:cornerRadius="28dp"
+                    app:elevation="0dp"
                     app:icon="@drawable/ic_google"
                     app:iconGravity="textStart"
                     app:iconPadding="12dp"
                     app:iconTint="@null"
-                    app:rippleColor="#0D000000"
-                    app:strokeColor="#E5E7EB"
+                    app:strokeColor="@color/divider"
                     app:strokeWidth="1dp" />
 
                 <ProgressBar
@@ -145,7 +156,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_gravity="center"
-                    android:indeterminateTint="#111827"
+                    android:indeterminateTint="@color/text_primary"
                     android:visibility="gone" />
             </FrameLayout>
 
@@ -157,14 +168,14 @@
                 android:gravity="center"
                 android:lineSpacingExtra="2dp"
                 android:text="By signing up, you agree to our Terms, Privacy Policy, and Data Safety."
-                android:textColor="#9CA3AF"
+                android:textColor="@color/text_tertiary"
                 android:textSize="12sp" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="@dimen/welcome_login_margin_top"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
@@ -172,7 +183,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Already have an account?"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
                 <com.google.android.material.button.MaterialButton
@@ -183,7 +194,7 @@
                     android:layout_marginStart="4dp"
                     android:text="Log in"
                     android:textAllCaps="false"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:paddingStart="8dp"
@@ -197,4 +208,46 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-</ScrollView>
+    </ScrollView>
+
+    <!-- Loading Overlay -->
+    <View
+        android:id="@+id/loadingScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/background_primary"
+        android:alpha="0"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/loadingContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:alpha="0"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:indeterminateTint="@color/text_primary"
+            style="?android:attr/progressBarStyle" />
+
+        <TextView
+            android:id="@+id/tvLoadingMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Signing in..."
+            android:textColor="@color/text_secondary"
+            android:textSize="15sp"
+            android:fontFamily="@font/inter_regular"
+            android:letterSpacing="0.01" />
+
+    </LinearLayout>
+
+</FrameLayout>

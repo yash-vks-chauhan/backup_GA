@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_bottom_sheet_universal"
-    android:paddingBottom="0dp">
+    android:paddingBottom="0dp"
+    android:clipToOutline="true">
 
-    <!-- Drag Handle and Close Button stay pinned to top -->
+    <!-- Drag Handle -->
     <View
         android:id="@+id/drag_handle"
         android:layout_width="32dp"
@@ -18,6 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Close Button -->
     <ImageView
         android:id="@+id/btn_close"
         android:layout_width="32dp"
@@ -27,7 +28,7 @@
         android:background="@drawable/bg_close_circle"
         android:src="@drawable/ic_close"
         android:padding="9dp"
-        app:tint="#5C5C5C"
+        app:tint="@color/text_secondary"
         android:clickable="true"
         android:focusable="true"
         android:contentDescription="Close"
@@ -35,29 +36,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:elevation="10dp"/>
 
-    <!-- Background Pattern (Expanded) -->
-    <ImageView
-        android:id="@+id/iv_reward_bg"
-        android:layout_width="match_parent"
-        android:layout_height="500dp"
-        android:src="@drawable/gold_infographic_pattern"
-        android:scaleType="centerCrop"
-        android:alpha="0.25"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Gradient Fade Overlay -->
-    <View
-        android:id="@+id/view_gradient_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:background="@drawable/gradient_transparent_to_white"
-        app:layout_constraintBottom_toBottomOf="@id/iv_reward_bg"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Scrollable Content Container -->
+    <!-- Scrollable Content -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -71,19 +50,40 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="32dp"
-            android:clipToPadding="false">
+            android:paddingBottom="16dp"
+            android:clipToPadding="false"
+            android:clipChildren="false">
 
-            <!-- Header Animation -->
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/lottie_icon"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
-                android:layout_marginTop="24dp"
+            <!-- Animation with ambient glow -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                app:lottie_fileName="premium_crown.json"
-                app:lottie_autoPlay="true"
-                app:lottie_loop="true" />
+                android:layout_marginTop="32dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <!-- Soft radial glow behind animation -->
+                <View
+                    android:id="@+id/view_reward_glow"
+                    android:layout_width="260dp"
+                    android:layout_height="260dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_reward_glow"
+                    android:alpha="0"
+                    android:visibility="gone" />
+
+                <!-- Lottie Animation -->
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/lottie_icon"
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:layout_gravity="center"
+                    app:lottie_fileName="premium_crown.json"
+                    app:lottie_autoPlay="true"
+                    app:lottie_loop="true" />
+
+            </FrameLayout>
 
             <!-- Title -->
             <TextView
@@ -96,8 +96,61 @@
                 android:fontFamily="@font/inter_semibold"
                 android:gravity="center"
                 android:text="Daily Reward"
-                android:textColor="#1A1A1A"
+                android:textColor="@color/text_primary"
                 android:textSize="24sp" />
+
+            <!-- Reward Amount Chip (only visible in reward mode) -->
+            <LinearLayout
+                android:id="@+id/reward_amount_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_reward_amount_chip"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="10dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/bg_gridee_coin_reward"
+                    android:text="G"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter_bold"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:paddingTop="1dp"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/tv_reward_amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10"
+                    android:textColor="@color/reward_amount_text"
+                    android:textSize="20sp"
+                    android:fontFamily="@font/inter_bold" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="20dp"
+                    android:layout_marginHorizontal="12dp"
+                    android:background="@color/reward_chip_stroke" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Wallet Credit"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter_regular" />
+
+            </LinearLayout>
 
             <!-- Subtitle -->
             <TextView
@@ -105,34 +158,135 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="24dp"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
                 android:fontFamily="@font/inter_regular"
                 android:gravity="center"
-                android:text="You've earned 50 coins! Come back tomorrow for more."
-                android:textColor="#5C5C5C"
-                android:textSize="16sp"
-                android:lineSpacingExtra="4dp"/>
+                android:text="Watch a short video to claim your daily reward"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp"
+                android:lineSpacingExtra="3dp"/>
 
             <!-- Primary Action Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_primary"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="56dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="32dp"
-                android:layout_marginEnd="24dp"
-                android:backgroundTint="#1A1A1A"
-                android:fontFamily="@font/inter_semibold"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:paddingHorizontal="40dp"
+                android:backgroundTint="@color/brand_primary"
+                android:fontFamily="@font/inter_bold"
                 android:text="Claim Reward"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/btn_text_on_brand"
                 android:textSize="16sp"
-                app:cornerRadius="16dp" />
-                
-            <!-- Extra Bottom Spacing -->
-            <View
+                android:textAllCaps="false"
+                app:cornerRadius="28dp"
+                app:rippleColor="#33FFFFFF"
+                android:elevation="4dp"
+                android:letterSpacing="0.01" />
+
+            <!-- Fine print (only visible in reward mode) -->
+            <TextView
+                android:id="@+id/tv_reward_note"
                 android:layout_width="match_parent"
-                android:layout_height="32dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="center"
+                android:text="Come back daily for more rewards"
+                android:textColor="@color/reward_note_text"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter_regular"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/play_store_review_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="28dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginEnd="28dp"
+                android:background="@drawable/bg_reward_amount_chip"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_semibold"
+                    android:gravity="center"
+                    android:text="Review Gridee on Play Store"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:background="@drawable/bg_gridee_coin_reward"
+                        android:fontFamily="@font/inter_bold"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:paddingTop="1dp"
+                        android:text="G"
+                        android:textColor="@android:color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:fontFamily="@font/inter_bold"
+                        android:text="30"
+                        android:textColor="@color/reward_amount_text"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:fontFamily="@font/inter_regular"
+                        android:text="Manual wallet credit"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:fontFamily="@font/inter_regular"
+                    android:gravity="center"
+                    android:lineSpacingExtra="3dp"
+                    android:text="Write a review on Play Store to earn 30 Gridee Coins. Our team will review it and award 30 Gridee Coins."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_play_store_review"
+                    android:layout_width="wrap_content"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="14dp"
+                    android:backgroundTint="@color/brand_primary"
+                    android:fontFamily="@font/inter_bold"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="22dp"
+                    android:text="Open Play Store"
+                    android:textAllCaps="false"
+                    android:textColor="@color/btn_text_on_brand"
+                    android:textSize="14sp"
+                    app:cornerRadius="23dp" />
+            </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

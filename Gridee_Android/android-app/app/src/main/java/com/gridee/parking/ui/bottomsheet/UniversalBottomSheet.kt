@@ -1,9 +1,12 @@
 package com.gridee.parking.ui.bottomsheet
 
 import android.app.Dialog
-import android.content.Intent
 import android.content.DialogInterface
+import android.content.Intent
+import android.content.res.Configuration
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,11 +23,16 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
+import com.google.android.material.progressindicator.IndeterminateDrawable
+import com.gridee.parking.R
 import com.gridee.parking.data.repository.WalletRepository
 import com.gridee.parking.databinding.BottomSheetUniversalBinding
 import com.gridee.parking.ui.components.CustomBottomNavigation
 import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.utils.AdMobManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,11 +48,12 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     private var pendingShowRewardedAd: Boolean = false
     private var primaryButtonIdleLabel: CharSequence? = null
     private var isViewDestroyed: Boolean = false
-    private val rewardAmountRupees = 20.0
+    private var isRewardEarned: Boolean = false
+    private val rewardAmount = 10.0
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(STYLE_NORMAL, com.gridee.parking.R.style.BottomSheetDialogTheme)
+        setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
         if (isRewardMode) preloadRewardedAd()
     }
 
@@ -56,8 +65,8 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             // Fix for Edge-to-Edge: Ensure the container extends behind nav bar
             val bottomSheet = bottomSheetDialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
             bottomSheet?.let { sheet ->
-                // Remove default background to use ours
-                sheet.background = null 
+                // Keep the sheet surface opaque so nav-area never appears transparent
+                sheet.setBackgroundResource(R.drawable.bg_bottom_sheet_universal)
                 
                 // Force the sheet to extend to the edge
                 sheet.fitsSystemWindows = false
@@ -66,12 +75,6 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
                 val params = sheet.layoutParams as? ViewGroup.MarginLayoutParams
                 params?.setMargins(0, 0, 0, 0)
                 sheet.layoutParams = params
-                
-                // Prevent system from padding the sheet automatically
-                ViewCompat.setOnApplyWindowInsetsListener(sheet) { view, insets ->
-                    view.setPadding(0, 0, 0, 0)
-                    insets
-                }
             }
             
             // Ensure behavior ignores gesture insets
@@ -79,13 +82,13 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             
             bottomSheetDialog.window?.let { window ->
                 WindowCompat.setDecorFitsSystemWindows(window, false)
-                val navBarColor = ContextCompat.getColor(requireContext(), com.gridee.parking.R.color.white)
-                window.navigationBarColor = navBarColor
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
                 window.isNavigationBarContrastEnforced = false
                 
-                // Ensure light nav bar (dark icons) since background is white
+                // Adapt nav bar icons to current theme
                 val wic = WindowCompat.getInsetsController(window, window.decorView)
-                wic.isAppearanceLightNavigationBars = true
+                val isDarkMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                wic.isAppearanceLightNavigationBars = !isDarkMode
                 
                 // Remove the black divider line above the nav bar (Android 9+)
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
@@ -137,10 +140,14 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun setupInsets() {
+        // Reduced bottom padding to avoid excessive space (common in Apple-like design)
+        val density = binding.root.context.resources.displayMetrics.density
+        val baseBottomPadding = binding.root.paddingBottom // Get XML padding
+        
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val initialPadding = (32 * view.context.resources.displayMetrics.density).toInt()
-            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, initialPadding + bars.bottom)
+            val extraPadding = (8 * density).toInt() // Ultra-tight breathing room
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, baseBottomPadding + extraPadding + bars.bottom)
             insets
         }
     }
@@ -193,19 +200,21 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun setupStandardUI() {
-        // Hide reward specific elements
-        binding.ivRewardBg.isVisible = false
-        binding.viewGradientOverlay.isVisible = false
-        
+        // Hide reward-specific elements
+        binding.viewRewardGlow.isVisible = false
+        binding.rewardAmountContainer.isVisible = false
+        binding.tvRewardNote.isVisible = false
+        binding.playStoreReviewContainer.isVisible = false
+
         // Hide drag handle for cleaner look
         binding.dragHandle.isVisible = false
-        
+
         // Lottie (Optional)
         if (lottieFileName != null) {
             binding.lottieIcon.setAnimation(lottieFileName)
             binding.lottieIcon.playAnimation()
             binding.lottieIcon.isVisible = true
-            
+
             // Subtle pop animation
             binding.lottieIcon.scaleX = 0f
             binding.lottieIcon.scaleY = 0f
@@ -225,13 +234,14 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
         binding.tvSubtitle.gravity = android.view.Gravity.START
         binding.tvSubtitle.textAlignment = View.TEXT_ALIGNMENT_TEXT_START
 
-        // Button
+        // Button — standard brand styling
+        binding.btnPrimary.icon = null
         if (primaryButtonText != null) {
             binding.btnPrimary.text = primaryButtonText
             binding.btnPrimary.isVisible = true
             binding.btnPrimary.setOnClickListener {
                 onPrimaryClickListener?.invoke()
-                dismiss() // Auto dismiss by default unless overridden
+                dismiss()
             }
         } else {
             binding.btnPrimary.isVisible = false
@@ -239,7 +249,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun setupRewardUI() {
-        // Lottie
+        // Lottie animation
         if (lottieFileName != null) {
             binding.lottieIcon.setAnimation(lottieFileName)
             binding.lottieIcon.playAnimation()
@@ -248,14 +258,15 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             binding.lottieIcon.isVisible = false
         }
 
-        // Background Pattern Animation
-        val rotateAnim = android.animation.ObjectAnimator.ofFloat(binding.ivRewardBg, "rotation", 0f, 360f)
-        rotateAnim.duration = 40000
-        rotateAnim.repeatCount = android.animation.ObjectAnimator.INFINITE
-        rotateAnim.interpolator = android.view.animation.LinearInterpolator()
-        rotateAnim.start()
+        // Show reward-specific views
+        binding.viewRewardGlow.isVisible = true
+        binding.rewardAmountContainer.isVisible = true
+        binding.tvRewardNote.isVisible = true
+        binding.playStoreReviewContainer.isVisible = true
 
-        // Animations
+        // --- Entrance Animations ---
+
+        // Lottie pop-in
         binding.lottieIcon.scaleX = 0f
         binding.lottieIcon.scaleY = 0f
         binding.lottieIcon.animate()
@@ -265,22 +276,68 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             .setInterpolator(android.view.animation.OvershootInterpolator(1.2f))
             .setStartDelay(200)
             .start()
-            
-        binding.ivRewardBg.alpha = 0f
-        binding.ivRewardBg.animate()
-            .alpha(0.6f)
-            .setDuration(800)
+
+        // Glow fade-in
+        binding.viewRewardGlow.alpha = 0f
+        binding.viewRewardGlow.scaleX = 0.8f
+        binding.viewRewardGlow.scaleY = 0.8f
+        binding.viewRewardGlow.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(900)
             .setStartDelay(100)
             .start()
 
-        // Set Texts from provided values or defaults only if not set
+        // Subtle breathing pulse on glow
+        val pulseX = android.animation.ObjectAnimator.ofFloat(binding.viewRewardGlow, "scaleX", 1f, 1.08f)
+        pulseX.duration = 2500
+        pulseX.repeatMode = android.animation.ObjectAnimator.REVERSE
+        pulseX.repeatCount = android.animation.ObjectAnimator.INFINITE
+        pulseX.interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+
+        val pulseY = android.animation.ObjectAnimator.ofFloat(binding.viewRewardGlow, "scaleY", 1f, 1.08f)
+        pulseY.duration = 2500
+        pulseY.repeatMode = android.animation.ObjectAnimator.REVERSE
+        pulseY.repeatCount = android.animation.ObjectAnimator.INFINITE
+        pulseY.interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+
+        val pulseSet = android.animation.AnimatorSet()
+        pulseSet.playTogether(pulseX, pulseY)
+        pulseSet.startDelay = 1000
+        pulseSet.start()
+
+        // Reward chip slide-up
+        binding.rewardAmountContainer.alpha = 0f
+        binding.rewardAmountContainer.translationY = 16f
+        binding.rewardAmountContainer.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(500)
+            .setStartDelay(400)
+            .start()
+
+        // --- Gold button styling ---
+        val goldColor = ContextCompat.getColor(requireContext(), R.color.reward_button)
+        val goldTextColor = ContextCompat.getColor(requireContext(), R.color.reward_button_text)
+        binding.btnPrimary.backgroundTintList = android.content.res.ColorStateList.valueOf(goldColor)
+        binding.btnPrimary.setTextColor(goldTextColor)
+        binding.btnPrimary.setIconResource(R.drawable.ic_reward_watch_claim)
+        binding.btnPrimary.iconTint = null
+        binding.btnPrimary.iconGravity = com.google.android.material.button.MaterialButton.ICON_GRAVITY_TEXT_START
+        binding.btnPrimary.iconSize = (20 * resources.displayMetrics.density).toInt()
+        binding.btnPrimary.iconPadding = (8 * resources.displayMetrics.density).toInt()
+
+        // Set texts
         binding.tvTitle.text = title ?: "Daily Reward"
-        binding.tvSubtitle.text = message ?: "You've earned 50 coins! Come back tomorrow for more."
-        binding.btnPrimary.text = primaryButtonText ?: "Claim Reward"
+        binding.tvSubtitle.text = message ?: "Watch a short video to claim your daily reward"
+        binding.btnPrimary.text = primaryButtonText ?: "Watch & Claim"
         primaryButtonIdleLabel = binding.btnPrimary.text
 
+        // Reward amount display
+        binding.tvRewardAmount.text = String.format("%.0f", rewardAmount)
+
         binding.btnPrimary.setOnClickListener {
-            // Check if there is a custom listener, otherwise use default reward logic
             if (onPrimaryClickListener != null) {
                 onPrimaryClickListener?.invoke()
             } else {
@@ -288,8 +345,29 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             }
         }
 
+        binding.btnPlayStoreReview.setOnClickListener {
+            openPlayStoreReview()
+        }
+
         // Preload rewarded ad
         preloadRewardedAd()
+    }
+
+    private fun openPlayStoreReview() {
+        val packageName = requireContext().packageName
+        val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
+        val webIntent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+        )
+
+        runCatching { startActivity(marketIntent) }
+            .onFailure {
+                runCatching { startActivity(webIntent) }
+                    .onFailure {
+                        Toast.makeText(requireContext(), "Unable to open Play Store", Toast.LENGTH_SHORT).show()
+                    }
+            }
     }
 
     // Public Configuration Methods =======================================================
@@ -367,39 +445,43 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     private fun preloadRewardedAd() {
         if (isLoadingRewardedAd || rewardedAd != null) return
 
-        val adUnitId = "ca-app-pub-5268197817154713/4238043733"
+        val appContext = requireContext().applicationContext
+        val adUnitId = AdMobManager.rewardedAdUnitId
         isLoadingRewardedAd = true
 
-        val adRequest = AdRequest.Builder().build()
+        val initialized = AdMobManager.initializeIfEnabled(requireContext()) {
+            if (isViewDestroyed) {
+                isLoadingRewardedAd = false
+                return@initializeIfEnabled
+            }
 
-        RewardedAd.load(
-            requireContext(),
-            adUnitId,
-            adRequest,
-            object : RewardedAdLoadCallback() {
-                override fun onAdLoaded(ad: RewardedAd) {
-                    isLoadingRewardedAd = false
-                    rewardedAd = ad
-                    maybeShowRewardedAdIfPending()
-                }
+            val adRequest = AdRequest.Builder().build()
 
-                override fun onAdFailedToLoad(adError: LoadAdError) {
-                    isLoadingRewardedAd = false
-                    rewardedAd = null
-                    if (pendingShowRewardedAd) {
-                        pendingShowRewardedAd = false
-                        setRewardedAdLoading(false)
-                        if (isAdded) {
-                            Toast.makeText(
-                                requireContext(),
-                                "Failed to load reward video. Please try again.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+            RewardedAd.load(
+                appContext,
+                adUnitId,
+                adRequest,
+                object : RewardedAdLoadCallback() {
+                    override fun onAdLoaded(ad: RewardedAd) {
+                        isLoadingRewardedAd = false
+                        rewardedAd = ad
+                        maybeShowRewardedAdIfPending()
+                    }
+
+                    override fun onAdFailedToLoad(adError: LoadAdError) {
+                        logRewardedAdLoadFailure(adError)
+                        isLoadingRewardedAd = false
+                        rewardedAd = null
+                        handleRewardedAdLoadFailure(rewardedAdLoadFailureMessage(adError))
                     }
                 }
-            }
-        )
+            )
+        }
+
+        if (!initialized) {
+            isLoadingRewardedAd = false
+            handleRewardedAdLoadFailure("Rewards are temporarily unavailable. Please try again later.")
+        }
     }
 
     private fun showRewardVideo() {
@@ -431,8 +513,42 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
         if (primaryButtonIdleLabel == null) primaryButtonIdleLabel = binding.btnPrimary.text
 
         binding.btnPrimary.isEnabled = !isLoading
-        binding.btnPrimary.alpha = if (isLoading) 0.6f else 1f
-        binding.btnPrimary.text = if (isLoading) "Loading..." else primaryButtonIdleLabel
+        binding.btnPrimary.alpha = if (isLoading) 0.7f else 1f
+
+        if (isLoading) {
+            // Animated spinner inside the button so the user can see the ad is being fetched.
+            binding.btnPrimary.text = "Preparing video…"
+            binding.btnPrimary.icon = buildButtonSpinner()
+            binding.btnPrimary.iconTint = android.content.res.ColorStateList.valueOf(
+                ContextCompat.getColor(requireContext(), R.color.reward_button_text)
+            )
+            binding.btnPrimary.iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+        } else {
+            binding.btnPrimary.text = primaryButtonIdleLabel
+            // Restore the idle watch/claim glyph only in reward mode (standard mode has no icon).
+            if (isRewardMode) {
+                binding.btnPrimary.setIconResource(R.drawable.ic_reward_watch_claim)
+                binding.btnPrimary.iconTint = null
+            } else {
+                binding.btnPrimary.icon = null
+            }
+        }
+    }
+
+    /** Material indeterminate circular spinner sized to sit inside the primary button. */
+    private fun buildButtonSpinner(): IndeterminateDrawable<CircularProgressIndicatorSpec> {
+        val density = resources.displayMetrics.density
+        val spec = CircularProgressIndicatorSpec(
+            requireContext(),
+            null,
+            0,
+            com.google.android.material.R.style.Widget_Material3_CircularProgressIndicator_ExtraSmall
+        ).apply {
+            indicatorInset = 0
+            indicatorSize = (20 * density).toInt()
+            trackThickness = (2 * density).toInt()
+        }
+        return IndeterminateDrawable.createCircularDrawable(requireContext(), spec)
     }
 
     private fun showRewardedAd(ad: RewardedAd) {
@@ -445,17 +561,26 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
                 rewardedAd = null
-                dismiss()
+                // If they didn't earn the reward (e.g., closed early), dismiss the sheet immediately.
+                // Otherwise, wait for the backend wallet top-up logic to finish processing.
+                if (!isRewardEarned) {
+                    dismissAllowingStateLoss()
+                }
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                Log.w(
+                    TAG,
+                    "Rewarded ad failed to show: code=${adError.code}, " +
+                        "domain=${adError.domain}, message=${adError.message}"
+                )
                 rewardedAd = null
                 preloadRewardedAd()
                 setRewardedAdLoading(false)
                 Toast.makeText(
                     requireContext(),
-                    "Failed to show reward video.",
-                    Toast.LENGTH_SHORT
+                    "We could not open the reward video. Please try again in a moment.",
+                    Toast.LENGTH_LONG
                 ).show()
             }
 
@@ -465,12 +590,46 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
         }
 
         ad.show(requireActivity()) { rewardItem ->
-            creditRewardToWallet(rewardAmountRupees)
+            isRewardEarned = true
+            creditRewardToWallet(rewardAmount)
             Toast.makeText(
                 requireContext(),
-                "Reward earned: ₹${String.format("%.0f", rewardAmountRupees)}",
+                "Reward earned! Processing your wallet top-up...",
                 Toast.LENGTH_SHORT
             ).show()
+        }
+    }
+
+    private fun handleRewardedAdLoadFailure(message: String) {
+        if (!pendingShowRewardedAd) return
+        pendingShowRewardedAd = false
+        setRewardedAdLoading(false)
+        if (isAdded) {
+            Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun logRewardedAdLoadFailure(adError: LoadAdError) {
+        Log.w(
+            TAG,
+            "Rewarded ad failed to load: code=${adError.code}, " +
+                "domain=${adError.domain}, message=${adError.message}, " +
+                "responseInfo=${adError.responseInfo}"
+        )
+    }
+
+    private fun rewardedAdLoadFailureMessage(adError: LoadAdError): String {
+        return when (adError.code) {
+            AdRequest.ERROR_CODE_NO_FILL,
+            AdRequest.ERROR_CODE_MEDIATION_NO_FILL ->
+                "No reward video is available right now. Please try again in a few minutes."
+            AdRequest.ERROR_CODE_NETWORK_ERROR ->
+                "We could not load the video. Check your internet connection and try again."
+            AdRequest.ERROR_CODE_INVALID_REQUEST,
+            AdRequest.ERROR_CODE_APP_ID_MISSING,
+            AdRequest.ERROR_CODE_INVALID_AD_STRING ->
+                "Rewards are not available in this app version yet. Please update or try again later."
+            else -> "We could not load the reward video. Please try again in a moment."
         }
     }
 
@@ -503,6 +662,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
                     "Reward earned but could not be added: ${e.message}",
                     Toast.LENGTH_LONG
                 ).show()
+                dismissAllowingStateLoss()
             } finally {
                 setRewardLoading(false)
             }
@@ -516,19 +676,22 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun showRewardDialog(amount: Double, newBalance: Double?) {
-        if (!isAdded) return
-        // Capture context reference before any dialog/dismissal operations
         val activityContext = activity ?: return
-        val balanceLine = newBalance?.let { "\nNew balance: ₹${String.format("%.2f", it)}" } ?: ""
-        MaterialAlertDialogBuilder(activityContext)
-            .setTitle("Reward Added")
-            .setMessage("₹${String.format("%.0f", amount)} has been added to your wallet.$balanceLine")
-            .setCancelable(true)
-            .setPositiveButton("View Wallet") { _, _ ->
-                openWalletPage(activityContext)
-            }
-            .setNegativeButton("Close", null)
-            .show()
+        
+        // Broadcast the reward completion directly into the MainContainerActivity global notification receiver
+        val rewardIntent = Intent(activityContext, MainContainerActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra(MainContainerActivity.EXTRA_SHOW_WALLET_TRANSACTION, true)
+            putExtra(MainContainerActivity.EXTRA_WALLET_TRANSACTION_TITLE, "Ad Top-Up")
+            putExtra(MainContainerActivity.EXTRA_WALLET_TRANSACTION_AMOUNT, String.format(java.util.Locale.getDefault(), "%.0f", amount))
+            putExtra(MainContainerActivity.EXTRA_WALLET_TRANSACTION_IS_CREDIT, true)
+            // Signal MainContainerActivity to route the click to the wallet tab directly instead of history 
+            putExtra(MainContainerActivity.EXTRA_WALLET_TRANSACTION_ROUTE_TO_WALLET, true)
+        }
+        activityContext.startActivity(rewardIntent)
+        
+        // Safely tear down this sheet AFTER offloading the broadcast UI instruction!
+        dismissAllowingStateLoss()
     }
 
     private fun openWalletPage(ctx: android.content.Context) {

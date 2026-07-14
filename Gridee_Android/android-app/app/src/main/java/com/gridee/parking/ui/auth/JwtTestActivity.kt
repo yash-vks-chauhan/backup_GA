@@ -187,7 +187,7 @@ class JwtTestActivity : AppCompatActivity() {
                     
                     val auth = state.authResponse
                     addLog("✅ LOGIN SUCCESS!")
-                    addLog("📝 Token: ${auth.token.take(20)}...")
+                    addLog("📝 Token: ${auth.token?.take(20).orEmpty()}...")
                     addLog("👤 User ID: ${auth.id}")
                     addLog("👤 Name: ${auth.name}")
                     addLog("🎭 Role: ${auth.role}")

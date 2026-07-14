@@ -90,52 +90,42 @@ class TransactionsAdapter(
                 absoluteAmount
             )
 
-            val amountText = if (statusIndicatesFailure) {
-                "₹$formattedAmount"
+            val signText = if (statusIndicatesFailure) {
+                ""
             } else {
-                if (amountPositive) "+₹$formattedAmount" else "-₹$formattedAmount"
+                if (amountPositive) "+" else "-"
             }
-            binding.tvAmount.text = amountText
+            binding.tvSign.text = signText
+            binding.tvSign.visibility = if (signText.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
+
+            binding.tvAmount.text = formattedAmount
 
             // Configure Status Pill (Amount Background & Color)
-            when {
-                statusIndicatesFailure -> {
-                    // Failed: Red Pill, Red Text
-                    binding.layoutStatusPill.setBackgroundResource(R.drawable.status_soft_debit)
-                    binding.tvAmount.setTextColor(android.graphics.Color.parseColor("#DC2626"))
-                    binding.viewStatusDot.visibility = android.view.View.GONE
-                }
-                transaction.type == TransactionType.BONUS -> {
-                    // Bonus: Pending Style (Amber Pill, Amber Text)
-                    binding.layoutStatusPill.setBackgroundResource(R.drawable.status_soft_pending)
-                    binding.tvAmount.setTextColor(android.graphics.Color.parseColor("#D97706"))
-                    binding.viewStatusDot.visibility = android.view.View.GONE
-                }
-                transaction.type == TransactionType.PARKING_PAYMENT -> {
-                    // Debit: Red Pill, Red Text
-                    binding.layoutStatusPill.setBackgroundResource(R.drawable.status_soft_debit)
-                    binding.tvAmount.setTextColor(android.graphics.Color.parseColor("#DC2626"))
-                    binding.viewStatusDot.visibility = android.view.View.GONE 
-                }
-                transaction.type == TransactionType.REFUND -> {
-                    // Refund: Green Pill, Green Text
-                    binding.layoutStatusPill.setBackgroundResource(R.drawable.status_soft_active)
-                    binding.tvAmount.setTextColor(android.graphics.Color.parseColor("#059669"))
-                    binding.viewStatusDot.visibility = android.view.View.GONE
-                }
-                transaction.type == TransactionType.TOP_UP -> {
-                    // Credit: Green Pill, Green Text
-                    binding.layoutStatusPill.setBackgroundResource(R.drawable.status_soft_active)
-                    binding.tvAmount.setTextColor(android.graphics.Color.parseColor("#059669"))
-                    binding.viewStatusDot.visibility = android.view.View.GONE
-                }
-                else -> {
-                    // Default: Grey Pill, Dark Grey Text
-                    binding.layoutStatusPill.setBackgroundResource(R.drawable.status_soft_completed)
-                    binding.tvAmount.setTextColor(android.graphics.Color.parseColor("#374151"))
-                    binding.viewStatusDot.visibility = android.view.View.GONE
-                }
+            val ctx = context
+            val textColorRes = when {
+                statusIndicatesFailure -> R.color.status_text_debit
+                transaction.type == TransactionType.BONUS -> R.color.status_text_pending
+                transaction.type == TransactionType.PARKING_PAYMENT -> R.color.status_text_debit
+                transaction.type == TransactionType.REFUND -> R.color.status_text_credit
+                transaction.type == TransactionType.TOP_UP -> R.color.status_text_credit
+                else -> R.color.status_text_neutral
             }
+
+            val bgRes = when {
+                statusIndicatesFailure -> R.drawable.status_soft_debit
+                transaction.type == TransactionType.BONUS -> R.drawable.status_soft_pending
+                transaction.type == TransactionType.PARKING_PAYMENT -> R.drawable.status_soft_debit
+                transaction.type == TransactionType.REFUND -> R.drawable.status_soft_active
+                transaction.type == TransactionType.TOP_UP -> R.drawable.status_soft_active
+                else -> R.drawable.status_soft_completed
+            }
+
+            binding.layoutStatusPill.setBackgroundResource(bgRes)
+            val colorResolved = androidx.core.content.ContextCompat.getColor(ctx, textColorRes)
+            binding.tvAmount.setTextColor(colorResolved)
+            binding.tvSign.setTextColor(colorResolved)
+            binding.tvCoinBadge.backgroundTintList = android.content.res.ColorStateList.valueOf(colorResolved)
+            binding.viewStatusDot.visibility = android.view.View.GONE
 
             val iconRes = when {
                 statusIndicatesFailure -> R.drawable.ic_wallet_transaction_failed
@@ -150,7 +140,7 @@ class TransactionsAdapter(
             // Keep all wallet icons neutral (grey) for a consistent UI.
             binding.ivTransactionIcon.imageTintList = ContextCompat.getColorStateList(context, R.color.text_secondary)
             
-
+            // Transaction cards should not trigger notifications on click.
         }
     }
 }

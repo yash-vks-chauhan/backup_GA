@@ -29,7 +29,7 @@
         android:background="@drawable/bg_close_circle"
         android:src="@drawable/ic_close"
         android:padding="9dp"
-        app:tint="#5C5C5C"
+        app:tint="@color/text_secondary"
         android:clickable="true"
         android:focusable="true"
         android:contentDescription="Close"
@@ -44,7 +44,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:indeterminateTint="#1A1A1A"
+        android:indeterminateTint="@color/text_primary"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/drag_handle"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -77,7 +77,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="32dp"
+                android:paddingBottom="16dp"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:paddingStart="24dp"
@@ -94,7 +94,7 @@
                     android:textStyle="bold"
                     android:gravity="center"
                     android:text="Edit Profile"
-                    android:textColor="#1A1A1A"
+                    android:textColor="@color/text_primary"
                     android:textSize="22sp" />
 
                 <!-- Profile Avatar Section (Centered) -->
@@ -124,12 +124,12 @@
                                 android:id="@+id/tv_user_initials"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:text="Y"
                                 android:textColor="#FFFFFF"
                                 android:textSize="40sp"
                                 android:textStyle="bold"
                                 android:gravity="center"
-                                android:fontFamily="@font/inter_bold" />
+                                android:fontFamily="@font/inter_bold"
+                                tools:text="YC" />
 
                         </FrameLayout>
 
@@ -166,7 +166,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Full Name"
-                    android:textColor="#1A1A1A"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:fontFamily="@font/inter_medium"
                     android:layout_marginBottom="8dp" />
@@ -181,10 +181,10 @@
                     app:boxCornerRadiusBottomStart="30dp"
                     app:boxCornerRadiusTopEnd="30dp"
                     app:boxCornerRadiusTopStart="30dp"
-                    app:boxStrokeColor="#E0E0E0"
-                    app:boxStrokeWidth="1.5dp"
+                    app:boxStrokeColor="@color/selector_profile_input_outline"
+                    app:boxStrokeWidth="@dimen/profile_input_outline_width"
                     app:endIconMode="clear_text"
-                    app:endIconTint="#9E9E9E"
+                    app:endIconTint="@color/text_tertiary"
                     app:hintEnabled="false">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -193,12 +193,12 @@
                         android:layout_height="wrap_content"
                         android:inputType="textPersonName"
                         android:textSize="16sp"
-                        android:textColor="#1A1A1A"
+                        android:textColor="@color/text_primary"
                         android:fontFamily="@font/inter_medium"
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp"
                         android:hint="Enter your name"
-                        android:textColorHint="#9E9E9E"/>
+                        android:textColorHint="@color/text_tertiary"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -207,7 +207,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Mobile Number"
-                    android:textColor="#1A1A1A"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:fontFamily="@font/inter_medium"
                     android:layout_marginBottom="8dp" />
@@ -223,8 +223,8 @@
                     app:boxCornerRadiusBottomStart="30dp"
                     app:boxCornerRadiusTopEnd="30dp"
                     app:boxCornerRadiusTopStart="30dp"
-                    app:boxStrokeColor="#E0E0E0"
-                    app:boxStrokeWidth="1.5dp"
+                    app:boxStrokeColor="@color/selector_profile_input_outline"
+                    app:boxStrokeWidth="@dimen/profile_input_outline_width"
                     app:hintEnabled="false">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -233,7 +233,7 @@
                         android:layout_height="wrap_content"
                         android:inputType="phone"
                         android:textSize="16sp"
-                        android:textColor="#9E9E9E"
+                        android:textColor="@color/text_tertiary"
                         android:fontFamily="@font/inter_medium"
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp"
@@ -249,7 +249,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Email Address"
-                    android:textColor="#1A1A1A"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:fontFamily="@font/inter_medium"
                     android:layout_marginBottom="8dp" />
@@ -264,8 +264,8 @@
                     app:boxCornerRadiusBottomStart="30dp"
                     app:boxCornerRadiusTopEnd="30dp"
                     app:boxCornerRadiusTopStart="30dp"
-                    app:boxStrokeColor="#E0E0E0"
-                    app:boxStrokeWidth="1.5dp"
+                    app:boxStrokeColor="@color/selector_profile_input_outline"
+                    app:boxStrokeWidth="@dimen/profile_input_outline_width"
                     app:hintEnabled="false">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -274,7 +274,7 @@
                         android:layout_height="wrap_content"
                         android:inputType="textEmailAddress"
                         android:textSize="16sp"
-                        android:textColor="#9E9E9E"
+                        android:textColor="@color/text_tertiary"
                         android:fontFamily="@font/inter_medium"
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp"
@@ -282,29 +282,28 @@
                         android:focusable="false"
                         android:backgroundTint="#FAFAFA"
                         android:hint="Enter email address"
-                        android:textColorHint="#9E9E9E"/>
+                        android:textColorHint="@color/text_tertiary"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Save Changes Button -->
+                <!-- Ultra-Thick Balanced Pill Button -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_save"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:backgroundTint="#1A1A1A"
+                    android:layout_width="wrap_content"
+                    android:layout_height="72dp"
+                    android:layout_gravity="center_horizontal"
+                    android:paddingHorizontal="48dp"
+                    android:backgroundTint="@color/brand_primary"
                     android:fontFamily="@font/inter_bold"
                     android:text="Save Changes"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/md3_on_primary"
                     android:textSize="16sp"
                     android:textAllCaps="false"
-                    app:cornerRadius="30dp"
-                    app:elevation="0dp"
-                    android:stateListAnimator="@null"/>
-
-                <!-- Extra Bottom Spacing -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="32dp" />
+                    app:cornerRadius="36dp"
+                    app:elevation="8dp"
+                    app:rippleColor="#33FFFFFF"
+                    android:stateListAnimator="@null"
+                    android:letterSpacing="0.01"/>
 
             </LinearLayout>
 
@@ -315,7 +314,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center_horizontal"
-                android:paddingBottom="32dp"
+                android:paddingBottom="16dp"
                 android:paddingStart="24dp"
                 android:paddingEnd="24dp"
                 android:visibility="gone"
@@ -335,7 +334,7 @@
                     android:layout_marginTop="32dp"
                     android:fontFamily="@font/inter_semibold"
                     android:gravity="center"
-                    android:textColor="#1A1A1A"
+                    android:textColor="@color/text_primary"
                     android:textSize="24sp"
                     tools:text="Info Title" />
 
@@ -346,15 +345,11 @@
                     android:layout_marginTop="12dp"
                     android:fontFamily="@font/inter_regular"
                     android:gravity="center"
-                    android:textColor="#5C5C5C"
+                    android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:lineSpacingExtra="4dp"
                     tools:text="Info message goes here." />
                 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp" />
-
             </LinearLayout>
 
         </LinearLayout>

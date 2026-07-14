@@ -4,30 +4,32 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.PopupWindow
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.gridee.parking.R
+import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.databinding.ActivityRegistrationBinding
 import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.utils.NotificationHelper
 
 class RegistrationActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityRegistrationBinding
     private val viewModel: RegistrationViewModel by viewModels()
     private val parkingLotData = mutableListOf<String>()
+    private var activePopupWindow: PopupWindow? = null
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRegistrationBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        // Set light status bar with dark icons for white background
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-        window.statusBarColor = android.graphics.Color.parseColor("#F5F5F5")
+        // Theme-aware status bar
+        window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
+            !com.gridee.parking.utils.ThemeManager.isDarkMode(this)
         
         setupUI()
         observeViewModel()
@@ -43,26 +45,16 @@ class RegistrationActivity : AppCompatActivity() {
         binding.etParkingLot.inputType = 0
         binding.etParkingLot.keyListener = null
 
-        val showDropdownAction = {
-            if (parkingLotData.isNotEmpty()) {
-                showParkingDropdown(binding.tilParkingLot, parkingLotData)
-            } else {
-                if (viewModel.parkingLotLoading.value != true) {
-                    viewModel.loadParkingLotNames()
-                }
-            }
-        }
+        binding.etParkingLot.setOnClickListener { toggleParkingDropdown() }
+        binding.tilParkingLot.setEndIconOnClickListener { toggleParkingDropdown() }
 
-        binding.etParkingLot.setOnClickListener { showDropdownAction() }
-        binding.etParkingLot.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                showDropdownAction()
-            }
-        }
-        binding.tilParkingLot.setEndIconOnClickListener { showDropdownAction() }
-        binding.tilParkingLot.setOnClickListener { showDropdownAction() }
+
 
         binding.btnRegister.setOnClickListener {
+            if (!RemoteConfigManager.isEmailSignInEnabled()) {
+                NotificationHelper.showWarning(binding.rootContainer, message = "Email registration is temporarily unavailable.")
+                return@setOnClickListener
+            }
             registerUser()
         }
         
@@ -71,6 +63,21 @@ class RegistrationActivity : AppCompatActivity() {
             // Navigate to login activity
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
+        }
+
+        applyFeatureSwitches()
+    }
+
+    private fun applyFeatureSwitches() {
+        RemoteConfigManager.loadCached(this)
+        val emailEnabled = RemoteConfigManager.isEmailSignInEnabled()
+        binding.btnRegister.isEnabled = emailEnabled
+        binding.btnRegister.alpha = if (emailEnabled) 1f else 0.45f
+        if (!emailEnabled) {
+            NotificationHelper.showWarning(
+                binding.rootContainer,
+                message = "Email registration is temporarily unavailable."
+            )
         }
     }
     
@@ -105,7 +112,7 @@ class RegistrationActivity : AppCompatActivity() {
 
         viewModel.parkingLotError.observe(this) { error ->
             error?.let {
-                Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+                NotificationHelper.showWarning(binding.rootContainer, message = it)
             }
         }
 
@@ -128,11 +135,12 @@ class RegistrationActivity : AppCompatActivity() {
                         .putBoolean("is_logged_in", true)
                         .apply()
                     
-                    Toast.makeText(this, "Registration successful! Welcome to Gridee!", Toast.LENGTH_LONG).show()
+                    NotificationHelper.showSuccess(binding.rootContainer, message = "Registration successful! Welcome to Gridee!")
                     
                     // Navigate directly to main container (same as login)
                     val intent = Intent(this, MainContainerActivity::class.java)
                     intent.putExtra("USER_NAME", state.user.name)
+                    intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()
@@ -146,7 +154,21 @@ class RegistrationActivity : AppCompatActivity() {
                 }
                 is RegistrationState.Error -> {
                     showLoading(false)
-                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    if (state.isRetryable) {
+                        NotificationHelper.showWarning(
+                            binding.rootContainer,
+                            title = state.title,
+                            message = state.message,
+                            onClick = { registerUser() },
+                            actionButtonText = "Try Again"
+                        )
+                    } else {
+                        NotificationHelper.showError(
+                            binding.rootContainer,
+                            title = state.title,
+                            message = state.message
+                        )
+                    }
                 }
             }
         }
@@ -179,6 +201,18 @@ class RegistrationActivity : AppCompatActivity() {
         binding.tilParkingLot.error = null
     }
 
+    private fun toggleParkingDropdown() {
+        if (activePopupWindow?.isShowing == true) {
+            activePopupWindow?.dismiss()
+        } else {
+            if (parkingLotData.isNotEmpty()) {
+                showParkingDropdown(binding.tilParkingLot, parkingLotData)
+            } else if (viewModel.parkingLotLoading.value != true) {
+                viewModel.loadParkingLotNames()
+            }
+        }
+    }
+
     private fun showParkingDropdown(anchor: View, items: List<String>) {
         val popupView = layoutInflater.inflate(R.layout.window_parking_dropdown, null)
         
@@ -198,8 +232,10 @@ class RegistrationActivity : AppCompatActivity() {
         
         // Remove window shadow, rely on CardView shadow inside
         popupWindow.elevation = 0f 
+        activePopupWindow = popupWindow
         popupWindow.isOutsideTouchable = true
         popupWindow.setBackgroundDrawable(ContextCompat.getDrawable(this, android.R.color.transparent))
+
         
         // Mechanical "Click" Rotation (Precision Snap)
         val endIcon = binding.tilParkingLot.findViewById<View>(com.google.android.material.R.id.text_input_end_icon)
@@ -213,8 +249,10 @@ class RegistrationActivity : AppCompatActivity() {
         anchor.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK)
 
         popupWindow.setOnDismissListener { 
+            activePopupWindow = null
             endIcon?.animate()?.rotation(0f)?.setDuration(250)?.setInterpolator(androidx.interpolator.view.animation.FastOutSlowInInterpolator())?.start()
         }
+
         
         val recyclerView = popupView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)

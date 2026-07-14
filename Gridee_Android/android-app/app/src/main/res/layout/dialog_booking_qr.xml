@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  QR focus modal. Single job: get the QR in front of the user as cleanly
+  and obviously as possible, with enough surrounding context that the
+  operator and the user agree on what they're looking at.
+
+  Reading order (top → bottom):
+    drag handle  →  BOOKING PASS eyebrow + title  →  subtitle  →
+    QR plate  →  booking-ID chip
+
+  The card is dismissed by:
+    – tap on backdrop
+    – tap on the close affordance (top-right)
+    – swipe / drag the card down past threshold
+    – system back
+
+  The Adapter owns the open/close choreography; this layout just holds
+  the views and assigns the IDs the animator looks up by.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dialog_qr_backdrop"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_booking_qr_focus_backdrop"
+    android:paddingHorizontal="24dp"
+    android:paddingVertical="32dp">
+
+    <LinearLayout
+        android:id="@+id/dialog_qr_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_booking_qr_focus_card"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:paddingHorizontal="22dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="22dp">
+
+        <!-- Drag handle: same vocabulary as a system bottom sheet so users
+             instantly know the card is dismissable by swipe. -->
+        <View
+            android:id="@+id/dialog_qr_drag_handle"
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/bg_qr_drag_handle" />
+
+        <!-- Title row: eyebrow + title on the left, close affordance on
+             the right. Eyebrow ("BOOKING PASS") gives context; title
+             ("Show at entry") gives the action. -->
+        <LinearLayout
+            android:id="@+id/dialog_qr_title_block"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_bold"
+                    android:letterSpacing="0.14"
+                    android:text="BOOKING PASS"
+                    android:textAllCaps="true"
+                    android:textColor="@color/status_text_pending"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_dialog_booking_qr_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:fontFamily="@font/inter_bold"
+                    android:letterSpacing="-0.02"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:text="Show at entry" />
+
+                <TextView
+                    android:id="@+id/tv_dialog_booking_qr_subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    tools:text="Hold up to the operator's scanner" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/iv_close_qr_dialog"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_close_circle"
+                android:clickable="true"
+                android:contentDescription="Close"
+                android:focusable="true"
+                android:padding="9dp"
+                android:src="@drawable/ic_close" />
+        </LinearLayout>
+
+        <!-- The QR itself. Bigger than before (300dp) and on its own white
+             plate so it scans reliably even at oblique angles. -->
+        <ImageView
+            android:id="@+id/iv_dialog_booking_qr"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_booking_qr_image"
+            android:contentDescription="Booking QR code"
+            android:padding="14dp"
+            android:scaleType="fitCenter"
+            tools:src="@drawable/ic_code_shield" />
+
+        <!-- Booking-ID chip: small pill, monospace-ish letter spacing, sits
+             quietly at the bottom. Reference data, not the subject. -->
+        <TextView
+            android:id="@+id/tv_dialog_booking_qr_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/bg_qr_id_chip"
+            android:ellipsize="middle"
+            android:fontFamily="@font/inter_semibold"
+            android:gravity="center"
+            android:letterSpacing="0.04"
+            android:maxLines="1"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"
+            tools:text="ID · A1B2C3D4" />
+    </LinearLayout>
+</FrameLayout>

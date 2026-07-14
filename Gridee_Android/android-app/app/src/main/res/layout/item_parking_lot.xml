@@ -8,7 +8,7 @@
     android:layout_marginEnd="12dp"
     android:layout_marginTop="10dp"
     android:layout_marginBottom="14dp"
-    app:cardBackgroundColor="@android:color/white"
+    app:cardBackgroundColor="@color/background_secondary"
     app:cardCornerRadius="16dp"
     app:cardElevation="6dp"
     app:cardUseCompatPadding="true"
@@ -37,7 +37,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_medium" />
 
             <TextView
                 android:id="@+id/tvAvailability"
@@ -48,7 +48,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary_green"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_medium" />
 
         </LinearLayout>
 
@@ -61,7 +61,7 @@
             tools:text="Address"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/inter_regular"
             android:layout_marginTop="8dp"
             android:maxLines="2"
             android:ellipsize="end" />
@@ -82,7 +82,7 @@
                 tools:text="Tap to view available spots"
                 android:textSize="13sp"
                 android:textColor="@color/text_secondary"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -92,7 +92,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/brand_primary"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_medium" />
 
         </LinearLayout>
 

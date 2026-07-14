@@ -23,6 +23,8 @@ class ParkingDiscoveryActivity : BaseActivityWithBottomNav<ActivityParkingDiscov
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Base redirected to login (no auth session) and finished; binding is null.
+        if (!isViewReady) return
         viewModel = ViewModelProvider(this)[ParkingDiscoveryViewModel::class.java]
         
         setupClickListeners()

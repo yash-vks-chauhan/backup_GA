@@ -1,16 +1,18 @@
 package com.gridee.parking.ui.activities
 
-import android.animation.Animator
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
-import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.view.Window
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.OvershootInterpolator
+import android.view.animation.PathInterpolator
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.updatePadding
@@ -26,9 +28,14 @@ import com.gridee.parking.databinding.ActivityTransactionHistoryBinding
 import com.gridee.parking.ui.adapters.Transaction
 import com.gridee.parking.ui.adapters.TransactionType
 import com.gridee.parking.ui.adapters.WalletTransactionGrouping
+import com.gridee.parking.ui.adapters.WalletTransactionListItem
 import com.gridee.parking.ui.adapters.WalletTransactionsAdapter
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.BackendTimestampParser
+import com.gridee.parking.utils.NotificationHelper
+import com.google.android.material.shape.ShapeAppearanceModel
+import com.google.android.material.transition.platform.MaterialContainerTransform
+import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 
 import kotlinx.coroutines.launch
 import java.util.*
@@ -45,77 +52,250 @@ class TransactionHistoryActivity : AppCompatActivity() {
     private var isLastPage = false
     private val pageSize = 20
 
-    private val headerCollapseRange by lazy {
-        resources.getDimensionPixelSize(R.dimen.transaction_header_collapse_range)
-    }
+    private var currentSubtitleText: String? = null
+    private var isSubtitleAnimating = false
+    private var isClosing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
+        setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
+        configureSharedElementTransitions()
+
         super.onCreate(savedInstanceState)
         binding = ActivityTransactionHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setTransitionName(binding.root, VIEW_ALL_TRANSITION_NAME)
+        runCatching { window.sharedElementsUseOverlay = false }
 
         window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
-        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
-        
+        val isDarkMode = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isDarkMode
+
+        onBackPressedDispatcher.addCallback(this) {
+            closeWithAnimation()
+        }
+
         setupToolbar()
         setupRecyclerView()
+        setupFrostedToolbar()
         setupFilterButtons()
         fetchAllTransactions()
     }
 
     private fun setupToolbar() {
         binding.btnBack.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
+            closeWithAnimation()
         }
+    }
+
+    private fun configureSharedElementTransitions() {
+        val pillShape = ShapeAppearanceModel.builder()
+            .setAllCornerSizes(16f.dpToPx())
+            .build()
+        val fullShape = ShapeAppearanceModel.builder()
+            .setAllCornerSizes(0f)
+            .build()
+
+        window.sharedElementEnterTransition = MaterialContainerTransform().apply {
+            addTarget(VIEW_ALL_TRANSITION_NAME)
+            duration = 500
+            scrimColor = Color.TRANSPARENT
+            setAllContainerColors(Color.TRANSPARENT)
+            drawingViewId = android.R.id.content
+            isElevationShadowEnabled = false
+            startShapeAppearanceModel = pillShape
+            endShapeAppearanceModel = fullShape
+            interpolator = PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f)
+            fadeMode = MaterialContainerTransform.FADE_MODE_CROSS
+        }
+
+        window.sharedElementReturnTransition = MaterialContainerTransform().apply {
+            addTarget(VIEW_ALL_TRANSITION_NAME)
+            duration = 450
+            scrimColor = Color.TRANSPARENT
+            setAllContainerColors(Color.TRANSPARENT)
+            drawingViewId = android.R.id.content
+            isElevationShadowEnabled = false
+            startShapeAppearanceModel = fullShape
+            endShapeAppearanceModel = pillShape
+            interpolator = PathInterpolator(0.05f, 0.7f, 0.1f, 1.0f)
+            fadeMode = MaterialContainerTransform.FADE_MODE_CROSS
+        }
+    }
+
+    private fun closeWithAnimation() {
+        if (isClosing) return
+        isClosing = true
+        finishAfterTransition()
     }
 
     private fun setupRecyclerView() {
         transactionsAdapter = WalletTransactionsAdapter(emptyList())
-        
+
         binding.rvAllTransactions.apply {
             layoutManager = LinearLayoutManager(this@TransactionHistoryActivity)
             adapter = transactionsAdapter
-            addItemDecoration(com.gridee.parking.ui.adapters.StickyHeaderItemDecoration(transactionsAdapter))
-            
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    
-                    val visibleItemCount = layoutManager?.childCount ?: 0
-                    val totalItemCount = layoutManager?.itemCount ?: 0
-                    val firstVisibleItemPosition = (layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-                    
-                    if (!isLoading && !isLastPage) {
-                        if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount && firstVisibleItemPosition >= 0 && totalItemCount >= pageSize) {
-                            loadMoreTransactions()
-                        }
-                    }
-                }
-            })
+            // No sticky header decoration — using frosted header + dynamic subtitle instead
         }
 
-        // Parallax setup removed
+        // Set RecyclerView top padding dynamically after header is measured
+        binding.layoutHeader.doOnLayout { header ->
+            binding.rvAllTransactions.updatePadding(top = header.height + 4f.dpToPx().toInt())
+        }
+    }
 
+    private fun setupFrostedToolbar() {
+        val frostView = binding.viewToolbarFrost
+        val subtitleView = binding.tvSectionSubtitle
+
+        // Start state — fully clear, subtitle invisible
+        frostView.alpha = 0f
+        subtitleView.alpha = 0f
+
+        binding.rvAllTransactions.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+                val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
+                val totalScroll = recyclerView.computeVerticalScrollOffset()
+
+                // ── Frost alpha: ramps over 120dp with ease-out cubic ──
+                val deadZone = 16f.dpToPx()
+                val activeScroll = (totalScroll - deadZone).coerceAtLeast(0f)
+
+                val frostRange = 150f.dpToPx()
+                val rawFrost = (activeScroll / frostRange).coerceIn(0f, 1f)
+                val t = 1f - rawFrost
+                val easedFrost = 1f - (t * t * t)
+                frostView.alpha = easedFrost
+
+                // ── Dynamic subtitle: detect current visible section ──
+                val subtitleRange = 100f.dpToPx()
+                val rawSubtitle = (activeScroll / subtitleRange).coerceIn(0f, 1f)
+
+                if (totalScroll <= 0) {
+                    // Fully scrolled to top — reset everything
+                    frostView.alpha = 0f
+                    subtitleView.animate().cancel()
+                    subtitleView.alpha = 0f
+                    subtitleView.translationY = 0f
+                    currentSubtitleText = null
+                    isSubtitleAnimating = false
+                    return
+                }
+
+                // Find the section header for the first visible item
+                val sectionTitle = findCurrentSectionTitle(firstVisiblePosition)
+
+                // Subtitle alpha: ease in over first 60dp then lock at full
+                val subtitleAlpha = if (rawSubtitle >= 1f) 1f else {
+                    // Smooth ease-in curve
+                    val s = rawSubtitle
+                    s * s * (3f - 2f * s) // smoothstep
+                }
+
+                if (sectionTitle != null) {
+                    if (sectionTitle != currentSubtitleText) {
+                        // Crossfade to new section title with slide
+                        crossfadeSubtitle(subtitleView, sectionTitle, subtitleAlpha)
+                        currentSubtitleText = sectionTitle
+                    } else if (!isSubtitleAnimating) {
+                        // Steady state — just track alpha
+                        subtitleView.alpha = subtitleAlpha
+                    }
+                } else {
+                    subtitleView.alpha = 0f
+                    subtitleView.translationY = 0f
+                    currentSubtitleText = null
+                }
+
+                // ── Pagination check ──
+                val visibleItemCount = layoutManager.childCount
+                val totalItemCount = layoutManager.itemCount
+                if (!isLoading && !isLastPage) {
+                    if ((visibleItemCount + firstVisiblePosition) >= totalItemCount && firstVisiblePosition >= 0 && totalItemCount >= pageSize) {
+                        loadMoreTransactions()
+                    }
+                }
+            }
+        })
+    }
+
+    private fun findCurrentSectionTitle(firstVisiblePosition: Int): String? {
+        if (firstVisiblePosition == RecyclerView.NO_POSITION) return null
+        val items = transactionsAdapter.getItems()
+        // Walk backwards from the first visible position to find the nearest header
+        for (i in firstVisiblePosition downTo 0) {
+            if (i < items.size) {
+                val item = items[i]
+                if (item is WalletTransactionListItem.Header) {
+                    return item.title
+                }
+            }
+        }
+        return null
+    }
+
+    private fun crossfadeSubtitle(view: android.widget.TextView, newText: String, targetAlpha: Float) {
+        if (isSubtitleAnimating) return
+
+        isSubtitleAnimating = true
+        val slideDistance = 6f.dpToPx()
+
+        // Phase 1: Fade out + slide up current text
+        view.animate().cancel()
+        view.animate()
+            .alpha(0f)
+            .translationY(-slideDistance)
+            .setDuration(200)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .withEndAction {
+                // Swap text while invisible
+                view.text = newText
+                // Reset position below for slide-up entrance
+                view.translationY = slideDistance
+
+                // Phase 2: Fade in + slide up into position
+                view.animate()
+                    .alpha(targetAlpha.coerceAtLeast(0.9f))
+                    .translationY(0f)
+                    .setDuration(280)
+                    .setInterpolator(android.view.animation.DecelerateInterpolator(1.5f))
+                    .withEndAction {
+                        isSubtitleAnimating = false
+                    }
+                    .start()
+            }
+            .start()
     }
 
     private fun setupFilterButtons() {
-        // Enable smooth scrolling for filter buttons
         binding.filterScrollView.isHorizontalScrollBarEnabled = false
         binding.filterScrollView.isSmoothScrollingEnabled = true
-        
+
         binding.btnFilterDate.setOnClickListener {
-            showDateFilterModal()
+            it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            showFilterComingSoon()
         }
-        
+
         binding.btnFilterAmount.setOnClickListener {
-            showAmountFilterModal()
+            it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            showFilterComingSoon()
         }
-        
+
         binding.btnFilterPaymentMethod.setOnClickListener {
-            showPaymentFilterModal()
+            it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            showFilterComingSoon()
         }
-        
-        setupDateFilter()
+    }
+
+    private fun showFilterComingSoon() {
+        NotificationHelper.showInfoNoIcon(
+            parent = binding.root,
+            title = "Coming Soon",
+            message = ""
+        )
     }
 
     private fun setupDateFilter() {
@@ -123,24 +303,22 @@ class TransactionHistoryActivity : AppCompatActivity() {
             applyDateFilter()
             hideDateFilterModal()
         }
-        
+
         binding.btnClearDateFilter.setOnClickListener {
             clearDateFilter()
             hideDateFilterModal()
         }
     }
-    
+
     private fun applyDateFilter() {
-        // Find selected radio button
         val selectedId = binding.rgDateFilter.checkedRadioButtonId
         if (selectedId == -1) {
              return
         }
-        
+
         val calendar = Calendar.getInstance()
         val now = calendar.time
-        
-        // Reset calendar for start calculation
+
         val startDate: Date? = when (selectedId) {
             R.id.rb_this_month -> {
                 calendar.set(Calendar.DAY_OF_MONTH, 1)
@@ -160,42 +338,35 @@ class TransactionHistoryActivity : AppCompatActivity() {
             }
             else -> null
         }
-        
+
         if (startDate != null) {
-            // Include today by ensuring 'before' covers it (adding buffer)
-            val bufferEnd = Date(now.time + 10000) 
-            
+            val bufferEnd = Date(now.time + 10000)
+
             filteredTransactionList = fullTransactionList.filter { transaction ->
                 val txTime = transaction.timestamp
                 txTime.after(startDate) && txTime.before(bufferEnd)
             }.toMutableList()
-            
-            // Reload with filters
+
             currentPage = 0
             isLastPage = false
             isLoading = false
             loadPage(0)
-            
+
             Toast.makeText(this, "Showing ${filteredTransactionList?.size} transactions", Toast.LENGTH_SHORT).show()
         }
     }
-    
+
     private fun clearDateFilter() {
         binding.rgDateFilter.clearCheck()
         filteredTransactionList = null
-        
+
         currentPage = 0
         isLastPage = false
         isLoading = false
         loadPage(0)
-        
+
         Toast.makeText(this, "Filters cleared", Toast.LENGTH_SHORT).show()
     }
-
-
-
-    // Parallax effect removed for cleaner, more standard UI
-
 
     private fun applyFilters() {
         renderTransactions(allTransactions)
@@ -213,33 +384,36 @@ class TransactionHistoryActivity : AppCompatActivity() {
             binding.tvTransactionCount.visibility = View.VISIBLE
             binding.tvTransactionCount.text = "${transactions.size} transactions"
             val groupedItems = WalletTransactionGrouping.buildGroupedItems(transactions).toMutableList()
-            
+
             if (isLoadingMore) {
-                groupedItems.add(com.gridee.parking.ui.adapters.WalletTransactionListItem.Loading)
+                groupedItems.add(WalletTransactionListItem.Loading)
             }
-            
+
             transactionsAdapter.updateItems(groupedItems)
         }
+
+        // Reset subtitle state when data changes
+        currentSubtitleText = null
+        isSubtitleAnimating = false
+        binding.tvSectionSubtitle.animate().cancel()
+        binding.tvSectionSubtitle.alpha = 0f
+        binding.tvSectionSubtitle.translationY = 0f
     }
-
-
 
     private fun loadMoreTransactions() {
         if (isLoading || isLastPage) return
-        
+
         isLoading = true
         currentPage++
-        
-        // Show loading indicator at bottom
+
         renderTransactions(displayedTransactions, isLoadingMore = true)
-        
-        // Simulate network delay for "loading more" feeling
+
         binding.rvAllTransactions.postDelayed({
             loadPage(currentPage)
             isLoading = false
-        }, 1500) // Increased delay slightly to show off the fancy loader
+        }, 1500)
     }
-    
+
     private fun fetchAllTransactions() {
         val userId = getUserId()
         if (userId == null) {
@@ -251,35 +425,35 @@ class TransactionHistoryActivity : AppCompatActivity() {
         showLoading(true)
         currentPage = 0
         isLastPage = false
-        filteredTransactionList = null // Reset filters on reload
+        filteredTransactionList = null
 
         lifecycleScope.launch {
             try {
-                // Fetch ALL transactions from backend
-                val response = ApiClient.apiService.getWalletTransactions(userId)
+                val response = ApiClient.apiService.getWalletTransactions(
+                    userId = userId,
+                    page = 0,
+                    size = 1000,
+                    sort = listOf("timestamp", "desc")
+                )
                 if (response.isSuccessful) {
-                    val rawTransactions = response.body() ?: emptyList()
-                    
-                    // PROCESS IN BACKGROUND:
-                    // Since we fetch ALL data at once, processing 1000+ items on the main thread
-                    // would freeze the UI. We move this work to the Default dispatcher.
+                    val rawTransactions = response.body()?.content.orEmpty()
+
                     val processedTransactions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
                         rawTransactions.mapNotNull { transaction ->
                             try {
                                 convertToUITransaction(transaction)
                             } catch (e: Exception) {
-                                null // Skip
+                                null
                             }
                         }.sortedByDescending { it.timestamp }
                     }
-                    
+
                     fullTransactionList.clear()
                     fullTransactionList.addAll(processedTransactions)
-                    
+
                     if (fullTransactionList.isEmpty()) {
                         showEmptyState()
                     } else {
-                        // Load first page
                         loadPage(0)
                     }
                 } else {
@@ -294,46 +468,45 @@ class TransactionHistoryActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     private var filteredTransactionList: MutableList<Transaction>? = null
-    
+
     private fun loadPage(page: Int) {
-        // Use filtered list if active, otherwise full list
         val sourceList = filteredTransactionList ?: fullTransactionList
-        
+
         val start = page * pageSize
         if (start >= sourceList.size) {
             isLastPage = true
             return
         }
-        
+
         var end = start + pageSize
         if (end >= sourceList.size) {
             end = sourceList.size
             isLastPage = true
         }
-        
+
         val chunk = sourceList.subList(start, end)
-        
+
         if (page == 0) {
             displayedTransactions.clear()
-            allTransactions.clear() 
+            allTransactions.clear()
         }
-        
+
         displayedTransactions.addAll(chunk)
-        allTransactions.addAll(chunk) // Sync lists
-        
+        allTransactions.addAll(chunk)
+
         renderTransactions(displayedTransactions)
     }
 
     private fun convertToUITransaction(walletTransaction: WalletTransaction): Transaction {
         val id = walletTransaction.id?.trim()
         val timestamp = walletTransaction.timestamp?.trim()
-        
+
         if (id.isNullOrBlank() || timestamp.isNullOrBlank()) {
             throw IllegalArgumentException("Transaction missing required fields")
         }
-        
+
         val parsedTimestamp = BackendTimestampParser.parse(timestamp)
 
         val rawDescription = walletTransaction.description?.trim()
@@ -347,7 +520,9 @@ class TransactionHistoryActivity : AppCompatActivity() {
         val backendUiType = when (backendType) {
             "BOOKING_FEE" -> TransactionType.PARKING_PAYMENT
             "BOOKING_REFUND" -> TransactionType.REFUND
-            "WALLET_TOP_UP", "AD_TOP_UP" -> TransactionType.TOP_UP
+            "WALLET_TOP_UP" -> TransactionType.TOP_UP
+            "AD_TOP_UP" -> TransactionType.BONUS
+            "WELCOME_BONUS" -> TransactionType.BONUS
             "REFUND" -> TransactionType.REFUND
             "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> TransactionType.PARKING_PAYMENT
             else -> null
@@ -357,6 +532,7 @@ class TransactionHistoryActivity : AppCompatActivity() {
             "BOOKING_REFUND" -> "Booking Refund"
             "WALLET_TOP_UP" -> "Wallet Top-up"
             "AD_TOP_UP" -> "Ad Top-up"
+            "WELCOME_BONUS" -> "Welcome Bonus"
             "REFUND" -> "Refund"
             "PENALTY_FEE" -> "Penalty Fee"
             "LATE_CHECK_IN_PENALTY" -> "Late Check-in Penalty"
@@ -364,7 +540,7 @@ class TransactionHistoryActivity : AppCompatActivity() {
             else -> null
         }
         val backendIsCredit = when (backendType) {
-            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "REFUND" -> true
+            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "WELCOME_BONUS", "REFUND" -> true
             "BOOKING_FEE", "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> false
             else -> null
         }
@@ -380,6 +556,7 @@ class TransactionHistoryActivity : AppCompatActivity() {
         val isRewardByAmount = amountValue > 0 &&
             kotlin.math.abs(amountValue - REWARD_AMOUNT_RUPEES) < 0.01
         val isReward = isRewardByText || isRewardByAmount || typeNorm == "bonus"
+            || typeNorm == "welcome_bonus"
 
         val isTopUpByType = typeNorm in listOf(
             "top_up",
@@ -476,12 +653,22 @@ class TransactionHistoryActivity : AppCompatActivity() {
                 else -> normalizedDescription ?: baseDescription
             }
         }
+        val locationLabel = listOfNotNull(
+            walletTransaction.lotName?.trim()?.takeIf { it.isNotEmpty() }
+                ?: walletTransaction.lotId?.trim()?.takeIf { it.isNotEmpty() },
+            walletTransaction.spotId?.trim()?.takeIf { it.isNotEmpty() }?.let { "Spot $it" }
+        ).joinToString(" • ").takeIf { it.isNotEmpty() }
+        val displayDescription = if (locationLabel != null && resolvedBookingRelated) {
+            "$description • $locationLabel"
+        } else {
+            description
+        }
 
         return Transaction(
             id = id,
             type = transactionType,
             amount = displayAmount,
-            description = description,
+            description = displayDescription,
             timestamp = parsedTimestamp,
             balanceAfter = walletTransaction.balanceAfter ?: 0.0,
             paymentMethod = null,
@@ -491,9 +678,8 @@ class TransactionHistoryActivity : AppCompatActivity() {
 
     companion object {
         private const val REWARD_AMOUNT_RUPEES = 20.0
+        const val VIEW_ALL_TRANSITION_NAME = "wallet_view_all_transition"
     }
-
-
 
     private fun showEmptyState() {
         allTransactions.clear()
@@ -518,50 +704,41 @@ class TransactionHistoryActivity : AppCompatActivity() {
         val modal = binding.dateFilterModal
         val overlay = binding.modalOverlay
         val closeButton = modal.findViewById<View>(R.id.btn_close_date)
-        
-        // Get screen height for consistent positioning
+
         val displayMetrics = resources.displayMetrics
         val screenHeight = displayMetrics.heightPixels.toFloat()
-        val slideDistance = screenHeight * 0.8f // Start 80% of screen height below
-        
-        // Set initial position off screen
+        val slideDistance = screenHeight * 0.8f
+
         modal.translationY = slideDistance
         modal.alpha = 0f
         overlay.alpha = 0f
-        
-        // Make modal and overlay visible
+
         modal.visibility = View.VISIBLE
         overlay.visibility = View.VISIBLE
-        
-        // Animate overlay fade in with blur effect
+
         val overlayAnimator = ObjectAnimator.ofFloat(overlay, "alpha", 0f, 1f).apply {
             duration = 350
             interpolator = AccelerateDecelerateInterpolator()
         }
-        
-        // Animate modal slide up with spring animation
+
         val slideUpAnimation = SpringAnimation(modal, SpringAnimation.TRANSLATION_Y, 0f).apply {
             spring = SpringForce(0f).apply {
                 dampingRatio = SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY
                 stiffness = SpringForce.STIFFNESS_LOW
             }
         }
-        
-        // Animate modal fade in
+
         val modalAlphaAnimator = ObjectAnimator.ofFloat(modal, "alpha", 0f, 1f).apply {
             duration = 400
-            interpolator = OvershootInterpolator(0.6f) // Slightly less overshoot for smoother feel
+            interpolator = OvershootInterpolator(0.6f)
         }
-        
-        // Start animations
+
         overlayAnimator.start()
         slideUpAnimation.start()
         modalAlphaAnimator.start()
-        
-        // Animate arrow up
+
         animateArrow(binding.ivArrowDate, true)
-        
-        // Set up close modal functionality
+
         overlay.setOnClickListener {
             hideDateFilterModal()
         }
@@ -569,53 +746,45 @@ class TransactionHistoryActivity : AppCompatActivity() {
             hideDateFilterModal()
         }
     }
-    
+
     private fun hideDateFilterModal() {
         val modal = binding.dateFilterModal
         val overlay = binding.modalOverlay
-        
-        // Animate overlay fade out with slower, smoother timing and blur effect
+
         val overlayAnimator = ObjectAnimator.ofFloat(overlay, "alpha", 1f, 0f).apply {
-            duration = 800 // Much slower fade out for smooth effect
+            duration = 800
             interpolator = AccelerateDecelerateInterpolator()
         }
-        
-        // Get screen height for proper slide down distance
+
         val displayMetrics = resources.displayMetrics
         val screenHeight = displayMetrics.heightPixels.toFloat()
-        val slideDistance = screenHeight * 0.9f // Slide further down for smoother exit
-        
-        // Animate modal slide down with smoother spring animation
+        val slideDistance = screenHeight * 0.9f
+
         val slideDownAnimation = SpringAnimation(modal, SpringAnimation.TRANSLATION_Y, slideDistance).apply {
             spring = SpringForce(slideDistance).apply {
-                dampingRatio = SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY // Smoother bounce
-                stiffness = SpringForce.STIFFNESS_LOW // Slower, more graceful movement
+                dampingRatio = SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY
+                stiffness = SpringForce.STIFFNESS_LOW
             }
         }
-        
-        // Animate modal fade out with smoother curve
+
         val modalAlphaAnimator = ObjectAnimator.ofFloat(modal, "alpha", 1f, 0f).apply {
-            duration = 400 // Longer duration for smoother fade
+            duration = 400
             interpolator = AccelerateDecelerateInterpolator()
-            startDelay = 50 // Small delay to let slide start first
+            startDelay = 50
         }
-        
-        // Hide modal and overlay after animations complete
+
         slideDownAnimation.addEndListener { _, _, _, _ ->
             modal.visibility = View.GONE
             overlay.visibility = View.GONE
-            // Reset positions for next time
             modal.translationY = slideDistance
             modal.alpha = 0f
             overlay.alpha = 0f
         }
-        
-        // Start animations simultaneously for smooth effect
+
         overlayAnimator.start()
         slideDownAnimation.start()
         modalAlphaAnimator.start()
-        
-        // Animate arrow down
+
         animateArrow(binding.ivArrowDate, false)
     }
 
@@ -623,50 +792,41 @@ class TransactionHistoryActivity : AppCompatActivity() {
         val modal = binding.amountFilterModal
         val overlay = binding.modalOverlay
         val closeButton = modal.findViewById<View>(R.id.btn_close_amount)
-        
-        // Get screen height for consistent positioning
+
         val displayMetrics = resources.displayMetrics
         val screenHeight = displayMetrics.heightPixels.toFloat()
-        val slideDistance = screenHeight * 0.8f // Start 80% of screen height below
-        
-        // Set initial position off screen
+        val slideDistance = screenHeight * 0.8f
+
         modal.translationY = slideDistance
         modal.alpha = 0f
         overlay.alpha = 0f
-        
-        // Make modal and overlay visible
+
         modal.visibility = View.VISIBLE
         overlay.visibility = View.VISIBLE
-        
-        // Animate overlay fade in with blur effect
+
         val overlayAnimator = ObjectAnimator.ofFloat(overlay, "alpha", 0f, 1f).apply {
             duration = 350
             interpolator = AccelerateDecelerateInterpolator()
         }
-        
-        // Animate modal slide up with spring animation
+
         val slideUpAnimation = SpringAnimation(modal, SpringAnimation.TRANSLATION_Y, 0f).apply {
             spring = SpringForce(0f).apply {
                 dampingRatio = SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY
                 stiffness = SpringForce.STIFFNESS_LOW
             }
         }
-        
-        // Animate modal fade in
+
         val modalAlphaAnimator = ObjectAnimator.ofFloat(modal, "alpha", 0f, 1f).apply {
             duration = 400
-            interpolator = OvershootInterpolator(0.6f) // Slightly less overshoot for smoother feel
+            interpolator = OvershootInterpolator(0.6f)
         }
-        
-        // Start animations
+
         overlayAnimator.start()
         slideUpAnimation.start()
         modalAlphaAnimator.start()
-        
-        // Animate arrow up
+
         animateArrow(binding.ivArrowAmount, true)
-        
-        // Set up close modal functionality
+
         overlay.setOnClickListener {
             hideAmountFilterModal()
         }
@@ -674,53 +834,45 @@ class TransactionHistoryActivity : AppCompatActivity() {
             hideAmountFilterModal()
         }
     }
-    
+
     private fun hideAmountFilterModal() {
         val modal = binding.amountFilterModal
         val overlay = binding.modalOverlay
-        
-        // Animate overlay fade out with faster timing
+
         val overlayAnimator = ObjectAnimator.ofFloat(overlay, "alpha", 1f, 0f).apply {
             duration = 300
             interpolator = AccelerateDecelerateInterpolator()
         }
-        
-        // Get screen height for proper slide down distance
+
         val displayMetrics = resources.displayMetrics
         val screenHeight = displayMetrics.heightPixels.toFloat()
-        val slideDistance = screenHeight * 0.8f // Slide down 80% of screen height
-        
-        // Animate modal slide down with spring animation - more bouncy and natural
+        val slideDistance = screenHeight * 0.8f
+
         val slideDownAnimation = SpringAnimation(modal, SpringAnimation.TRANSLATION_Y, slideDistance).apply {
             spring = SpringForce(slideDistance).apply {
-                dampingRatio = SpringForce.DAMPING_RATIO_LOW_BOUNCY // More spring bounce
-                stiffness = SpringForce.STIFFNESS_MEDIUM // Good responsiveness
+                dampingRatio = SpringForce.DAMPING_RATIO_LOW_BOUNCY
+                stiffness = SpringForce.STIFFNESS_MEDIUM
             }
         }
-        
-        // Animate modal fade out with smoother curve
+
         val modalAlphaAnimator = ObjectAnimator.ofFloat(modal, "alpha", 1f, 0f).apply {
-            duration = 400 // Longer duration for smoother fade
+            duration = 400
             interpolator = AccelerateDecelerateInterpolator()
-            startDelay = 50 // Small delay to let slide start first
+            startDelay = 50
         }
-        
-        // Hide modal and overlay after animations complete
+
         slideDownAnimation.addEndListener { _, _, _, _ ->
             modal.visibility = View.GONE
             overlay.visibility = View.GONE
-            // Reset positions for next time
             modal.translationY = slideDistance
             modal.alpha = 0f
             overlay.alpha = 0f
         }
-        
-        // Start animations simultaneously for smooth effect
+
         overlayAnimator.start()
         slideDownAnimation.start()
         modalAlphaAnimator.start()
-        
-        // Animate arrow down
+
         animateArrow(binding.ivArrowAmount, false)
     }
 
@@ -728,50 +880,41 @@ class TransactionHistoryActivity : AppCompatActivity() {
         val modal = binding.paymentFilterModal
         val overlay = binding.modalOverlay
         val closeButton = modal.findViewById<View>(R.id.btn_close_payment)
-        
-        // Get screen height for consistent positioning
+
         val displayMetrics = resources.displayMetrics
         val screenHeight = displayMetrics.heightPixels.toFloat()
-        val slideDistance = screenHeight * 0.8f // Start 80% of screen height below
-        
-        // Set initial position off screen
+        val slideDistance = screenHeight * 0.8f
+
         modal.translationY = slideDistance
         modal.alpha = 0f
         overlay.alpha = 0f
-        
-        // Make modal and overlay visible
+
         modal.visibility = View.VISIBLE
         overlay.visibility = View.VISIBLE
-        
-        // Animate overlay fade in with blur effect
+
         val overlayAnimator = ObjectAnimator.ofFloat(overlay, "alpha", 0f, 1f).apply {
             duration = 350
             interpolator = AccelerateDecelerateInterpolator()
         }
-        
-        // Animate modal slide up with spring animation
+
         val slideUpAnimation = SpringAnimation(modal, SpringAnimation.TRANSLATION_Y, 0f).apply {
             spring = SpringForce(0f).apply {
                 dampingRatio = SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY
                 stiffness = SpringForce.STIFFNESS_LOW
             }
         }
-        
-        // Animate modal fade in
+
         val modalAlphaAnimator = ObjectAnimator.ofFloat(modal, "alpha", 0f, 1f).apply {
             duration = 400
-            interpolator = OvershootInterpolator(0.6f) // Slightly less overshoot for smoother feel
+            interpolator = OvershootInterpolator(0.6f)
         }
-        
-        // Start animations
+
         overlayAnimator.start()
         slideUpAnimation.start()
         modalAlphaAnimator.start()
-        
-        // Animate arrow up
+
         animateArrow(binding.ivArrowPayment, true)
-        
-        // Set up close modal functionality
+
         overlay.setOnClickListener {
             hidePaymentFilterModal()
         }
@@ -779,53 +922,45 @@ class TransactionHistoryActivity : AppCompatActivity() {
             hidePaymentFilterModal()
         }
     }
-    
+
     private fun hidePaymentFilterModal() {
         val modal = binding.paymentFilterModal
         val overlay = binding.modalOverlay
-        
-        // Animate overlay fade out with faster timing
+
         val overlayAnimator = ObjectAnimator.ofFloat(overlay, "alpha", 1f, 0f).apply {
             duration = 300
             interpolator = AccelerateDecelerateInterpolator()
         }
-        
-        // Get screen height for proper slide down distance
+
         val displayMetrics = resources.displayMetrics
         val screenHeight = displayMetrics.heightPixels.toFloat()
-        val slideDistance = screenHeight * 0.8f // Slide down 80% of screen height
-        
-        // Animate modal slide down with spring animation - more bouncy and natural
+        val slideDistance = screenHeight * 0.8f
+
         val slideDownAnimation = SpringAnimation(modal, SpringAnimation.TRANSLATION_Y, slideDistance).apply {
             spring = SpringForce(slideDistance).apply {
-                dampingRatio = SpringForce.DAMPING_RATIO_LOW_BOUNCY // More spring bounce
-                stiffness = SpringForce.STIFFNESS_MEDIUM // Good responsiveness
+                dampingRatio = SpringForce.DAMPING_RATIO_LOW_BOUNCY
+                stiffness = SpringForce.STIFFNESS_MEDIUM
             }
         }
-        
-        // Animate modal fade out with smoother curve
+
         val modalAlphaAnimator = ObjectAnimator.ofFloat(modal, "alpha", 1f, 0f).apply {
-            duration = 400 // Longer duration for smoother fade
+            duration = 400
             interpolator = AccelerateDecelerateInterpolator()
-            startDelay = 50 // Small delay to let slide start first
+            startDelay = 50
         }
-        
-        // Hide modal and overlay after animations complete
+
         slideDownAnimation.addEndListener { _, _, _, _ ->
             modal.visibility = View.GONE
             overlay.visibility = View.GONE
-            // Reset positions for next time
             modal.translationY = slideDistance
             modal.alpha = 0f
             overlay.alpha = 0f
         }
-        
-        // Start animations simultaneously for smooth effect
+
         overlayAnimator.start()
         slideDownAnimation.start()
         modalAlphaAnimator.start()
-        
-        // Animate arrow down
+
         animateArrow(binding.ivArrowPayment, false)
     }
 
@@ -836,5 +971,9 @@ class TransactionHistoryActivity : AppCompatActivity() {
             interpolator = AccelerateDecelerateInterpolator()
             start()
         }
+    }
+
+    private fun Float.dpToPx(): Float {
+        return this * resources.displayMetrics.density
     }
 }

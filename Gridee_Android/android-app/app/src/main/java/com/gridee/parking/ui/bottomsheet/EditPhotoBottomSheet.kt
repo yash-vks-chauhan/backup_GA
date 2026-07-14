@@ -19,6 +19,7 @@ import androidx.dynamicanimation.animation.SpringForce
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.gridee.parking.R
 import com.gridee.parking.databinding.BottomSheetEditPhotoBinding
 
 class EditPhotoBottomSheet(
@@ -49,6 +50,11 @@ class EditPhotoBottomSheet(
                 handlePhotoSelected(savedUri)
             }
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {

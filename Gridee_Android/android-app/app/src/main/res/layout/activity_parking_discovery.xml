@@ -35,10 +35,10 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:text="Find Parking"
-            android:textColor="#333333"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/inter_regular"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/btn_filter"
             app:layout_constraintStart_toEndOf="@id/btn_back"
@@ -92,10 +92,10 @@
                 android:hint="Search by location or address"
                 android:paddingStart="12dp"
                 android:paddingEnd="8dp"
-                android:textColor="#333333"
-                android:textColorHint="#999999"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tertiary"
                 android:textSize="16sp"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
             <ImageButton
                 android:id="@+id/btn_search"
@@ -130,7 +130,7 @@
             android:textAllCaps="false"
             android:textColor="#1976D2"
             android:textSize="14sp"
-            android:fontFamily="sans-serif" />
+            android:fontFamily="@font/inter_regular" />
 
         <Button
             android:id="@+id/btn_list_view"
@@ -141,7 +141,7 @@
             android:textAllCaps="false"
             android:textColor="#1976D2"
             android:textSize="14sp"
-            android:fontFamily="sans-serif" />
+            android:fontFamily="@font/inter_regular" />
 
     </LinearLayout>
 

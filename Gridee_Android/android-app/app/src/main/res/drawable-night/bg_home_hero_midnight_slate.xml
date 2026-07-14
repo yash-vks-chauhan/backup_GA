@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Midnight slate (dark mode): fades to PURE #000000 so it dissolves into the black
+     body. The radial "top glow" overlay was removed — its 800dp radius never reached
+     transparency inside the hero, washing a faint grey over the whole view and lifting
+     the bottom above pure black (a seam against the #000000 body). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle"
+    android:dither="true">
+    <gradient
+        android:angle="270"
+        android:startColor="#263238"
+        android:centerColor="#1C2833"
+        android:endColor="#000000"
+        android:type="linear" />
+</shape>

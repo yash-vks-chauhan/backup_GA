@@ -11,6 +11,7 @@ object ApiConfig {
     // ✅ Production (custom domain)
     // API base: https://www.gridee.in/api
     const val BASE_URL = "https://www.gridee.in/"
+    const val FALLBACK_BASE_URL = "https://gridee.onrender.com/"
     
     // Alternative backend URLs (uncomment to use)
     // const val BASE_URL = "http://10.0.2.2:8080/"  // Android emulator (local backend)

@@ -26,7 +26,7 @@
         android:background="@drawable/bg_close_circle"
         android:src="@drawable/ic_close"
         android:padding="9dp"
-        app:tint="#5C5C5C"
+        app:tint="@color/text_secondary"
         android:clickable="true"
         android:focusable="true"
         android:contentDescription="Close"
@@ -62,7 +62,7 @@
                 android:gravity="start"
                 android:text="@string/select_language"
                 android:textStyle="bold"
-                android:textColor="#1A1A1A"
+                android:textColor="@color/text_primary"
                 android:textSize="24sp" 
                 android:layout_marginBottom="32dp"/>
 
@@ -83,14 +83,14 @@
                     android:layout_height="wrap_content"
                     android:text="English"
                     android:textSize="16sp"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:fontFamily="@font/inter_medium" />
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#E5E7EB" />
+                android:background="@color/divider" />
 
             <!-- Tamil -->
             <LinearLayout
@@ -109,14 +109,14 @@
                     android:layout_height="wrap_content"
                     android:text="தமிழ் (Tamil)"
                     android:textSize="16sp"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:fontFamily="@font/inter_medium" />
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#E5E7EB" />
+                android:background="@color/divider" />
 
             <!-- Hindi -->
             <LinearLayout
@@ -135,7 +135,7 @@
                     android:layout_height="wrap_content"
                     android:text="हिंदी (Hindi)"
                     android:textSize="16sp"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:fontFamily="@font/inter_medium" />
             </LinearLayout>
             

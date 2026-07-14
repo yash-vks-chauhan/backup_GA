@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Late-warning fill: applied when remaining time crosses below ~10%
+  (or absolute 5 min). The whole card picks up a softer pulse from the
+  Adapter at this point.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:startColor="#F87171"
+        android:endColor="@color/status_text_cancelled"
+        android:type="linear" />
+    <corners android:radius="100dp" />
+</shape>

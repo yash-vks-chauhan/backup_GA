@@ -20,6 +20,7 @@ import com.gridee.parking.R
 import com.gridee.parking.databinding.BottomSheetAddVehicleBinding
 
 class AddVehicleBottomSheet(
+    private val existingVehicleNumbers: List<String> = emptyList(),
     private val onVehicleAdded: (String) -> Unit
 ) : BottomSheetDialogFragment() {
 
@@ -40,8 +41,8 @@ class AddVehicleBottomSheet(
             // Fix for Edge-to-Edge: Ensure the container extends behind nav bar
             val bottomSheet = bottomSheetDialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
             bottomSheet?.let { sheet ->
-                // Remove default background to use ours
-                sheet.background = null 
+                // Keep the sheet surface opaque so nav-area never appears transparent
+                sheet.setBackgroundResource(R.drawable.bg_bottom_sheet_universal)
                 
                 // Force the sheet to extend to the edge
                 sheet.fitsSystemWindows = false
@@ -50,12 +51,6 @@ class AddVehicleBottomSheet(
                 val params = sheet.layoutParams as? ViewGroup.MarginLayoutParams
                 params?.setMargins(0, 0, 0, 0)
                 sheet.layoutParams = params
-                
-                // Prevent system from padding the sheet automatically
-                androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(sheet) { view, insets ->
-                    view.setPadding(0, 0, 0, 0)
-                    insets
-                }
             }
             
             // Ensure behavior ignores gesture insets
@@ -67,8 +62,7 @@ class AddVehicleBottomSheet(
             
             bottomSheetDialog.window?.let { window ->
                 androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
-                val navBarColor = androidx.core.content.ContextCompat.getColor(requireContext(), com.gridee.parking.R.color.white)
-                window.navigationBarColor = navBarColor
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
                 window.isNavigationBarContrastEnforced = false
                 
                 // Ensure light nav bar (dark icons) since background is white
@@ -120,6 +114,11 @@ class AddVehicleBottomSheet(
         // Don't auto-focus or show keyboard
         // Let the user tap on the input field to bring up the keyboard
         // This allows the modal to slide up smoothly first
+        binding.etVehicleNumber.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                binding.tilVehicleNumber.error = null
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -133,21 +132,21 @@ class AddVehicleBottomSheet(
     }
 
     private fun addVehicle() {
-        val vehicleNumber = binding.etVehicleNumber.text.toString().trim().uppercase()
-        
-        when {
-            vehicleNumber.isEmpty() -> {
-                binding.tilVehicleNumber.error = "Please enter a vehicle number"
-                return
-            }
-            vehicleNumber.length < 6 -> {
-                binding.tilVehicleNumber.error = "Vehicle number is too short"
-                return
-            }
-            else -> {
-                binding.tilVehicleNumber.error = null
-            }
+        val vehicleNumber = com.gridee.parking.utils.VehicleNumberValidator.normalize(
+            binding.etVehicleNumber.text.toString()
+        )
+
+        val error = com.gridee.parking.utils.VehicleNumberValidator.getError(vehicleNumber)
+        if (error != null) {
+            binding.tilVehicleNumber.error = error
+            return
         }
+
+        if (com.gridee.parking.utils.VehicleNumberValidator.containsEquivalent(existingVehicleNumbers, vehicleNumber)) {
+            binding.tilVehicleNumber.error = "Vehicle number already exists"
+            return
+        }
+        binding.tilVehicleNumber.error = null
 
         // Animate button press
         animateButtonPress {

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.data.api.ApiClient
 import com.gridee.parking.utils.AuthSession
 import com.razorpay.Checkout
@@ -26,8 +27,15 @@ class WalletTopUpActivity : AppCompatActivity(), PaymentResultWithDataListener {
         orderId = intent.getStringExtra("ORDER_ID") ?: ""
 
         userId = resolveUserId(userId)
+        RemoteConfigManager.loadCached(this)
 
-        if (userId.isBlank() || amount <= 0.0 || orderId.isBlank()) {
+        if (!RemoteConfigManager.isWalletEnabled()) {
+            Toast.makeText(this, "Wallet top-up is temporarily unavailable.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
+        if (userId.isBlank() || !isAmountAllowed(amount) || orderId.isBlank()) {
             Toast.makeText(this, "Invalid payment data", Toast.LENGTH_LONG).show()
             finish()
             return
@@ -49,9 +57,10 @@ class WalletTopUpActivity : AppCompatActivity(), PaymentResultWithDataListener {
             val options = JSONObject()
             options.put("name", "Gridee")
             options.put("description", "Wallet Top-up")
-            options.put("currency", "INR")
+            options.put("currency", RemoteConfigManager.currentConfig.platform.currency)
             options.put("order_id", orderId)
             options.put("amount", (amount * 100).toInt())
+            options.put("allow_rotation", true)
 
             // Optionally set key explicitly if backend included it in the intent
             val keyFromServer = intent.getStringExtra("KEY_ID")?.trim()
@@ -87,6 +96,11 @@ class WalletTopUpActivity : AppCompatActivity(), PaymentResultWithDataListener {
         }
     }
 
+    private fun isAmountAllowed(amount: Double): Boolean {
+        val financial = RemoteConfigManager.currentConfig.financial
+        return amount >= financial.minWalletTopUpAmount && amount <= financial.maxWalletTopUpAmount
+    }
+
     override fun onPaymentSuccess(razorpayPaymentId: String?, paymentData: PaymentData?) {
         val paymentId = paymentData?.paymentId ?: (razorpayPaymentId ?: "")
         val orderIdFromCallback = paymentData?.orderId
@@ -109,7 +123,15 @@ class WalletTopUpActivity : AppCompatActivity(), PaymentResultWithDataListener {
                 if (!resp.isSuccessful) {
                     Toast.makeText(this@WalletTopUpActivity, "Payment success, update failed", Toast.LENGTH_LONG).show()
                 } else {
-                    Toast.makeText(this@WalletTopUpActivity, "Wallet recharged successfully", Toast.LENGTH_LONG).show()
+                    val intent = android.content.Intent(this@WalletTopUpActivity, com.gridee.parking.ui.main.MainContainerActivity::class.java).apply {
+                        flags = android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        putExtra("extra_show_wallet_transaction", true)
+                        putExtra("extra_wallet_transaction_title", "Wallet Top-up")
+                        val formattedAmount = String.format(java.util.Locale.getDefault(), "%.2f", amount)
+                        putExtra("extra_wallet_transaction_amount", "+$formattedAmount")
+                        putExtra("extra_wallet_transaction_is_credit", true)
+                    }
+                    startActivity(intent)
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@WalletTopUpActivity, "Callback error: ${e.message}", Toast.LENGTH_LONG).show()

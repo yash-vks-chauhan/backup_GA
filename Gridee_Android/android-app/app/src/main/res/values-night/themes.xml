@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.Gridee" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">#FFFFFF</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorPrimaryContainer">#1C1C1E</item>
+        <item name="colorOnPrimaryContainer">#FFFFFF</item>
+
+        <item name="colorSecondary">#8E8E93</item>
+        <item name="colorOnSecondary">#000000</item>
+        <item name="colorSecondaryContainer">#2C2C2E</item>
+        <item name="colorOnSecondaryContainer">#EBEBF5</item>
+
+        <item name="colorSurface">@color/background_primary</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="colorSurfaceVariant">@color/background_card</item>
+        <item name="colorOnSurfaceVariant">#8E8E93</item>
+
+        <item name="colorError">#FF453A</item>
+        <item name="colorOnError">#000000</item>
+
+        <!-- Default font family — real bundled Inter, as a weighted family so
+             android:textStyle="bold" resolves to true Inter Bold (not synthetic). -->
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- Enable edge-to-edge -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:fitsSystemWindows">false</item>
+
+        <!-- Prevent navigation bar contrast enforcement (API 29+) -->
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+
+        <!-- Force Navigation Drawer to be square -->
+        <item name="drawerLayoutCornerSize">0dp</item>
+        <item name="bottomSheetDialogTheme">@style/BottomSheetDialogTheme</item>
+    </style>
+
+    <style name="Theme.Gridee.NoActionBar" parent="Theme.Gridee">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Gridee.MainLaunch" parent="Theme.Gridee.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <style name="Theme.Gridee.LaunchSplash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_transparent</item>
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.Gridee.LaunchSplash.Post</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
+    <style name="Theme.Gridee.LaunchSplash.Post" parent="Theme.Gridee.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="Theme.Gridee.Search" parent="Theme.Gridee.NoActionBar">
+        <item name="android:windowContentTransitions">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <!-- Login/Auth Theme -->
+    <style name="Theme.Gridee.Auth" parent="Theme.Gridee.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <!-- Bottom Sheet Dialog Theme -->
+    <style name="BottomSheetDialogTheme" parent="Theme.Material3.DayNight.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.7</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarDividerColor" tools:targetApi="p">@android:color/transparent</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="enableEdgeToEdge">true</item>
+        <item name="paddingBottomSystemWindowInsets">true</item>
+        <item name="paddingLeftSystemWindowInsets">false</item>
+        <item name="paddingRightSystemWindowInsets">false</item>
+        <item name="paddingTopSystemWindowInsets">false</item>
+        <item name="bottomSheetDragHandleStyle">@null</item>
+        <item name="android:windowAnimationStyle">@style/BottomSheetSpringAnimation</item>
+    </style>
+
+    <style name="BottomSheetStyle" parent="Widget.Material3.BottomSheet">
+        <item name="shapeAppearanceOverlay">@style/BottomSheetShapeAppearance</item>
+        <item name="android:elevation">8dp</item>
+        <item name="backgroundTint">#1C1C1E</item>
+        <item name="gestureInsetBottomIgnored">true</item>
+        <item name="paddingBottomSystemWindowInsets">true</item>
+    </style>
+
+    <!-- iOS 26 Back Button (Dark) -->
+    <style name="Widget.Gridee.BackButton.IOS26" parent="">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:foreground">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:outlineAmbientShadowColor">@color/ios26_back_button_shadow_ambient</item>
+        <item name="android:outlineSpotShadowColor">@color/ios26_back_button_shadow_spot</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="cardCornerRadius">@dimen/ios26_back_button_radius</item>
+        <item name="cardBackgroundColor">@color/ios26_back_button_surface</item>
+        <item name="cardElevation">0dp</item>
+        <item name="rippleColor">#0DFFFFFF</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">#38383A</item>
+    </style>
+
+    <style name="Widget.Gridee.BackButton.HomeCardShadow" parent="">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:foreground">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="cardCornerRadius">@dimen/ios26_back_button_radius</item>
+        <item name="cardBackgroundColor">@color/ios26_back_button_surface</item>
+        <item name="cardElevation">0dp</item>
+        <item name="rippleColor">#10FFFFFF</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">#38383A</item>
+    </style>
+
+    <style name="Widget.Gridee.FilterButton.IOS26" parent="">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:outlineAmbientShadowColor">@color/ios26_back_button_shadow_ambient</item>
+        <item name="android:outlineSpotShadowColor">@color/ios26_back_button_shadow_spot</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="cardCornerRadius">100dp</item>
+        <item name="cardBackgroundColor">@color/ios26_back_button_surface</item>
+        <item name="cardElevation">0dp</item>
+        <item name="rippleColor">#0DFFFFFF</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">#38383A</item>
+    </style>
+
+    <!-- Popup Menu (Dark mode) -->
+    <style name="PopupMenuTheme" parent="Theme.Material3.Dark">
+        <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#8E8E93</item>
+        <item name="colorSurface">#2C2C2E</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="android:colorBackground">#2C2C2E</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:overlapAnchor">false</item>
+        <item name="android:dropDownSelector">@android:color/transparent</item>
+    </style>
+
+    <!-- Collapsing Toolbar Text Styles -->
+    <style name="ExpandedTitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">32sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="CollapsedTitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <!-- Date Picker (Dark mode) -->
+    <style name="CustomDatePickerTheme" parent="ThemeOverlay.Material3.MaterialCalendar">
+        <item name="colorPrimary">#FFFFFF</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorSurface">#1C1C1E</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="colorSurfaceVariant">#2C2C2E</item>
+        <item name="colorOnSurfaceVariant">#8E8E93</item>
+        <item name="colorPrimaryContainer">#2C2C2E</item>
+        <item name="colorOnPrimaryContainer">#FFFFFF</item>
+        <item name="colorSecondary">#8E8E93</item>
+        <item name="colorOnSecondary">#000000</item>
+        <item name="colorSecondaryContainer">#3A3A3C</item>
+        <item name="colorOnSecondaryContainer">#EBEBF5</item>
+        <item name="colorOutline">#48484A</item>
+        <item name="colorOutlineVariant">#38383A</item>
+        <item name="android:colorBackground">#1C1C1E</item>
+        <item name="colorControlHighlight">#1AFFFFFF</item>
+        <item name="materialButtonStyle">@style/Widget.DatePicker.BlackButton</item>
+        <item name="borderlessButtonStyle">@style/Widget.DatePicker.BlackTextButton</item>
+        <item name="android:windowEnterAnimation">@anim/date_picker_enter</item>
+        <item name="android:windowExitAnimation">@anim/date_picker_exit</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.DatePicker.Body</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.DatePicker.Body</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.DatePicker.Label</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.DatePicker.MediumComponent</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.DatePicker.SmallComponent</item>
+    </style>
+
+    <style name="TextAppearance.DatePicker.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:fontFamily">@font/inter_regular</item>
+    </style>
+
+    <style name="TextAppearance.DatePicker.Label" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textColor">#8E8E93</item>
+        <item name="android:fontFamily">@font/inter_medium</item>
+    </style>
+
+    <style name="Widget.DatePicker.BlackButton" parent="Widget.Material3.Button">
+        <item name="backgroundTint">#FFFFFF</item>
+        <item name="android:textColor">#000000</item>
+        <item name="rippleColor">#33000000</item>
+    </style>
+
+    <style name="Widget.DatePicker.BlackTextButton" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="rippleColor">#1AFFFFFF</item>
+    </style>
+
+    <!-- Extend Booking Picker Theme (Dark) -->
+    <style name="ExtendBookingPickerTheme" parent="Theme.Material3.Dark">
+        <item name="android:colorBackground">@color/background_secondary</item>
+        <item name="colorSurface">@color/background_secondary</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
+
+</resources>

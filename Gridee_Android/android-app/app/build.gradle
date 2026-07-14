@@ -24,9 +24,9 @@ android {
     defaultConfig {
         applicationId "com.gridee.parking"
         minSdk 24
-        targetSdk 35
-        versionCode 42
-        versionName "1.42"
+        targetSdk 36
+        versionCode 66
+        versionName "1.65"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -90,6 +90,7 @@ android {
 
 dependencies {
     implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
     implementation 'androidx.dynamicanimation:dynamicanimation:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.10.0'
@@ -149,8 +150,11 @@ dependencies {
     implementation 'com.google.android.play:app-update:2.1.0'
     implementation 'com.google.android.play:app-update-ktx:2.1.0'
 
+    // Google Play In-App Review
+    implementation 'com.google.android.play:review:2.0.2'
+
     // Razorpay Checkout SDK
-    implementation 'com.razorpay:checkout:1.6.33'
+    implementation 'com.razorpay:checkout:1.6.41'
 
     // QR scanning (ZXing)
     implementation 'com.google.zxing:core:3.5.2'
@@ -164,7 +168,8 @@ dependencies {
     implementation 'androidx.concurrent:concurrent-futures:1.1.0'
     implementation 'com.google.guava:guava:31.1-android'
     implementation 'com.google.android.gms:play-services-mlkit-text-recognition:19.0.1'
-    
+    implementation 'com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1'
+
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'

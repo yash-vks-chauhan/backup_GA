@@ -1,4 +1,4 @@
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,260 +7,24 @@
     android:fitsSystemWindows="true"
     tools:context=".ui.activities.TransactionHistoryActivity">
 
-    <!-- Professional, Minimal Header - Centered Title -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layout_header"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btn_back"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:cardCornerRadius="22dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/border_light"
-            app:strokeWidth="1dp"
-            app:cardBackgroundColor="@color/white"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_arrow_back"
-                app:tint="@color/text_primary" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <TextView
-            android:id="@+id/tv_header_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="History"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:fontFamily="@font/inter_bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_transaction_count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Loading..."
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp"
-            android:fontFamily="@font/inter_medium"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:visibility="visible"
-            tools:text="12" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- Filter Row - Refined Style -->
-    <HorizontalScrollView
-        android:id="@+id/filter_scroll_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:overScrollMode="never"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:clipToPadding="false"
-        android:clipChildren="false"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="12dp"
-        app:layout_constraintTop_toBottomOf="@id/layout_header">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingVertical="16dp"
-            android:clipChildren="false"
-            android:clipToPadding="false">
-
-            <!-- Date Filter Chip -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/btn_filter_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                app:cardCornerRadius="100dp"
-                app:cardElevation="12dp"
-                app:cardBackgroundColor="@android:color/transparent"
-                app:strokeWidth="0dp"
-                app:strokeColor="@android:color/transparent"
-                android:outlineSpotShadowColor="#590F172A"
-                android:outlineAmbientShadowColor="#1F0F172A"
-                android:stateListAnimator="@animator/wallet_chip_state_animator"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_wallet_chip_ceramic"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Date"
-                        android:textColor="#111827"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:fontFamily="@font/inter_bold"
-                        android:layout_marginEnd="8dp"/>
-
-                    <ImageView
-                        android:id="@+id/iv_arrow_date"
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:src="@drawable/ic_arrow_down"
-                        app:tint="#6B7280" />
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Amount Filter Chip -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/btn_filter_amount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                app:cardCornerRadius="100dp"
-                app:cardElevation="12dp"
-                app:cardBackgroundColor="@android:color/transparent"
-                app:strokeWidth="0dp"
-                app:strokeColor="@android:color/transparent"
-                android:outlineSpotShadowColor="#590F172A"
-                android:outlineAmbientShadowColor="#1F0F172A"
-                android:stateListAnimator="@animator/wallet_chip_state_animator"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_wallet_chip_ceramic"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Amount"
-                        android:textColor="#111827"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:fontFamily="@font/inter_bold"
-                        android:layout_marginEnd="8dp"/>
-
-                    <ImageView
-                        android:id="@+id/iv_arrow_amount"
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:src="@drawable/ic_arrow_down"
-                        app:tint="#6B7280" />
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Payment Method Filter Chip -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/btn_filter_payment_method"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                app:cardCornerRadius="100dp"
-                app:cardElevation="12dp"
-                app:cardBackgroundColor="@android:color/transparent"
-                app:strokeWidth="0dp"
-                app:strokeColor="@android:color/transparent"
-                android:outlineSpotShadowColor="#590F172A"
-                android:outlineAmbientShadowColor="#1F0F172A"
-                android:stateListAnimator="@animator/wallet_chip_state_animator"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_wallet_chip_ceramic"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Type"
-                        android:textColor="#111827"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:fontFamily="@font/inter_bold"
-                        android:layout_marginEnd="8dp"/>
-
-                    <ImageView
-                        android:id="@+id/iv_arrow_payment"
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:src="@drawable/ic_arrow_down"
-                        app:tint="#6B7280" />
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-        </LinearLayout>
-    </HorizontalScrollView>
-
-    <!-- Transactions List -->
+    <!-- Transactions List — full-bleed, scrolls behind the transparent header -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_all_transactions"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingTop="4dp"
         android:paddingBottom="100dp"
         android:paddingHorizontal="16dp"
-        app:layout_constraintTop_toBottomOf="@id/filter_scroll_view"
-        app:layout_constraintBottom_toBottomOf="parent"
         tools:listitem="@layout/item_transaction" />
 
     <!-- Empty State -->
     <LinearLayout
         android:id="@+id/layout_empty_state"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/filter_scroll_view"
-        app:layout_constraintBottom_toBottomOf="parent"
         android:padding="32dp">
 
         <ImageView
@@ -294,12 +58,251 @@
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:visibility="gone"
-        android:indeterminateTint="@color/primary"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:indeterminateTint="@color/primary" />
+
+    <!-- Unified frosted header overlay — gradient from opaque at top to transparent at bottom.
+         Same pattern as profile page. Covers header + dissolve zone below. -->
+    <View
+        android:id="@+id/view_toolbar_frost"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_gravity="top"
+        android:background="@drawable/bg_toolbar_frosted"
+        android:alpha="0" />
+
+    <!-- Header content — floats on top of everything -->
+    <LinearLayout
+        android:id="@+id/layout_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:orientation="vertical"
+        android:paddingTop="8dp">
+
+        <!-- Top Row: Back button + Title + Count -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="8dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btn_back"
+                style="@style/Widget.Gridee.BackButton.IOS26"
+                android:layout_width="@dimen/ios26_back_button_size"
+                android:layout_height="@dimen/ios26_back_button_size"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <ImageView
+                    android:layout_width="@dimen/ios26_back_icon_size"
+                    android:layout_height="@dimen/ios26_back_icon_size"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/back"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="@color/brand_primary" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/tv_header_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="History"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_transaction_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Loading..."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:fontFamily="@font/inter_medium"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:visibility="visible"
+                tools:text="12" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Filter Row -->
+        <HorizontalScrollView
+            android:id="@+id/filter_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:overScrollMode="never"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:clipToPadding="false"
+            android:clipChildren="false"
+            android:layout_marginTop="4dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <!-- Date Filter Chip -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/btn_filter_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    app:cardCornerRadius="100dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="0.8dp"
+                    app:strokeColor="@color/filter_chip_stroke"
+                    android:stateListAnimator="@null"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="10dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Date"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter_bold"
+                            android:layout_marginEnd="6dp"/>
+
+                        <ImageView
+                            android:id="@+id/iv_arrow_date"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_arrow_down"
+                            app:tint="@color/text_secondary" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Amount Filter Chip -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/btn_filter_amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    app:cardCornerRadius="100dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="0.8dp"
+                    app:strokeColor="@color/filter_chip_stroke"
+                    android:stateListAnimator="@null"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="10dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Amount"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter_bold"
+                            android:layout_marginEnd="6dp"/>
+
+                        <ImageView
+                            android:id="@+id/iv_arrow_amount"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_arrow_down"
+                            app:tint="@color/text_secondary" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Type Filter Chip -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/btn_filter_payment_method"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    app:cardCornerRadius="100dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="0.8dp"
+                    app:strokeColor="@color/filter_chip_stroke"
+                    android:stateListAnimator="@null"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="10dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Type"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter_bold"
+                            android:layout_marginEnd="6dp"/>
+
+                        <ImageView
+                            android:id="@+id/iv_arrow_payment"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_arrow_down"
+                            app:tint="@color/text_secondary" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <!-- Dynamic Section Subtitle — fades in on scroll, shows current date section -->
+        <TextView
+            android:id="@+id/tv_section_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:alpha="0"
+            android:fontFamily="@font/inter_bold"
+            android:gravity="center"
+            android:paddingTop="4dp"
+            android:paddingBottom="10dp"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            tools:alpha="1"
+            tools:text="Today" />
+
+    </LinearLayout>
 
     <!-- OVERLAYS (Must be last to be on top) -->
     <View
@@ -322,11 +325,11 @@
         android:background="@drawable/bg_bottom_sheet_universal"
         android:visibility="gone"
         android:translationY="500dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_gravity="bottom"
         android:elevation="20dp"
         android:clickable="true"
         android:focusable="true">
-        
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -346,14 +349,17 @@
                 android:id="@+id/btn_close_date"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="20dp"
+                android:background="@drawable/bg_close_circle"
                 android:src="@drawable/ic_close"
-                android:padding="8dp"
+                android:padding="9dp"
                 app:tint="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="12dp"
-                android:layout_marginEnd="16dp" />
+                android:elevation="10dp"/>
 
             <TextView
                 android:id="@+id/title_date"
@@ -379,39 +385,41 @@
                 <RadioButton
                     android:id="@+id/rb_this_month"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="64dp"
+                    android:background="@drawable/selector_pill_white_to_black"
                     android:text="This Month"
-                    android:textSize="16sp"
-                    android:paddingVertical="12dp"
-                    android:fontFamily="@font/inter_medium"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/brand_primary"
-                    android:layoutDirection="rtl"
+                    android:textSize="15sp"
+                    android:paddingHorizontal="20dp"
+                    android:fontFamily="@font/inter_bold"
+                    android:textColor="@color/selector_text_black_to_white"
+                    android:button="@null"
                     android:layout_marginTop="8dp"/>
 
                 <RadioButton
                     android:id="@+id/rb_last_30_days"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="64dp"
+                    android:background="@drawable/selector_pill_white_to_black"
                     android:text="Last 30 Days"
-                    android:textSize="16sp"
-                    android:paddingVertical="12dp"
-                    android:fontFamily="@font/inter_medium"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/brand_primary"
-                    android:layoutDirection="rtl"/>
+                    android:textSize="15sp"
+                    android:paddingHorizontal="20dp"
+                    android:fontFamily="@font/inter_bold"
+                    android:textColor="@color/selector_text_black_to_white"
+                    android:button="@null"
+                    android:layout_marginTop="12dp"/>
 
                 <RadioButton
                     android:id="@+id/rb_last_90_days"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="64dp"
+                    android:background="@drawable/selector_pill_white_to_black"
                     android:text="Last 90 Days"
-                    android:textSize="16sp"
-                    android:paddingVertical="12dp"
-                    android:fontFamily="@font/inter_medium"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/brand_primary"
-                    android:layoutDirection="rtl"/>
+                    android:textSize="15sp"
+                    android:paddingHorizontal="20dp"
+                    android:fontFamily="@font/inter_bold"
+                    android:textColor="@color/selector_text_black_to_white"
+                    android:button="@null"
+                    android:layout_marginTop="12dp"/>
             </RadioGroup>
 
             <LinearLayout
@@ -425,15 +433,15 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_clear_date_filter"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="62dp"
                     android:layout_weight="1"
                     android:text="Clear All"
                     android:textColor="@color/text_primary"
-                    app:backgroundTint="@color/background_secondary"
-                    app:cornerRadius="12dp"
+                    app:backgroundTint="#F3F4F6"
+                    app:cornerRadius="31dp"
                     android:textAllCaps="false"
                     android:fontFamily="@font/inter_bold"
-                    android:textSize="16sp"
+                    android:textSize="15sp"
                     app:elevation="0dp"
                     android:layout_marginEnd="12dp"
                     style="@style/Widget.MaterialComponents.Button.UnelevatedButton"/>
@@ -441,16 +449,17 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_apply_date_filter"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="62dp"
                     android:layout_weight="1"
                     android:text="Apply"
                     android:textColor="@color/white"
                     app:backgroundTint="@color/brand_primary"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="31dp"
                     android:textAllCaps="false"
                     android:fontFamily="@font/inter_bold"
-                    android:textSize="16sp"
-                    app:elevation="0dp"
+                    android:textSize="15sp"
+                    app:elevation="8dp"
+                    app:rippleColor="#33FFFFFF"
                     style="@style/Widget.MaterialComponents.Button.UnelevatedButton"/>
 
             </LinearLayout>
@@ -466,11 +475,11 @@
         android:background="@drawable/bg_bottom_sheet_universal"
         android:visibility="gone"
         android:translationY="500dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_gravity="bottom"
         android:elevation="20dp"
         android:clickable="true"
         android:focusable="true">
-        
+
           <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -531,11 +540,11 @@
         android:background="@drawable/bg_bottom_sheet_universal"
         android:visibility="gone"
         android:translationY="500dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_gravity="bottom"
         android:elevation="20dp"
         android:clickable="true"
         android:focusable="true">
-        
+
           <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -587,4 +596,4 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

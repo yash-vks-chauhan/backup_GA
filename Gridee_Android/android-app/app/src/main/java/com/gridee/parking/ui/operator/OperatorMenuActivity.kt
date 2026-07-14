@@ -1,6 +1,5 @@
 package com.gridee.parking.ui.operator
 
-import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -8,15 +7,17 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.button.MaterialButton
 import com.gridee.parking.R
 import com.gridee.parking.ui.auth.LoginActivity
+import com.gridee.parking.ui.bottomsheet.LogoutConfirmationBottomSheet
+import com.gridee.parking.utils.AppLocaleManager
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.NotificationHelper
 
 class OperatorMenuActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppLocaleManager.applySavedLocale(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_operator_menu)
         
@@ -47,10 +48,10 @@ class OperatorMenuActivity : AppCompatActivity() {
 
         // Set Current Language
         val langCode = sharedPref.getString("app_language", "en") ?: "en"
-        val langName = when(langCode) {
-            "hi" -> "Hindi"
-            "ta" -> "Tamil"
-            else -> "English"
+        val langName = when (langCode) {
+            "hi" -> getString(R.string.language_hindi)
+            "ta" -> getString(R.string.language_tamil)
+            else -> getString(R.string.language_english)
         }
         findViewById<TextView>(R.id.tv_current_lang)?.text = langName
     }
@@ -64,7 +65,7 @@ class OperatorMenuActivity : AppCompatActivity() {
 
         // History
         findViewById<View>(R.id.btn_menu_history).setOnClickListener {
-            showNotification("History Feature Coming Soon", NotificationType.INFO)
+            showNotification(getString(R.string.op_history_soon), NotificationType.INFO)
         }
 
         // Settings
@@ -89,11 +90,11 @@ class OperatorMenuActivity : AppCompatActivity() {
     }
 
     private fun showLanguageSelectionDialog() {
-        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this, R.style.BottomSheetDialogTheme)
         
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as? FrameLayout
-            bottomSheet?.setBackgroundResource(android.R.color.transparent)
+            bottomSheet?.setBackgroundResource(R.drawable.bg_bottom_sheet_universal)
         }
         
         val view = layoutInflater.inflate(R.layout.bottom_sheet_language_selector, null)
@@ -120,15 +121,7 @@ class OperatorMenuActivity : AppCompatActivity() {
     }
 
     private fun setAppLocale(languageCode: String) {
-        val locale = java.util.Locale(languageCode)
-        java.util.Locale.setDefault(locale)
-        val config = resources.configuration
-        config.setLocale(locale)
-        createConfigurationContext(config)
-        resources.updateConfiguration(config, resources.displayMetrics)
-
-        // Save to prefs
-        getSharedPreferences("gridee_prefs", MODE_PRIVATE).edit().putString("app_language", languageCode).apply()
+        AppLocaleManager.setLocale(this, languageCode)
 
         // Restart App (Go to Dashboard)
         val intent = Intent(this, OperatorDashboardActivity::class.java)
@@ -138,23 +131,9 @@ class OperatorMenuActivity : AppCompatActivity() {
     }
 
     private fun showLogoutConfirmation() {
-        val dialog = Dialog(this)
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        dialog.setContentView(R.layout.dialog_logout_confirmation)
-        
-        val btnCancel = dialog.findViewById<MaterialButton>(R.id.btn_cancel)
-        val btnLogout = dialog.findViewById<MaterialButton>(R.id.btn_logout)
-        
-        btnCancel.setOnClickListener {
-            dialog.dismiss()
-        }
-        
-        btnLogout.setOnClickListener {
-            dialog.dismiss()
-            logout()
-        }
-        
-        dialog.show()
+        LogoutConfirmationBottomSheet.newInstance()
+            .setOnLogoutConfirmed { logout() }
+            .show(supportFragmentManager, LogoutConfirmationBottomSheet.TAG)
     }
 
     private fun logout() {

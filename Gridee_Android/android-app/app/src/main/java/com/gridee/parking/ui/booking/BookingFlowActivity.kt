@@ -1,7 +1,5 @@
 package com.gridee.parking.ui.booking
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +11,7 @@ import android.view.View
 import android.widget.EditText
 import com.gridee.parking.data.model.ParkingSpot
 import com.gridee.parking.utils.AuthSession
+import com.gridee.parking.utils.ParkingSpotSchedulePolicy
 import com.gridee.parking.databinding.ActivityBookingFlowBinding
 import java.text.SimpleDateFormat
 import java.util.*
@@ -92,14 +91,6 @@ class BookingFlowActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
             finish()
-        }
-
-        binding.cardStartTime.setOnClickListener {
-            showDateTimePicker(true) // true for start time
-        }
-
-        binding.cardEndTime.setOnClickListener {
-            showDateTimePicker(false) // false for end time
         }
 
         binding.btnSelectSpot.setOnClickListener {
@@ -279,39 +270,6 @@ class BookingFlowActivity : AppCompatActivity() {
         println("BookingFlowActivity: updateSelectedSpotDisplay called with: '$spot', set text to: '${binding.tvSelectedSpot.text}'")
     }
 
-    private fun showDateTimePicker(isStartTime: Boolean) {
-        val calendar = Calendar.getInstance()
-        val currentTime = if (isStartTime) viewModel.startTime.value else viewModel.endTime.value
-        currentTime?.let { calendar.time = it }
-
-        DatePickerDialog(
-            this,
-            { _, year, month, dayOfMonth ->
-                calendar.set(year, month, dayOfMonth)
-                
-                TimePickerDialog(
-                    this,
-                    { _, hourOfDay, minute ->
-                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                        calendar.set(Calendar.MINUTE, minute)
-                        
-                        if (isStartTime) {
-                            viewModel.setStartTime(calendar.time)
-                        } else {
-                            viewModel.setEndTime(calendar.time)
-                        }
-                    },
-                    calendar.get(Calendar.HOUR_OF_DAY),
-                    calendar.get(Calendar.MINUTE),
-                    false
-                ).show()
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
-    }
-
     private fun showSpotSelectionDialog() {
         val dialogView = layoutInflater.inflate(com.gridee.parking.R.layout.dialog_spot_selection, null)
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
@@ -369,7 +327,9 @@ class BookingFlowActivity : AppCompatActivity() {
                 
                 runOnUiThread {
                     if (spotsResponse.isSuccessful) {
-                        val filteredSpots = spotsResponse.body()?.filter { it.available > 0 } ?: emptyList()
+                        val filteredSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(
+                            spotsResponse.body()?.filter { it.available > 0 } ?: emptyList()
+                        )
                         
                         showToast("Filtered spots for lot '$selectedLotId': ${filteredSpots.size}")
                         println("BookingFlowActivity: Received ${filteredSpots.size} spots for lot $selectedLotId")
@@ -468,6 +428,11 @@ class BookingFlowActivity : AppCompatActivity() {
                     }, 500)
                     
                     viewModel.setSelectedSpot(spotName)
+                    parkingSpot = spot
+                    if (spot.lotId.isNotBlank()) {
+                        selectedLotId = spot.lotId
+                    }
+                    viewModel.setParkingSpot(spot)
                 } ?: run {
                     showToast("No specific spot selected, using Any available spot")
                     println("BookingFlowActivity: No spot selected, falling back to Any available spot")

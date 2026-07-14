@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  iOS-style dark tab bar background: clean opaque surface + a single hairline.
+  No gradient, no shadow band — minimal, Apple-feel.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Opaque dark surface -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#000000" />
+        </shape>
+    </item>
+
+    <!-- iOS-style separator hairline at the top edge. -->
+    <item android:gravity="top">
+        <shape android:shape="rectangle">
+            <size android:height="0.5dp" />
+            <solid android:color="#26FFFFFF" />
+        </shape>
+    </item>
+
+</layer-list>

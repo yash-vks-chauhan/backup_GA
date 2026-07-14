@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dark-mode active pill. segment_track_color in dark equals the capsule surface,
+  which would make the pill invisible. This override uses a lifted dark gray
+  (~iOS systemGray5 dark) so the indicator reads against the capsule.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#2C2C2E" />
+    <corners android:radius="16dp" />
+</shape>

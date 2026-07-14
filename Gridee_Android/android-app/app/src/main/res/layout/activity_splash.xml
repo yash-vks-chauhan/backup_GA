@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout 
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -7,49 +7,84 @@
     android:background="#000000"
     android:fitsSystemWindows="false">
 
-    <!-- Card Icon with Road -->
-    <ImageView
-        android:id="@+id/ivCard"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:src="@drawable/ic_splash_card"
-        android:alpha="0"
-        android:contentDescription="@string/card_on_road"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:tint="#FFFFFF" />
-
-    <!-- Bike Icon with Road -->
-    <ImageView
-        android:id="@+id/ivBike"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:src="@drawable/ic_splash_bike"
-        android:alpha="0"
-        android:contentDescription="@string/bike_on_road"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:tint="#FFFFFF" />
-
-    <!-- Gridee Logo Text -->
     <TextView
         android:id="@+id/tvGrideeLogo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/app_name_gridee"
-        android:textSize="48sp"
+        android:textSize="72sp"
         android:textStyle="bold"
         android:textColor="#FFFFFF"
-        android:fontFamily="sans-serif-black"
+        android:fontFamily="@font/inter_bold"
         android:letterSpacing="0.05"
         android:alpha="0"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Branded loading state. Only fades in if routing has to wait on the network
+         past a short threshold, so a slow connection lands on a clean, themed screen
+         instead of a black frame. Invisible (and never seen) on fast connections.
+         Full-screen themed surface: white in light mode, #000000 in dark so it stays
+         seamless with the always-dark cinematic. -->
+    <LinearLayout
+        android:id="@+id/loadingContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@color/splash_loading_bg"
+        android:alpha="0"
+        android:visibility="invisible"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Static location mark with a thin ring orbiting it. Reads as intentional
+             and premium — the "logo with a sweeping ring" pattern — rather than a
+             generic spinning icon. Monochrome and theme-aware. -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progressLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                app:indicatorColor="@color/text_secondary"
+                app:trackColor="@android:color/transparent"
+                app:indicatorSize="62dp"
+                app:trackThickness="2.5dp" />
+
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_location"
+                android:importantForAccessibility="no"
+                app:tint="@color/text_primary" />
+
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tvLoadingMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:text="@string/splash_loading_message"
+            android:textSize="16sp"
+            android:textColor="@color/text_primary"
+            android:fontFamily="@font/inter_medium"
+            android:letterSpacing="0.01"
+            android:gravity="center"
+            android:maxLines="1"
+            android:paddingStart="40dp"
+            android:paddingEnd="40dp" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

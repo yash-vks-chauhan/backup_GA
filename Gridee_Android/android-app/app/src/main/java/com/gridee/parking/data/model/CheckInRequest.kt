@@ -19,6 +19,9 @@ data class CheckInRequest(
     @SerializedName("pin")
     val pin: String? = null,
 
+    @SerializedName("parkingLotId")
+    val parkingLotId: String? = null,
+
     @SerializedName("parkingSpotId")
     val parkingSpotId: String? = null
 ) {
@@ -37,4 +40,3 @@ data class CheckInRequest(
         }
     }
 }
-

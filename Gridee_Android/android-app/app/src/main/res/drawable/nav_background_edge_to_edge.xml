@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    
-    <!-- White background that extends to bottom edge -->
-    <solid android:color="#FFFFFF" />
-    
-    <!-- Top border for separation -->
-    <stroke
-        android:width="0.5dp"
-        android:color="#E5E5E5" />
-    
-    <!-- Ensure background extends to edges -->
-    <size 
-        android:width="1000dp"
-        android:height="80dp" />
-        
-</shape>
+<!--
+  iOS-style tab bar background: clean opaque surface + a single hairline separator.
+  No gradient, no shadow band, no floating "shadow" that reads as a grey strip —
+  Apple's tab bars use just material + hairline. Cleanest, most professional look.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Opaque surface -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- iOS-style separator hairline at the top edge (the only visual delimiter). -->
+    <item android:gravity="top">
+        <shape android:shape="rectangle">
+            <size android:height="0.5dp" />
+            <solid android:color="#1F000000" />
+        </shape>
+    </item>
+
+</layer-list>

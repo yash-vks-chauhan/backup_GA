@@ -6,6 +6,9 @@ import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.util.Pair
+import androidx.core.view.ViewCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gridee.parking.R
@@ -19,6 +22,7 @@ import com.gridee.parking.ui.adapters.TransactionsAdapter
 import com.gridee.parking.ui.base.BaseTabFragment
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.BackendTimestampParser
+import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -63,6 +67,11 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
     }
 
     private fun setupClickListeners() {
+        ViewCompat.setTransitionName(
+            binding.tvViewAll,
+            TransactionHistoryActivity.VIEW_ALL_TRANSITION_NAME
+        )
+
         // Add money button
         binding.btnAddMoney.setOnClickListener {
             showTopUpDialog()
@@ -86,11 +95,23 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
             processTopUp(200.0)
         }
         
-        binding.tvViewAll.setOnClickListener {
-            // Navigate to TransactionHistoryActivity to show all transactions
-            val intent = Intent(requireContext(), TransactionHistoryActivity::class.java)
-            startActivity(intent)
+        binding.tvViewAll.setOnClickListener { view ->
+            launchTransactionHistory(view)
         }
+    }
+
+    private fun launchTransactionHistory(sourceView: View) {
+        requireActivity().setExitSharedElementCallback(
+            MaterialContainerTransformSharedElementCallback()
+        )
+        requireActivity().window.sharedElementsUseOverlay = false
+
+        val intent = Intent(requireContext(), TransactionHistoryActivity::class.java)
+        val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+            requireActivity(),
+            Pair.create(sourceView, TransactionHistoryActivity.VIEW_ALL_TRANSITION_NAME)
+        )
+        startActivity(intent, options.toBundle())
     }
     
     private fun loadWalletData() {
@@ -127,10 +148,15 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
                 }
 
                 // Fetch wallet transactions separately
-                val transactionsResponse = ApiClient.apiService.getWalletTransactions(userId)
+                val transactionsResponse = ApiClient.apiService.getWalletTransactions(
+                    userId = userId,
+                    page = 0,
+                    size = 200,
+                    sort = listOf("timestamp", "desc")
+                )
                 if (transactionsResponse.isSuccessful) {
-                    val transactions = transactionsResponse.body()
-                    if (transactions != null && transactions.isNotEmpty()) {
+                    val transactions = transactionsResponse.body()?.content.orEmpty()
+                    if (transactions.isNotEmpty()) {
                         userTransactions.clear()
                         try {
                             userTransactions.addAll(transactions.mapNotNull { transaction ->
@@ -186,12 +212,8 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
     }
 
     private fun updateBalanceDisplay() {
-        binding.tvBalanceAmount.text = "₹${String.format("%.2f", currentBalance)}"
-        
-        // Update last updated time
-        binding.tvLastUpdated.text = "Updated now"
-        
-        // Save balance to cache
+        binding.tvBalanceAmount.text = String.format("%.2f", currentBalance)
+
         val sharedPref = requireActivity().getSharedPreferences("gridee_prefs", android.content.Context.MODE_PRIVATE)
         sharedPref.edit().putFloat("wallet_balance", currentBalance.toFloat()).apply()
     }
@@ -234,6 +256,7 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
             "BOOKING_FEE" -> TransactionType.PARKING_PAYMENT
             "BOOKING_REFUND" -> TransactionType.REFUND
             "WALLET_TOP_UP", "AD_TOP_UP" -> TransactionType.TOP_UP
+            "WELCOME_BONUS" -> TransactionType.BONUS
             "REFUND" -> TransactionType.REFUND
             "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> TransactionType.PARKING_PAYMENT
             else -> null
@@ -243,6 +266,7 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
             "BOOKING_REFUND" -> "Booking Refund"
             "WALLET_TOP_UP" -> "Wallet Top-up"
             "AD_TOP_UP" -> "Ad Top-up"
+            "WELCOME_BONUS" -> "Welcome Bonus"
             "REFUND" -> "Refund"
             "PENALTY_FEE" -> "Penalty Fee"
             "LATE_CHECK_IN_PENALTY" -> "Late Check-in Penalty"
@@ -250,7 +274,7 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
             else -> null
         }
         val backendIsCredit = when (backendType) {
-            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "REFUND" -> true
+            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "WELCOME_BONUS", "REFUND" -> true
             "BOOKING_FEE", "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> false
             else -> null
         }
@@ -266,6 +290,7 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
         val isRewardByAmount = amountValue > 0 &&
             kotlin.math.abs(amountValue - REWARD_AMOUNT_RUPEES) < 0.01
         val isReward = isRewardByText || isRewardByAmount || typeNorm == "bonus"
+            || typeNorm == "welcome_bonus"
 
         val isTopUpByType = typeNorm in listOf(
             "top_up",
@@ -362,12 +387,22 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
                 else -> normalizedDescription ?: baseDescription
             }
         }
+        val locationLabel = listOfNotNull(
+            walletTransaction.lotName?.trim()?.takeIf { it.isNotEmpty() }
+                ?: walletTransaction.lotId?.trim()?.takeIf { it.isNotEmpty() },
+            walletTransaction.spotId?.trim()?.takeIf { it.isNotEmpty() }?.let { "Spot $it" }
+        ).joinToString(" • ").takeIf { it.isNotEmpty() }
+        val displayDescription = if (locationLabel != null && resolvedBookingRelated) {
+            "$description • $locationLabel"
+        } else {
+            description
+        }
 
         return Transaction(
             id = id,
             type = transactionType,
             amount = displayAmount,
-            description = description,
+            description = displayDescription,
             timestamp = parsedTimestamp,
             balanceAfter = walletTransaction.balanceAfter ?: 0.0,
             status = walletTransaction.status
@@ -425,7 +460,7 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
                 )
 
                 if (!initResp.isSuccessful) {
-                    showToast("Failed to initiate payment: ${initResp.code()}")
+                    showToast("Add money temporarily unavailable during payment integration.")
                     return@launch
                 }
 
@@ -433,7 +468,7 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
                 val orderId = body?.orderId
                 val keyId = body?.keyId
                 if (orderId.isNullOrBlank()) {
-                    showToast("Invalid payment order from server")
+                    showToast("Add money temporarily unavailable during payment integration.")
                     return@launch
                 }
 
@@ -444,7 +479,7 @@ class WalletFragment : BaseTabFragment<FragmentWalletNewBinding>() {
                 keyId?.let { intent.putExtra("KEY_ID", it) }
                 startActivity(intent)
             } catch (e: Exception) {
-                showToast("Error: ${e.message}")
+                showToast("Add money temporarily unavailable during payment integration.")
             }
         }
     }

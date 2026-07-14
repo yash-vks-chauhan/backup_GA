@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Secondary "earn more" row — a quiet, layered card lifted off the content
+     surface (a clean white/elevated-dark fill with a hairline border), so it
+     reads as a tappable list item rather than a coloured box. Gold is reserved
+     for the "+amount" badge alone. Ripple for tap feedback. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/quick_add_ripple">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/background_secondary" />
+            <corners android:radius="20dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/divider" />
+        </shape>
+    </item>
+</ripple>

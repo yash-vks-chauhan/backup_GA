@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Active-tab indicator — iOS UISegmentedControl style. Spans the whole tab slot
+  (sized by the anchor view) with a slightly-brighter fill and a hairline border
+  so it reads as an inset segment against the floating capsule, not a halo.
+  Reuses the bulky_glass tokens that the rest of the app's segmented controls use.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/nav_active_pill_fill" />
+    <stroke
+        android:width="0.5dp"
+        android:color="@color/nav_active_pill_stroke" />
+    <corners android:radius="27dp" />
+</shape>

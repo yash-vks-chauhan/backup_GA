@@ -8,10 +8,25 @@ import com.google.gson.annotations.SerializedName
  */
 data class AuthResponse(
     @SerializedName("token")
-    val token: String,
+    val token: String? = null,
     
     @SerializedName("tokenType")
     val tokenType: String? = "Bearer",
+
+    @SerializedName("mfaRequired")
+    val mfaRequired: Boolean? = null,
+
+    @SerializedName("mfaEnabled")
+    val mfaEnabled: Boolean? = null,
+
+    @SerializedName("profileComplete")
+    val profileComplete: Boolean? = null,
+
+    @SerializedName("requiresProfileCompletion")
+    val requiresProfileCompletion: Boolean? = null,
+
+    @SerializedName("isNewUser")
+    val isNewUser: Boolean? = null,
     
     @SerializedName("user")
     val user: UserResponseDto,
@@ -52,6 +67,8 @@ data class UserResponseDto(
     @SerializedName("walletCoins")
     val walletCoins: Int? = 0,
     
+    // Auth screens do not use these values. Keep them as strings so Gson can
+    // tolerate both epoch millis and legacy ISO timestamp responses.
     @SerializedName("createdAt")
     val createdAt: String? = null,
     
@@ -81,4 +98,3 @@ data class AuthRequest(
     @SerializedName("password")
     val password: String
 )
-

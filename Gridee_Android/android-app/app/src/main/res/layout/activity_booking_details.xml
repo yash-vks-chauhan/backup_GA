@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,101 +8,640 @@
     android:fitsSystemWindows="true"
     tools:context=".ui.bookings.BookingDetailsActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layout_header"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingBottom="96dp"
+        android:scrollbars="none">
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btn_back"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:cardCornerRadius="22dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/border_light"
-            app:strokeWidth="1dp"
-            app:cardBackgroundColor="@color/white"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_arrow_back"
-                app:tint="@color/text_primary" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <TextView
-            android:id="@+id/tv_header_title"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/content_container"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Booking Details"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:fontFamily="@font/inter_bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            android:orientation="vertical"
+            android:paddingHorizontal="22dp"
+            android:paddingTop="12dp">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <!-- ========== HERO ========== -->
+            <LinearLayout
+                android:id="@+id/section_hero"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
+                <LinearLayout
+                    android:id="@+id/pill_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_booking_status_pill"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="11dp"
+                    android:paddingVertical="6dp">
+
+                    <View
+                        android:id="@+id/dot_status"
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:background="@drawable/shape_status_dot"
+                        android:backgroundTint="@color/booking_details_support_text" />
+
+                    <TextView
+                        android:id="@+id/tv_status_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="7dp"
+                        android:fontFamily="@font/inter_medium"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="0"
+                        android:text="Active"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        tools:text="Active" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_spot_summary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/inter_semibold"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="0"
+                    android:lineSpacingMultiplier="1.08"
+                    android:maxLines="2"
+                    android:text="Spot 12 · Block A"
+                    android:textColor="@color/text_primary"
+                    android:textSize="27sp"
+                    tools:text="Spot 12 · Block A" />
+
+                <TextView
+                    android:id="@+id/tv_lot_summary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:letterSpacing="0"
+                    android:text="SRM University Parking Lot"
+                    android:textColor="@color/booking_details_support_text"
+                    android:textSize="14sp"
+                    tools:text="SRM University Parking Lot" />
+
+                <View
+                    android:id="@+id/hero_rule"
+                    android:layout_width="36dp"
+                    android:layout_height="1.5dp"
+                    android:layout_marginTop="16dp"
+                    android:alpha="0.72"
+                    android:background="@drawable/shape_booking_hero_rule" />
+
+                <TextView
+                    android:id="@+id/tv_smart_summary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:text="Parked for 44 minutes"
+                    android:textColor="@color/booking_details_support_text"
+                    android:textSize="14sp"
+                    tools:text="Parked for 44 minutes" />
+
+            </LinearLayout>
+
+            <!-- ========== SCHEDULE ========== -->
+            <LinearLayout
+                android:id="@+id/section_schedule"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_semibold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="0"
+                        android:text="Timeline"
+                        android:textColor="@color/booking_details_section_text"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:id="@+id/schedule_hairline"
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="14dp"
+                        android:alpha="0.62"
+                        android:layout_weight="1"
+                        android:background="@color/divider_hairline" />
+
+                </LinearLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/schedule_timeline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp">
+
+                    <!-- Check-in block -->
+                    <LinearLayout
+                        android:id="@+id/block_checkin"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="36dp"
+                        android:orientation="vertical"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_medium"
+                            android:letterSpacing="0"
+                            android:text="Check-in"
+                            android:textColor="@color/booking_details_label_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_checkin_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:fontFamily="@font/inter_semibold"
+                            android:fontFeatureSettings="tnum"
+                            android:letterSpacing="0"
+                            android:text="7:12 PM"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            tools:text="7:12 PM" />
+
+                        <TextView
+                            android:id="@+id/tv_checkin_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:fontFamily="@font/inter_medium"
+                            android:fontFeatureSettings="tnum"
+                            android:text="Wed, 20 Feb"
+                            android:textColor="@color/booking_details_support_text"
+                            android:textSize="13sp"
+                            tools:text="Wed, 20 Feb" />
+
+                        <TextView
+                            android:id="@+id/tv_checkin_actual"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:fontFamily="@font/inter_medium"
+                            android:text="Arrived 7:14 PM · 2 min late"
+                            android:textColor="@color/booking_details_support_text"
+                            android:textSize="13sp"
+                            tools:text="Arrived 7:14 PM · 2 min late" />
+
+                    </LinearLayout>
+
+                    <!-- Duration label between blocks -->
+                    <TextView
+                        android:id="@+id/tv_schedule_duration"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="36dp"
+                        android:fontFamily="@font/inter_medium"
+                        android:paddingVertical="14dp"
+                        android:text="44 minutes parked"
+                        android:textColor="@color/booking_details_support_text"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/block_checkin"
+                        tools:text="44 minutes parked" />
+
+                    <!-- Check-out block -->
+                    <LinearLayout
+                        android:id="@+id/block_checkout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="36dp"
+                        android:orientation="vertical"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/tv_schedule_duration"
+                        app:layout_goneMarginTop="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_medium"
+                            android:letterSpacing="0"
+                            android:text="Check-out"
+                            android:textColor="@color/booking_details_label_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_checkout_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:fontFamily="@font/inter_semibold"
+                            android:fontFeatureSettings="tnum"
+                            android:letterSpacing="0"
+                            android:text="8:00 PM"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            tools:text="8:00 PM" />
+
+                        <TextView
+                            android:id="@+id/tv_checkout_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:fontFamily="@font/inter_medium"
+                            android:fontFeatureSettings="tnum"
+                            android:text="Wed, 20 Feb"
+                            android:textColor="@color/booking_details_support_text"
+                            android:textSize="13sp"
+                            tools:text="Wed, 20 Feb" />
+
+                        <TextView
+                            android:id="@+id/tv_checkout_actual"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:fontFamily="@font/inter_medium"
+                            android:text="Left 7:58 PM · 2 min early"
+                            android:textColor="@color/booking_details_support_text"
+                            android:textSize="13sp"
+                            tools:text="Left 7:58 PM · 2 min early" />
+
+                    </LinearLayout>
+
+                    <!-- Continuous track (drawn first, sits behind dots) -->
+                    <View
+                        android:id="@+id/schedule_track"
+                        android:layout_width="1dp"
+                        android:layout_height="0dp"
+                        android:alpha="0.75"
+                        android:background="@color/divider_hairline"
+                        app:layout_constraintBottom_toBottomOf="@id/dot_check_out"
+                        app:layout_constraintEnd_toEndOf="@id/dot_check_in"
+                        app:layout_constraintStart_toStartOf="@id/dot_check_in"
+                        app:layout_constraintTop_toTopOf="@id/dot_check_in" />
+
+                    <!-- Animated fill (sits between dots, grows from check-in's bottom edge) -->
+                    <View
+                        android:id="@+id/schedule_fill"
+                        android:layout_width="2dp"
+                        android:layout_height="0dp"
+                        android:alpha="0.88"
+                        android:background="@color/text_primary"
+                        android:scaleY="0"
+                        android:transformPivotY="0dp"
+                        app:layout_constraintBottom_toTopOf="@id/dot_check_out"
+                        app:layout_constraintEnd_toEndOf="@id/schedule_track"
+                        app:layout_constraintStart_toStartOf="@id/schedule_track"
+                        app:layout_constraintTop_toBottomOf="@id/dot_check_in" />
+
+                    <!-- Dots (drawn last so they sit on top of track and fill) -->
+                    <View
+                        android:id="@+id/dot_check_in"
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/shape_booking_dot_solid"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/block_checkin" />
+
+                    <View
+                        android:id="@+id/dot_check_out"
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/shape_booking_dot_ring"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/block_checkout" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </LinearLayout>
+
+            <!-- ========== DETAILS ========== -->
+            <LinearLayout
+                android:id="@+id/section_details"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_semibold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="0"
+                        android:text="Receipt"
+                        android:textColor="@color/booking_details_section_text"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:id="@+id/details_hairline"
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="14dp"
+                        android:alpha="0.62"
+                        android:layout_weight="1"
+                        android:background="@color/divider_hairline" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="vertical">
+
+                    <!-- Vehicle -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingVertical="12dp">
+
+                        <TextView
+                            android:layout_width="96dp"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_medium"
+                            android:letterSpacing="0"
+                            android:text="Vehicle"
+                            android:textColor="@color/booking_details_label_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_vehicle_value"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:fontFamily="@font/inter_semibold"
+                            android:fontFeatureSettings="tnum"
+                            android:gravity="end"
+                            android:letterSpacing="0"
+                            android:maxLines="1"
+                            android:text="TN 11 AB 1234"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            tools:text="TN 11 AB 1234" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:alpha="0.55"
+                        android:background="@color/divider_hairline" />
+
+                    <!-- Total -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingVertical="12dp">
+
+                        <TextView
+                            android:layout_width="96dp"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_medium"
+                            android:letterSpacing="0"
+                            android:text="Total"
+                            android:textColor="@color/booking_details_label_text"
+                            android:textSize="14sp" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:layout_width="17dp"
+                            android:layout_height="17dp"
+                            android:layout_marginEnd="7dp"
+                            android:background="@drawable/bg_gridee_coin_brand"
+                            android:fontFamily="@font/inter_semibold"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:text="G"
+                            android:textColor="@color/background_primary"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_amount_summary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_semibold"
+                            android:fontFeatureSettings="tnum"
+                            android:letterSpacing="0"
+                            android:text="5.00"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            tools:text="5.00" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:alpha="0.55"
+                        android:background="@color/divider_hairline" />
+
+                    <!-- Booked on -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:orientation="horizontal"
+                        android:paddingVertical="12dp">
+
+                        <TextView
+                            android:layout_width="96dp"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_medium"
+                            android:letterSpacing="0"
+                            android:paddingTop="2dp"
+                            android:text="Booked on"
+                            android:textColor="@color/booking_details_label_text"
+                            android:textSize="14sp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_booked_on_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:fontFamily="@font/inter_semibold"
+                                android:fontFeatureSettings="tnum"
+                                android:gravity="end"
+                                android:maxLines="1"
+                                android:text="Mon, 18 Feb"
+                                android:textColor="@color/text_primary"
+                                android:textSize="16sp"
+                                tools:text="Mon, 18 Feb" />
+
+                            <TextView
+                                android:id="@+id/tv_booked_on_time"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:ellipsize="end"
+                                android:fontFamily="@font/inter_medium"
+                                android:fontFeatureSettings="tnum"
+                                android:gravity="end"
+                                android:maxLines="1"
+                                android:text="3:42 PM"
+                                android:textColor="@color/booking_details_support_text"
+                                android:textSize="13sp"
+                                tools:text="3:42 PM" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:alpha="0.55"
+                        android:background="@color/divider_hairline" />
+
+                    <!-- Reference -->
+                    <LinearLayout
+                        android:id="@+id/row_booking_id"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:orientation="vertical"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="10dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:fontFamily="@font/inter_medium"
+                                android:letterSpacing="0"
+                                android:text="Reference"
+                                android:textColor="@color/booking_details_label_text"
+                                android:textSize="14sp" />
+
+                            <ImageView
+                                android:id="@+id/iv_copy_id"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:contentDescription="Copy reference"
+                                android:src="@drawable/ic_copy_booking_reference"
+                                app:tint="@color/booking_details_support_text" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tv_booking_id_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:fontFamily="@font/inter_medium"
+                            android:letterSpacing="0"
+                            android:lineSpacingExtra="2dp"
+                            android:maxLines="3"
+                            android:text="67c28c4f-8b1d-4ff3-b43d-2e7c028a91"
+                            android:textColor="@color/booking_details_support_text"
+                            android:textSize="13sp"
+                            tools:text="67c28c4f-8b1d-4ff3-b43d-2e7c028a91" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Loading Spinner -->
     <ProgressBar
         android:id="@+id/progress_loading"
-        style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:indeterminateTint="@color/primary" />
 
     <LinearLayout
         android:id="@+id/layout_error_state"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
         android:gravity="center"
-        android:visibility="gone"
+        android:orientation="vertical"
         android:paddingHorizontal="48dp"
-        app:layout_constraintTop_toBottomOf="@id/layout_header"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.4">
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/tv_error_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Couldn’t load booking"
-            android:textSize="20sp"
-            android:textColor="#374151"
+            android:layout_marginBottom="12dp"
             android:fontFamily="@font/inter_bold"
+            android:text="Couldn't load booking"
             android:textAlignment="center"
-            android:layout_marginBottom="12dp" />
+            android:textColor="@color/text_primary"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/tv_error_message"
-            android:layout_width="300dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Please try again."
-            android:textSize="15sp"
-            android:textColor="#9CA3AF"
+            android:maxWidth="320dp"
             android:fontFamily="@font/inter_medium"
             android:gravity="center"
+            android:lineSpacingMultiplier="1.3"
+            android:text="Please try again."
             android:textAlignment="center"
-            android:lineSpacingMultiplier="1.3" />
+            android:textColor="@color/booking_details_support_text"
+            android:textSize="15sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_retry"
@@ -118,48 +657,55 @@
 
     </LinearLayout>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/scroll_content"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:fillViewport="true"
-        android:clipToPadding="false"
-        android:paddingBottom="24dp"
-        app:layout_constraintTop_toBottomOf="@id/layout_header"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+    <View
+        android:id="@+id/view_toolbar_frost"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_gravity="top"
+        android:alpha="0"
+        android:background="@drawable/bg_toolbar_frosted" />
 
-        <LinearLayout
-            android:id="@+id/content_container"
-            android:layout_width="match_parent"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_back"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:contentDescription="@string/back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tv_header_title"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="12dp">
+            android:fontFamily="@font/inter_bold"
+            android:text="Booking Details"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_details"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/border_light"
-                app:strokeWidth="1dp"
-                app:cardBackgroundColor="@color/white">
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <LinearLayout
-                    android:id="@+id/details_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="8dp" />
-
-            </com.google.android.material.card.MaterialCardView>
-
-        </LinearLayout>
-
-    </androidx.core.widget.NestedScrollView>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

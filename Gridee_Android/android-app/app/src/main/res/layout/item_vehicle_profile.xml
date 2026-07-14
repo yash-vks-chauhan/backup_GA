@@ -38,10 +38,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="MH01AB1234"
-                android:textColor="#333333"
+                android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
             <TextView
                 android:id="@+id/tv_vehicle_type"
@@ -49,9 +49,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Personal Vehicle"
-                android:textColor="#666666"
+                android:textColor="@color/text_secondary"
                 android:textSize="14sp"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
         </LinearLayout>
 

@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 import java.util.Date
 
 data class Booking(
-    @SerializedName("id")
+    @SerializedName(value = "id", alternate = ["_id", "bookingId"])
     val id: String? = null,
     
     @SerializedName("userId")

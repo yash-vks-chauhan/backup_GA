@@ -11,10 +11,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Select Vehicle"
-        android:textColor="#333333"
+        android:textColor="@color/text_primary"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:fontFamily="sans-serif"
+        android:fontFamily="@font/inter_regular"
         android:layout_marginBottom="16dp" />
 
     <!-- Vehicle List -->
@@ -59,7 +59,7 @@
                 android:textColor="#1976D2"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
         </LinearLayout>
 
@@ -78,7 +78,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Cancel"
-            android:textColor="#666666"
+            android:textColor="@color/text_secondary"
             android:layout_marginEnd="8dp" />
 
         <Button

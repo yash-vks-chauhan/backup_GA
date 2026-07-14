@@ -1,17 +1,15 @@
 package com.gridee.parking.ui.base
 
+import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsetsController
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.RecyclerView
@@ -20,6 +18,8 @@ import com.gridee.parking.R
 import com.gridee.parking.ui.auth.LoginActivity
 import com.gridee.parking.ui.components.CustomBottomNavigation
 import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.ui.utils.configureEdgeToEdge
+import com.gridee.parking.ui.utils.withClampedFontScale
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.InAppUpdateController
 
@@ -28,18 +28,30 @@ abstract class BaseActivityWithBottomNav<T : ViewBinding> : AppCompatActivity(),
     
     private var _binding: T? = null
     protected val binding get() = _binding!!
+
+    /**
+     * True only after [onCreate] has inflated the binding. It stays false when the base
+     * bailed out early — the user wasn't authenticated, so we redirected to login and
+     * finished. Calling finish() does NOT stop a subclass's onCreate/onResume/onDestroy
+     * from running, so every subclass MUST `if (!isViewReady) return` (right after its
+     * super call) before touching [binding] or anything derived from it. Otherwise the
+     * `_binding!!` getter throws NPE on the redirect path (expired token, process death).
+     */
+    protected val isViewReady: Boolean get() = _binding != null
     
     protected lateinit var bottomNavigation: CustomBottomNavigation
 
     private var inAppUpdateController: InAppUpdateController? = null
-    
-    // Scroll behavior variables
-    private var lastScrollY = 0
-    private var scrollThreshold = 3  // More sensitive threshold like Twitter
-    
+
     abstract fun getViewBinding(): T
     abstract fun getCurrentTab(): Int
-    
+
+    override fun attachBaseContext(newBase: Context) {
+        // Cap the system font scale so extreme "Font size" settings can't break layouts
+        // on small screens. Covers all four main tabs + bottom sheets hosted here.
+        super.attachBaseContext(newBase.withClampedFontScale())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -56,8 +68,7 @@ abstract class BaseActivityWithBottomNav<T : ViewBinding> : AppCompatActivity(),
         // Keep legacy prefs in sync for older screens that still rely on "gridee_prefs".
         AuthSession.syncLegacyPrefsFromJwt(this)
         
-        // Enable edge-to-edge display
-        setupEdgeToEdge()
+        configureEdgeToEdge()
         
         _binding = getViewBinding()
         setContentView(binding.root)
@@ -90,50 +101,6 @@ abstract class BaseActivityWithBottomNav<T : ViewBinding> : AppCompatActivity(),
         inAppUpdateController?.onActivityResult(requestCode, resultCode, data)
     }
     
-    private fun setupEdgeToEdge() {
-        // Enable edge-to-edge for modern Android versions
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            
-            // Disable navigation bar contrast enforcement to prevent gray areas
-            window.isNavigationBarContrastEnforced = false
-            window.isStatusBarContrastEnforced = false
-            
-            // Set transparent navigation bar
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
-            
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            
-            // Disable navigation bar contrast enforcement (API 29+)
-            window.isNavigationBarContrastEnforced = false
-            
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
-            
-        } else {
-            // For older versions, use deprecated approach
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            )
-            
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
-        }
-        
-        // Force the navigation bar to be completely transparent
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
-        
-        // Configure light icons for status and navigation bars
-        val controller = androidx.core.view.WindowInsetsControllerCompat(window, window.decorView)
-        controller.isAppearanceLightStatusBars = true
-        controller.isAppearanceLightNavigationBars = true
-    }
-    
     private fun setupBottomNavigation() {
         try {
             bottomNavigation = findViewById(R.id.bottom_navigation)
@@ -158,83 +125,68 @@ abstract class BaseActivityWithBottomNav<T : ViewBinding> : AppCompatActivity(),
     
     // Method that activities can call to setup scroll behavior for specific views
     protected fun setupScrollBehaviorForView(scrollableView: View) {
-        when (scrollableView) {
-            is NestedScrollView -> {
-                scrollableView.setOnScrollChangeListener { _: NestedScrollView, _: Int, scrollY: Int, _: Int, oldScrollY: Int ->
-                    val deltaY = scrollY - oldScrollY
-                    handleScrollDelta(deltaY)
-                }
-            }
-            is ScrollView -> {
-                // For regular ScrollView, use a custom scroll detection approach
-                scrollableView.viewTreeObserver.addOnScrollChangedListener {
-                    val currentScrollY = scrollableView.scrollY
-                    val deltaY = currentScrollY - lastScrollY
-                    
-                    println("ScrollView: currentScrollY=$currentScrollY, lastScrollY=$lastScrollY, deltaY=$deltaY, threshold=$scrollThreshold")
-                    
-                    if (kotlin.math.abs(deltaY) > scrollThreshold) {
-                        handleScrollDelta(deltaY)
-                        lastScrollY = currentScrollY
-                    }
-                }
-                
-                // Also try using touch listener as backup
-                var startY = 0f
-                scrollableView.setOnTouchListener { _, event ->
-                    when (event.action) {
-                        android.view.MotionEvent.ACTION_DOWN -> {
-                            startY = event.y
-                        }
-                        android.view.MotionEvent.ACTION_MOVE -> {
-                            val currentY = event.y
-                            val deltaY = startY - currentY
-                            if (kotlin.math.abs(deltaY) > 50) { // Touch threshold
-                                handleScrollDelta(deltaY.toInt())
-                                startY = currentY
-                            }
-                        }
-                    }
-                    false // Don't consume the touch event
-                }
-            }
-            is RecyclerView -> {
-                scrollableView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(recyclerView, dx, dy)
-                        handleScrollDelta(dy)
-                    }
-                })
-            }
+        // Content scrolls behind the floating capsule. Reserve bottom padding so the
+        // last item clears the capsule + gesture-nav inset. Apply once via tag.
+        applyFloatingNavBottomPadding(scrollableView)
+
+        // Read current scroll position from whichever scrollable variant we got.
+        val readScrollY: () -> Int = when (scrollableView) {
+            is NestedScrollView -> { { scrollableView.scrollY } }
+            is ScrollView -> { { scrollableView.scrollY } }
+            is RecyclerView -> { { scrollableView.computeVerticalScrollOffset() } }
+            else -> return
+        }
+
+        // Initial state — covers the case where a fragment is restored at a non-zero
+        // scroll position (rotation, fragment switch back to a previously-scrolled tab).
+        applyScrollPressure(readScrollY())
+
+        // Additive listener: fragments may already own the View's setOnScrollChangeListener
+        // for their own visual effects (ProfileFragment.setupFrostedToolbar). Hooking the
+        // viewTreeObserver coexists with that instead of overwriting it.
+        scrollableView.viewTreeObserver.addOnScrollChangedListener {
+            applyScrollPressure(readScrollY())
+        }
+    }
+
+    /**
+     * Map current scroll offset to pressure [0..1] and drive the floating capsule's
+     * elevation plus the bottom-edge fade scrim. Dead zone of 16dp + 120dp ramp with
+     * ease-out cubic — mirrors the frosted top-toolbar curve in ProfileFragment so
+     * the two effects feel like one motion system.
+     */
+    private fun applyScrollPressure(scrollY: Int) {
+        val density = resources.displayMetrics.density
+        val deadZonePx = 16f * density
+        val rangePx = 120f * density
+        val active = ((scrollY - deadZonePx) / rangePx).coerceIn(0f, 1f)
+        val t = 1f - active
+        val eased = 1f - (t * t * t)
+
+        if (this::bottomNavigation.isInitialized) {
+            bottomNavigation.setScrollPressure(eased)
         }
     }
     
-    private fun handleScrollDelta(deltaY: Int) {
-        // Disabled scroll behavior to prevent content bleeding through
-        // Add debug logging
-        println("ScrollDelta: $deltaY, threshold: $scrollThreshold")
-        
-        // Commenting out the hide/show behavior
-        /*
-        if (deltaY > scrollThreshold) {
-            // Scrolling down - hide navigation
-            println("Hiding navigation - scrolling down")
-            bottomNavigation.hideBottomNavigation()
-        } else if (deltaY < -scrollThreshold) {
-            // Scrolling up - show navigation
-            println("Showing navigation - scrolling up")
-            bottomNavigation.showBottomNavigation()
-        }
-        */
+    private fun applyFloatingNavBottomPadding(view: View) {
+        if (view.getTag(R.id.tag_floating_nav_padding_applied) == true) return
+        view.setTag(R.id.tag_floating_nav_padding_applied, true)
+
+        val density = resources.displayMetrics.density
+        // Capsule content (~52dp) + capsule bottom margin (16dp) + gesture-nav inset.
+        val navInset = ViewCompat.getRootWindowInsets(window.decorView)
+            ?.getInsets(WindowInsetsCompat.Type.navigationBars())?.bottom ?: 0
+        val extra = (68 * density).toInt() + navInset
+
+        (view as? ViewGroup)?.clipToPadding = false
+        view.setPadding(
+            view.paddingLeft,
+            view.paddingTop,
+            view.paddingRight,
+            view.paddingBottom + extra
+        )
     }
-    
-    @Deprecated("Use handleScrollDelta instead")
-    private fun handleScroll(scrollY: Int) {
-        val deltaY = scrollY - lastScrollY
-        handleScrollDelta(deltaY)
-        lastScrollY = scrollY
-    }
-    
+
     override fun onTabSelected(tabId: Int) {
         val isMainContainer = this is MainContainerActivity
         if (tabId == getCurrentTab() && isMainContainer) {
@@ -259,7 +211,19 @@ abstract class BaseActivityWithBottomNav<T : ViewBinding> : AppCompatActivity(),
     }
     
     protected fun showToast(message: String) {
-        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
+        val parentView = findViewById<android.view.ViewGroup>(R.id.fragment_container)
+            ?: findViewById<android.view.ViewGroup>(android.R.id.content)
+            
+        if (parentView != null) {
+            com.gridee.parking.utils.NotificationHelper.showInfoNoIcon(
+                parent = parentView,
+                title = "Notification",
+                message = message,
+                duration = 3000L
+            )
+        } else {
+            android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
     
     // Method to manually control navigation visibility

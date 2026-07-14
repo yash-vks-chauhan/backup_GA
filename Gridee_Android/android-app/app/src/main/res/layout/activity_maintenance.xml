@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/maintenanceRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary"
+    android:clipChildren="false">
+
+    <!-- ── Hero: gridee wordmark + parking boom-gate, over a faint glow ─────── -->
+    <FrameLayout
+        android:id="@+id/heroContainer"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:clipChildren="false"
+        app:layout_constraintBottom_toTopOf="@id/tvMaintenanceTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintVertical_bias="0.42">
+
+        <View
+            android:id="@+id/heroGlow"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_maintenance_glow" />
+
+        <FrameLayout
+            android:id="@+id/heroGroup"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false">
+
+            <com.gridee.parking.ui.maintenance.GrideeGateView
+                android:id="@+id/gateView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="40dp"
+                android:contentDescription="@string/maintenance_a11y_mark" />
+
+            <TextView
+                android:id="@+id/tvWordmark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|top"
+                android:layout_marginTop="40dp"
+                android:fontFamily="@font/inter_bold"
+                android:letterSpacing="0.04"
+                android:text="@string/app_name_gridee"
+                android:textColor="@color/text_primary"
+                android:textSize="44sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <!-- ── Copy ────────────────────────────────────────────────────────────── -->
+    <TextView
+        android:id="@+id/tvMaintenanceTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="40dp"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/inter_semibold"
+        android:gravity="center"
+        android:letterSpacing="-0.01"
+        android:lineSpacingMultiplier="1.05"
+        android:textColor="@color/text_primary"
+        android:textSize="26sp"
+        app:layout_constraintBottom_toTopOf="@id/tvMaintenanceMessage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/heroContainer"
+        tools:text="We'll be right back" />
+
+    <TextView
+        android:id="@+id/tvMaintenanceMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="44dp"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/inter_regular"
+        android:gravity="center"
+        android:lineSpacingMultiplier="1.35"
+        android:textColor="@color/text_secondary"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvMaintenanceTitle"
+        tools:text="Gridee is taking a short break for maintenance. We'll be back in a few minutes." />
+
+    <!-- ── Bottom: compact retry pill + live status ticker ─────────────────── -->
+    <FrameLayout
+        android:id="@+id/retryContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="54dp"
+        app:layout_constraintBottom_toTopOf="@id/tvMaintenanceCaption"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRetry"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:fontFamily="@font/inter_semibold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:letterSpacing="0.01"
+            android:minWidth="168dp"
+            android:paddingHorizontal="36dp"
+            android:stateListAnimator="@animator/touch_scale"
+            android:text="@string/maintenance_retry"
+            android:textAllCaps="false"
+            android:textColor="@color/btn_text_on_brand"
+            android:textSize="15sp"
+            app:backgroundTint="@color/brand_primary"
+            app:cornerRadius="27dp"
+            app:elevation="0dp" />
+
+        <ProgressBar
+            android:id="@+id/retrySpinner"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/btn_text_on_brand"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvMaintenanceCaption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="22dp"
+        android:fontFamily="@font/inter_regular"
+        android:gravity="center"
+        android:textColor="@color/text_tertiary"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Checking automatically · last checked just now" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

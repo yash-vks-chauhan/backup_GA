@@ -29,7 +29,7 @@
         android:background="@drawable/bg_close_circle"
         android:src="@drawable/ic_close"
         android:padding="9dp"
-        app:tint="#5C5C5C"
+        app:tint="@color/text_secondary"
         android:clickable="true"
         android:focusable="true"
         android:contentDescription="Close"
@@ -67,7 +67,7 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="32dp"
                 android:text="Booking Filters"
-                android:textColor="#1A1A1A"
+                android:textColor="@color/text_primary"
                 android:textSize="22sp"
                 android:gravity="center"
                 android:fontFamily="@font/inter_bold" />
@@ -77,7 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Sort Bookings"
-                android:textColor="#1A1A1A"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter_medium"
                 android:layout_marginBottom="12dp" />
@@ -87,8 +87,8 @@
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="30dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeColor="#E0E0E0"
+                app:cardBackgroundColor="@color/background_secondary"
+                app:strokeColor="@color/divider"
                 app:strokeWidth="1.5dp">
 
                 <LinearLayout
@@ -114,7 +114,7 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_sort_amount_down"
-                            app:tint="#1A1A1A"
+                            app:tint="@color/text_primary"
                             android:layout_marginEnd="16dp" />
 
                         <TextView
@@ -122,7 +122,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Newest First"
-                            android:textColor="#1A1A1A"
+                            android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:fontFamily="@font/inter_medium" />
 
@@ -131,7 +131,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checked="true"
-                            android:buttonTint="#1A1A1A"
+                            android:buttonTint="@color/text_primary"
                             android:clickable="false"
                             android:duplicateParentState="true" />
                     </LinearLayout>
@@ -140,7 +140,7 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="#F3F4F6"
+                        android:background="@color/divider"
                         android:layout_marginStart="52dp"
                         android:layout_marginEnd="16dp"/>
 
@@ -161,7 +161,7 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_sort_amount_up"
-                            app:tint="#1A1A1A"
+                            app:tint="@color/text_primary"
                             android:layout_marginEnd="16dp" />
 
                         <TextView
@@ -169,7 +169,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Oldest First"
-                            android:textColor="#1A1A1A"
+                            android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:fontFamily="@font/inter_medium" />
 
@@ -177,7 +177,7 @@
                             android:id="@+id/radioOldestFirst"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:buttonTint="#1A1A1A"
+                            android:buttonTint="@color/text_primary"
                             android:clickable="false"
                             android:duplicateParentState="true" />
                     </LinearLayout>
@@ -201,7 +201,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Date Range"
-                    android:textColor="#1A1A1A"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:fontFamily="@font/inter_medium" />
 
@@ -210,7 +210,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Clear"
-                    android:textColor="#EF4444"
+                    android:textColor="@color/status_text_cancelled"
                     android:textSize="13sp"
                     android:fontFamily="@font/inter_medium"
                     android:background="?attr/selectableItemBackgroundBorderless"
@@ -240,8 +240,8 @@
                         android:layout_height="wrap_content"
                         app:cardCornerRadius="30dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#FFFFFF"
-                        app:strokeColor="#E0E0E0"
+                        app:cardBackgroundColor="@color/background_secondary"
+                        app:strokeColor="@color/divider"
                         app:strokeWidth="1.5dp">
 
                         <LinearLayout
@@ -254,7 +254,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="From"
-                                android:textColor="#9E9E9E"
+                                android:textColor="@color/text_tertiary"
                                 android:textSize="12sp"
                                 android:fontFamily="@font/inter_medium"
                                 android:layout_marginBottom="4dp"/>
@@ -269,7 +269,7 @@
                                     android:layout_width="24dp"
                                     android:layout_height="24dp"
                                     android:src="@drawable/ic_calendar_edit"
-                                    app:tint="#1A1A1A"
+                                    app:tint="@color/text_primary"
                                     android:layout_marginEnd="8dp"/>
 
                                 <TextView
@@ -277,7 +277,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Select Date"
-                                    android:textColor="#1A1A1A"
+                                    android:textColor="@color/text_primary"
                                     android:textSize="14sp"
                                     android:fontFamily="@font/inter_medium"
                                     android:singleLine="true"
@@ -301,8 +301,8 @@
                         android:layout_height="wrap_content"
                         app:cardCornerRadius="30dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#FFFFFF"
-                        app:strokeColor="#E0E0E0"
+                        app:cardBackgroundColor="@color/background_secondary"
+                        app:strokeColor="@color/divider"
                         app:strokeWidth="1.5dp">
 
                         <LinearLayout
@@ -315,7 +315,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="To"
-                                android:textColor="#9E9E9E"
+                                android:textColor="@color/text_tertiary"
                                 android:textSize="12sp"
                                 android:fontFamily="@font/inter_medium"
                                 android:layout_marginBottom="4dp"/>
@@ -330,7 +330,7 @@
                                     android:layout_width="24dp"
                                     android:layout_height="24dp"
                                     android:src="@drawable/ic_calendar_edit"
-                                    app:tint="#1A1A1A"
+                                    app:tint="@color/text_primary"
                                     android:layout_marginEnd="8dp"/>
 
                                 <TextView
@@ -338,7 +338,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Select Date"
-                                    android:textColor="#1A1A1A"
+                                    android:textColor="@color/text_primary"
                                     android:textSize="14sp"
                                     android:fontFamily="@font/inter_medium"
                                     android:singleLine="true"
@@ -358,7 +358,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Parking Spot"
-                android:textColor="#1A1A1A"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter_medium"
                 android:layout_marginBottom="12dp" />
@@ -368,7 +368,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="No spots available to filter"
-                android:textColor="#5C5C5C"
+                android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter_medium"
                 android:visibility="gone" />
@@ -406,10 +406,10 @@
                     android:layout_height="60dp"
                     android:text="Apply Filters"
                     android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/brand_surface"
                     android:textSize="16sp"
                     android:fontFamily="@font/inter_semibold"
-                    android:backgroundTint="#1A1A1A"
+                    android:backgroundTint="@color/brand_primary"
                     app:cornerRadius="30dp"
                     app:elevation="0dp"
                     android:insetTop="0dp"
@@ -422,7 +422,7 @@
                     android:layout_height="60dp"
                     android:text="Reset Filters"
                     android:textAllCaps="false"
-                    android:textColor="#5C5C5C"
+                    android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:fontFamily="@font/inter_medium"
                     app:cornerRadius="30dp"

@@ -25,10 +25,15 @@ object DebugHelper {
                 }
                 
                 // Test transactions endpoint
-                val transResponse = ApiClient.apiService.getWalletTransactions(userId)
+                val transResponse = ApiClient.apiService.getWalletTransactions(
+                    userId = userId,
+                    page = 0,
+                    size = 20,
+                    sort = listOf("timestamp", "desc")
+                )
                 if (transResponse.isSuccessful) {
-                    val transactions = transResponse.body()
-                    Toast.makeText(context, "✅ Transactions API working! Count: ${transactions?.size ?: 0}", Toast.LENGTH_LONG).show()
+                    val transactions = transResponse.body()?.content.orEmpty()
+                    Toast.makeText(context, "✅ Transactions API working! Count: ${transactions.size}", Toast.LENGTH_LONG).show()
                 } else {
                     Toast.makeText(context, "❌ Transactions API failed: ${transResponse.code()} - ${transResponse.message()}", Toast.LENGTH_LONG).show()
                 }

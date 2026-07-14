@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Soft grey pill at the top of the QR modal. Signals that the card is
+  dismissable by swipe — same vocabulary as a system bottom sheet so users
+  don't have to learn a new gesture.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/border_light" />
+    <corners android:radius="100dp" />
+    <size android:width="40dp" android:height="4dp" />
+</shape>

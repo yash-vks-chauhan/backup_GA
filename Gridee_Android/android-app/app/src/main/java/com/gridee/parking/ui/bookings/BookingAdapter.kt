@@ -156,57 +156,45 @@ class BookingAdapter(
                 tvCheckInTime.text = booking.startTime
                 tvCheckOutTime.text = booking.endTime
                 tvAmount.text = booking.amount
-                
-                // Use safe optional access for vehicle number as it might not be in the binding's layout for all variants
-                // (Depends on if user modified item_booking.xml to have ID tv_vehicle_number, which we saw in Step 9)
-                 try {
-                     // Check if view exists via findViewById if binding doesn't expose it directly or if it's optional?
-                     // Actually binding should expose it if ID exists.
-                     // In Step 9, item_booking.xml HAS tv_vehicle_number.
-                     // So binding.tvVehicleNumber exists.
-                     // But in previous Adapter code (Step 17), it wasn't used.
-                     // I will assume it exists.
-                     // Note: binding classes map IDs to camelCase. tv_vehicle_number -> tvVehicleNumber.
-                     // Wait, Step 9: android:id="@+id/tv_vehicle_number"
-                     // So usage: tvVehicleNumber.
-                 } catch (e: Exception) {
-                     // Ignore if field missing
-                 }
-                
-                // Optional binding check for vehicle number (not in original adapter code but useful)
-                // If binding has tvVehicleNumber property:
-                // binding.tvVehicleNumber?.text = booking.vehicleNumber 
-                // However, I can't check 'has property' easily in code text without reflection or knowing the generated class.
-                // I will skip binding vehicle number here to match previous behavior for non-active cards, 
-                // OR check if I can add it safely. 
-                // I'll stick to reproducing previous logic + Status Pill.
+                tvVehicleNumber.text = booking.vehicleNumber
 
+                // Reset card background
+                cardBooking.setCardBackgroundColor(androidx.core.content.ContextCompat.getColor(itemView.context, R.color.background_secondary))
+                progressActiveTimer.visibility = View.GONE
+                viewStatusDot.visibility = View.GONE
+
+                val ctx = itemView.context
                 when (booking.status) {
                     BookingStatus.ACTIVE -> {
-                        // Should not happen here given getItemViewType
-                        tvStatus.text = booking.statusLabelOverride ?: "ACTIVE"
-                        tvStatus.setBackgroundResource(R.drawable.status_outlined_active)
-                        tvStatus.setTextColor(android.graphics.Color.parseColor("#2E7D32"))
+                        tvStatus.text = booking.statusLabelOverride ?: "Active"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_active)
+                        tvStatus.setTextColor(androidx.core.content.ContextCompat.getColor(ctx, R.color.status_text_active))
+                        viewStatusDot.visibility = View.VISIBLE
+                        viewStatusDot.setBackgroundResource(R.drawable.shape_status_dot_active)
                     }
                     BookingStatus.PENDING -> {
-                        tvStatus.text = booking.statusLabelOverride ?: "PENDING"
-                        tvStatus.setBackgroundResource(R.drawable.status_outlined_pending)
-                        tvStatus.setTextColor(android.graphics.Color.parseColor("#E65100"))
+                        tvStatus.text = booking.statusLabelOverride ?: "Booked"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_pending)
+                        tvStatus.setTextColor(androidx.core.content.ContextCompat.getColor(ctx, R.color.status_text_pending))
+                        viewStatusDot.visibility = View.GONE
                     }
                     BookingStatus.COMPLETED -> {
-                        tvStatus.text = booking.statusLabelOverride ?: "COMPLETED"
-                        tvStatus.setBackgroundResource(R.drawable.status_outlined_completed)
-                        tvStatus.setTextColor(android.graphics.Color.parseColor("#616161"))
+                        tvStatus.text = booking.statusLabelOverride ?: "Completed"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_completed)
+                        tvStatus.setTextColor(androidx.core.content.ContextCompat.getColor(ctx, R.color.status_text_completed))
+                        viewStatusDot.visibility = View.GONE
                     }
                     BookingStatus.CANCELLED -> {
-                        tvStatus.text = booking.statusLabelOverride ?: "CANCELLED"
-                        tvStatus.setBackgroundResource(R.drawable.status_soft_cancelled) // Using soft for consistency or outlined if available
-                        tvStatus.setTextColor(android.graphics.Color.parseColor("#DC2626"))
+                        tvStatus.text = booking.statusLabelOverride ?: "Cancelled"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_cancelled)
+                        tvStatus.setTextColor(androidx.core.content.ContextCompat.getColor(ctx, R.color.status_text_cancelled))
+                        viewStatusDot.visibility = View.GONE
                     }
                     BookingStatus.NO_SHOW -> {
-                        tvStatus.text = booking.statusLabelOverride ?: "NO SHOW"
-                        tvStatus.setBackgroundResource(R.drawable.status_soft_noshow) // Using soft for consistency or outlined if available
-                        tvStatus.setTextColor(android.graphics.Color.parseColor("#2563EB"))
+                        tvStatus.text = booking.statusLabelOverride ?: "No Show"
+                        layoutStatusPill.setBackgroundResource(R.drawable.status_soft_noshow)
+                        tvStatus.setTextColor(androidx.core.content.ContextCompat.getColor(ctx, R.color.status_text_noshow))
+                        viewStatusDot.visibility = View.GONE
                     }
                 }
             }

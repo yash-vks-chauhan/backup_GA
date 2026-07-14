@@ -15,6 +15,9 @@
     <color name="text_primary">#191C19</color>
     <color name="text_secondary">#666666</color>
     <color name="white">#FFFFFF</color>
+    <!-- Splash loading surface — light here, pure black in -night so it stays
+         seamless with the always-dark cinematic. -->
+    <color name="splash_loading_bg">#FFFFFF</color>
     <color name="home_hero_background">#D32F2F</color>
     <color name="home_hero_surface">#C62828</color>
     <color name="home_hero_subtext">#B3FFFFFF</color>
@@ -32,6 +35,19 @@
     <color name="brand_primary">#000000</color>
     <color name="brand_surface">#F5F5F5</color>
     <color name="brand_dark">#000000</color>
+
+    <!-- Profile Avatar Ring (theme-aware — white in light, light-tinted in dark for visibility) -->
+    <color name="avatar_ring">#FFFFFF</color>
+
+    <!-- iOS UIColor.separator — cool neutral gray at ~29% opacity -->
+    <color name="divider_hairline">#493C3C43</color>
+    <!-- iOS-style flat press overlay (~6% black) -->
+    <color name="row_press_overlay">#0F000000</color>
+    <color name="history_vehicle_plate_surface">#FFFFFF</color>
+    <color name="history_vehicle_plate_stroke">#E1E5EA</color>
+
+    <!-- Destructive red — matches LogoutConfirmationBottomSheet icon tint -->
+    <color name="text_destructive">#D32F2F</color>
     
     <color name="inactive_gray">#999999</color>
     <color name="light_gray">#CCCCCC</color>
@@ -42,6 +58,21 @@
     <color name="bottom_nav_active">#FFFFFF</color>
     <color name="bottom_nav_inactive">#8E8E93</color>
     <color name="bottom_nav_background">#FEFEFE</color>
+    <!-- Floating navbar — mirrors the iOS-style segmented control on the Bookings tab
+         (segment_track_color / segment_slider_fill). Light-gray track in light mode,
+         white pill, hairline dark stroke. Selected icon/label uses brand_primary
+         (#000000 light, #FFFFFF dark), same as segment_text_selected. -->
+    <color name="nav_floating_stroke">#0F000000</color>
+    <color name="nav_floating_surface">#EDEDED</color>
+    <!-- Active-tab pill (selected segment). Pure white with hairline dark stroke,
+         matches bg_segment_slider exactly. -->
+    <color name="nav_active_pill_fill">#FFFFFF</color>
+    <color name="nav_active_pill_stroke">#0D000000</color>
+    <!-- Active icon/label color (sits on the white pill). brand_primary = #000000
+         in light mode → reads cleanly on the white pill. -->
+    <color name="nav_active_pill_on">@color/brand_primary</color>
+    <!-- Inactive icon/label color — quieter gray on the dark track. -->
+    <color name="nav_inactive_tint">#8E8E93</color>
     <color name="bottom_nav_surface">#F8F9FA</color>
     <color name="bottom_nav_indicator">#FFFFFF</color>
     <color name="bottom_nav_shadow">#12000000</color>
@@ -50,9 +81,13 @@
     <color name="success_green">#4CAF50</color>
     <color name="green">#4CAF50</color>
     <color name="red">#F44336</color>
+    <!-- Tokens for Brand Buttons -->
+    <color name="btn_text_on_brand">#FFFFFF</color>
+
     <color name="divider_color">#E0E0E0</color>
     <color name="darker_gray">#666666</color>
     <color name="divider">#E0E0E0</color>
+    <color name="input_field_outline">#E0E0E0</color>
     
     <!-- Common alias -->
     <color name="primary_color">@color/brand_primary</color>
@@ -100,6 +135,9 @@
     <color name="booking_card_border_pressed">#E0E0E0</color>
     <color name="booking_card_background_pressed">#FAFAFA</color>
     <color name="booking_card_ripple">#1AF5F5F5</color>
+    <color name="active_card_stroke">#FFFFFF</color>
+    <color name="btn_navigate_text">#4B5563</color>
+    <color name="gridee_coin_text">#000000</color>
     <color name="booking_sheet_background">#F4F5F8</color>
     <color name="booking_sheet_card_surface">#FFFFFFFF</color>
     <color name="booking_sheet_divider">#E5E7EB</color>
@@ -199,6 +237,7 @@
     <color name="scanner_surface">#1B1B1F</color>
     <color name="scanner_text_primary">#DEFFFFFF</color>
     <color name="scanner_text_secondary">#99FFFFFF</color>
+    <color name="scanner_toggle_selected_text">#111827</color>
     <color name="scanner_overlay_dark">#B3000000</color>
     <color name="scanner_status_chip_base">#26FFFFFF</color>
     <color name="scanner_status_chip_border">#33FFFFFF</color>
@@ -244,16 +283,129 @@
     <color name="scanner_v2_shadow_inner">#1F000000</color>
     <color name="scanner_v2_ghost_white">#F8F8FF</color>
     <color name="scanner_v2_highlight">#33FFFFFF</color>
+    <color name="scanner_control_surface">#2A0D121B</color>
+    <color name="scanner_control_surface_active">#3D2F1A08</color>
+    <color name="scanner_control_stroke">#52FFFFFF</color>
+    <color name="scanner_control_shadow">#3F000000</color>
+    <color name="scanner_control_icon_close">#FFF4E5</color>
+    <color name="scanner_control_icon_flash_off">#E8D2AA</color>
+    <color name="scanner_control_icon_flash_on">#FFB648</color>
+    <color name="scanner_control_ripple">#33FFB648</color>
+    <color name="scanner_glass_surface">#201E2933</color>
+    <color name="scanner_glass_surface_elevated">#26212B35</color>
+    <color name="scanner_glass_input_surface">#1C121A22</color>
+    <color name="scanner_glass_border">#38FFFFFF</color>
+    <color name="scanner_glass_highlight">#14FFFFFF</color>
+    <color name="scanner_glass_shadow">#18000000</color>
+
+    <!-- iOS 26 inspired light back button -->
+    <color name="ios26_back_button_surface">#FFFFFF</color>
+    <color name="ios26_back_button_stroke">@android:color/transparent</color>
+    <color name="ios26_back_button_icon">#000000</color>
+    <color name="ios26_back_button_shadow_ambient">#08000000</color>
+    <color name="ios26_back_button_shadow_spot">#12000000</color>
 
     <!-- Booking compact card specific colors -->
     <color name="status_minimal_active_text">@color/booking_status_active_text</color>
     <color name="icon_secondary">#6B7280</color>
     <color name="text_tertiary">#9CA3AF</color>
+    <color name="text_quaternary">#C8CCD2</color>
+
+    <!-- Skeleton placeholder fill — used in bottom-sheet loading states -->
+    <color name="skeleton_base">#ECEDF0</color>
     <color name="price_primary">@color/brand_primary</color>
+
+    <!-- Booking details page subtle column line / hairline -->
+    <color name="booking_details_column_line">#0D000000</color>
+    <color name="booking_details_status_pill_bg">#0A000000</color>
+    <color name="booking_details_section_text">#2F3744</color>
+    <color name="booking_details_label_text">#596371</color>
+    <color name="booking_details_support_text">#6B7280</color>
+    <color name="booking_details_delta_late">#A8623E</color>
+    <color name="booking_details_delta_early">#3C7A57</color>
+
+    <!-- Status Text Colors (for programmatic use in adapters) -->
+    <color name="status_text_active">#059669</color>
+    <color name="status_text_pending">#D97706</color>
+    <color name="status_text_completed">#374151</color>
+    <color name="status_text_cancelled">#DC2626</color>
+    <color name="cancel_button_bg">#FEE2E2</color> <!-- Light red tint for cancel button -->
+    <color name="status_text_noshow">#1E40AF</color>
+    <color name="status_text_completed_alt">#334155</color>
+    <color name="status_text_debit">#DC2626</color>
+    <color name="status_text_credit">#059669</color>
+    <color name="status_text_neutral">#374151</color>
+    <color name="parking_spot_available">#17A26B</color>
+    <color name="parking_spot_unavailable">#9CA3AF</color>
 
     <!-- Liquid Segment Control Colors -->
     <color name="segment_track_color">#EDEDED</color> <!-- darker than F5F5F5 page bg -->
     <color name="segment_slider_shadow">#1A000000</color>
     <color name="segment_text_selected">#000000</color>
-    <color name="segment_text_unselected">#666666</color>
+    <color name="segment_text_unselected">#6B7280</color>
+
+    <!-- Quick Action Button in Search Bar -->
+    <color name="quick_action_bg">#EDEDED</color>
+    <color name="quick_action_stroke">#E5E5E5</color>
+    
+    <color name="filter_chip_stroke">#F3F4F6</color>
+    
+    <!-- Circle Icon Background -->
+    <color name="circle_icon_bg">#F3F4F6</color>
+
+    <!-- Slide-to-Book Slider -->
+    <color name="slider_track">#1A1A1A</color>
+    <color name="slider_thumb">#FFFFFF</color>
+    <color name="slider_text">#FFFFFF</color>
+
+    <!-- Confirm Booking Button -->
+    <color name="confirm_btn_bg">#1A1A1A</color>
+    <color name="confirm_btn_bg_pressed">#333333</color>
+    <color name="confirm_btn_text">#FFFFFF</color>
+    <color name="confirm_btn_ripple">#33FFFFFF</color>
+    <color name="confirm_btn_disabled_bg">#E0E0E0</color>
+    <color name="confirm_btn_disabled_text">#9E9E9E</color>
+    <color name="confirm_btn_success_bg">#4CAF50</color>
+    <color name="confirm_btn_glow">#181A1A1A</color>
+
+    <!-- Container stroke — adapts per mode -->
+    <color name="container_stroke">#E0E0E0</color>
+
+    <!-- Reward Bottom Sheet -->
+    <color name="reward_button">#C6930A</color>
+    <color name="reward_button_text">#000000</color>
+    <color name="reward_amount_text">#B8860B</color>
+    <color name="reward_chip_bg">#FFF8E1</color>
+    <color name="reward_chip_stroke">#EEDBA0</color>
+    <color name="reward_note_text">#9CA3AF</color>
+    <color name="reward_glow_center">#30DAA520</color>
+    <!-- Redesigned earn section: neutral premium card, subtle icon bubble, solid
+         gold "+amount" badge. Keeps gold to a single confident accent. -->
+    <color name="reward_earn_bubble">#0F191C19</color>
+    <color name="reward_earn_badge_bg">#C6930A</color>
+    <color name="reward_earn_badge_text">#FFFFFF</color>
+    <color name="reward_glow_edge">#00DAA520</color>
+
+    <!-- Welcome Gift Bottom Sheet -->
+    <color name="welcome_gift_glow_center">#50FFD700</color>
+    <color name="welcome_gift_glow_edge">#00FFD700</color>
+    <color name="welcome_gift_glow_inner_center">#60FFBF00</color>
+    <color name="welcome_gift_glow_inner_edge">#00FFBF00</color>
+
+    <!-- Uber Style Segment Toggle Colors -->
+    <color name="uber_toggle_container_bg">@android:color/transparent</color>
+    <color name="uber_toggle_container_stroke">#EBEBEB</color>
+    <color name="uber_toggle_selected_bg">#F5F5F5</color>
+    <color name="uber_toggle_selected_text">#000000</color>
+    <color name="uber_toggle_unselected_text">#8E8E93</color>
+
+    <!-- Fully-transparent variant of background_primary, used for clean alpha
+         interpolation in scroll-edge fade overlays (avoids muddy gray midpoints). -->
+    <color name="background_primary_transparent">#00F5F5F5</color>
+
+    <!-- In-app notification card stroke. Transparent in light (the hairline reads
+         as a hard pencil line against #FFFFFF on #F5F5F5), visible in dark mode
+         where the card surface (#1C1C1E) needs definition against pure black. -->
+    <color name="notification_card_stroke">@android:color/transparent</color>
+
 </resources>

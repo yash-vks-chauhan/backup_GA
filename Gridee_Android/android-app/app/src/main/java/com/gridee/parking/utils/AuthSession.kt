@@ -1,6 +1,7 @@
 package com.gridee.parking.utils
 
 import android.content.Context
+import com.gridee.parking.data.model.User
 
 /**
  * Centralized session helpers to keep JWT storage and legacy SharedPreferences in sync.
@@ -18,6 +19,7 @@ object AuthSession {
     private const val KEY_USER_PHONE = "user_phone"
     private const val KEY_USER_ROLE = "user_role"
     private const val KEY_IS_LOGGED_IN = "is_logged_in"
+    private const val KEY_PARKING_LOT_ID = "parking_lot_id"
     private const val KEY_PARKING_LOT_NAME = "parking_lot_name"
 
     fun isAuthenticated(context: Context): Boolean {
@@ -51,6 +53,34 @@ object AuthSession {
         return legacy ?: JwtTokenManager(context).getUserRole()
     }
 
+    fun getParkingLotId(context: Context): String? {
+        val prefs = context.getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
+        val legacy = prefs.getString(KEY_PARKING_LOT_ID, null)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+        if (legacy != null) return legacy
+
+        val userId = getUserId(context)?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return UserProfileCache.get(context, userId)
+            ?.parkingLotId
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+    }
+
+    fun getParkingLotName(context: Context): String? {
+        val prefs = context.getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
+        val legacy = prefs.getString(KEY_PARKING_LOT_NAME, null)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+        if (legacy != null) return legacy
+
+        val userId = getUserId(context)?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return UserProfileCache.get(context, userId)
+            ?.parkingLotName
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+    }
+
     /**
      * Ensures legacy prefs have the minimum user fields required by older screens.
      * Safe to call repeatedly.
@@ -71,6 +101,25 @@ object AuthSession {
             .apply()
     }
 
+    fun updateCachedUserProfile(context: Context, user: User) {
+        val userId = user.id?.trim().orEmpty()
+        if (userId.isEmpty()) return
+
+        context.getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_USER_ID, userId)
+            .putString(KEY_USER_NAME, user.name)
+            .putString(KEY_USER_EMAIL, user.email)
+            .putString(KEY_USER_PHONE, user.phone)
+            .putString(KEY_USER_ROLE, user.role)
+            .putString(KEY_PARKING_LOT_ID, user.parkingLotId)
+            .putString(KEY_PARKING_LOT_NAME, user.parkingLotName)
+            .putBoolean(KEY_IS_LOGGED_IN, true)
+            .apply()
+
+        UserProfileCache.save(context, user)
+    }
+
     /**
      * Clears authentication state while keeping unrelated user preferences intact.
      */
@@ -88,6 +137,7 @@ object AuthSession {
                 .remove(KEY_USER_EMAIL)
                 .remove(KEY_USER_PHONE)
                 .remove(KEY_USER_ROLE)
+                .remove(KEY_PARKING_LOT_ID)
                 .remove(KEY_PARKING_LOT_NAME)
                 .putBoolean(KEY_IS_LOGGED_IN, false)
                 .apply()
@@ -95,6 +145,10 @@ object AuthSession {
 
         runCatching {
             JwtTokenManager(context).clearAuthToken()
+        }
+
+        runCatching {
+            UserProfileCache.clear(context)
         }
     }
 }

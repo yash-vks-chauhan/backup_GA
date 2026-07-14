@@ -1,19 +1,23 @@
 package com.gridee.parking.ui.auth
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
+import android.view.animation.PathInterpolator
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.gridee.parking.R
+import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.databinding.ActivityLoginBinding
 import com.gridee.parking.ui.main.MainContainerActivity
 import com.gridee.parking.ui.operator.OperatorDashboardActivity
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.GoogleSignInManager
 import com.gridee.parking.utils.GoogleSignInResult
+import com.gridee.parking.utils.NotificationHelper
 import java.util.Locale
 
 class LoginActivity : AppCompatActivity() {
@@ -61,9 +65,10 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        // Set light status bar with dark icons for white background
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-        window.statusBarColor = android.graphics.Color.parseColor("#F5F5F5")
+        // Theme-aware status bar
+        window.statusBarColor = androidx.core.content.ContextCompat.getColor(this, R.color.background_primary)
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
+            !com.gridee.parking.utils.ThemeManager.isDarkMode(this)
         
         // Initialize sign-in managers
         googleSignInManager = GoogleSignInManager(this)
@@ -95,6 +100,10 @@ class LoginActivity : AppCompatActivity() {
     private fun setupUI() {
         // Sign In button click
         binding.btnSignIn.setOnClickListener {
+            if (!RemoteConfigManager.isEmailSignInEnabled()) {
+                NotificationHelper.showWarning(binding.rootContainer, message = "Email sign-in is temporarily unavailable.")
+                return@setOnClickListener
+            }
             it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
             val emailOrPhone = binding.etEmailPhone.text.toString()
             val password = binding.etPassword.text.toString()
@@ -112,6 +121,10 @@ class LoginActivity : AppCompatActivity() {
         
         // Google Sign In
         binding.btnSignInWithGoogle.setOnClickListener {
+            if (!RemoteConfigManager.isGoogleSignInEnabled()) {
+                NotificationHelper.showWarning(binding.rootContainer, message = "Google sign-in is temporarily unavailable.")
+                return@setOnClickListener
+            }
             it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
             googleSignInManager.launchSignIn(googleSignInLauncher)
         }
@@ -130,6 +143,24 @@ class LoginActivity : AppCompatActivity() {
         binding.etPassword.setOnFocusChangeListener { _, _ ->
             viewModel.clearErrors()
         }
+
+        applyFeatureSwitches()
+    }
+
+    private fun applyFeatureSwitches() {
+        RemoteConfigManager.loadCached(this)
+        val emailEnabled = RemoteConfigManager.isEmailSignInEnabled()
+        val googleEnabled = RemoteConfigManager.isGoogleSignInEnabled()
+
+        binding.btnSignIn.isEnabled = emailEnabled
+        binding.btnSignIn.alpha = if (emailEnabled) 1f else 0.45f
+        binding.etEmailPhone.isEnabled = emailEnabled
+        binding.etPassword.isEnabled = emailEnabled
+        binding.tvForgotPassword.isEnabled = emailEnabled
+        binding.tvForgotPassword.alpha = if (emailEnabled) 1f else 0.45f
+        binding.tvSignUpLink.isEnabled = emailEnabled
+        binding.tvSignUpLink.alpha = if (emailEnabled) 1f else 0.45f
+        binding.btnSignInWithGoogle.visibility = if (googleEnabled) View.VISIBLE else View.GONE
     }
     
 
@@ -142,7 +173,6 @@ class LoginActivity : AppCompatActivity() {
                 }
                 is LoginState.Success -> {
                     showLoading(false)
-                    Toast.makeText(this, "Welcome back, ${state.user.name}!", Toast.LENGTH_LONG).show()
                     
                     val normalizedRole = state.user.role?.uppercase(Locale.ROOT) ?: "USER"
                     val resolvedUserId = state.user.id ?: AuthSession.getUserId(this)
@@ -189,6 +219,7 @@ class LoginActivity : AppCompatActivity() {
                             } else {
                                 val intent = Intent(this, MainContainerActivity::class.java)
                                 intent.putExtra("USER_NAME", state.user.name)
+                                intent.putExtra(MainContainerActivity.EXTRA_SHOW_LOGIN_WELCOME, true)
                                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 startActivity(intent)
                                 finish()
@@ -204,14 +235,28 @@ class LoginActivity : AppCompatActivity() {
                 }
                 is LoginState.Error -> {
                     showLoading(false)
-                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    if (state.isRetryable) {
+                        NotificationHelper.showWarning(
+                            binding.rootContainer,
+                            title = state.title,
+                            message = state.message,
+                            onClick = { binding.btnSignIn.performClick() },
+                            actionButtonText = "Try Again"
+                        )
+                    } else {
+                        NotificationHelper.showError(
+                            binding.rootContainer,
+                            title = state.title,
+                            message = state.message
+                        )
+                    }
                 }
             }
         }
 
         viewModel.statusMessage.observe(this) { message ->
             if (!message.isNullOrBlank()) {
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                NotificationHelper.showInfo(binding.rootContainer, message = message)
             }
         }
         
@@ -226,13 +271,54 @@ class LoginActivity : AppCompatActivity() {
         }
     }
     
+    private var isLoadingVisible = false
+
     private fun showLoading(show: Boolean) {
-        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
-        binding.btnSignIn.isEnabled = !show
-        binding.btnSignIn.text = if (show) "" else "Sign In"
-        
-        // Disable other buttons during loading
-        binding.btnSignInWithGoogle.isEnabled = !show
+        if (show == isLoadingVisible) return
+        isLoadingVisible = show
+
+        val easeOut = PathInterpolator(0.22f, 1.0f, 0.36f, 1.0f)
+
+        if (show) {
+            binding.btnSignIn.isEnabled = false
+            binding.btnSignInWithGoogle.isEnabled = false
+
+            binding.loadingScrim.visibility = View.VISIBLE
+            binding.loadingContent.visibility = View.VISIBLE
+
+            val scrimFade = ObjectAnimator.ofFloat(binding.loadingScrim, View.ALPHA, 0f, 0.85f)
+            val contentFade = ObjectAnimator.ofFloat(binding.loadingContent, View.ALPHA, 0f, 1f)
+            val contentScaleX = ObjectAnimator.ofFloat(binding.loadingContent, View.SCALE_X, 0.9f, 1f)
+            val contentScaleY = ObjectAnimator.ofFloat(binding.loadingContent, View.SCALE_Y, 0.9f, 1f)
+
+            AnimatorSet().apply {
+                playTogether(scrimFade, contentFade, contentScaleX, contentScaleY)
+                duration = 350L
+                interpolator = easeOut
+                start()
+            }
+        } else {
+            val scrimFade = ObjectAnimator.ofFloat(binding.loadingScrim, View.ALPHA, binding.loadingScrim.alpha, 0f)
+            val contentFade = ObjectAnimator.ofFloat(binding.loadingContent, View.ALPHA, 1f, 0f)
+            val contentScaleX = ObjectAnimator.ofFloat(binding.loadingContent, View.SCALE_X, 1f, 0.95f)
+            val contentScaleY = ObjectAnimator.ofFloat(binding.loadingContent, View.SCALE_Y, 1f, 0.95f)
+
+            AnimatorSet().apply {
+                playTogether(scrimFade, contentFade, contentScaleX, contentScaleY)
+                duration = 250L
+                interpolator = PathInterpolator(0.55f, 0f, 1f, 0.45f)
+                addListener(object : android.animation.AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: android.animation.Animator) {
+                        binding.loadingScrim.visibility = View.GONE
+                        binding.loadingContent.visibility = View.GONE
+                        binding.btnSignIn.isEnabled = true
+                        binding.btnSignIn.text = "Sign In"
+                        binding.btnSignInWithGoogle.isEnabled = true
+                    }
+                })
+                start()
+            }
+        }
     }
     
     private fun clearErrors() {

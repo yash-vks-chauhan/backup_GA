@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Background track of the active session's progress bar. Soft grey, fully
+  rounded so the leading edge of the green fill always tucks neatly into a
+  circle (no jagged seam where fill meets track).
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/border_light" />
+    <corners android:radius="100dp" />
+</shape>

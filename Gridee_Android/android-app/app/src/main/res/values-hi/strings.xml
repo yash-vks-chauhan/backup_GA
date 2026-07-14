@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">Gridee</string>
     <string name="camera_permission_required">कैमरा अनुमति आवश्यक है</string>
+    <string name="camera_permission_granted">कैमरा अनुमति प्रदान की गई</string>
     <string name="scan_to_check_in">चेक-इन करने के लिए स्कैन करें</string>
     <string name="scan_to_check_out">चेक-आउट करने के लिए स्कैन करें</string>
     <string name="validating_qr">QR की जांच हो रही है…</string>
@@ -24,6 +25,11 @@
     <string name="vehicle_scan_best_guess">संभावित मिलान: %1$s</string>
     <string name="vehicle_scan_flash_on">फ्लैश चालू</string>
     <string name="vehicle_scan_flash_off">फ्लैश बंद</string>
+    <string name="vehicle_scan_voice_input">वाहन संख्या बोलें</string>
+    <string name="vehicle_scan_voice_prompt">वाहन पंजीकरण संख्या अंग्रेज़ी अक्षरों और अंकों में बोलें, जैसे M H 12 A B 1234</string>
+    <string name="vehicle_scan_voice_unavailable">इस डिवाइस पर वॉइस इनपुट उपलब्ध नहीं है</string>
+    <string name="vehicle_scan_voice_no_match">आवाज़ से वैध वाहन पंजीकरण संख्या का पता नहीं चल सका</string>
+    <string name="vehicle_scan_voice_start_error">वॉइस इनपुट शुरू नहीं किया जा सका</string>
     <string name="vehicle_scan_hint_move_closer">करीब जाएं और फ्रेम के भीतर संरेखित करें</string>
     <string name="vehicle_sheet_status_fetching">सक्रिय बुकिंग प्राप्त की जा रही है…</string>
     <string name="vehicle_sheet_status_not_found">%1$s से कोई बुकिंग नहीं जुड़ी है।</string>
@@ -40,10 +46,11 @@
     <string name="vehicle_sheet_booking_location">लॉट %1$s • स्पॉट %2$s</string>
     <string name="vehicle_sheet_booking_window">%1$s - %2$s</string>
     <string name="vehicle_sheet_manual_label">वाहन संख्या मैन्युअल रूप से दर्ज करें</string>
-    <string name="vehicle_sheet_manual_hint">वाहन संख्या</string>
+    <string name="vehicle_sheet_manual_hint">वाहन पंजीकरण संख्या</string>
     <string name="vehicle_sheet_manual_submit">वाहन संख्या का उपयोग करें</string>
     <string name="vehicle_sheet_manual_button">मैन्युअल रूप से दर्ज करें</string>
-    <string name="vehicle_sheet_manual_error">एक वैध वाहन संख्या दर्ज करें</string>
+    <string name="vehicle_sheet_manual_error">एक वैध भारतीय वाहन पंजीकरण संख्या दर्ज करें</string>
+    <string name="vehicle_sheet_processing_timeout">ऑपरेटर अनुरोध में बहुत समय लग गया। स्कैनर फिर से प्रयास करने के लिए तैयार है।</string>
     <string name="vehicle_sheet_checkin_success">%1$s के लिए चेक-इन पूरा हुआ</string>
     <string name="vehicle_sheet_checkout_success">%1$s के लिए चेक-आउट पूरा हुआ</string>
     <string name="vehicle_sheet_status_ready">वाहन %1$s का पता चला</string>
@@ -58,22 +65,37 @@
     <string name="op_check_in">चेक-इन</string>
     <string name="op_check_out">चेक-आउट</string>
     <string name="op_tap_to_scan">स्कैन करने के लिए टैप करें</string>
+    <string name="op_scan_vehicle_cd">वाहन स्कैन करें</string>
+    <string name="op_align_qr_hint">QR कोड को फ्रेम के भीतर संरेखित करें</string>
     <string name="op_btn_check_in">चेक इन</string>
     <string name="op_btn_check_out">चेक आउट</string>
     <string name="op_manual_entry_label">या वाहन संख्या मैन्युअल रूप से दर्ज करें</string>
+    <string name="op_manual_title">वाहन संख्या दर्ज करें</string>
     <string name="op_submit_manual">वाहन संख्या उपयोग करें</string>
     <string name="op_back_to_scan">स्कैनर पर वापस जाएं</string>
-    <string name="op_enter_vehicle_hint">उदा. MH 04 AB 1234</string>
+    <string name="op_enter_vehicle_hint">उदा. MH12AB1234 या 22BH1234A</string>
     <string name="op_enter_vehicle_error">वाहन संख्या दर्ज करें</string>
-    <string name="op_invalid_vehicle_error">अमान्य वाहन संख्या</string>
+    <string name="op_invalid_vehicle_error">एक वैध भारतीय वाहन पंजीकरण संख्या दर्ज करें</string>
     <string name="op_switched_to">%1$s पर स्विच किया गया</string>
+    <string name="op_dashboard_insights_title">विश्लेषण और अंतर्दृष्टि</string>
+    <string name="op_dashboard_insights_subtitle">ऑक्यूपेंसी ट्रेंड्स और प्रदर्शन मीट्रिक्स देखें। जल्द ही आपके डैशबोर्ड पर आ रहा है।</string>
+    <string name="op_menu_title">ऑपरेटर मेनू</string>
+    <string name="op_menu_section_general">सामान्य</string>
+    <string name="op_menu_history">इतिहास</string>
+    <string name="op_menu_section_support">सहायता</string>
+    <string name="op_menu_version">v2.4.0 • ग्रिडी ऑपरेटर</string>
+    <string name="op_history_soon">इतिहास सुविधा जल्द आ रही है</string>
     <string name="op_settings_soon">सेटिंग्स जल्द ही आ रही हैं</string>
     <string name="op_help_soon">सहायता और समर्थन जल्द ही आ रहा है</string>
     <string name="op_logout_title">लॉग आउट</string>
     <string name="op_logout_message">क्या आप वाकई लॉग आउट करना चाहते हैं?</string>
+    <string name="logout_sheet_message">क्या आप इस खाते से लॉग आउट करना चाहते हैं? आपका डेटा सुरक्षित रूप से सहेजा जाएगा।</string>
     <string name="op_cancel">रद्द करें</string>
     <string name="op_confirm_logout">लॉग आउट</string>
     <string name="op_session_info">ऑपरेटर: %1$s\nस्थान: %2$s\nसत्र: सक्रिय</string>
+    <string name="language_english">अंग्रेज़ी</string>
+    <string name="language_hindi">हिंदी</string>
+    <string name="language_tamil">तमिल</string>
     <string name="select_language">भाषा चुनें</string>
 
     <!-- Sidebar Menu -->

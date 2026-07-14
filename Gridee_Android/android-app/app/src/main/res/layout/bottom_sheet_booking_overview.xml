@@ -51,11 +51,11 @@
                 android:layout_marginBottom="12dp"
                 android:clipToPadding="false"
                 android:clipChildren="false"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="28dp"
+                app:cardBackgroundColor="@color/background_secondary"
+                app:cardCornerRadius="30dp"
                 app:cardElevation="0dp"
                 android:elevation="0dp"
-                app:strokeColor="#E5E7EB"
+                app:strokeColor="@color/booking_card_border_default"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -82,8 +82,14 @@
                             android:text="Spot A-15"
                             android:textColor="@color/text_primary"
                             android:textSize="26sp"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            app:autoSizeTextType="uniform"
+                            app:autoSizeMaxTextSize="26sp"
+                            app:autoSizeMinTextSize="16sp"
+                            android:layout_marginEnd="16dp"
                             android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium" />
+                            android:fontFamily="@font/inter_medium" />
 
                         <!-- Status Chip matching item_booking.xml style -->
                         <TextView
@@ -97,7 +103,7 @@
                             android:textColor="@color/booking_status_active_text"
                             android:textSize="13sp"
                             android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"/>
+                            android:fontFamily="@font/inter_medium"/>
                     </LinearLayout>
 
                     <!-- Sub-header Row: Location Name + Address -->
@@ -117,34 +123,15 @@
 
                         <TextView
                             android:id="@+id/textSpotName"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Phoenix Marketcity"
                             android:textColor="@color/booking_sheet_secondary_text"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginEnd="8dp"/>
-
-                         <!-- Dot Separator -->
-                         <View
-                             android:layout_width="4dp"
-                             android:layout_height="4dp"
-                             android:background="@drawable/circle_separator"
-                             android:backgroundTint="@color/booking_sheet_secondary_text"
-                             android:layout_marginEnd="8dp" />
-
-                        <TextView
-                             android:id="@+id/textLocationAddress"
-                             android:layout_width="0dp"
-                             android:layout_height="wrap_content"
-                             android:layout_weight="1"
-                             android:text="Viman Nagar"
-                             android:textColor="@color/booking_sheet_secondary_text"
-                             android:textSize="16sp"
-                             android:ellipsize="end"
-                             android:maxLines="1"
-                             android:fontFamily="sans-serif"/>
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:fontFamily="@font/inter_medium" />
 
                     </LinearLayout>
                     
@@ -154,10 +141,10 @@
 
                     <!-- Hero Time Section -->
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
+                        android:gravity="start|center_vertical"
                         android:layout_marginBottom="32dp">
 
                         <TextView
@@ -165,28 +152,30 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="10:00 AM"
-                            android:textSize="32sp"
-                            android:textColor="#111827"
+                            android:textSize="24sp"
+                            android:maxLines="1"
+                            android:textColor="@color/text_primary"
                             android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"
+                            android:fontFamily="@font/inter_medium"
                             android:letterSpacing="-0.03"/>
 
                         <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
                             android:src="@drawable/ic_arrow_right"
-                            app:tint="#9CA3AF"
-                            android:layout_marginHorizontal="20dp" />
+                            app:tint="@color/text_tertiary"
+                            android:layout_marginHorizontal="16dp" />
 
                         <TextView
                             android:id="@+id/textCheckOut"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="12:00 PM"
-                            android:textSize="32sp"
-                            android:textColor="#111827"
+                            android:textSize="24sp"
+                            android:maxLines="1"
+                            android:textColor="@color/text_primary"
                             android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"
+                            android:fontFamily="@font/inter_medium"
                             android:letterSpacing="-0.03"/>
                     </LinearLayout>
 
@@ -205,7 +194,7 @@
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
                             android:background="@drawable/bg_pill_gray_f5"
-                            android:backgroundTint="#F9FAFB"
+                            android:backgroundTint="@color/gray_50"
                             android:paddingHorizontal="12dp"
                             android:paddingVertical="8dp">
 
@@ -213,7 +202,7 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:src="@drawable/ic_car_outlined"
-                                app:tint="#6B7280"
+                                app:tint="@color/text_secondary"
                                 android:layout_marginEnd="8dp" />
 
                             <TextView
@@ -222,8 +211,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="MH 12 AB 3456"
                                 android:textSize="16sp"
-                                android:textColor="#6B7280"
-                                android:fontFamily="sans-serif-medium" />
+                                android:textColor="@color/text_secondary"
+                                android:fontFamily="@font/inter_medium" />
                         </LinearLayout>
 
                         <Space
@@ -237,7 +226,7 @@
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
                             android:background="@drawable/bg_pill_gray_f5"
-                            android:backgroundTint="#F9FAFB"
+                            android:backgroundTint="@color/gray_50"
                             android:paddingHorizontal="12dp"
                             android:paddingVertical="8dp">
 
@@ -245,7 +234,7 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:src="@drawable/ic_time"
-                                app:tint="#6B7280"
+                                app:tint="@color/text_secondary"
                                 android:layout_marginEnd="8dp" />
 
                             <TextView
@@ -254,8 +243,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="2h 15m"
                                 android:textSize="16sp"
-                                android:textColor="#6B7280"
-                                android:fontFamily="sans-serif-medium" />
+                                android:textColor="@color/text_secondary"
+                                android:fontFamily="@font/inter_medium" />
                         </LinearLayout>
 
                     </LinearLayout>
@@ -293,7 +282,7 @@
                                 android:text="Booking Date"
                                 android:textSize="16sp"
                                 android:textColor="@color/booking_sheet_secondary_text"
-                                android:fontFamily="sans-serif"/>
+                                android:fontFamily="@font/inter_regular"/>
 
                             <Space
                                 android:layout_width="0dp"
@@ -308,7 +297,7 @@
                                 android:textSize="16sp"
                                 android:textColor="@color/text_primary"
                                 android:textStyle="bold"
-                                android:fontFamily="sans-serif-medium"/>
+                                android:fontFamily="@font/inter_medium"/>
                         </LinearLayout>
                         
                         <!-- Amount Row -->
@@ -332,7 +321,7 @@
                                 android:text="Amount Paid"
                                 android:textSize="16sp"
                                 android:textColor="@color/booking_sheet_secondary_text"
-                                android:fontFamily="sans-serif"/>
+                                android:fontFamily="@font/inter_regular"/>
 
                             <Space
                                 android:layout_width="0dp"
@@ -347,7 +336,7 @@
                                 android:textSize="18sp"
                                 android:textColor="@color/text_primary"
                                 android:textStyle="bold"
-                                android:fontFamily="sans-serif-medium"/>
+                                android:fontFamily="@font/inter_medium"/>
                         </LinearLayout>
 
                     </LinearLayout>
@@ -359,55 +348,6 @@
                         android:layout_marginTop="48dp"
                         android:orientation="vertical">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/actionDirections"
-                                style="@style/Widget.Material3.Button.UnelevatedButton"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="8dp"
-                                android:layout_weight="1"
-                                android:insetTop="0dp"
-                                android:insetBottom="0dp"
-                                android:minHeight="54dp"
-                                android:text="@string/booking_directions"
-                                android:textAllCaps="false"
-                                android:textColor="#374151"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                app:backgroundTint="#F3F4F6"
-                                app:cornerRadius="16dp"
-                                app:icon="@drawable/ic_map_folded"
-                                app:iconGravity="textStart"
-                                app:iconSize="20dp"
-                                app:iconTint="#374151" />
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/actionShare"
-                                style="@style/Widget.Material3.Button.UnelevatedButton"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:layout_weight="1"
-                                android:insetTop="0dp"
-                                android:insetBottom="0dp"
-                                android:minHeight="54dp"
-                                android:text="@string/booking_share"
-                                android:textAllCaps="false"
-                                android:textColor="#374151"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                app:backgroundTint="#F3F4F6"
-                                app:cornerRadius="16dp"
-                                app:icon="@drawable/ic_share"
-                                app:iconGravity="textStart"
-                                app:iconSize="20dp"
-                                app:iconTint="#374151" />
-                        </LinearLayout>
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/actionCancel"
@@ -420,15 +360,15 @@
                             android:minHeight="54dp"
                             android:text="@string/cancel_booking"
                             android:textAllCaps="false"
-                            android:textColor="#EF4444"
-                            android:textSize="13sp"
+                            android:textColor="@color/status_text_cancelled"
+                            android:textSize="14sp"
                             android:textStyle="bold"
-                            app:backgroundTint="#FEE2E2"
-                            app:cornerRadius="16dp"
+                            app:backgroundTint="@color/cancel_button_bg"
+                            app:cornerRadius="28dp"
                             app:icon="@drawable/ic_close"
                             app:iconGravity="textStart"
-                            app:iconSize="20dp"
-                            app:iconTint="#EF4444" />
+                            app:iconSize="18dp"
+                            app:iconTint="@color/status_text_cancelled" />
 
                     </LinearLayout>
                     
@@ -443,10 +383,10 @@
                         android:textColor="@color/booking_sheet_secondary_text"
                         android:textSize="12sp"
                         android:background="@drawable/bg_pill_gray_f5"
-                        android:backgroundTint="#F3F4F6"
+                        android:backgroundTint="@color/gray_200"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="4dp"
-                        android:fontFamily="sans-serif-medium"/>
+                        android:fontFamily="@font/inter_medium"/>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

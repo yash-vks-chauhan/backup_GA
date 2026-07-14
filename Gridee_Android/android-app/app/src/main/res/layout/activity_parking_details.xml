@@ -33,10 +33,10 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="Parking Details"
-            android:textColor="#333333"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/inter_regular"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/btn_back"
@@ -65,9 +65,9 @@
                 android:layout_height="wrap_content"
                 android:text="🅿️ Detailed Parking Information\n\n• Location details &amp; photos\n• Pricing information\n• Available spots count\n• Amenities overview\n• User reviews &amp; ratings\n• Real-time availability"
                 android:textAlignment="center"
-                android:textColor="#666666"
+                android:textColor="@color/text_secondary"
                 android:textSize="16sp"
-                android:fontFamily="sans-serif"
+                android:fontFamily="@font/inter_regular"
                 android:lineSpacingMultiplier="1.4"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -109,7 +109,7 @@
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif"
+                android:fontFamily="@font/inter_regular"
                 android:gravity="center" />
 
         </androidx.cardview.widget.CardView>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Translucent amber halo placed behind the brand check-in dot. The Adapter
+  pulses this view to draw the eye to the "next stop" without using a hard
+  ring (which would feel medical/clinical). The halo is the calmer cousin
+  of the active pass radar.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#33D97706" />
+    <size
+        android:width="22dp"
+        android:height="22dp" />
+</shape>

@@ -10,9 +10,9 @@
     <!-- Drag Handle -->
     <View
         android:id="@+id/drag_handle"
-        android:layout_width="32dp"
-        android:layout_height="4dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="36dp"
+        android:layout_height="5dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/handle_pill_minimal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,67 +21,199 @@
     <!-- Close Button -->
     <ImageView
         android:id="@+id/btn_close"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginTop="20dp"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginTop="18dp"
         android:layout_marginEnd="20dp"
         android:background="@drawable/bg_close_circle"
         android:contentDescription="Close"
         android:padding="9dp"
         android:src="@drawable/ic_close"
-        app:tint="#5C5C5C"
+        app:tint="@color/text_secondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Header Section -->
+    <!-- Header: Name + Meta + Badges -->
     <LinearLayout
         android:id="@+id/header_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="20dp"
         android:layout_marginStart="24dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="60dp"
         android:orientation="vertical"
-        android:gravity="start"
-        app:layout_constraintEnd_toStartOf="@id/btn_close"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/drag_handle">
 
-        <TextView
-            android:id="@+id/tvParkingName"
+        <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/inter_bold"
-            android:text="Phoenix Mall"
-            android:textColor="#1A1A1A"
-            android:textSize="26sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:minHeight="30dp">
 
-        <!-- Combined Subtitle: Address • Rate -->
-        <TextView
-            android:id="@+id/tvParkingMeta"
+            <View
+                android:id="@+id/skelParkingName"
+                android:layout_width="180dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/bg_skeleton_pill" />
+
+            <TextView
+                android:id="@+id/tvParkingName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_bold"
+                android:letterSpacing="-0.02"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                tools:text="Phoenix Mall" />
+        </FrameLayout>
+
+        <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:fontFamily="@font/inter_medium"
-            android:text="Viman Nagar • ₹150/hr"
-            android:textColor="#6B7280"
-            android:textSize="15sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
-    </LinearLayout>
-    
-    <!-- Hidden legacy fields to prevent crashes if binding references them directly -->
-    <TextView android:id="@+id/tvParkingAddress" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-    <TextView android:id="@+id/tvHourlyRate" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
+            android:minHeight="20dp">
 
+            <View
+                android:id="@+id/skelParkingMeta"
+                android:layout_width="120dp"
+                android:layout_height="14dp"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/bg_skeleton_pill" />
+
+            <TextView
+                android:id="@+id/tvParkingMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_medium"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp"
+                tools:text="Viman Nagar, Pune" />
+        </FrameLayout>
+
+        <!-- Badge Row -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical">
+
+            <!-- Rate slot — skeleton and real badge overlap inside one frame so
+                 the reveal swaps the value in place. They must not be laid out
+                 as siblings: during the crossfade both are measured, which
+                 briefly doubled the row width and made the badges jump. -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <View
+                    android:id="@+id/skelRateBadge"
+                    android:layout_width="74dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/bg_skeleton_pill" />
+
+                <LinearLayout
+                    android:id="@+id/layoutRateBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/bg_rate_badge"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:background="@drawable/bg_gridee_coin_dark"
+                        android:text="G"
+                        android:textColor="@color/btn_text_on_brand"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/inter_bold"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:paddingTop="1dp"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:id="@+id/tvRateBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_semibold"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        tools:text="150/hr" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- Availability slot — same overlap pattern. -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp">
+
+                <View
+                    android:id="@+id/skelAvailability"
+                    android:layout_width="86dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/bg_skeleton_pill" />
+
+                <LinearLayout
+                    android:id="@+id/layoutAvailability"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/bg_availability_badge"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp"
+                    android:visibility="gone">
+
+                    <View
+                        android:id="@+id/viewAvailabilityDot"
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_dot_inactive"
+                        android:backgroundTint="@color/parking_spot_available" />
+
+                    <TextView
+                        android:id="@+id/tvAvailability"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_semibold"
+                        android:textColor="@color/parking_spot_available"
+                        android:textSize="13sp"
+                        tools:text="Available" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Hidden legacy fields for binding compatibility -->
+    <TextView android:id="@+id/tvParkingAddress" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+    <TextView android:id="@+id/tvHourlyRate" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+
+    <!-- Scrollable Content -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:clipToPadding="false"
-        android:paddingBottom="100dp"
+        android:overScrollMode="never"
+        android:paddingBottom="12dp"
         android:scrollbars="none"
         app:layout_constraintBottom_toTopOf="@id/bookingSummary"
         app:layout_constraintTop_toBottomOf="@id/header_container">
@@ -90,177 +222,157 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp">
+            android:paddingHorizontal="20dp">
 
-            <!-- Title for Section 1 -->
+            <!-- Section Label: Schedule -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
+                android:layout_marginStart="4dp"
                 android:fontFamily="@font/inter_bold"
-                android:letterSpacing="0.05"
+                android:letterSpacing="0.08"
                 android:text="SCHEDULE"
-                android:textColor="#9CA3AF"
-                android:textSize="12sp" 
-                android:layout_marginStart="4dp"/>
+                android:textColor="@color/text_tertiary"
+                android:textSize="11sp" />
 
-            <!-- Schedule Container -->
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <!-- Side-by-side Time Cards -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_container_outline_28"
-                android:padding="20dp"
-                android:layout_marginBottom="32dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
 
-                <!-- Connector Line -->
-                <View
-                    android:id="@+id/timeline_connector"
-                    android:layout_width="2dp"
-                    android:layout_height="0dp"
-                    android:background="#E5E7EB"
-                    app:layout_constraintTop_toBottomOf="@id/iv_start_icon"
-                    app:layout_constraintBottom_toTopOf="@id/iv_end_icon"
-                    app:layout_constraintStart_toStartOf="@id/iv_start_icon"
-                    app:layout_constraintEnd_toEndOf="@id/iv_start_icon"
-                    android:layout_marginVertical="4dp"/>
-
-                <!-- Check In Item -->
-                <ImageView
-                    android:id="@+id/iv_start_icon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_start_time"
-                    app:tint="#111827"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    android:layout_marginTop="8dp"/>
-
+                <!-- Check In Card -->
                 <LinearLayout
                     android:id="@+id/cardStartTime"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_time_card"
                     android:orientation="vertical"
-                    android:background="?attr/selectableItemBackground"
-                    app:layout_constraintStart_toEndOf="@id/iv_start_icon"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
+                    android:paddingHorizontal="18dp"
+                    android:paddingTop="18dp"
+                    android:paddingBottom="20dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_medium"
-                        android:text="Start Time"
-                        android:textColor="#6B7280"
-                        android:textSize="13sp" />
+                        android:fontFamily="@font/inter_semibold"
+                        android:text="CHECK IN"
+                        android:textColor="@color/text_tertiary"
+                        android:textSize="10sp"
+                        android:letterSpacing="0.08" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/tvStartDate"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="2dp">
-                        
-                        <TextView
-                            android:id="@+id/tvStartTime"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:fontFamily="@font/inter_bold"
-                            android:textColor="#111827"
-                            android:textSize="18sp"
-                            tools:text="Today, 10:00 AM" />
-                            
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="#D1D5DB" />
-                    </LinearLayout>
+                        android:layout_marginTop="10dp"
+                        android:fontFamily="@font/inter_medium"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        tools:text="Today" />
+
+                    <TextView
+                        android:id="@+id/tvStartTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="@font/inter_bold"
+                        android:textColor="@color/text_primary"
+                        android:textSize="22sp"
+                        android:letterSpacing="-0.02"
+                        tools:text="10:00 AM" />
                 </LinearLayout>
 
-                <!-- Check Out Item -->
+                <!-- Arrow -->
                 <ImageView
-                    android:id="@+id/iv_end_icon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_end_time"
-                    app:tint="#111827"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/cardStartTime"
-                    android:layout_marginTop="24dp"/>
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginHorizontal="10dp"
+                    android:src="@drawable/ic_time_range_arrow"
+                    app:tint="@color/text_tertiary" />
 
+                <!-- Check Out Card -->
                 <LinearLayout
                     android:id="@+id/cardEndTime"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_time_card"
                     android:orientation="vertical"
-                    android:background="?attr/selectableItemBackground"
-                    app:layout_constraintStart_toEndOf="@id/iv_end_icon"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/iv_end_icon">
+                    android:paddingHorizontal="18dp"
+                    android:paddingTop="18dp"
+                    android:paddingBottom="20dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_medium"
-                        android:text="End Time"
-                        android:textColor="#6B7280"
-                        android:textSize="13sp" />
+                        android:fontFamily="@font/inter_semibold"
+                        android:text="CHECK OUT"
+                        android:textColor="@color/text_tertiary"
+                        android:textSize="10sp"
+                        android:letterSpacing="0.08" />
 
-                     <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/tvEndDate"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="2dp">
+                        android:layout_marginTop="10dp"
+                        android:fontFamily="@font/inter_medium"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        tools:text="Today" />
 
-                        <TextView
-                            android:id="@+id/tvEndTime"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:fontFamily="@font/inter_bold"
-                            android:textColor="#111827"
-                            android:textSize="18sp"
-                            tools:text="Today, 12:00 PM" />
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="#D1D5DB" />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/tvEndTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="@font/inter_bold"
+                        android:textColor="@color/text_primary"
+                        android:textSize="22sp"
+                        android:letterSpacing="-0.02"
+                        tools:text="12:00 PM" />
                 </LinearLayout>
+            </LinearLayout>
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
 
+
+            <!-- Hidden legacy views for binding compatibility -->
+            <ImageView android:id="@+id/iv_start_icon" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <ImageView android:id="@+id/iv_end_icon" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <View android:id="@+id/timeline_connector" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+
+            <!-- Booking Notice -->
             <TextView
                 android:id="@+id/tvBookingNotice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="28dp"
                 android:background="@drawable/bg_rounded_error_light"
                 android:fontFamily="@font/inter_medium"
-                android:padding="12dp"
-                android:textColor="#DC2626"
+                android:lineSpacingExtra="2dp"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp"
+                android:textColor="@color/status_text_cancelled"
                 android:textSize="13sp"
                 android:visibility="gone"
                 tools:text="Booking notice text" />
 
-            <!-- Title for Section 2 -->
+            <!-- Section Label: Details -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
+                android:layout_marginStart="4dp"
                 android:fontFamily="@font/inter_bold"
-                android:letterSpacing="0.05"
+                android:letterSpacing="0.08"
                 android:text="DETAILS"
-                android:textColor="#9CA3AF"
-                android:textSize="12sp" 
-                android:layout_marginStart="4dp"/>
+                android:textColor="@color/text_tertiary"
+                android:textSize="11sp" />
 
             <!-- Details Container -->
             <LinearLayout
@@ -268,9 +380,10 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_container_outline_28"
-                android:padding="20dp">
+                android:paddingHorizontal="18dp"
+                android:paddingVertical="6dp">
 
-                <!-- Vehicle Selection -->
+                <!-- Vehicle Row -->
                 <LinearLayout
                     android:id="@+id/cardVehicleSelection"
                     android:layout_width="match_parent"
@@ -278,18 +391,25 @@
                     android:background="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="24dp">
+                    android:paddingVertical="16dp">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_car_outlined"
-                        app:tint="#111827" />
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_icon_circle_small">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_car_outlined"
+                            app:tint="@color/text_primary" />
+                    </FrameLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
+                        android:layout_marginStart="14dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -298,54 +418,74 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_medium"
                             android:text="Vehicle"
-                            android:textColor="#6B7280"
-                            android:textSize="13sp" />
+                            android:textColor="@color/text_tertiary"
+                            android:textSize="12sp" />
 
-                        <TextView
-                            android:id="@+id/tvSelectedVehicle"
+                        <FrameLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:fontFamily="@font/inter_bold"
-                            android:textColor="#111827"
-                            android:textSize="16sp"
-                            tools:text="MH 12 AB 1234" />
+                            android:minHeight="20dp">
+
+                            <View
+                                android:id="@+id/skelSelectedVehicle"
+                                android:layout_width="110dp"
+                                android:layout_height="14dp"
+                                android:layout_gravity="center_vertical"
+                                android:background="@drawable/bg_skeleton_pill" />
+
+                            <TextView
+                                android:id="@+id/tvSelectedVehicle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/inter_bold"
+                                android:textColor="@color/text_primary"
+                                android:textSize="15sp"
+                                tools:text="MH 12 AB 1234" />
+                        </FrameLayout>
                     </LinearLayout>
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_chevron_right"
-                        app:tint="#D1D5DB" />
+                        app:tint="@color/text_tertiary" />
                 </LinearLayout>
 
                 <!-- Divider -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#F3F4F6"
-                    android:layout_marginBottom="24dp"
-                    android:layout_marginStart="40dp"/>
+                    android:layout_marginStart="54dp"
+                    android:background="@color/divider" />
 
-                <!-- Wallet -->
+                <!-- Wallet Balance Row -->
                 <LinearLayout
                     android:id="@+id/cardWallet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:paddingVertical="16dp">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_wallet"
-                        app:tint="#111827" />
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_icon_circle_small">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_wallet"
+                            app:tint="@color/text_primary" />
+                    </FrameLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
+                        android:layout_marginStart="14dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -353,56 +493,189 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_medium"
-                            android:text="Payment Method"
-                            android:textColor="#6B7280"
-                            android:textSize="13sp" />
+                            android:text="Wallet Balance"
+                            android:textColor="@color/text_tertiary"
+                            android:textSize="12sp" />
 
-                        <TextView
-                            android:id="@+id/tvWalletBalance"
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:fontFamily="@font/inter_bold"
-                            android:textColor="#111827"
-                            android:textSize="16sp"
-                            tools:text="Wallet (₹150.00)" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="2dp">
+
+                            <TextView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:background="@drawable/bg_gridee_coin_dark"
+                                android:text="G"
+                                android:textColor="@color/btn_text_on_brand"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:fontFamily="@font/inter_bold"
+                                android:gravity="center"
+                                android:includeFontPadding="false"
+                                android:paddingTop="1dp"
+                                android:layout_marginEnd="6dp" />
+
+                            <FrameLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:minHeight="20dp">
+
+                                <View
+                                    android:id="@+id/skelWalletBalance"
+                                    android:layout_width="62dp"
+                                    android:layout_height="14dp"
+                                    android:layout_gravity="center_vertical"
+                                    android:background="@drawable/bg_skeleton_pill" />
+
+                                <TextView
+                                    android:id="@+id/tvWalletBalance"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="@font/inter_bold"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="15sp"
+                                    tools:text="150.00" />
+                            </FrameLayout>
+                        </LinearLayout>
                     </LinearLayout>
 
                     <TextView
                         android:id="@+id/btnAddMoney"
                         android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:background="@drawable/bg_topup_pill"
+                        android:fontFamily="@font/inter_semibold"
+                        android:gravity="center"
+                        android:paddingHorizontal="16dp"
+                        android:text="Top Up"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Refund & Penalty Policy -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="12dp"
+                android:layout_marginStart="4dp"
+                android:fontFamily="@font/inter_bold"
+                android:letterSpacing="0.08"
+                android:text="REFUND &amp; PENALTY POLICY"
+                android:textColor="@color/text_tertiary"
+                android:textSize="11sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_container_outline_28"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="18dp">
+
+                <!-- Policy Item 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="9dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/bg_dot_inactive"
+                        android:backgroundTint="@color/text_tertiary" />
+
+                    <TextView
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_bold"
-                        android:text="Add Funds"
-                        android:textColor="#1A1A1A"
-                        android:textSize="13sp"
-                        android:padding="8dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"/>
+                        android:layout_weight="1"
+                        android:fontFamily="@font/inter_medium"
+                        android:lineSpacingExtra="3dp"
+                        android:text="Your booking amount is fully refunded to your wallet upon successfully checking out on time."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
                 </LinearLayout>
 
+                <!-- Policy Item 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="9dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/bg_dot_inactive"
+                        android:backgroundTint="@color/text_tertiary" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/inter_medium"
+                        android:lineSpacingExtra="3dp"
+                        android:text="Late checkouts incur a penalty starting at 20 G-Coins per 10 mins (after a 10 min grace period)."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Policy Item 3 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="9dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/bg_dot_inactive"
+                        android:backgroundTint="@color/text_tertiary" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/inter_medium"
+                        android:lineSpacingExtra="3dp"
+                        android:text="Cancellations are 100% refunded if made 2+ hours prior, 50% up to 30 mins prior, and non-refundable otherwise."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
             </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Footer -->
+    <!-- Footer: Total + Duration + Slide to Book -->
     <LinearLayout
         android:id="@+id/bookingSummary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_footer_rounded_top"
-        android:elevation="15dp"
-        android:outlineAmbientShadowColor="#1A000000"
-        android:outlineSpotShadowColor="#40000000"
-        android:outlineProvider="background"
+        android:elevation="12dp"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:paddingHorizontal="28dp"
+        android:paddingTop="22dp"
+        android:paddingBottom="14dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
+        <!-- Price + Duration Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="20dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -417,61 +690,129 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_medium"
                     android:text="Total"
-                    android:textColor="#6B7280"
-                    android:textSize="13sp" />
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.02" />
 
-                <TextView
-                    android:id="@+id/tvTotalPrice"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_bold"
-                    android:textColor="#1A1A1A"
-                    android:textSize="24sp"
-                    tools:text="₹150.00" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp">
+
+                    <TextView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:background="@drawable/bg_gridee_coin_dark"
+                        android:text="G"
+                        android:textColor="@color/btn_text_on_brand"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/inter_bold"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:paddingTop="1dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="32dp">
+
+                        <View
+                            android:id="@+id/skelTotalPrice"
+                            android:layout_width="92dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center_vertical"
+                            android:background="@drawable/bg_skeleton_pill" />
+
+                        <TextView
+                            android:id="@+id/tvTotalPrice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_bold"
+                            android:letterSpacing="-0.02"
+                            android:textColor="@color/text_primary"
+                            android:textSize="26sp"
+                            tools:text="150.00" />
+                    </FrameLayout>
+                </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/tvDuration"
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/inter_medium"
-                android:gravity="bottom"
-                android:textColor="#6B7280"
-                android:textSize="15sp"
-                tools:text="2h" />
+                android:layout_height="wrap_content">
+
+                <View
+                    android:id="@+id/skelDuration"
+                    android:layout_width="58dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/bg_skeleton_pill" />
+
+                <TextView
+                    android:id="@+id/tvDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_duration_chip"
+                    android:fontFamily="@font/inter_semibold"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="8dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    tools:text="2h 0m" />
+            </FrameLayout>
         </LinearLayout>
 
+        <!-- Confirm Booking Button -->
         <FrameLayout
+            android:id="@+id/btnConfirmWrapper"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:background="@drawable/bg_slider_track"
-            android:clipChildren="false">
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
-            <TextView
-                android:id="@+id/tvSlideToBook"
+            <FrameLayout
+                android:id="@+id/btnConfirmContainer"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Slide to Book"
-                android:textColor="#FFFFFF"
-                android:fontFamily="@font/inter_bold"
-                android:textSize="18sp"
-                android:letterSpacing="0.05"
-                android:alpha="0.8" />
+                android:layout_height="56dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_confirm_booking_button"
+                android:clickable="true"
+                android:focusable="true">
 
-            <SeekBar
-                android:id="@+id/sbSlideToBook"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:thumb="@drawable/thumb_slider"
-                android:progressDrawable="@android:color/transparent"
-                android:splitTrack="false"
-                android:max="100"
-                android:progress="0"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp"
-                android:thumbOffset="0dp" />
+                <TextView
+                    android:id="@+id/tvConfirmBooking"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="@font/inter_semibold"
+                    android:text="Confirm Booking"
+                    android:textAllCaps="false"
+                    android:textColor="@color/confirm_btn_text"
+                    android:textSize="16sp" />
 
+                <ProgressBar
+                    android:id="@+id/progressConfirm"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/confirm_btn_text"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/ivConfirmCheck"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:alpha="0"
+                    android:src="@drawable/avd_confirm_button_check"
+                    android:visibility="gone"
+                    android:importantForAccessibility="no" />
+
+            </FrameLayout>
         </FrameLayout>
     </LinearLayout>
 

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.gridee.parking.data.model.ParkingLot
 import com.gridee.parking.data.model.ParkingSpot
 import com.gridee.parking.data.repository.ParkingRepository
+import com.gridee.parking.utils.ParkingSpotSchedulePolicy
 import kotlinx.coroutines.launch
 
 data class Location(
@@ -87,11 +88,12 @@ class ParkingDiscoveryViewModel : ViewModel() {
                 }
                 
                 println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Total spots aggregated=${allSpots.size}")
+                val visibleSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(allSpots)
                 
                 _parkingLots.value = filteredLots
                 if (!lockSpotUpdates) {
-                    _parkingSpots.value = allSpots
-                    println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Updated _parkingSpots LiveData with ${allSpots.size} spots")
+                    _parkingSpots.value = visibleSpots
+                    println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Updated _parkingSpots LiveData with ${visibleSpots.size} spots")
                 }
                 _isLoading.value = false
             } catch (e: Exception) {
@@ -109,8 +111,9 @@ class ParkingDiscoveryViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val spots = fetchSpotsForLot(lotId)
-                println("DEBUG ParkingDiscoveryViewModel.loadParkingSpotsForLot: Fetched spots for lotId='$lotId', lotName='$lotName', size=${spots.size}")
-                _parkingSpots.value = spots
+                val visibleSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(spots)
+                println("DEBUG ParkingDiscoveryViewModel.loadParkingSpotsForLot: Fetched spots for lotId='$lotId', lotName='$lotName', size=${spots.size}, visible=${visibleSpots.size}")
+                _parkingSpots.value = visibleSpots
                 _isLoading.value = false
             } catch (e: Exception) {
                 println("DEBUG ParkingDiscoveryViewModel.loadParkingSpotsForLot: Exception - ${e.message}")
@@ -134,7 +137,7 @@ class ParkingDiscoveryViewModel : ViewModel() {
     }
     
     private fun filterParkingSpots() {
-        val allSpots = _parkingSpots.value ?: emptyList()
+        val allSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(_parkingSpots.value ?: emptyList())
         val query = _searchQuery.value?.lowercase() ?: ""
         
         val filteredSpots = allSpots.filter { spot ->

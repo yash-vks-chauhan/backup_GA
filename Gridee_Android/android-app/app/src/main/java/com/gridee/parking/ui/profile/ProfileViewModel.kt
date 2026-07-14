@@ -1,11 +1,15 @@
 package com.gridee.parking.ui.profile
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gridee.parking.data.model.User
 import com.gridee.parking.data.repository.UserRepository
+import com.gridee.parking.utils.AuthSession
+import com.gridee.parking.utils.UserProfileCache
+import com.gridee.parking.utils.VehicleNumberValidator
 import kotlinx.coroutines.launch
 
 class ProfileViewModel : ViewModel() {
@@ -24,14 +28,26 @@ class ProfileViewModel : ViewModel() {
     private val _logoutSuccess = MutableLiveData<Boolean>()
     val logoutSuccess: LiveData<Boolean> = _logoutSuccess
 
-    fun loadUserProfile(userId: String) {
+    fun loadUserProfile(context: Context, userId: String) {
         viewModelScope.launch {
+            val cachedUser = UserProfileCache.get(context, userId)
+            if (cachedUser != null) {
+                _userProfile.value = cachedUser
+            }
+
             _isLoading.value = true
             try {
                 val user = userRepository.getUserById(userId)
-                _userProfile.value = user
+                if (user != null) {
+                    _userProfile.value = user
+                    AuthSession.updateCachedUserProfile(context, user)
+                } else if (cachedUser == null) {
+                    _errorMessage.value = "Failed to load profile"
+                }
             } catch (e: Exception) {
-                _errorMessage.value = "Failed to load profile: ${e.message}"
+                if (cachedUser == null) {
+                    _errorMessage.value = "Failed to load profile: ${e.message}"
+                }
             } finally {
                 _isLoading.value = false
             }
@@ -45,19 +61,14 @@ class ProfileViewModel : ViewModel() {
             return
         }
 
-        // Basic validation - just check if not empty and reasonable length
-        if (vehicleNumber.isBlank()) {
-            _errorMessage.value = "Please enter a vehicle number"
-            return
-        }
-        
-        if (vehicleNumber.length < 4 || vehicleNumber.length > 15) {
-            _errorMessage.value = "Vehicle number should be between 4-15 characters"
+        val normalizedVehicleNumber = VehicleNumberValidator.normalize(vehicleNumber)
+        val validationError = VehicleNumberValidator.getError(normalizedVehicleNumber)
+        if (validationError != null) {
+            _errorMessage.value = validationError
             return
         }
 
-        // Check if vehicle already exists
-        if (currentUser.vehicleNumbers.contains(vehicleNumber)) {
+        if (VehicleNumberValidator.containsEquivalent(currentUser.vehicleNumbers, normalizedVehicleNumber)) {
             _errorMessage.value = "Vehicle number already exists"
             return
         }
@@ -66,14 +77,13 @@ class ProfileViewModel : ViewModel() {
             _isLoading.value = true
             try {
                 val updatedVehicles = currentUser.vehicleNumbers.toMutableList()
-                updatedVehicles.add(vehicleNumber)
+                updatedVehicles.add(normalizedVehicleNumber)
                 
                 val updatedUser = currentUser.copy(vehicleNumbers = updatedVehicles)
                 val result = userRepository.updateUser(updatedUser)
                 
                 if (result) {
                     _userProfile.value = updatedUser
-                    _errorMessage.value = "Vehicle added successfully"
                 } else {
                     _errorMessage.value = "Failed to update on server. Please check your connection."
                 }
@@ -92,25 +102,23 @@ class ProfileViewModel : ViewModel() {
             return
         }
 
-        // Basic validation
-        if (newVehicleNumber.isBlank()) {
-            _errorMessage.value = "Please enter a vehicle number"
-            return
-        }
-        
-        if (newVehicleNumber.length < 4 || newVehicleNumber.length > 15) {
-            _errorMessage.value = "Vehicle number should be between 4-15 characters"
+        val normalizedOldVehicleNumber = VehicleNumberValidator.normalize(oldVehicleNumber)
+        val normalizedNewVehicleNumber = VehicleNumberValidator.normalize(newVehicleNumber)
+        val validationError = VehicleNumberValidator.getError(normalizedNewVehicleNumber)
+        if (validationError != null) {
+            _errorMessage.value = validationError
             return
         }
 
-        // Check if new vehicle number already exists (and it's not the same as old one)
-        if (newVehicleNumber != oldVehicleNumber && currentUser.vehicleNumbers.contains(newVehicleNumber)) {
+        if (
+            normalizedNewVehicleNumber != normalizedOldVehicleNumber &&
+            VehicleNumberValidator.containsEquivalent(currentUser.vehicleNumbers, normalizedNewVehicleNumber)
+        ) {
             _errorMessage.value = "Vehicle number already exists"
             return
         }
 
-        // If same vehicle number, no need to update
-        if (oldVehicleNumber == newVehicleNumber) {
+        if (oldVehicleNumber == normalizedNewVehicleNumber) {
             _errorMessage.value = "No changes made"
             return
         }
@@ -119,16 +127,25 @@ class ProfileViewModel : ViewModel() {
             _isLoading.value = true
             try {
                 val updatedVehicles = currentUser.vehicleNumbers.toMutableList()
-                val index = updatedVehicles.indexOf(oldVehicleNumber)
+                val index = updatedVehicles.indexOfFirst {
+                    it == oldVehicleNumber || VehicleNumberValidator.areEquivalent(it, oldVehicleNumber)
+                }
                 if (index != -1) {
-                    updatedVehicles[index] = newVehicleNumber
-                    
-                    val updatedUser = currentUser.copy(vehicleNumbers = updatedVehicles)
+                    updatedVehicles[index] = normalizedNewVehicleNumber
+
+                    val updatedDefaultVehicle = currentUser.defaultVehicle
+                        ?.takeIf { VehicleNumberValidator.areEquivalent(it, oldVehicleNumber) }
+                        ?.let { normalizedNewVehicleNumber }
+                        ?: currentUser.defaultVehicle
+
+                    val updatedUser = currentUser.copy(
+                        vehicleNumbers = updatedVehicles,
+                        defaultVehicle = updatedDefaultVehicle
+                    )
                     val result = userRepository.updateUser(updatedUser)
                     
                     if (result) {
                         _userProfile.value = updatedUser
-                        _errorMessage.value = "Vehicle updated successfully"
                     } else {
                         _errorMessage.value = "Failed to update on server. Please check your connection."
                     }
@@ -154,14 +171,19 @@ class ProfileViewModel : ViewModel() {
             _isLoading.value = true
             try {
                 val updatedVehicles = currentUser.vehicleNumbers.toMutableList()
-                updatedVehicles.remove(vehicleNumber)
-                
-                val updatedUser = currentUser.copy(vehicleNumbers = updatedVehicles)
+                updatedVehicles.removeAll { VehicleNumberValidator.areEquivalent(it, vehicleNumber) }
+
+                val updatedDefaultVehicle = currentUser.defaultVehicle
+                    ?.takeUnless { VehicleNumberValidator.areEquivalent(it, vehicleNumber) }
+
+                val updatedUser = currentUser.copy(
+                    vehicleNumbers = updatedVehicles,
+                    defaultVehicle = updatedDefaultVehicle
+                )
                 val result = userRepository.updateUser(updatedUser)
                 
                 if (result) {
                     _userProfile.value = updatedUser
-                    _errorMessage.value = "Vehicle removed successfully"
                 } else {
                     _errorMessage.value = "Failed to remove vehicle"
                 }
@@ -192,27 +214,33 @@ class ProfileViewModel : ViewModel() {
             return
         }
 
-        // Check if vehicle exists in user's vehicle list
-        if (!currentUser.vehicleNumbers.contains(vehicleNumber)) {
+        val resolvedVehicleNumber = currentUser.vehicleNumbers.firstOrNull {
+            VehicleNumberValidator.areEquivalent(it, vehicleNumber)
+        }
+
+        if (resolvedVehicleNumber == null) {
             _errorMessage.value = "Vehicle not found in your list"
             return
         }
 
-        // If already default, no need to update
-        if (currentUser.defaultVehicle == vehicleNumber) {
-            _errorMessage.value = "$vehicleNumber is already your default vehicle"
+        val currentDefaultVehicle = currentUser.defaultVehicle
+        if (
+            currentDefaultVehicle != null &&
+            VehicleNumberValidator.areEquivalent(currentDefaultVehicle, resolvedVehicleNumber)
+        ) {
+            _errorMessage.value = "$resolvedVehicleNumber is already your default vehicle"
             return
         }
 
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val updatedUser = currentUser.copy(defaultVehicle = vehicleNumber)
+                val updatedUser = currentUser.copy(defaultVehicle = resolvedVehicleNumber)
                 val result = userRepository.updateUser(updatedUser)
                 
                 if (result) {
                     _userProfile.value = updatedUser
-                    _errorMessage.value = "Default vehicle set to $vehicleNumber"
+                    // Setting default vehicle successfully
                 } else {
                     _errorMessage.value = "Failed to set default vehicle"
                 }
@@ -226,11 +254,5 @@ class ProfileViewModel : ViewModel() {
 
     fun clearError() {
         _errorMessage.value = null
-    }
-
-    private fun isValidVehicleNumber(vehicleNumber: String): Boolean {
-        // Indian vehicle number format: XX00XX0000 (e.g., MH01AB1234)
-        val regex = "^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$".toRegex()
-        return regex.matches(vehicleNumber)
     }
 }

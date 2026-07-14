@@ -1,23 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout 
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_container_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_primary"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:fitsSystemWindows="false">
 
-    <!-- Fragment Container -->
-    <FrameLayout
+    <!-- Fragment Container (intercepts edge-swipes for tab switching).
+         Extends to the parent bottom so content scrolls visibly behind the floating
+         capsule. Each fragment's scrollable view receives extra bottom padding via
+         BaseActivityWithBottomNav.setupScrollBehaviorForView so the last item isn't
+         hidden under the capsule. -->
+    <com.gridee.parking.ui.motion.SwipeableFragmentContainer
         android:id="@+id/fragment_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom fade — a soft vertical gradient that dissolves content into the
+         page background as it approaches the floating capsule. Mirrors the
+         iOS Music / Maps / Spotify pattern: content gracefully fades to the
+         page color near the bottom of the screen so the capsule appears to
+         rest in calm space rather than be punched out of a busy scroll.
+
+         No backdrop blur, no library, no per-frame snapshots — a single
+         gradient drawable that always reads cleanly.
+
+         Height 96dp: starts the fade ~96dp above the screen bottom, ending
+         fully solid (= page color) at the bottom. Tuned so the last list item
+         (whose bottom edge sits at 68dp + nav inset thanks to
+         applyFloatingNavBottomPadding) is only just touched by the very top of
+         the fade — clear to read at scroll-end, smoothly hidden during scroll.
+
+         Pointer-events off — the fade is purely visual; touches go through to
+         the capsule and the fragment beneath. -->
+    <View
+        android:id="@+id/nav_bottom_fade"
+        android:layout_width="0dp"
+        android:layout_height="96dp"
+        android:background="@drawable/nav_bottom_scrim"
+        android:clickable="false"
+        android:focusable="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Bottom Navigation. The 2dp elevation that casts the soft system shadow above the
+         bar lives on the inner `bottom_navigation_container` (which owns the background
+         drawable). Setting elevation here on the outer LinearLayout has no effect because
+         it has no background to derive an outline from. -->
     <com.gridee.parking.ui.components.CustomBottomNavigation
         android:id="@+id/bottom_navigation"
         android:layout_width="0dp"

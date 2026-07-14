@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Pill backing the booking-ID line at the bottom of the QR modal. Treats
+  the ID as a small, discrete badge rather than free-floating text — it's
+  reference data the operator might call out, not the main subject.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/background_primary" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/border_light" />
+    <corners android:radius="100dp" />
+</shape>

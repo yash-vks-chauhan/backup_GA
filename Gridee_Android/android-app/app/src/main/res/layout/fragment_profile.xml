@@ -4,77 +4,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/background_primary"
     android:fitsSystemWindows="false">
 
-    <!-- AppBarLayout with Collapsing Toolbar -->
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/app_bar_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:elevation="0dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:elevation="0dp">
-
-        <com.google.android.material.appbar.CollapsingToolbarLayout
-            android:id="@+id/collapsing_toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
-            app:contentScrim="#F5F5F5"
-            app:scrimAnimationDuration="400"
-            app:titleEnabled="false">
-
-            <!-- Header Background (Kept for spacing/parallax if needed, but made minimal) -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:background="#F5F5F5"
-                app:layout_collapseMode="parallax" />
-
-            <!-- Toolbar (Fixed Title) -->
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:layout_marginStart="0dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                app:layout_collapseMode="pin"
-                app:contentInsetStart="0dp"
-                app:contentInsetLeft="0dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="My Profile"
-                    android:textColor="#111827"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/inter_bold"
-                    android:layout_gravity="center" />
-                    
-            </androidx.appcompat.widget.Toolbar>
-
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <!-- Scrollable Content -->
+    <!-- Scrollable Content — full-bleed, scrolls behind the transparent toolbar -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scrollContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
         android:scrollbars="none"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:clipToPadding="false">
 
         <LinearLayout
+            android:id="@+id/content_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="8dp">
+            android:paddingBottom="32dp">
 
         <!-- Profile Header (Open Design) -->
         <LinearLayout
@@ -82,8 +29,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
-            android:paddingTop="24dp"
-            android:paddingBottom="24dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="16dp"
             android:clipChildren="false"
             android:clipToPadding="false">
 
@@ -100,10 +47,10 @@
                     android:layout_height="104dp"
                     android:layout_margin="8dp"
                     app:cardCornerRadius="52dp"
-                    app:cardElevation="10dp"
-                    app:cardMaxElevation="12dp"
+                    app:cardElevation="2dp"
+                    app:cardMaxElevation="3dp"
                     app:cardPreventCornerOverlap="false"
-                    app:cardBackgroundColor="#FFFFFF">
+                    app:cardBackgroundColor="@color/avatar_ring">
 
                     <!-- Inner Container for White Border -->
                     <FrameLayout
@@ -115,18 +62,21 @@
                             android:id="@+id/card_profile_avatar"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@drawable/circle_background_green">
+                            android:background="@drawable/circle_background_green"
+                            android:foreground="@drawable/bg_ios_row_press"
+                            android:clickable="true"
+                            android:focusable="true">
 
                             <TextView
                                 android:id="@+id/tv_user_initials"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:text="Y"
                                 android:textColor="#FFFFFF"
                                 android:textSize="36sp"
                                 android:textStyle="bold"
                                 android:gravity="center"
-                                android:fontFamily="@font/inter_bold" />
+                                android:fontFamily="@font/inter_bold"
+                                tools:text="YC" />
 
                         </FrameLayout>
                     </FrameLayout>
@@ -134,11 +84,10 @@
                 </androidx.cardview.widget.CardView>
 
                 <!-- Floating Badge (Outside CardView to prevent clipping) -->
-                <!-- Positioned at Bottom-End of the 104dp+margin area -->
                 <FrameLayout
                     android:id="@+id/btn_edit_profile"
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
                     android:layout_gravity="bottom|end"
                     android:layout_marginEnd="4dp"
                     android:layout_marginBottom="4dp"
@@ -164,13 +113,13 @@
                 android:id="@+id/tv_user_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Y C"
-                android:textColor="#111827"
+                android:textColor="@color/text_primary"
                 android:textSize="26sp"
                 android:textStyle="bold"
                 android:fontFamily="@font/inter_bold"
-                android:layout_marginTop="20dp"
-                android:letterSpacing="0.01" />
+                android:layout_marginTop="16dp"
+                android:letterSpacing="0.01"
+                tools:text="Yash Chauhan" />
 
         </LinearLayout>
 
@@ -179,13 +128,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Account"
-            android:textColor="#6B7280"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
             android:fontFamily="@font/inter_bold"
-            android:layout_marginStart="24dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="12dp" />
+            android:letterSpacing="0.01"
+            android:layout_marginStart="20dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginTop="24dp" />
 
         <!-- Account & Profile Category -->
         <androidx.cardview.widget.CardView
@@ -194,9 +144,9 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="28dp"
+            app:cardCornerRadius="36dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="@color/background_secondary">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -210,8 +160,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -219,7 +170,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_account_settings"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <TextView
@@ -227,21 +178,24 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Account Settings"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
 
-
-
-
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@color/divider_hairline" />
 
                 <!-- Notifications -->
                 <LinearLayout
@@ -250,8 +204,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -259,7 +214,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_notifications"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <TextView
@@ -267,15 +222,15 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Notifications"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
 
@@ -288,13 +243,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Bookings &amp; Vehicles"
-            android:textColor="#757575"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
             android:fontFamily="@font/inter_bold"
-            android:layout_marginStart="24dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="12dp" />
+            android:letterSpacing="0.01"
+            android:layout_marginStart="20dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginTop="24dp" />
 
         <!-- Vehicle Management Category -->
         <androidx.cardview.widget.CardView
@@ -303,9 +259,9 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="28dp"
+            app:cardCornerRadius="36dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="@color/background_secondary">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -319,8 +275,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -328,7 +285,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_booking_history_ticket"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <TextView
@@ -336,17 +293,24 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Booking History"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@color/divider_hairline" />
 
                 <!-- My Vehicles (Accordion) -->
                 <LinearLayout
@@ -355,8 +319,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -364,7 +329,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_car_outlined"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <LinearLayout
@@ -377,7 +342,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="My Vehicles"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:fontFamily="@font/inter_medium" />
 
@@ -385,20 +350,21 @@
                             android:id="@+id/tv_vehicle_count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="2 vehicles"
-                            android:textColor="#6B7280"
-                            android:textSize="14sp"
+                            android:text="@string/profile_vehicle_count_loading"
+                            android:textColor="@color/text_tertiary"
+                            android:textSize="13sp"
                             android:fontFamily="@font/inter_regular"
-                            android:layout_marginTop="2dp" />
+                            android:layout_marginTop="2dp"
+                            tools:text="2 vehicles" />
 
                     </LinearLayout>
 
                     <ImageView
                         android:id="@+id/iv_vehicles_expand"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_down"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
 
@@ -411,8 +377,6 @@
                     android:visibility="gone"
                     android:alpha="0">
 
-
-
                     <!-- Vehicle List Container - Dynamically populated -->
                     <LinearLayout
                         android:id="@+id/vehicles_container"
@@ -423,14 +387,12 @@
                         android:paddingEnd="16dp"
                         android:paddingTop="12dp"
                         android:paddingBottom="12dp">
-                        
+
                         <!-- Vehicles will be added dynamically here -->
 
                     </LinearLayout>
 
                 </LinearLayout>
-
-
 
             </LinearLayout>
 
@@ -441,13 +403,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Preferences"
-            android:textColor="#6B7280"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
             android:fontFamily="@font/inter_bold"
-            android:layout_marginStart="24dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="12dp" />
+            android:letterSpacing="0.01"
+            android:layout_marginStart="20dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginTop="24dp" />
 
         <!-- App Preferences Category -->
         <androidx.cardview.widget.CardView
@@ -456,9 +419,9 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="28dp"
+            app:cardCornerRadius="36dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="@color/background_secondary">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -472,8 +435,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -481,7 +445,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_display"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <TextView
@@ -489,23 +453,34 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Display &amp; Theme"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
 
+                    <TextView
+                        android:id="@+id/tv_display_theme_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="System"
+                        android:textColor="@color/text_tertiary"
+                        android:textSize="15sp"
+                        android:fontFamily="@font/inter_regular"
+                        android:layout_marginEnd="8dp" />
+
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
 
-
-
-
-
-
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@color/divider_hairline" />
 
                 <!-- Language & Region -->
                 <LinearLayout
@@ -514,8 +489,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -523,7 +499,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_language"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <TextView
@@ -531,15 +507,25 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Language &amp; Region"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
 
+                    <TextView
+                        android:id="@+id/tv_language_region_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="English"
+                        android:textColor="@color/text_tertiary"
+                        android:textSize="15sp"
+                        android:fontFamily="@font/inter_regular"
+                        android:layout_marginEnd="8dp" />
+
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
 
@@ -552,13 +538,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Legal &amp; Support"
-            android:textColor="#6B7280"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
             android:fontFamily="@font/inter_bold"
-            android:layout_marginStart="24dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="12dp" />
+            android:letterSpacing="0.01"
+            android:layout_marginStart="20dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginTop="24dp" />
 
         <!-- Support & Legal Category -->
         <androidx.cardview.widget.CardView
@@ -567,9 +554,9 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="28dp"
+            app:cardCornerRadius="36dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="@color/background_secondary">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -583,8 +570,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -592,7 +580,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_help"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <TextView
@@ -600,19 +588,24 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Help &amp; Support"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
 
-
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@color/divider_hairline" />
 
                 <!-- Privacy Policy -->
                 <LinearLayout
@@ -621,8 +614,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -630,7 +624,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_privacy_policy"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <TextView
@@ -638,19 +632,24 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Privacy Policy"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
 
-
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@color/divider_hairline" />
 
                 <!-- Data Safety -->
                 <LinearLayout
@@ -659,8 +658,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -668,7 +668,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_data_safety"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <TextView
@@ -676,19 +676,24 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Data Safety &amp; Account Deletion"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
 
-
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@color/divider_hairline" />
 
                 <!-- About -->
                 <LinearLayout
@@ -697,8 +702,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:padding="20dp"
-                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -706,7 +712,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_info"
-                        android:tint="#6B7280"
+                        android:tint="@color/icon_secondary"
                         android:layout_marginEnd="16dp" />
 
                     <TextView
@@ -714,15 +720,15 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="About"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="#6B7280" />
+                        android:tint="@color/text_tertiary" />
 
                 </LinearLayout>
 
@@ -735,13 +741,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Session"
-            android:textColor="#6B7280"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
             android:fontFamily="@font/inter_bold"
-            android:layout_marginStart="24dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="12dp" />
+            android:letterSpacing="0.01"
+            android:layout_marginStart="20dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginTop="24dp" />
 
         <!-- Logout Section -->
         <androidx.cardview.widget.CardView
@@ -749,10 +756,10 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginBottom="24dp"
-            app:cardCornerRadius="28dp"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="36dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="@color/background_secondary">
 
             <LinearLayout
                 android:id="@+id/btn_logout"
@@ -760,8 +767,9 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="20dp"
-                android:background="?attr/selectableItemBackground"
+                android:paddingVertical="18dp"
+                android:paddingHorizontal="20dp"
+                android:background="@drawable/bg_ios_row_press"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -769,7 +777,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_logout"
-                    android:tint="#6B7280"
+                    android:tint="@color/text_destructive"
                     android:layout_marginEnd="16dp" />
 
                 <TextView
@@ -777,7 +785,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Logout"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_destructive"
                     android:textSize="16sp"
                     android:fontFamily="@font/inter_medium" />
 
@@ -785,25 +793,32 @@
 
         </androidx.cardview.widget.CardView>
 
-            <!-- Bottom Spacing -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="24dp"
-                android:background="#F5F5F5" />
-
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Fog Overlay -->
+    <!-- Unified frosted header overlay — gradient from opaque at top to transparent at bottom.
+         One single view that covers both toolbar area + dissolve zone below.
+         No separate fog overlay, no z-fighting, totally seamless. -->
     <View
-        android:id="@+id/view_fog_overlay"
+        android:id="@+id/view_toolbar_frost"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:background="@drawable/bg_fog_gradient"
-        android:alpha="0"
-        android:translationZ="10dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:layout_gravity="top" />
+        android:layout_height="112dp"
+        android:layout_gravity="top"
+        android:background="@drawable/bg_toolbar_frosted"
+        android:alpha="0" />
+
+    <!-- Toolbar title — floats on top of everything -->
+    <TextView
+        android:id="@+id/tv_toolbar_title"
+        android:layout_width="wrap_content"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="top|center_horizontal"
+        android:text="My Profile"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/inter_bold"
+        android:gravity="center" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

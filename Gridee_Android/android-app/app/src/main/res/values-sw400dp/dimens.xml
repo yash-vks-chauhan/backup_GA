@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Larger phones (smallestWidth >= 400dp, includes the Galaxy A54 at 411dp).
+         These restore the original onboarding sizing; compact phones use the smaller
+         defaults in values/dimens.xml so the Log-in link stays above the fold. -->
+    <dimen name="welcome_brand_text_size">42sp</dimen>
+    <dimen name="welcome_headline_text_size">40sp</dimen>
+    <dimen name="welcome_subheadline_text_size">18sp</dimen>
+    <dimen name="welcome_brand_margin_top">24dp</dimen>
+    <dimen name="welcome_headline_margin_top">32dp</dimen>
+    <dimen name="welcome_subheadline_margin_top">16dp</dimen>
+    <dimen name="welcome_actions_margin_top">48dp</dimen>
+    <dimen name="welcome_login_margin_top">32dp</dimen>
+
+    <!-- Registration original sizing for >=400dp phones (incl. A54). -->
+    <dimen name="reg_title_text_size">32sp</dimen>
+    <dimen name="reg_title_margin_top">64dp</dimen>
+    <dimen name="reg_first_field_margin_top">48dp</dimen>
+    <dimen name="reg_field_gap">16dp</dimen>
+    <dimen name="reg_button_margin_top">32dp</dimen>
+    <dimen name="reg_login_margin_top">32dp</dimen>
+</resources>

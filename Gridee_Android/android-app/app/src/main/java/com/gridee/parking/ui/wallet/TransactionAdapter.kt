@@ -30,14 +30,13 @@ class TransactionAdapter : ListAdapter<WalletTransaction, TransactionAdapter.Tra
             binding.apply {
                 tvDescription.text = transaction.description
                 tvAmount.text = if (transaction.type == "CREDIT") {
-                    "+₹${transaction.amount}"
+                    "+${transaction.amount}"
                 } else {
-                    "-₹${transaction.amount}"
+                    "-${transaction.amount}"
                 }
                 
                 // Set amount color based on transaction type
-                // Minimalist approach: Monochromatic #111827
-                tvAmount.setTextColor(android.graphics.Color.parseColor("#111827"))
+                tvAmount.setTextColor(androidx.core.content.ContextCompat.getColor(itemView.context, com.gridee.parking.R.color.text_primary))
                 
                 // Format timestamp
                 tvTimestamp.text = formatTimestamp(transaction.timestamp ?: "")

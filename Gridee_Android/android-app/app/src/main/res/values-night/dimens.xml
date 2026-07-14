@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Edit Profile Input Field Outline (1dp hairline for dark mode) -->
+    <dimen name="profile_input_outline_width">1dp</dimen>
+</resources>

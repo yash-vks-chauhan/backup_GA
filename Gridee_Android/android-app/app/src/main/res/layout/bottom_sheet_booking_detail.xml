@@ -27,7 +27,7 @@
                 android:text="Booking Details"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/black"/>
+                android:textColor="@color/text_primary"/>
 
             <ImageButton
                 android:id="@+id/btn_close"
@@ -62,9 +62,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:background="#FFEBEE"
+            android:background="@color/booking_status_pending_bg"
             android:padding="12dp"
-            android:textColor="#C62828"
+            android:textColor="@color/status_text_cancelled"
             android:textSize="14sp"
             android:visibility="gone"/>
 
@@ -114,7 +114,7 @@
                     android:layout_height="1dp"
                     android:layout_marginTop="12dp"
                     android:layout_marginBottom="12dp"
-                    android:background="#E0E0E0"/>
+                    android:background="@color/divider"/>
 
                 <TextView
                     android:id="@+id/tv_check_in_time"
@@ -149,7 +149,7 @@
                     android:layout_height="1dp"
                     android:layout_marginTop="12dp"
                     android:layout_marginBottom="12dp"
-                    android:background="#E0E0E0"/>
+                    android:background="@color/divider"/>
 
                 <TextView
                     android:id="@+id/tv_amount"
@@ -158,7 +158,7 @@
                     android:text="₹200.00"
                     android:textSize="24sp"
                     android:textStyle="bold"
-                    android:textColor="@android:color/black"
+                    android:textColor="@color/text_primary"
                     android:gravity="center"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -171,8 +171,8 @@
             android:layout_marginTop="16dp"
             android:text="\uD83D\uDCF7 Scan QR to Check In"
             android:textSize="16sp"
-            android:backgroundTint="@color/primary"
-            android:textColor="@android:color/white"
+            android:backgroundTint="@color/brand_primary"
+            android:textColor="@color/background_primary"
             android:visibility="gone"/>
 
         <ProgressBar
@@ -190,8 +190,8 @@
             android:layout_marginTop="16dp"
             android:text="\uD83D\uDCF7 Scan QR to Check Out"
             android:textSize="16sp"
-            android:backgroundTint="@color/primary"
-            android:textColor="@android:color/white"
+            android:backgroundTint="@color/brand_primary"
+            android:textColor="@color/background_primary"
             android:visibility="gone"/>
 
         <ProgressBar

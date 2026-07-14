@@ -1,71 +1,337 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    android:padding="24dp"
+    android:background="@color/background_primary"
+    android:fitsSystemWindows="true"
     tools:context=".ui.profile.HelpSupportActivity">
 
-    <LinearLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:paddingBottom="40dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/content_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="12dp">
+
+                <!-- ========== HERO ========== -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_semibold"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="0"
+                    android:text="Support"
+                    android:textColor="@color/text_primary"
+                    android:textSize="30sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:letterSpacing="0"
+                    android:lineSpacingMultiplier="1.25"
+                    android:text="Get help with bookings, payments and your account."
+                    android:textColor="@color/booking_details_support_text"
+                    android:textSize="14sp" />
+
+                <!-- ========== ACTIVE CONVERSATION ========== -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_active_conversation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="26dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/background_secondary"
+                    app:cardCornerRadius="36dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:rippleColor="@color/row_press_overlay">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <View
+                                android:id="@+id/view_active_live_dot"
+                                android:layout_width="7dp"
+                                android:layout_height="7dp"
+                                android:layout_marginEnd="8dp"
+                                android:background="@drawable/bg_support_live_dot" />
+
+                            <TextView
+                                android:id="@+id/tv_active_status"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/inter_medium"
+                                android:includeFontPadding="false"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="5dp"
+                                android:textSize="11.5sp"
+                                tools:text="In progress" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tv_active_subject"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:ellipsize="end"
+                            android:fontFamily="@font/inter_semibold"
+                            android:includeFontPadding="false"
+                            android:letterSpacing="0"
+                            android:maxLines="1"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16.5sp"
+                            tools:text="Payment deducted but booking failed" />
+
+                        <TextView
+                            android:id="@+id/tv_active_snippet"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:ellipsize="end"
+                            android:fontFamily="@font/inter_regular"
+                            android:letterSpacing="0"
+                            android:lineSpacingMultiplier="1.22"
+                            android:maxLines="2"
+                            android:textColor="@color/booking_details_support_text"
+                            android:textSize="13.5sp"
+                            tools:text="Support: Thanks for the details — we're looking into the failed transaction now." />
+
+                        <!-- Status journey stepper (Open → In Progress → Resolved), built in code -->
+                        <LinearLayout
+                            android:id="@+id/layout_status_journey"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="20dp"
+                            android:orientation="vertical" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="18dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/inter_semibold"
+                                android:includeFontPadding="false"
+                                android:letterSpacing="0"
+                                android:text="Continue conversation"
+                                android:textColor="@color/brand_primary"
+                                android:textSize="14sp" />
+
+                            <ImageView
+                                android:layout_width="15dp"
+                                android:layout_height="15dp"
+                                android:layout_marginStart="5dp"
+                                android:contentDescription="@string/back"
+                                android:src="@drawable/ic_arrow_right"
+                                app:tint="@color/brand_primary" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ========== START A REQUEST ========== -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_start_request"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="26dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardBackgroundColor="@color/background_secondary"
+                    app:cardCornerRadius="36dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:rippleColor="@color/row_press_overlay">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="18dp">
+
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:layout_marginEnd="14dp"
+                            android:background="@drawable/circle_background_grey_light">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@string/back"
+                                android:src="@drawable/ic_help"
+                                android:tint="@color/icon_secondary" />
+
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/inter_semibold"
+                                android:includeFontPadding="false"
+                                android:letterSpacing="0"
+                                android:text="Start a request"
+                                android:textColor="@color/text_primary"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:fontFamily="@font/inter_regular"
+                                android:letterSpacing="0"
+                                android:text="Describe an issue and we'll follow up"
+                                android:textColor="@color/booking_details_support_text"
+                                android:textSize="12.5sp" />
+
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_marginStart="8dp"
+                            android:contentDescription="@string/back"
+                            android:src="@drawable/ic_arrow_right"
+                            android:tint="@color/text_tertiary" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ========== YOUR TICKETS (flat, date-grouped like booking/transaction history) ========== -->
+                <ProgressBar
+                    android:id="@+id/progressTickets"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="30dp"
+                    android:indeterminateTint="@color/text_tertiary"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvTicketEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.2"
+                    android:paddingVertical="22dp"
+                    android:text="No tickets yet — anything you raise will show up here."
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/ticketList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Frosted header overlay — fades in as content scrolls beneath it -->
+    <View
+        android:id="@+id/view_toolbar_frost"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_gravity="top"
+        android:alpha="0"
+        android:background="@drawable/bg_toolbar_frosted" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.4">
+        android:layout_gravity="top"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
-        <com.airbnb.lottie.LottieAnimationView
-            android:id="@+id/lottieHelpSupport"
-            android:layout_width="280dp"
-            android:layout_height="280dp"
-            android:contentDescription="Help and support icon"
-            app:lottie_autoPlay="true"
-            app:lottie_fileName="Central icons _ Users.json"
-            app:lottie_loop="true" />
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_back"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/tvHeadline"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
-            android:text="Help &amp; Support is almost here"
-            android:textColor="#000000"
-            android:textSize="24sp" />
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:contentDescription="@string/back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
-            android:id="@+id/tvMessage"
-            android:layout_width="match_parent"
+            android:id="@+id/tv_header_title"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center"
-            android:lineSpacingMultiplier="1.2"
-            android:text="We’re building a comprehensive support center to answer your questions. Stay tuned!"
-            android:textColor="#6B7280"
-            android:textSize="16sp" />
+            android:fontFamily="@font/inter_bold"
+            android:text="Support"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnBackToProfile"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginBottom="24dp"
-        android:text="Back to Profile"
-        android:textAllCaps="false"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        app:backgroundTint="#000000"
-        app:cornerRadius="28dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:rippleColor="#33FFFFFF" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

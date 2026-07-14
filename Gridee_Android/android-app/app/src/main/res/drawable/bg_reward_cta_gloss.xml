@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Foreground gloss for the gold "Watch & claim" CTA. Sits OVER the solid gold
+     button (so it never disturbs the Material ripple/elevation underneath) and turns
+     the flat fill into a struck-metal pill: a soft sheen down from the top edge plus
+     a hairline highlight along the very top, like light catching a bevel. Tuned to
+     the 28dp pill radius of the button. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Top-down sheen -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:centerColor="#0AFFFFFF"
+                android:endColor="#00FFFFFF"
+                android:startColor="#3DFFFFFF"
+                android:type="linear" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+
+    <!-- Crisp top-edge highlight -->
+    <item>
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="0.7dp"
+                android:color="#5CFFFFFF" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+
+</layer-list>

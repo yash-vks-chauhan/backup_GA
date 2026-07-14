@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mid-warning fill: applied when remaining time has dropped below ~25%.
+  Same shape as the green fill so the swap is purely a tint change — no
+  geometry shift.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:startColor="#FBBF24"
+        android:endColor="@color/status_text_pending"
+        android:type="linear" />
+    <corners android:radius="100dp" />
+</shape>

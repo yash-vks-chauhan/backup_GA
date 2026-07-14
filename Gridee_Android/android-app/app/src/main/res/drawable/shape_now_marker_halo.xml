@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Translucent halo behind the now-marker. The Adapter pulses scale + alpha
+  on this view (~2s cycle) so the leading edge of the timeline visibly
+  *breathes* — that's the "live" cue, no decorative radar needed.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#3334C759" />
+    <size
+        android:width="28dp"
+        android:height="28dp" />
+</shape>

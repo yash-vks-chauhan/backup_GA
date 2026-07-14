@@ -25,7 +25,7 @@
         android:textAlignment="center"
         android:textColor="@color/scanner_text_primary"
         android:textSize="18sp"
-        android:fontFamily="sans-serif-medium"
+        android:fontFamily="@font/inter_medium"
         android:layout_marginTop="16dp" />
 
     <TextView
@@ -36,7 +36,7 @@
         android:textAlignment="center"
         android:textColor="@color/scanner_text_secondary"
         android:textSize="14sp"
-        android:fontFamily="sans-serif"
+        android:fontFamily="@font/inter_regular"
         android:layout_marginTop="8dp" />
 
     <TextView
@@ -47,7 +47,7 @@
         android:textAlignment="center"
         android:textColor="@color/scanner_text_primary"
         android:textSize="13sp"
-        android:fontFamily="sans-serif-medium"
+        android:fontFamily="@font/inter_medium"
         android:layout_marginTop="12dp" />
 
     <com.google.android.material.button.MaterialButton
@@ -75,7 +75,7 @@
         android:textColor="@color/scanner_text_primary"
         android:textSize="14sp"
         android:layout_marginTop="20dp"
-        android:fontFamily="sans-serif-medium" />
+        android:fontFamily="@font/inter_medium" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/timeout_manual_input_container"
@@ -89,7 +89,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/vehicle_sheet_manual_hint"
-            android:inputType="textCapCharacters" />
+            android:inputType="textCapCharacters|textNoSuggestions"
+            android:maxLength="16" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton

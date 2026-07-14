@@ -42,7 +42,7 @@
             android:textColor="@color/status_minimal_active_text"
             android:textSize="10sp"
             android:textStyle="normal"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/inter_medium"
             android:includeFontPadding="false" />
     </LinearLayout>
 
@@ -64,7 +64,7 @@
             android:text="Phoenix Mall Parking"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/inter_regular"
             android:layout_marginBottom="2dp" />
 
         <TextView
@@ -75,7 +75,7 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:fontFamily="sans-serif-medium" />
+            android:fontFamily="@font/inter_medium" />
     </LinearLayout>
 
     <!-- Compact Content -->
@@ -111,7 +111,7 @@
                 android:text="MH01AB1234"
                 android:textSize="13sp"
                 android:textColor="@color/text_primary"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/inter_medium"
                 android:layout_weight="1" />
 
             <TextView
@@ -121,7 +121,7 @@
                 android:text="9:00 AM"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -129,7 +129,7 @@
                 android:text=" - "
                 android:textSize="12sp"
                 android:textColor="@color/text_tertiary"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
             <TextView
                 android:id="@+id/tv_end_time"
@@ -138,7 +138,7 @@
                 android:text="6:00 PM"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
             <TextView
                 android:id="@+id/tv_duration"
@@ -147,7 +147,7 @@
                 android:text="(9h)"
                 android:textSize="11sp"
                 android:textColor="@color/text_tertiary"
-                android:fontFamily="sans-serif"
+                android:fontFamily="@font/inter_regular"
                 android:layout_marginStart="6dp" />
         </LinearLayout>
 
@@ -164,7 +164,7 @@
                 android:text="Amount:"
                 android:textSize="11sp"
                 android:textColor="@color/text_tertiary"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
             <View
                 android:layout_width="0dp"
@@ -179,7 +179,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/price_primary"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_medium" />
         </LinearLayout>
 
     </LinearLayout>

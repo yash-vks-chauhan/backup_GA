@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Small solid-gold "+amount" badge — the single warm accent in the earn row,
+     echoing the gold of the hero coin and the primary CTA. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/reward_earn_badge_bg" />
+    <corners android:radius="100dp" />
+</shape>

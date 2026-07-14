@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The "minting chamber": a deep obsidian zone at the top of the reward sheet,
+     quoting the home hero's material so the medallion stays in its native dark
+     setting. Rounded top corners match the sheet; a top-centre "breath" glow
+     keeps the dark glass from reading flat. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Deep obsidian base (stays dark top-to-bottom; the light content surface
+         supplies the transition, not this gradient). -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#131B2E"
+                android:centerColor="#0D1322"
+                android:endColor="#090D18"
+                android:type="linear" />
+            <corners
+                android:topLeftRadius="32dp"
+                android:topRightRadius="32dp" />
+        </shape>
+    </item>
+
+    <!-- Breath of life: subtle top-centre light, like glow hitting dark glass. -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="520dp"
+                android:centerX="0.5"
+                android:centerY="0.04"
+                android:startColor="#1AFFFFFF"
+                android:endColor="#00FFFFFF" />
+            <corners
+                android:topLeftRadius="32dp"
+                android:topRightRadius="32dp" />
+        </shape>
+    </item>
+
+</layer-list>

@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.data.model.AuthResponse
 import com.gridee.parking.data.repository.UserRepository
 import com.gridee.parking.utils.AuthSession
@@ -52,15 +53,27 @@ class JwtLoginViewModel : ViewModel() {
                 
                 if (response.isSuccessful) {
                     response.body()?.let { authResponse ->
+                        val token = authResponse.token?.trim()?.takeIf { it.isNotEmpty() }
+                        if (token == null) {
+                            _authState.value = JwtAuthState.Error(
+                                if (authResponse.mfaRequired == true) {
+                                    "Additional verification is required for this account."
+                                } else {
+                                    "Login successful but no token received"
+                                }
+                            )
+                            return@launch
+                        }
                         // Save JWT token and user info
                         val jwtManager = JwtTokenManager(context)
                         jwtManager.saveAuthToken(
-                            token = authResponse.token,
+                            token = token,
                             userId = authResponse.id,
                             userName = authResponse.name,
                             userRole = authResponse.role
                         )
                         AuthSession.syncLegacyPrefsFromJwt(context)
+                        RemoteConfigManager.refresh(context)
                         NotificationTokenManager.registerCurrentToken(context)
                         
                         _authState.value = JwtAuthState.Success(authResponse)

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Richer dark gradient for dark mode -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:startColor="#1A1A2E"
+                android:centerColor="#12121F"
+                android:endColor="#000000"
+                android:type="linear" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+
+    <item android:drawable="@drawable/bg_diamond_grid" />
+    
+    <!-- Glossy Metallic Sheen / Light Reflection (Under-glass effect) -->
+    <item bottom="40dp">
+        <shape>
+            <gradient
+                android:angle="135"
+                android:startColor="#25FFFFFF"
+                android:centerColor="#00FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:centerX="0.3"
+                android:type="linear" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+    <!-- Fade gradient: pattern fades toward bottom/center where content sits -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="#E6000000"
+                android:centerColor="#66000000"
+                android:endColor="#00000000"
+                android:type="linear" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+</layer-list>

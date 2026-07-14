@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#FFFFFF" />
-    <corners android:radius="28dp" />
-    <stroke android:width="1dp" android:color="#E5E7EB" />
+    <solid android:color="@color/booking_sheet_card_surface" />
+    <corners android:radius="20dp" />
 </shape>

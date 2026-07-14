@@ -38,6 +38,22 @@ object BookingActiveNotificationManager {
         }
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
 
+        // Show standard notification directly without foreground service
+        val notification = buildNotification(context, bookingId, endTimeMillis)
+        val notificationId = notificationId(bookingId)
+        try {
+            NotificationManagerCompat.from(context).notify(notificationId, notification)
+        } catch (e: SecurityException) {
+            // Missing POST_NOTIFICATIONS permission
+        }
+
+        scheduleThresholdUpdates(context, safeBookingId, endTimeMillis)
+    }
+
+    fun buildNotification(context: Context, bookingId: String, endTimeMillis: Long): android.app.Notification {
+        val safeBookingId = bookingId.ifBlank { "active_$endTimeMillis" }
+        val remainingMs = endTimeMillis - System.currentTimeMillis()
+        
         NotificationChannels.ensureDefaultChannel(context)
 
         val endTimeLabel = DateFormat.getTimeFormat(context).format(Date(endTimeMillis))
@@ -61,28 +77,27 @@ object BookingActiveNotificationManager {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(context, NotificationChannels.DEFAULT_CHANNEL_ID)
+        // Standard Notification using NotificationCompat for all versions
+        // This avoids the need for special permissions required by the native Builder for Promoted traits
+        return NotificationCompat.Builder(context, NotificationChannels.DEFAULT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notifications)
             .setContentTitle("Active booking")
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
             .setWhen(endTimeMillis)
-            .setShowWhen(true)
-            .setUsesChronometer(true)
-            .setChronometerCountDown(true)
+            .setShowWhen(false)
+            .setUsesChronometer(false)
+            .setChronometerCountDown(false)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setAutoCancel(false)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_EVENT)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setColor(color)
             .setColorized(true)
             .setContentIntent(pendingIntent)
             .build()
-
-        NotificationManagerCompat.from(context).notify(notificationId(safeBookingId), notification)
-        scheduleThresholdUpdates(context, safeBookingId, endTimeMillis)
     }
 
     fun cancel(context: Context, bookingId: String) {
@@ -96,6 +111,10 @@ object BookingActiveNotificationManager {
 
     fun handleTimerCancel(context: Context, bookingId: String) {
         cancel(context, bookingId)
+    }
+
+    fun notificationId(bookingId: String): Int {
+        return ("active_booking_$bookingId").hashCode()
     }
 
     private fun scheduleThresholdUpdates(context: Context, bookingId: String, endTimeMillis: Long) {
@@ -184,10 +203,6 @@ object BookingActiveNotificationManager {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-    }
-
-    private fun notificationId(bookingId: String): Int {
-        return ("active_booking_$bookingId").hashCode()
     }
 
     private fun buildBookingIntent(context: Context, bookingId: String): Intent {

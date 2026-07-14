@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Close affordance for the dark chamber: faint glass disc + white ripple. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33FFFFFF">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#1FFFFFFF" />
+        </shape>
+    </item>
+</ripple>

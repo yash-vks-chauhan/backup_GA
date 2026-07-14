@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Hero booking card ("Mobility Pass").
+
+  The card reads top-to-bottom as a single journey:
+    eyebrow → spot title → CHECK-IN → rail (with duration capsule) → CHECK-OUT
+    → perforated ticket divider → footer (vehicle chip · amount)
+
+  The rail itself is an amber → muted vertical gradient. Direction (you're
+  starting here, going to there) is implied by the gradient + by the live
+  halo that pulses behind the brand dot at check-in. The destination dot
+  is a hollow ring — clearly "not yet active".
+
+  IDs preserved for BookingsAdapter.HeroBookingViewHolder:
+    card_booking, tv_booking_date, tv_status, view_status_dot,
+    layout_status_pill, tv_parking_spot, tv_location_sub,
+    tv_check_in_time, tv_check_out_time, layout_booking_qr, iv_booking_qr,
+    tv_booking_qr_title, tv_booking_qr_subtitle, tv_vehicle_number,
+    tv_amount, progress_active_timer.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_booking"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="@color/background_secondary"
+    app:cardCornerRadius="32dp"
+    app:cardElevation="6dp"
+    app:rippleColor="#10000000"
+    app:strokeColor="@color/booking_card_border_default"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="22dp"
+        android:paddingBottom="22dp">
+
+        <!-- ───────── Top: date eyebrow + status pill ───────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_booking_date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/inter_bold"
+                android:letterSpacing="0.12"
+                android:text="03 APR 2026"
+                android:textAllCaps="true"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+
+            <LinearLayout
+                android:id="@+id/layout_status_pill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/status_soft_pending"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp">
+
+                <View
+                    android:id="@+id/view_status_dot"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_dot_inactive"
+                    android:backgroundTint="@color/status_text_active"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tv_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_semibold"
+                    android:letterSpacing="0.02"
+                    android:text="Booked"
+                    android:textColor="@color/status_text_pending"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ───────── Spot name + sub-location ───────── -->
+        <TextView
+            android:id="@+id/tv_parking_spot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/inter_bold"
+            android:letterSpacing="-0.03"
+            android:singleLine="true"
+            android:text="Java - Morning"
+            android:textColor="@color/text_primary"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_location_sub"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/inter_medium"
+            android:singleLine="true"
+            android:text="Phoenix Mall, Pune"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <!-- ───────── Body: journey rail (left) + naked QR (right) ───────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Left: dot column (24dp) + label/time column ───────────────
+                 The dot column hosts the brand dot (with halo), the gradient
+                 rail, and the destination ring — vertically stacked and
+                 center-aligned to a single 24dp axis.
+                 The label column hosts the CHECK-IN/CHECK-OUT pair with the
+                 duration capsule between them; spacing matches the rail. -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <!-- Dot column: brand dot · rail · endpoint -->
+                <LinearLayout
+                    android:layout_width="24dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <!-- Brand dot with translucent amber halo behind it.
+                         The halo is the view we pulse from the adapter to
+                         signal "this is your next move". -->
+                    <FrameLayout
+                        android:layout_width="22dp"
+                        android:layout_height="22dp">
+
+                        <View
+                            android:id="@+id/view_journey_dot_halo"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/shape_journey_dot_brand_halo" />
+
+                        <View
+                            android:id="@+id/view_journey_dot_brand"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/shape_journey_dot_brand" />
+                    </FrameLayout>
+
+                    <!-- Gradient rail. layerType=software so the gradient
+                         renders cleanly on a thin (2dp) rectangle. -->
+                    <View
+                        android:id="@+id/view_journey_rail"
+                        android:layout_width="2dp"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="3dp"
+                        android:layout_marginBottom="3dp"
+                        android:background="@drawable/bg_journey_rail_pending"
+                        android:layerType="software" />
+
+                    <!-- Destination: hollow ring -->
+                    <View
+                        android:id="@+id/view_journey_dot_endpoint"
+                        android:layout_width="11dp"
+                        android:layout_height="11dp"
+                        android:background="@drawable/shape_journey_dot_endpoint" />
+                </LinearLayout>
+
+                <!-- Label column: CHECK-IN · duration capsule · CHECK-OUT -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:orientation="vertical">
+
+                    <!-- CHECK-IN row -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="22dp"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_bold"
+                            android:letterSpacing="0.12"
+                            android:text="CHECK-IN"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_check_in_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_bold"
+                        android:letterSpacing="-0.02"
+                        android:text="09:48 am"
+                        android:textColor="@color/text_primary"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <!-- Duration capsule sits in the gap between times,
+                         aligned to the middle of the rail to its left. -->
+                    <TextView
+                        android:id="@+id/tv_duration_capsule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="6dp"
+                        android:background="@drawable/bg_duration_capsule_pending"
+                        android:fontFamily="@font/inter_bold"
+                        android:letterSpacing="0.04"
+                        android:paddingHorizontal="9dp"
+                        android:paddingVertical="3dp"
+                        android:text="4h 0m"
+                        android:textColor="@color/status_text_pending"
+                        android:textSize="10sp" />
+
+                    <!-- CHECK-OUT row -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="22dp"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_bold"
+                            android:letterSpacing="0.12"
+                            android:text="CHECK-OUT"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_check_out_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_bold"
+                        android:letterSpacing="-0.02"
+                        android:text="01:48 pm"
+                        android:textColor="@color/text_primary"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Right: QR on a soft amber-tinted plate. -->
+            <LinearLayout
+                android:id="@+id/layout_booking_qr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:background="@drawable/bg_qr_frame_pending"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="10dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/iv_booking_qr"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/bg_qr_minimal"
+                    android:contentDescription="Booking QR code"
+                    android:padding="6dp"
+                    android:scaleType="fitCenter"
+                    tools:src="@drawable/ic_code_shield" />
+
+                <TextView
+                    android:id="@+id/tv_booking_qr_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:fontFamily="@font/inter_bold"
+                    android:letterSpacing="0.02"
+                    android:text="Show at entry"
+                    android:textColor="@color/status_text_pending"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_booking_qr_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:text="Tap to enlarge"
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ───────── Perforated ticket-stub divider ───────── -->
+        <View
+            android:id="@+id/divider_perforated"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="22dp"
+            android:layout_marginBottom="18dp"
+            android:background="@drawable/bg_perforated_divider_subtle"
+            android:layerType="software" />
+
+        <!-- ───────── Footer: vehicle chip · amount ───────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Vehicle as a soft pill: badge of identity, not free-floating
+                 text. Anchors the bottom-left of the card cleanly. -->
+            <LinearLayout
+                android:id="@+id/chip_vehicle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_vehicle_chip"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp">
+
+                <ImageView
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
+                    android:layout_marginEnd="6dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_car_outlined"
+                    app:tint="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/tv_vehicle_number"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_semibold"
+                    android:letterSpacing="0.02"
+                    android:text="MH04CV4888"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_marginEnd="5dp"
+                android:background="@drawable/bg_gridee_coin_dark"
+                android:fontFamily="@font/inter_bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingTop="1dp"
+                android:text="G"
+                android:textColor="@color/btn_text_on_brand"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_bold"
+                android:letterSpacing="-0.02"
+                android:text="20.00"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Hidden — kept so adapter view-recycling resets don't crash -->
+        <ProgressBar
+            android:id="@+id/progress_active_timer"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:progressDrawable="@drawable/progress_active_timer"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -71,7 +71,9 @@ class UserRepository {
                 name = user.name.trim().takeIf { it.isNotEmpty() },
                 email = user.email.trim().takeIf { it.isNotEmpty() },
                 phone = user.phone.trim().takeIf { it.isNotEmpty() },
-                vehicleNumbers = user.vehicleNumbers.takeIf { it.isNotEmpty() },
+                // Preserve explicit clears: an empty list means "remove all vehicles",
+                // while null means "leave vehicle numbers unchanged".
+                vehicleNumbers = user.vehicleNumbers,
                 parkingLotName = user.parkingLotName?.trim()?.takeIf { it.isNotEmpty() }
             )
 

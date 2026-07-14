@@ -1,254 +1,240 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Root container that extends to screen bottom -->
+<!--
+  iOS 26 floating capsule navbar with a UISegmentedControl-style active pill.
+
+  Each tab has a FIXED width AND height (70dp × 54dp). This is deliberate: it lets
+  the per-tab anchor view (home_active_bg etc) use match_parent without triggering
+  the wrap_content + match_parent measure-pass collapse that previously blew up
+  the capsule's vertical extent. The active pill (morph_pill) sizes itself to the
+  anchor — which spans the whole tab (icon + label) inset by a small margin — so
+  the selected tab reads like a segmented-control segment rather than a halo
+  behind the icon.
+
+  Capsule + bar bottom margin handled at runtime via window insets.
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:id="@+id/bottom_navigation_container"
-    android:background="@drawable/nav_background_edge_to_edge"
-    android:elevation="0dp"
-    android:fitsSystemWindows="false"
-    android:paddingBottom="0dp"
-    android:minHeight="60dp">
+    android:layout_gravity="center_horizontal|bottom"
+    android:layout_marginBottom="32dp"
+    android:background="@drawable/nav_floating_capsule"
+    android:elevation="6dp"
+    android:outlineAmbientShadowColor="#33000000"
+    android:outlineSpotShadowColor="#26000000"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:fitsSystemWindows="false">
 
-    <!-- Navigation content container -->
+    <!-- Active pill. Carries a soft 2dp drop shadow (matches the bookings segment
+         slider). The icon/label group below gets translationZ=4dp so the pill stays
+         behind them in z-order — required because elevation alone would otherwise
+         raise the pill above the icon/label layer and hide them. -->
+    <View
+        android:id="@+id/morph_pill"
+        android:layout_width="72dp"
+        android:layout_height="54dp"
+        android:background="@drawable/nav_active_pill"
+        android:elevation="2dp"
+        android:outlineProvider="background"
+        android:alpha="0"
+        android:layout_gravity="top|start" />
+
     <LinearLayout
         android:id="@+id/nav_container"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:background="@android:color/transparent"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="4dp"
+        android:paddingHorizontal="3dp"
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp"
         android:clipToPadding="false"
-        android:layout_marginBottom="0dp">
+        android:elevation="4dp"
+        android:translationZ="4dp">
 
-        <!-- Home Tab -->
         <FrameLayout
             android:id="@+id/tab_home"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_width="72dp"
+            android:layout_height="54dp"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_margin="2dp">
+            android:focusable="true">
+
+            <View
+                android:id="@+id/home_active_bg"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="invisible" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:paddingBottom="4dp">
+                android:orientation="vertical">
 
-                <FrameLayout
-                    android:layout_width="64dp"
-                    android:layout_height="32dp"
-                    android:layout_marginBottom="6dp"
-                    android:background="@drawable/tab_ripple_effect"
-                    android:duplicateParentState="true">
-
-                    <View
-                        android:id="@+id/home_active_bg"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/active_tab_background"
-                        android:visibility="gone" />
-
-                    <ImageView
-                        android:id="@+id/iv_home"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_home"
-                        app:tint="@color/charcoal_black"
-                        android:scaleType="centerInside" />
-                </FrameLayout>
+                <ImageView
+                    android:id="@+id/iv_home"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="3dp"
+                    android:src="@drawable/ic_home"
+                    app:tint="@color/nav_inactive_tint"
+                    android:scaleType="centerInside"
+                    android:importantForAccessibility="no" />
 
                 <TextView
                     android:id="@+id/tv_home"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Home"
-                    android:textColor="@color/charcoal_black"
-                    android:textSize="12sp"
+                    android:textColor="@color/nav_inactive_tint"
+                    android:textSize="10sp"
                     android:fontFamily="@font/inter_medium"
                     android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
                     android:gravity="center" />
-
             </LinearLayout>
-
         </FrameLayout>
 
-        <!-- Bookings Tab -->
         <FrameLayout
             android:id="@+id/tab_bookings"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_width="84dp"
+            android:layout_height="54dp"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_margin="2dp">
+            android:focusable="true">
+
+            <View
+                android:id="@+id/bookings_active_bg"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="invisible" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:paddingBottom="4dp">
+                android:orientation="vertical">
 
-                <FrameLayout
-                    android:layout_width="64dp"
-                    android:layout_height="32dp"
-                    android:layout_marginBottom="6dp"
-                    android:background="@drawable/tab_ripple_effect"
-                    android:duplicateParentState="true">
-
-                    <View
-                        android:id="@+id/bookings_active_bg"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/active_tab_background"
-                        android:visibility="gone" />
-
-                    <ImageView
-                        android:id="@+id/iv_bookings"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_bookings"
-                        app:tint="@color/charcoal_black"
-                        android:scaleType="centerInside" />
-                </FrameLayout>
+                <ImageView
+                    android:id="@+id/iv_bookings"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="3dp"
+                    android:src="@drawable/ic_bookings"
+                    app:tint="@color/nav_inactive_tint"
+                    android:scaleType="centerInside"
+                    android:importantForAccessibility="no" />
 
                 <TextView
                     android:id="@+id/tv_bookings"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Bookings"
-                    android:textColor="@color/charcoal_black"
-                    android:textSize="12sp"
+                    android:textColor="@color/nav_inactive_tint"
+                    android:textSize="10sp"
                     android:fontFamily="@font/inter_medium"
                     android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
                     android:gravity="center" />
-
             </LinearLayout>
-
         </FrameLayout>
 
-        <!-- Wallet Tab -->
         <FrameLayout
             android:id="@+id/tab_wallet"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_width="84dp"
+            android:layout_height="54dp"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_margin="2dp">
+            android:focusable="true">
+
+            <View
+                android:id="@+id/wallet_active_bg"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="invisible" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:paddingBottom="4dp">
+                android:orientation="vertical">
 
-                <FrameLayout
-                    android:layout_width="64dp"
-                    android:layout_height="32dp"
-                    android:layout_marginBottom="6dp"
-                    android:background="@drawable/tab_ripple_effect"
-                    android:duplicateParentState="true">
-
-                    <View
-                        android:id="@+id/wallet_active_bg"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/active_tab_background"
-                        android:visibility="gone" />
-
-                    <ImageView
-                        android:id="@+id/iv_wallet"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_wallet"
-                        app:tint="@color/charcoal_black"
-                        android:scaleType="centerInside" />
-                </FrameLayout>
+                <ImageView
+                    android:id="@+id/iv_wallet"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="3dp"
+                    android:src="@drawable/ic_wallet"
+                    app:tint="@color/nav_inactive_tint"
+                    android:scaleType="centerInside"
+                    android:importantForAccessibility="no" />
 
                 <TextView
                     android:id="@+id/tv_wallet"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Wallet"
-                    android:textColor="@color/charcoal_black"
-                    android:textSize="12sp"
+                    android:textColor="@color/nav_inactive_tint"
+                    android:textSize="10sp"
                     android:fontFamily="@font/inter_medium"
                     android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
                     android:gravity="center" />
-
             </LinearLayout>
-
         </FrameLayout>
 
-        <!-- Profile Tab -->
         <FrameLayout
             android:id="@+id/tab_profile"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_width="72dp"
+            android:layout_height="54dp"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_margin="2dp">
+            android:focusable="true">
+
+            <View
+                android:id="@+id/profile_active_bg"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="invisible" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:paddingBottom="4dp">
+                android:orientation="vertical">
 
-                <FrameLayout
-                    android:layout_width="64dp"
-                    android:layout_height="32dp"
-                    android:layout_marginBottom="6dp"
-                    android:background="@drawable/tab_ripple_effect"
-                    android:duplicateParentState="true">
-
-                    <View
-                        android:id="@+id/profile_active_bg"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/active_tab_background"
-                        android:visibility="gone" />
-
-                    <ImageView
-                        android:id="@+id/iv_profile"
-                        android:layout_width="24dp"
-                        android:layout_height="20dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_profile_nav"
-                        app:tint="@color/charcoal_black"
-                        android:scaleType="centerInside" />
-                </FrameLayout>
+                <ImageView
+                    android:id="@+id/iv_profile"
+                    android:layout_width="20dp"
+                    android:layout_height="17dp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="3dp"
+                    android:src="@drawable/ic_profile_nav"
+                    app:tint="@color/nav_inactive_tint"
+                    android:scaleType="centerInside"
+                    android:importantForAccessibility="no" />
 
                 <TextView
                     android:id="@+id/tv_profile"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Profile"
-                    android:textColor="@color/charcoal_black"
-                    android:textSize="12sp"
+                    android:textColor="@color/nav_inactive_tint"
+                    android:textSize="10sp"
                     android:fontFamily="@font/inter_medium"
                     android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
                     android:gravity="center" />
-
             </LinearLayout>
-
         </FrameLayout>
 
     </LinearLayout>
 
-</FrameLayout>                                                                                                                                                                 
+</FrameLayout>

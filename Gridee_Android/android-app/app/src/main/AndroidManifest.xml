@@ -6,12 +6,23 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <!-- So the home wordmark can deep-link the follow tap into the Instagram app
+             (Android 11+ package visibility); falls back to the browser if absent. -->
+        <package android:name="com.instagram.android" />
+    </queries>
 
     <application
         android:name=".GrideeApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -19,9 +30,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Gridee"
-        android:usesCleartextTraffic="true"
+        android:usesCleartextTraffic="false"
         android:networkSecurityConfig="@xml/network_security_config"
-        tools:targetApi="31">
+        tools:targetApi="36">
 
         <!-- Google Mobile Ads (AdMob) App ID -->
         <meta-data
@@ -48,11 +59,13 @@
         <receiver
             android:name=".notifications.BookingActiveNotificationReceiver"
             android:exported="false" />
+
+
         
         <activity
-            android:name=".ui.auth.WelcomeActivity"
+            android:name=".ui.auth.SplashActivity"
             android:exported="true"
-            android:theme="@style/Theme.Gridee.NoActionBar">
+            android:theme="@style/Theme.Gridee.LaunchSplash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -60,8 +73,18 @@
         </activity>
 
         <activity
+            android:name=".ui.maintenance.MaintenanceActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gridee.NoActionBar" />
+
+        <activity
+            android:name=".ui.auth.WelcomeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gridee.PostSplashLaunch" />
+
+        <activity
             android:name=".ui.auth.LoginActivity"
-            android:exported="true"
+            android:exported="false"
             android:theme="@style/Theme.Gridee.NoActionBar" />
 
         <activity
@@ -96,7 +119,7 @@
         
         <activity
             android:name=".ui.MainComposeActivity"
-            android:exported="true"
+            android:exported="false"
             android:theme="@style/Theme.Gridee.NoActionBar">
             <!-- Uncomment these lines to make this the main activity -->
             <!--
@@ -109,12 +132,12 @@
         
         <activity
             android:name=".ui.compose.EdgeToEdgeComposeActivity"
-            android:exported="true"
+            android:exported="false"
             android:theme="@style/Theme.Gridee.NoActionBar" />
         
         <activity
             android:name=".ui.demo.EdgeToEdgeDemoActivity"
-            android:exported="true"
+            android:exported="false"
             android:theme="@style/Theme.Gridee.NoActionBar">
             <!-- Test activity - can be made launcher for testing -->
             <!--
@@ -128,25 +151,30 @@
         <activity
             android:name=".ui.main.MainContainerActivity"
             android:exported="false"
-            android:theme="@style/Theme.Gridee.NoActionBar" />
+            android:configChanges="uiMode"
+            android:theme="@style/Theme.Gridee.MainLaunch" />
         
         <activity
             android:name=".ui.operator.OperatorDashboardActivity"
             android:exported="false"
             android:label="Operator Dashboard"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.Gridee.NoActionBar" />
+            android:theme="@style/Theme.Gridee.PostSplashLaunch" />
 
         <activity
             android:name=".ui.operator.OperatorMenuActivity"
             android:exported="false"
-            android:theme="@style/Theme.Gridee.NoActionBar"
-            android:screenOrientation="portrait" />
+            android:theme="@style/Theme.Gridee.NoActionBar" />
 
         <activity
             android:name=".ui.wallet.WalletTopUpActivity"
             android:exported="false"
             android:theme="@style/Theme.Gridee.NoActionBar" />
+
+        <activity
+            android:name=".ui.wallet.WalletAddMoneyActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gridee.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
             
         <activity
             android:name=".ui.activities.TransactionHistoryActivity"
@@ -221,12 +249,25 @@
         <activity
             android:name=".ui.profile.DisplayThemeActivity"
             android:exported="false"
+            android:configChanges="uiMode"
             android:theme="@style/Theme.Gridee.NoActionBar" />
 
         <activity
             android:name=".ui.profile.HelpSupportActivity"
             android:exported="false"
             android:theme="@style/Theme.Gridee.NoActionBar" />
+
+        <activity
+            android:name=".ui.profile.SupportTicketChatActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gridee.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.profile.NewSupportRequestActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gridee.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
         
         <activity
             android:name=".ui.wallet.WalletActivity"
@@ -234,15 +275,13 @@
             android:theme="@style/Theme.Gridee.NoActionBar" />
 
         <activity
-            android:name=".ui.search.SearchActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Gridee.Search"
-            android:windowSoftInputMode="stateVisible|adjustResize" />
-
-        <activity
             android:name=".ui.qr.QrScannerActivity"
             android:exported="false"
             android:theme="@style/Theme.Gridee.NoActionBar" />
+
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            tools:remove="android:screenOrientation" />
 
     </application>
 

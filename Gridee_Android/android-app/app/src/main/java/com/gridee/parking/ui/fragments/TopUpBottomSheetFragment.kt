@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.gridee.parking.R
 import com.gridee.parking.databinding.BottomSheetTopUpBinding
 
 class TopUpBottomSheetFragment : BottomSheetDialogFragment() {
@@ -36,6 +37,7 @@ class TopUpBottomSheetFragment : BottomSheetDialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
         currentBalance = arguments?.getDouble("current_balance", 0.0) ?: 0.0
     }
 

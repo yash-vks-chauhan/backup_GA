@@ -1,5 +1,6 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
+    <!-- Full capsule on a 32dp-tall indicator. Half-height radius = pill. -->
     <solid android:color="@color/segment_track_color" />
-    <corners android:radius="20dp" />
+    <corners android:radius="16dp" />
 </shape>

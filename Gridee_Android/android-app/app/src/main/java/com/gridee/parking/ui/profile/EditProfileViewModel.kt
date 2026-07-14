@@ -1,5 +1,6 @@
 package com.gridee.parking.ui.profile
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -7,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.gridee.parking.data.model.User
 import com.gridee.parking.data.model.UpdateUserRequest
 import com.gridee.parking.data.repository.UserRepository
+import com.gridee.parking.utils.AuthSession
+import com.gridee.parking.utils.UserProfileCache
 import kotlinx.coroutines.launch
 
 class EditProfileViewModel : ViewModel() {
@@ -25,21 +28,33 @@ class EditProfileViewModel : ViewModel() {
     private val _updateSuccess = MutableLiveData<Boolean>()
     val updateSuccess: LiveData<Boolean> = _updateSuccess
 
-    fun loadUserProfile(userId: String) {
+    fun loadUserProfile(context: Context, userId: String) {
         viewModelScope.launch {
+            val cachedUser = UserProfileCache.get(context, userId)
+            if (cachedUser != null) {
+                _userProfile.value = cachedUser
+            }
+
             _isLoading.value = true
             try {
                 val user = userRepository.getUserById(userId)
-                _userProfile.value = user
+                if (user != null) {
+                    _userProfile.value = user
+                    AuthSession.updateCachedUserProfile(context, user)
+                } else if (cachedUser == null) {
+                    _errorMessage.value = "Failed to load profile"
+                }
             } catch (e: Exception) {
-                _errorMessage.value = "Failed to load profile: ${e.message}"
+                if (cachedUser == null) {
+                    _errorMessage.value = "Failed to load profile: ${e.message}"
+                }
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun updateProfile(name: String, email: String, phone: String) {
+    fun updateProfile(context: Context, name: String, email: String, phone: String) {
         val currentUser = _userProfile.value
         if (currentUser == null) {
             _errorMessage.value = "User profile not loaded"
@@ -80,6 +95,7 @@ class EditProfileViewModel : ViewModel() {
                         phone = sanitizedPhone
                     )
                     _userProfile.value = updatedUser
+                    AuthSession.updateCachedUserProfile(context, updatedUser)
                     _updateSuccess.value = true
                 } else {
                     _errorMessage.value = "Failed to update profile"

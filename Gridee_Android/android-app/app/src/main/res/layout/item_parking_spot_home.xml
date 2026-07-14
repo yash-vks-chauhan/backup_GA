@@ -3,145 +3,121 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/card_spot"
-    android:layout_width="200dp"
-    android:layout_height="250dp"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="8dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="0dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="16dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
-    app:cardBackgroundColor="@android:color/white"
-    app:cardCornerRadius="28dp"
-    app:cardElevation="2dp"
-    app:strokeWidth="1dp"
-    app:strokeColor="#E5E7EB"
-    app:rippleColor="#10000000">
+    android:outlineAmbientShadowColor="#1A000000"
+    android:outlineSpotShadowColor="#33000000"
+    app:cardBackgroundColor="@color/background_secondary"
+    app:cardCornerRadius="30dp"
+    app:cardElevation="3dp"
+    app:strokeWidth="0dp">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/bg_card_surface_gradient"
-        android:padding="20dp">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
 
-        <!-- Header: Live Status Pill -->
+        <!-- Custom Icon Circle -->
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/circle_light_gray_background"
+            android:layout_marginEnd="14dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_home_card_motorcycle"
+                app:tint="@color/text_primary"/>
+        </FrameLayout>
+
         <LinearLayout
-            android:id="@+id/layout_live_pill"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/bg_status_pill_live"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="6dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <FrameLayout
-                android:layout_width="12dp"
-                android:layout_height="12dp"
-                android:layout_marginEnd="6dp">
+            <TextView
+                android:id="@+id/tv_spot_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:fontFamily="@font/inter_bold"
+                android:textStyle="bold"
+                android:letterSpacing="-0.01"
+                android:layout_marginBottom="4dp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="TP Avenue" />
 
-                <!-- Faint Ripple (Visual only) -->
+            <LinearLayout
+                android:id="@+id/layout_availability"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/status_soft_active"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:layout_marginTop="0dp">
+
                 <View
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:background="@drawable/shape_circle_green_faint"
-                    android:alpha="0.5"/>
-
-                <!-- Core Dot -->
-                <View
+                    android:id="@+id/view_status_dot"
                     android:layout_width="6dp"
                     android:layout_height="6dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/shape_status_dot_active"/>
-            </FrameLayout>
+                    android:background="@drawable/bg_dot_inactive"
+                    android:backgroundTint="@color/parking_spot_available"
+                    android:layout_marginEnd="6dp" />
 
+                <TextView
+                    android:id="@+id/tv_spot_availability"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/parking_spot_available"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter_semibold"
+                    tools:text="400 Available" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Bold Book Button -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_book"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/gray_200"
+            app:cardCornerRadius="100dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            android:clickable="false"
+            android:focusable="false"
+            android:layout_marginStart="8dp">
+            
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="LIVE"
-                android:textSize="11sp"
-                android:textColor="#059669"
-                android:textStyle="bold"
-                android:fontFamily="@font/inter_bold"
-                android:letterSpacing="0.05"/>
-        </LinearLayout>
-
-        <!-- Spot Name -->
-        <TextView
-            android:id="@+id/tv_spot_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Phoenix Mall"
-            android:textColor="#111827"
-            android:textSize="22sp"
-            android:fontFamily="@font/inter_bold"
-            android:letterSpacing="-0.03"
-            android:lineHeight="28sp"
-            android:maxLines="2"
-            android:ellipsize="end"
-            app:layout_constraintTop_toBottomOf="@id/layout_live_pill"
-            app:layout_constraintStart_toStartOf="parent"/>
-
-        <!-- Availability Section (Grouped with Name) -->
-        <TextView
-            android:id="@+id/tv_spot_availability"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="14"
-            android:textColor="#059669"
-            android:textSize="44sp"
-            android:textStyle="bold"
-            android:fontFamily="@font/inter_bold"
-            android:letterSpacing="-0.04"
-            android:includeFontPadding="false"
-            android:layout_marginTop="12dp"
-            app:layout_constraintTop_toBottomOf="@id/tv_spot_name"
-            app:layout_constraintStart_toStartOf="parent"/>
-
-        <TextView
-            android:id="@+id/tv_label_spots"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="SPOTS AVAILABLE"
-            android:textColor="#6B7280"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:fontFamily="@font/inter_bold"
-            android:letterSpacing="0.05"
-            android:layout_marginTop="2dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_spot_availability"/>
-
-        <!-- Action Arrow Button -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            app:cardCornerRadius="20dp"
-            app:cardBackgroundColor="#F3F4F6"
-            app:cardElevation="0dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="#E5E7EB"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_arrow_right"
-                android:layout_gravity="center"
-                app:tint="#111827"/>
-
+                android:paddingHorizontal="18dp"
+                android:paddingVertical="10dp"
+                android:fontFamily="@font/inter_semibold"
+                android:text="Park"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Compat Helpers (Hidden) -->
-        <TextView android:id="@+id/tv_price_pill" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" app:layout_constraintBottom_toTopOf="parent"/>
-        <LinearLayout android:id="@+id/layout_badge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" app:layout_constraintBottom_toTopOf="parent"/>
-        <LinearLayout android:id="@+id/layout_location_meta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" app:layout_constraintBottom_toTopOf="parent"><TextView android:id="@+id/tv_spot_meta" android:layout_width="wrap_content" android:layout_height="wrap_content"/></LinearLayout>
-        <LinearLayout android:id="@+id/layout_live_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" app:layout_constraintTop_toTopOf="parent"/>
-        <LinearLayout android:id="@+id/layout_status_minimal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" app:layout_constraintTop_toTopOf="parent"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/yashchauhan/gridee-android/Gridee_Android/android-app/app/src/main -type f \\\\\\( -name \"*.kt\" -o -name \"*.xml\" \\\\\\) -exec grep -l \"OperatorDashboard\\\\|OperatorMenu\\\\|OperatorViewModel\" {} \\\\;)",
+      "Bash(./gradlew :app:compileDebugSources)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(ls /Users/yashchauhan/gridee-android/Gridee_Android/android-app/app/src/main/res/drawable/avd_*)",
+      "Bash(ls /Users/yashchauhan/gridee-android/Gridee_Android/android-app/app/src/main/res/drawable/ic_check*)",
+      "Bash(./gradlew :app:compileDebugKotlin)",
+      "Bash(./gradlew :app:processDebugResources)",
+      "Bash(./gradlew :app:assembleDebug)",
+      "Bash(grep -E \"\\\\.\\(kt|xml\\)$\")",
+      "Bash(grep -E \"\\\\.xml$\")",
+      "Bash(awk 'NR<=20 && /card_wallet|^[0-9]+:.*\\(11|27|35|66|89|139|163|171|197|264|266|269|294|296|298|300|302\\):/' /Users/yashchauhan/gridee-android/Gridee_Android/android-app/app/src/main/res/layout/fragment_wallet_new.xml)",
+      "Bash(./gradlew :app:assembleDebug -q)",
+      "Bash(./gradlew :app:assembleDebug --quiet)",
+      "Bash(./gradlew :app:compileDebugKotlin --quiet)",
+      "Bash(./gradlew --stop)",
+      "Bash(adb devices *)",
+      "Bash(adb logcat *)",
+      "Bash(grep -E \"\\\\.\\(kt|xml|java\\)$\")",
+      "Bash(./gradlew :app:lintDebug)",
+      "Bash(./gradlew :app:installDebug)",
+      "WebSearch",
+      "WebFetch(domain:www.donnywals.com)",
+      "WebFetch(domain:designfornative.com)",
+      "WebFetch(domain:www.learnui.design)",
+      "Bash(./gradlew :app:assembleDebug --offline -q)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:www.createwithswift.com)"
+    ]
+  }
+}

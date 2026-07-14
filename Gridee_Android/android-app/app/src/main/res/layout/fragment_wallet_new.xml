@@ -4,137 +4,223 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/background_primary"
     android:fitsSystemWindows="false">
 
     <!-- Sticky Wallet Card Header -->
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_wallet_balance"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="16dp"
-        app:cardCornerRadius="20dp"
+        app:cardCornerRadius="24dp"
         app:cardElevation="12dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:strokeWidth="0.5dp"
+        app:strokeColor="#1FFFFFFF"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Gradient Background -->
-        <LinearLayout
+        <!-- Gradient Background with Decorative Layer -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/wallet_card_gradient"
-            android:orientation="vertical"
-            android:padding="24dp">
+            android:clipChildren="true"
+            android:clipToPadding="false">
 
-            <!-- Header Row: Logo + Add Money Button -->
+            <!-- Content Layer -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="24dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="20dp">
+
+            <!-- Label -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BALANCE"
+                android:textColor="@android:color/white"
+                android:textSize="11sp"
+                android:alpha="0.55"
+                android:letterSpacing="0.18"
+                android:textAllCaps="true"
+                android:fontFamily="@font/inter_medium"
+                android:includeFontPadding="false" />
+
+            <!-- Balance Hero: coin + whole -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:layout_marginTop="12dp">
 
-                <!-- Gridee Wallet Logo & Title -->
-                <LinearLayout
+                <TextView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_gridee_coin"
+                    android:text="G"
+                    android:textColor="#E6FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter_bold"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:importantForAccessibility="no"
+                    android:layout_marginEnd="12dp" />
+
+                <TextView
+                    android:id="@+id/tv_balance_amount"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:maxLines="1"
+                    android:text="0"
+                    android:textColor="@android:color/white"
+                    android:textSize="48sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter_bold"
+                    android:letterSpacing="-0.035"
+                    android:includeFontPadding="false"
+                    android:fontFeatureSettings="'tnum' on, 'lnum' on"
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="22sp"
+                    app:autoSizeMaxTextSize="48sp"
+                    app:autoSizeStepGranularity="1sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="G"
-                        android:textSize="24sp"
-                        android:textColor="@color/white"
-                        android:textStyle="bold"
-                        android:fontFamily="@font/inter_bold"
-                        android:layout_marginEnd="8dp" />
+            </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tv_gridee"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Gridee Wallet"
-                        android:textColor="@color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:fontFamily="@font/inter_bold" />
+            <!-- Gold Hairline Accent -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@drawable/divider_gold_hairline"
+                android:layout_marginTop="30dp" />
 
-                </LinearLayout>
+            <!-- Action Row: Wide Gold Earn Pill + Compact Add Circle -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="18dp">
 
-                <!-- Add Money Button -->
+                <!-- Earn Pill (Hero CTA) -->
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/btn_add_money"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="@color/white"
+                    android:id="@+id/btn_watch_ad"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="26dp"
+                    app:cardElevation="6dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    android:outlineSpotShadowColor="#66C6930A"
+                    android:outlineAmbientShadowColor="#33C6930A"
                     android:clickable="true"
                     android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground">
+                    android:foreground="?attr/selectableItemBackground"
+                    android:contentDescription="Watch ad to earn coins">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_gold_pill_earn" />
+
+                    <!-- Metallic gloss overlay (top-half sheen) -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_gold_gloss_overlay" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="16dp">
+
+                        <!-- Minimal Diamond / Reward Icon -->
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_reward_watch_claim"
+                            app:tint="#FFFFFF" />
+
+                        <!-- Combined Sleek Text -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Earn 10"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/inter_bold"
+                            android:letterSpacing="0.01"
+                            android:includeFontPadding="false"
+                            android:layout_marginStart="8dp" />
+
+                        <!-- Gridee Coin Glyph (Wireframe styled to match text) -->
+                        <TextView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:background="@drawable/bg_gridee_coin_wire"
+                            android:text="G"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/inter_bold"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:importantForAccessibility="no"
+                            android:layout_marginStart="4dp" />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <!-- Add Money Secondary Button -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/btn_add_money"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="12dp"
+                    app:cardCornerRadius="26dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:contentDescription="Add money to wallet">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_add_money_button" />
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
                         android:layout_gravity="center"
-                        android:src="@drawable/ic_plus_circle"
-                        app:tint="@color/text_primary" />
+                        android:src="@drawable/ic_plus_thin"
+                        app:tint="#0A0E13" />
 
                 </androidx.cardview.widget.CardView>
 
             </LinearLayout>
 
-            <!-- Balance Section (Hero Element) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center_horizontal"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Available Balance"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:alpha="0.9"
-                    android:fontFamily="@font/inter_medium" />
-
-                <TextView
-                    android:id="@+id/tv_balance_amount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="₹0.00"
-                    android:textColor="@color/white"
-                    android:textSize="48sp"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/inter_bold"
-                    android:layout_marginTop="8dp"
-                    android:letterSpacing="-0.02" />
-
             </LinearLayout>
 
-            <!-- Footer Info -->
-            <TextView
-                android:id="@+id/tv_last_updated"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Updated now"
-                android:textColor="@color/white"
-                android:textSize="10sp"
-                android:alpha="0.7"
-                android:fontFamily="@font/inter_regular"
-                android:layout_gravity="center_horizontal" />
+        </FrameLayout>
 
-        </LinearLayout>
-
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- Scrollable Content Area with Pull-to-Refresh -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -160,7 +246,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingTop="8dp"
-            android:paddingBottom="24dp"
+            android:paddingBottom="12dp"
             android:clipChildren="false"
             android:clipToPadding="false">
 
@@ -169,7 +255,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Quick Top-up"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:fontFamily="@font/inter_bold"
@@ -215,24 +301,30 @@
                         android:layout_height="match_parent"
                         android:background="@drawable/bg_wallet_chip_ceramic"
                         android:gravity="center"
+                        android:baselineAligned="false"
                         android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="₹"
-                            android:textColor="#6B7280"
-                            android:textSize="14sp"
-                            android:textStyle="normal"
-                            android:fontFamily="@font/inter_medium"
-                            android:layout_marginEnd="2dp" />
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:background="@drawable/bg_gridee_coin_dark"
+                            android:text="G"
+                            android:textColor="@color/btn_text_on_brand"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/inter_bold"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:paddingTop="1dp"
+                            android:importantForAccessibility="no"
+                            android:layout_marginEnd="4dp" />
 
                         <TextView
                             android:id="@+id/tv_quick_add_50"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="50"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="20sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/inter_bold" />
@@ -265,24 +357,30 @@
                         android:layout_height="match_parent"
                         android:background="@drawable/bg_wallet_chip_ceramic"
                         android:gravity="center"
+                        android:baselineAligned="false"
                         android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="₹"
-                            android:textColor="#6B7280"
-                            android:textSize="14sp"
-                            android:textStyle="normal"
-                            android:fontFamily="@font/inter_medium"
-                            android:layout_marginEnd="2dp" />
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:background="@drawable/bg_gridee_coin_dark"
+                            android:text="G"
+                            android:textColor="@color/btn_text_on_brand"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/inter_bold"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:paddingTop="1dp"
+                            android:importantForAccessibility="no"
+                            android:layout_marginEnd="4dp" />
 
                         <TextView
                             android:id="@+id/tv_quick_add_100"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="100"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="20sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/inter_bold" />
@@ -315,24 +413,30 @@
                         android:layout_height="match_parent"
                         android:background="@drawable/bg_wallet_chip_ceramic"
                         android:gravity="center"
+                        android:baselineAligned="false"
                         android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="₹"
-                            android:textColor="#6B7280"
-                            android:textSize="14sp"
-                            android:textStyle="normal"
-                            android:fontFamily="@font/inter_medium"
-                            android:layout_marginEnd="2dp" />
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:background="@drawable/bg_gridee_coin_dark"
+                            android:text="G"
+                            android:textColor="@color/btn_text_on_brand"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/inter_bold"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:paddingTop="1dp"
+                            android:importantForAccessibility="no"
+                            android:layout_marginEnd="4dp" />
 
                         <TextView
                             android:id="@+id/tv_quick_add_200"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="200"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="20sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/inter_bold" />
@@ -357,7 +461,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Activity"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:fontFamily="@font/inter_bold"
@@ -366,23 +470,31 @@
                 <LinearLayout
                     android:id="@+id/tv_view_all"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@drawable/bg_pill_hairline_white"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="4dp">
+                    android:paddingHorizontal="14dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_medium"
+                        android:fontFamily="@font/inter_bold"
                         android:text="View All"
                         android:textAllCaps="false"
-                        android:textColor="#6B7280"
-                        android:textSize="13sp" />
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:includeFontPadding="false" />
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginStart="4dp"
+                        android:src="@drawable/ic_arrow_right_mini"
+                        app:tint="@color/icon_secondary" />
 
                 </LinearLayout>
 
@@ -394,7 +506,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="0dp"
                 android:orientation="vertical">
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -428,7 +540,7 @@
                         android:text="No Transactions"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:layout_marginBottom="4dp" />
 
                     <TextView
@@ -437,7 +549,7 @@
                         android:layout_height="wrap_content"
                         android:text="Your recent activity will show up here"
                         android:textSize="14sp"
-                        android:textColor="#9CA3AF"
+                        android:textColor="@color/text_tertiary"
                         android:gravity="center" />
 
                 </LinearLayout>

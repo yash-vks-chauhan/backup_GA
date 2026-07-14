@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Background tint for the gold CTA: a deeper gold on press so the button visibly
+     darkens under the finger (paired with the spring scale-down in code). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#A87D08" android:state_pressed="true" />
+    <item android:color="@color/reward_button" />
+</selector>

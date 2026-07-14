@@ -7,7 +7,7 @@
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="3dp"
-    app:cardBackgroundColor="#FFFFFF"
+    app:cardBackgroundColor="@color/background_secondary"
     android:foreground="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
@@ -24,10 +24,10 @@
             android:layout_height="wrap_content"
             android:text=""
             tools:text="Parking Name"
-            android:textColor="#333333"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/inter_regular"
             app:layout_constraintEnd_toStartOf="@id/tv_price"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -38,10 +38,10 @@
             android:layout_height="wrap_content"
             android:text=""
             tools:text="$15/hr"
-            android:textColor="#1976D2"
+            android:textColor="@color/primary_color"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/inter_regular"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -52,9 +52,9 @@
             android:layout_marginTop="4dp"
             android:text=""
             tools:text="123 Main St, City"
-            android:textColor="#666666"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/inter_regular"
             app:layout_constraintEnd_toStartOf="@id/tv_distance"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_name" />
@@ -66,9 +66,9 @@
             android:layout_marginTop="4dp"
             android:text=""
             tools:text="250m"
-            android:textColor="#999999"
+            android:textColor="@color/text_tertiary"
             android:textSize="12sp"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/inter_regular"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_price" />
 
@@ -102,9 +102,9 @@
                 android:layout_marginStart="8dp"
                 android:text=""
                 tools:text="4.2 (128)"
-                android:textColor="#666666"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
         </LinearLayout>
 
@@ -115,7 +115,7 @@
             android:layout_marginTop="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#E8F5E8"
+            app:cardBackgroundColor="@color/booking_status_active_bg"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_address">
 
@@ -127,10 +127,10 @@
                 android:paddingVertical="6dp"
                 android:text=""
                 tools:text="25 spots available"
-                android:textColor="#2E7D32"
+                android:textColor="@color/status_text_active"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
         </androidx.cardview.widget.CardView>
 
@@ -150,9 +150,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Amenities:"
-                android:textColor="#999999"
+                android:textColor="@color/text_tertiary"
                 android:textSize="12sp"
-                android:fontFamily="sans-serif" />
+                android:fontFamily="@font/inter_regular" />
 
             <ImageView
                 android:id="@+id/ic_covered"
@@ -160,7 +160,7 @@
                 android:layout_height="20dp"
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_covered"
-                android:tint="#666666"
+                android:tint="@color/text_secondary"
                 android:visibility="gone" />
 
             <ImageView
@@ -169,7 +169,7 @@
                 android:layout_height="20dp"
                 android:layout_marginStart="6dp"
                 android:src="@drawable/ic_security"
-                android:tint="#666666"
+                android:tint="@color/text_secondary"
                 android:visibility="gone" />
 
             <ImageView
@@ -178,7 +178,7 @@
                 android:layout_height="20dp"
                 android:layout_marginStart="6dp"
                 android:src="@drawable/ic_ev_charging"
-                android:tint="#666666"
+                android:tint="@color/text_secondary"
                 android:visibility="gone" />
 
             <ImageView
@@ -187,7 +187,7 @@
                 android:layout_height="20dp"
                 android:layout_marginStart="6dp"
                 android:src="@drawable/ic_cctv"
-                android:tint="#666666"
+                android:tint="@color/text_secondary"
                 android:visibility="gone" />
 
         </LinearLayout>

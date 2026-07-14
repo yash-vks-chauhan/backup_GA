@@ -12,6 +12,8 @@ import com.gridee.parking.data.repository.UserRepository
 import com.gridee.parking.data.repository.WalletRepository
 import com.gridee.parking.data.model.Booking
 import com.gridee.parking.data.model.Vehicle
+import com.gridee.parking.utils.ParkingSpotSchedulePolicy
+import com.gridee.parking.utils.VehicleNumberValidator
 import kotlinx.coroutines.launch
 import java.util.*
 import java.text.SimpleDateFormat
@@ -142,8 +144,9 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
                 val spotsResponse = parkingRepository.getParkingSpotsByLot(safeLotId)
                 if (spotsResponse.isSuccessful) {
                     val spots = spotsResponse.body() ?: emptyList()
-                    println("DEBUG BookingViewModel.loadParkingSpotsForLot: Fetched spots for lotId='$safeLotId', size=${spots.size}")
-                    onResult(spots)
+                    val visibleSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(spots)
+                    println("DEBUG BookingViewModel.loadParkingSpotsForLot: Fetched spots for lotId='$safeLotId', size=${spots.size}, visible=${visibleSpots.size}")
+                    onResult(visibleSpots)
                 } else {
                     println("DEBUG BookingViewModel.loadParkingSpotsForLot: Failed for lotId='$safeLotId', status=${spotsResponse.code()}")
                     onResult(emptyList())
@@ -174,7 +177,7 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
                         }
                     } catch (_: Exception) { /* ignore */ }
                 }
-                onResult(combined)
+                onResult(ParkingSpotSchedulePolicy.filterVisibleSpots(combined))
             } catch (e: Exception) {
                 onResult(emptyList())
             }
@@ -257,6 +260,10 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
     
     // Backend integration - Create actual booking
     fun createBackendBooking() {
+        if (_isLoading.value == true) {
+            return
+        }
+
         val start = _startTime.value
         val end = _endTime.value
         val spot = _parkingSpot.value
@@ -266,21 +273,21 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
             _errorMessage.value = "Please fill all required fields"
             return
         }
-        
+
+        _isLoading.value = true
         viewModelScope.launch {
-            _isLoading.value = true
             try {
-                val existingBookings = bookingRepository.getUserBookings()
-                if (existingBookings.isSuccess) {
-                    val hasOpenBooking = existingBookings.getOrNull()
-                        ?.any { isOpenBookingStatus(it.status) } == true
-                    if (hasOpenBooking) {
-                        _errorMessage.value = "You already have an active or pending booking. Please cancel or complete it first."
-                        _bookingCreated.value = null
-                        return@launch
-                    }
-                } else {
-                    println("BookingViewModel: Failed to check existing bookings: ${existingBookings.exceptionOrNull()?.message}")
+                if (!ParkingSpotSchedulePolicy.canBookNow(spot)) {
+                    _errorMessage.value = ParkingSpotSchedulePolicy.bookingRestrictionMessage(spot)
+                        ?: "This parking spot cannot be booked right now."
+                    _bookingCreated.value = null
+                    return@launch
+                }
+                if (!ParkingSpotSchedulePolicy.isStartTimeAllowed(spot, start)) {
+                    _errorMessage.value = ParkingSpotSchedulePolicy.startTimeRestrictionMessage(spot)
+                        ?: "Selected start time is not allowed for this parking spot."
+                    _bookingCreated.value = null
+                    return@launch
                 }
 
                 bookingRepository.startBooking(
@@ -417,8 +424,9 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
     fun addVehicleToProfile(vehicleNumber: String, onResult: (Boolean) -> Unit) {
         val sharedPref = getApplication<Application>().getSharedPreferences("gridee_prefs", Context.MODE_PRIVATE)
         val userId = sharedPref.getString("user_id", null)
+        val normalizedVehicleNumber = VehicleNumberValidator.normalize(vehicleNumber)
         
-        println("BookingViewModel: addVehicleToProfile called with vehicle: $vehicleNumber, userId: $userId")
+        println("BookingViewModel: addVehicleToProfile called with vehicle: $normalizedVehicleNumber, userId: $userId")
         
         if (userId == null) {
             println("BookingViewModel: No user ID found")
@@ -436,14 +444,14 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
                     println("BookingViewModel: User found, current vehicles: ${user.vehicleNumbers}")
                     
                     // Check if vehicle already exists
-                    if (user.vehicleNumbers.contains(vehicleNumber)) {
+                    if (VehicleNumberValidator.containsEquivalent(user.vehicleNumbers, normalizedVehicleNumber)) {
                         println("BookingViewModel: Vehicle already exists")
                         onResult(false)
                         return@launch
                     }
                     
                     val updatedVehicles = user.vehicleNumbers.toMutableList()
-                    updatedVehicles.add(vehicleNumber)
+                    updatedVehicles.add(normalizedVehicleNumber)
                     
                     println("BookingViewModel: Updating user with vehicles: $updatedVehicles")
                     val updatedUser = user.copy(vehicleNumbers = updatedVehicles)
@@ -463,51 +471,7 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun isOpenBookingStatus(status: String?): Boolean {
-        val normalized = status?.trim()?.lowercase(Locale.ROOT)?.replace(' ', '_') ?: return false
-        if (normalized.isEmpty()) return false
-
-        if (normalized in OPEN_BOOKING_STATUSES) return true
-
-        return normalized.contains("pending") ||
-            normalized.contains("await") ||
-            normalized.contains("reserve") ||
-            normalized.contains("confirm") ||
-            normalized.contains("book") ||
-            normalized.contains("hold") ||
-            normalized.contains("active") ||
-            normalized.contains("in_progress") ||
-            normalized.contains("ongoing") ||
-            normalized.contains("checkin") ||
-            normalized.contains("check_in") ||
-            normalized.contains("checked_in")
-    }
-
-    companion object {
-        private val OPEN_BOOKING_STATUSES = setOf(
-            "pending",
-            "created",
-            "booked",
-            "reserved",
-            "scheduled",
-            "pending_confirmation",
-            "pending-confirmation",
-            "pending_payment",
-            "pending-payment",
-            "awaiting_payment",
-            "awaiting-payment",
-            "awaiting_checkin",
-            "awaiting-checkin",
-            "initiated",
-            "confirmed",
-            "active",
-            "in_progress",
-            "in-progress",
-            "ongoing",
-            "ongoing_session",
-            "live",
-            "checked_in",
-            "checked-in"
-        )
+    companion object
+    {
     }
 }

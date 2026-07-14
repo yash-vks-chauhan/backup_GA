@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ============================================================ -->
+    <!-- Gridee Dark Mode — iOS 26-Inspired Color System              -->
+    <!-- True layered blacks, tonal surface elevation, vibrant status -->
+    <!-- ============================================================ -->
+
+    <!-- Core Backgrounds — Layered Surface System -->
+    <color name="background_primary">#000000</color>
+    <color name="background_secondary">#1C1C1E</color>
+    <color name="background_light">#0A0A0C</color>
+    <color name="background_color">#0A0A0C</color>
+    <color name="background_grouped">#0A0A0C</color>
+    <color name="background_card">#1C1C1E</color>
+    <color name="white">#1C1C1E</color>
+    <!-- Matches the cinematic's #000000 so the loading state fades in seamlessly. -->
+    <color name="splash_loading_bg">#000000</color>
+
+    <!-- Text Colors — Adaptive Hierarchy -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#8E8E93</color>
+    <color name="text_tertiary">#636366</color>
+    <color name="text_quaternary">#48484A</color>
+
+    <!-- Skeleton placeholder fill — used in bottom-sheet loading states -->
+    <color name="skeleton_base">#2A2B30</color>
+
+    <!-- Booking details page subtle column line / hairline -->
+    <color name="booking_details_column_line">#14FFFFFF</color>
+    <color name="booking_details_status_pill_bg">#14FFFFFF</color>
+    <color name="booking_details_section_text">#E5E5EA</color>
+    <color name="booking_details_label_text">#B8BBC2</color>
+    <color name="booking_details_support_text">#A1A7B0</color>
+    <color name="booking_details_delta_late">#E8A48C</color>
+    <color name="booking_details_delta_early">#7DCFA1</color>
+
+    <!-- Brand Colors (Inverted for dark) -->
+    <color name="brand_primary">#FFFFFF</color>
+    <color name="btn_text_on_brand">#000000</color>
+    <color name="brand_surface">#1C1C1E</color>
+    <color name="brand_dark">#FFFFFF</color>
+
+    <!-- Profile Avatar Ring (elevated tonal surface — subtle halo on pure black) -->
+    <color name="avatar_ring">#2C2C2E</color>
+
+    <!-- iOS UIColor.separator (dark) — cool gray at ~65% opacity -->
+    <color name="divider_hairline">#A6545458</color>
+    <!-- iOS-style flat press overlay (~10% white) -->
+    <color name="row_press_overlay">#1AFFFFFF</color>
+    <color name="history_vehicle_plate_surface">#1C1C1E</color>
+    <color name="history_vehicle_plate_stroke">#38383A</color>
+
+    <!-- Destructive red (dark) — matches LogoutConfirmationBottomSheet icon tint -->
+    <color name="text_destructive">#D32F2F</color>
+    <color name="brand_accent">#FFFFFF</color>
+    <color name="primary_color">#FFFFFF</color>
+    <color name="primary">#FFFFFF</color>
+    <color name="primary_dark">#FFFFFF</color>
+
+    <!-- Grays (Adapted) -->
+    <color name="inactive_gray">#636366</color>
+    <color name="light_gray">#3A3A3C</color>
+    <color name="gray_500">#636366</color>
+    <color name="gray_200">#2C2C2E</color>
+    <color name="gray_50">#1C1C1E</color>
+    <color name="darker_gray">#8E8E93</color>
+    <color name="charcoal_black">#E5E5EA</color>
+
+    <!-- Bottom Navigation -->
+    <color name="bottom_nav_active">#FFFFFF</color>
+    <color name="bottom_nav_inactive">#636366</color>
+    <color name="bottom_nav_background">#1C1C1E</color>
+    <!-- iOS 26 floating navbar — UISegmentedControl-style track + selected pill.
+         Capsule is a deep gray track; selected segment is a lighter gray pill. Fully
+         opaque so content can't show through. -->
+    <color name="nav_floating_stroke">#1AFFFFFF</color>
+    <color name="nav_floating_surface">#1C1C1E</color>
+    <color name="nav_active_pill_fill">#3A3A3C</color>
+    <color name="nav_active_pill_stroke">#33FFFFFF</color>
+    <color name="nav_active_pill_on">@color/brand_primary</color>
+    <color name="nav_inactive_tint">#8E8E93</color>
+    <color name="bottom_nav_surface">#1C1C1E</color>
+    <color name="bottom_nav_indicator">#2C2C2E</color>
+    <color name="bottom_nav_shadow">#00000000</color>
+
+    <!-- Status Colors — Vibrant for dark surfaces -->
+    <color name="success_green">#30D158</color>
+    <color name="green">#30D158</color>
+    <color name="red">#FF453A</color>
+    <color name="status_active">#30D158</color>
+    <color name="status_error">#FF453A</color>
+    <color name="status_pending">#FF9F0A</color>
+    <color name="accent">#FF9F0A</color>
+    <color name="orange">#FF9F0A</color>
+    <color name="error">#FF453A</color>
+
+    <!-- Dividers & Borders -->
+    <color name="divider_color">#2C2C2E</color>
+    <color name="divider">#38383A</color>
+    <color name="border_light">#38383A</color>
+    <color name="input_field_outline">#48484A</color>
+
+    <!-- Booking Status Badges -->
+    <color name="booking_status_active_bg">#0D2318</color>
+    <color name="booking_status_active_text">#30D158</color>
+    <color name="booking_status_pending_bg">#2D1A00</color>
+    <color name="booking_status_pending_text">#FF9F0A</color>
+    <color name="booking_status_completed_bg">#2C2C2E</color>
+    <color name="booking_status_completed_text">#8E8E93</color>
+    <color name="booking_card_border_default">#38383A</color>
+    <color name="booking_card_border_pressed">#48484A</color>
+    <color name="booking_card_background_pressed">#2C2C2E</color>
+    <color name="booking_card_ripple">#1AFFFFFF</color>
+    <color name="active_card_stroke">#38383A</color>
+    <color name="btn_navigate_text">#AEAEB2</color>
+    <color name="gridee_coin_text">#FFFFFF</color>
+
+    <!-- Booking Sheet -->
+    <color name="booking_sheet_background">#1C1C1E</color>
+    <color name="booking_sheet_card_surface">#2C2C2E</color>
+    <color name="booking_sheet_divider">#38383A</color>
+    <color name="booking_sheet_icon_tint">#AEAEB2</color>
+    <color name="booking_sheet_secondary_text">#8E8E93</color>
+    <color name="booking_sheet_chip_bg">#2C2C3E</color>
+    <color name="booking_sheet_overlay">#B0000000</color>
+    <color name="booking_sheet_action_surface">#2C2C2E</color>
+    <color name="booking_sheet_action_border">#38383A</color>
+    <color name="quick_add_outline">#38383A</color>
+    <color name="quick_add_ripple">#1AFFFFFF</color>
+    <color name="fab_border">#1AFFFFFF</color>
+
+    <!-- Search Bar -->
+    <color name="search_surface">#1C1C1E</color>
+    <color name="search_surface_tint">#2C2C2E</color>
+    <color name="search_border">#38383A</color>
+    <color name="search_border_focused">#FFFFFF</color>
+    <color name="search_icon_tint">#636366</color>
+    <color name="search_icon_tint_focused">#FFFFFF</color>
+    <color name="search_hint_text">#636366</color>
+    <color name="search_hint_text_active">#8E8E93</color>
+    <color name="search_input_text">#FFFFFF</color>
+    <color name="search_ripple_color">#1AFFFFFF</color>
+
+    <!-- Segmented Control -->
+    <color name="segment_shell_surface">#1C1C1E</color>
+    <color name="segment_shell_border">#38383A</color>
+    <color name="segment_button_bg_checked">#3A3A3C</color>
+    <color name="segment_button_bg_unchecked">#1C1C1E</color>
+    <color name="segment_button_border_checked">#545456</color>
+    <color name="segment_button_border_unchecked">#00000000</color>
+    <color name="segment_button_text_checked">#FFFFFF</color>
+    <color name="segment_button_text_unchecked">#636366</color>
+    <color name="segment_slider_fill">#3A3A3C</color>
+    <color name="segment_slider_border">#00000000</color>
+    <color name="segment_badge_bg">#2C2C3E</color>
+    <color name="segment_badge_text">#A8B8FF</color>
+    <color name="segment_ripple_active">#33FFFFFF</color>
+    <color name="filter_button_ripple">#22FFFFFF</color>
+    <color name="segment_track_color">#1C1C1E</color>
+    <color name="segment_slider_shadow">#40000000</color>
+    <color name="segment_text_selected">#FFFFFF</color>
+    <color name="segment_text_unselected">#636366</color>
+    <color name="scanner_toggle_selected_text">#FFFFFF</color>
+    <color name="segment_active_text">#FFFFFF</color>
+    <color name="segment_badge">#30D158</color>
+    <color name="segment_hover">#1AFFFFFF</color>
+    <color name="segment_glow">#40FFFFFF</color>
+    <color name="segment_indicator_shadow">#26000000</color>
+    <color name="segment_ripple_subtle">#33FFFFFF</color>
+    <color name="segment_ripple_white">#26FFFFFF</color>
+
+    <!-- Bulky Glass Segmented Control -->
+    <color name="bulky_glass_container_fill">#1C1C1E</color>
+    <color name="bulky_glass_container_border">#38383A</color>
+    <color name="bulky_glass_indicator_fill">#3A3A3C</color>
+    <color name="bulky_glass_indicator_border">#545456</color>
+    <color name="bulky_glass_shadow">#40000000</color>
+    <color name="bulky_glass_highlight">#22FFFFFF</color>
+    <color name="bulky_glass_text_selected">#FFFFFF</color>
+    <color name="bulky_glass_text_unselected">#636366</color>
+    <color name="bulky_glass_focus_ring">#33FFFFFF</color>
+    <color name="bulky_glass_pressed">#3AFFFFFF</color>
+
+    <!-- Glass Morphism (Stays mostly the same on dark) -->
+    <color name="glass_container_border">#1AFFFFFF</color>
+    <color name="glass_text_unselected">#99FFFFFF</color>
+    <color name="glass_shadow">#40000000</color>
+    <color name="glass_focus_ring">#33FFFFFF</color>
+    <color name="glass_surface">#14FFFFFF</color>
+    <color name="glass_surface_variant">#0AFFFFFF</color>
+    <color name="glass_border">#1AFFFFFF</color>
+    <color name="glass_highlight_new">#22FFFFFF</color>
+    <color name="glass_shadow_light">#14000000</color>
+    <color name="glass_shadow_medium">#22000000</color>
+    <color name="scanner_glass_surface">#1E1E2832</color>
+    <color name="scanner_glass_surface_elevated">#24222C36</color>
+    <color name="scanner_glass_input_surface">#1B141B23</color>
+    <color name="scanner_glass_border">#34FFFFFF</color>
+    <color name="scanner_glass_highlight">#12FFFFFF</color>
+    <color name="scanner_glass_shadow">#18000000</color>
+
+    <!-- Material Design 3 Tokens -->
+    <color name="md3_primary">#FFFFFF</color>
+    <color name="md3_on_primary">#000000</color>
+    <color name="md3_primary_container">#1C1C1E</color>
+    <color name="md3_on_primary_container">#FFFFFF</color>
+    <color name="md3_surface">#000000</color>
+    <color name="md3_surface_variant">#2C2C2E</color>
+    <color name="md3_on_surface">#EBEBF5</color>
+    <color name="md3_on_surface_variant">#8E8E93</color>
+    <color name="md3_outline">#636366</color>
+    <color name="md3_outline_variant">#38383A</color>
+
+    <!-- iOS 26 Back Button (Dark mode) -->
+    <color name="ios26_back_button_surface">#1C1C1E</color>
+    <color name="ios26_back_button_icon">#FFFFFF</color>
+    <color name="ios26_back_button_shadow_ambient">#08FFFFFF</color>
+    <color name="ios26_back_button_shadow_spot">#00000000</color>
+
+    <!-- Booking compact card specific colors -->
+    <color name="status_minimal_active_text">#30D158</color>
+    <color name="icon_secondary">#8E8E93</color>
+    <color name="price_primary">#FFFFFF</color>
+
+    <!-- Ultra / Card Components -->
+    <color name="ultra_icon_color">#FFFFFF</color>
+    <color name="ultra_border">#38383A</color>
+    <color name="ultra_card_background">#1C1C1E</color>
+    <color name="ultra_price_background">#2C2C2E</color>
+    <color name="ultra_status_background">#0D2318</color>
+    <color name="ultra_status_indicator">#30D158</color>
+
+    <!-- Modal -->
+    <color name="modal_overlay_color">#B3000000</color>
+
+    <!-- Hero Section (Already dark — deepen) -->
+    <color name="home_hero_background">#090C14</color>
+    <color name="home_hero_surface">#0D1117</color>
+    <color name="home_hero_subtext">#99FFFFFF</color>
+    <color name="home_hero_card_border">#1AFFFFFF</color>
+    <color name="hero_minimal_start">#000000</color>
+    <color name="hero_minimal_end">#000000</color>
+
+    <!-- Status Text Colors (vibrant for dark surfaces) -->
+    <color name="status_text_active">#30D158</color>
+    <color name="status_text_pending">#FF9F0A</color>
+    <color name="status_text_completed">#8E8E93</color>
+    <color name="status_text_cancelled">#FF453A</color>
+    <color name="cancel_button_bg">#2D1215</color> <!-- Dark red tint for cancel button -->
+    <color name="status_text_noshow">#64D2FF</color>
+    <color name="status_text_completed_alt">#8E8E93</color>
+    <color name="status_text_debit">#FF453A</color>
+    <color name="status_text_credit">#30D158</color>
+    <color name="status_text_neutral">#8E8E93</color>
+    <color name="parking_spot_available">#30D158</color>
+    <color name="parking_spot_unavailable">#636366</color>
+
+    <!-- Gold (unchanged on dark) -->
+    <color name="gold_dark">#B8860B</color>
+    <color name="gold_light">#FFD700</color>
+    <color name="gold">#DAA520</color>
+
+    <!-- Quick Action Button in Search Bar -->
+    <color name="quick_action_bg">#2C2C2E</color>
+    <color name="quick_action_stroke">@android:color/transparent</color>
+
+    <color name="filter_chip_stroke">#38383A</color>
+    
+    <!-- Circle Icon Background -->
+    <color name="circle_icon_bg">#2C2C2E</color>
+
+    <!-- Slide-to-Book Slider -->
+    <color name="slider_track">#3A3A3C</color>
+    <color name="slider_thumb">#FFFFFF</color>
+    <color name="slider_text">#FFFFFF</color>
+
+    <!-- Confirm Booking Button -->
+    <color name="confirm_btn_bg">#FFFFFF</color>
+    <color name="confirm_btn_bg_pressed">#E0E0E0</color>
+    <color name="confirm_btn_text">#000000</color>
+    <color name="confirm_btn_ripple">#33000000</color>
+    <color name="confirm_btn_disabled_bg">#2C2C2E</color>
+    <color name="confirm_btn_disabled_text">#636366</color>
+    <color name="confirm_btn_success_bg">#30D158</color>
+    <color name="confirm_btn_glow">#18FFFFFF</color>
+
+    <!-- Container stroke — adapts per mode -->
+    <color name="container_stroke">#636366</color>
+
+    <!-- Reward Bottom Sheet -->
+    <color name="reward_button">#DAA520</color>
+    <color name="reward_button_text">#000000</color>
+    <color name="reward_amount_text">#FFD700</color>
+    <color name="reward_chip_bg">#1F1A00</color>
+    <color name="reward_chip_stroke">#3D3000</color>
+    <color name="reward_note_text">#636366</color>
+    <color name="reward_glow_center">#40DAA520</color>
+    <!-- Redesigned earn section (dark): subtle white icon bubble, warm gold badge. -->
+    <color name="reward_earn_bubble">#1FFFFFFF</color>
+    <color name="reward_earn_badge_bg">#DAA520</color>
+    <color name="reward_earn_badge_text">#1A1206</color>
+    <color name="reward_glow_edge">#00DAA520</color>
+
+    <!-- Welcome Gift Bottom Sheet -->
+    <color name="welcome_gift_glow_center">#60FFD700</color>
+    <color name="welcome_gift_glow_edge">#00FFD700</color>
+    <color name="welcome_gift_glow_inner_center">#70FFBF00</color>
+    <color name="welcome_gift_glow_inner_edge">#00FFBF00</color>
+
+    <!-- Uber Style Segment Toggle Colors -->
+    <color name="uber_toggle_container_bg">@android:color/transparent</color>
+    <color name="uber_toggle_container_stroke">#38383A</color>
+    <color name="uber_toggle_selected_bg">#2C2C2E</color>
+    <color name="uber_toggle_selected_text">#FFFFFF</color>
+    <color name="uber_toggle_unselected_text">#8E8E93</color>
+
+    <color name="background_primary_transparent">#00000000</color>
+
+    <!-- Dark-mode hairline for the notification card — separates the elevated
+         card surface from the pure-black page background. -->
+    <color name="notification_card_stroke">@color/divider_hairline</color>
+
+</resources>

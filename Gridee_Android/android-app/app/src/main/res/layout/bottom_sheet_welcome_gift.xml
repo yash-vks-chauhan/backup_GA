@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_universal"
+    android:paddingBottom="0dp"
+    android:clipToOutline="true"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- Drag Handle -->
+    <View
+        android:id="@+id/drag_handle"
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/handle_pill_minimal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Close Button -->
+    <ImageView
+        android:id="@+id/btn_close"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/bg_close_circle"
+        android:src="@drawable/ic_close"
+        android:padding="9dp"
+        app:tint="@color/text_secondary"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:elevation="10dp" />
+
+    <!-- Scrollable Content -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/drag_handle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        android:layout_marginTop="8dp"
+        android:fillViewport="true"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="16dp"
+            android:clipToPadding="false"
+            android:clipChildren="false">
+
+            <!-- Gift Icon with dual glow -->
+            <FrameLayout
+                android:id="@+id/gift_area_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <!-- Outer soft radial glow -->
+                <View
+                    android:id="@+id/view_gift_glow"
+                    android:layout_width="280dp"
+                    android:layout_height="280dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_welcome_gift_glow" />
+
+                <!-- Inner concentrated glow for warmth -->
+                <View
+                    android:id="@+id/view_gift_glow_inner"
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_welcome_gift_glow_inner" />
+
+                <!-- Gift Box Icon -->
+                <ImageView
+                    android:id="@+id/iv_gift_box"
+                    android:layout_width="140dp"
+                    android:layout_height="140dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_gift_box"
+                    android:contentDescription="Welcome Gift" />
+
+            </FrameLayout>
+
+            <!-- Title -->
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:fontFamily="@font/inter_semibold"
+                android:gravity="center"
+                android:text="Welcome to Gridee!"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp" />
+
+            <!-- Coin Amount Chip -->
+            <LinearLayout
+                android:id="@+id/coin_amount_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_reward_amount_chip"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="10dp">
+
+                <TextView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:background="@drawable/bg_gridee_coin_reward"
+                    android:text="G"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter_bold"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:paddingTop="1dp"
+                    android:layout_marginEnd="8dp" />
+
+                <!-- Animated counter text -->
+                <TextView
+                    android:id="@+id/tv_coin_amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@color/reward_amount_text"
+                    android:textSize="22sp"
+                    android:fontFamily="@font/inter_bold" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="20dp"
+                    android:layout_marginHorizontal="12dp"
+                    android:background="@color/reward_chip_stroke" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Free Coins"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter_regular" />
+
+            </LinearLayout>
+
+            <!-- Subtitle -->
+            <TextView
+                android:id="@+id/tv_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:fontFamily="@font/inter_regular"
+                android:gravity="center"
+                android:text="We've added 50 Gridee Coins to your wallet as a welcome gift. Use them for your first booking!"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp"
+                android:lineSpacingExtra="3dp" />
+
+            <!-- Primary Action Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_start_exploring"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:paddingHorizontal="48dp"
+                android:backgroundTint="@color/brand_primary"
+                android:fontFamily="@font/inter_bold"
+                android:text="Start Exploring"
+                android:textColor="@color/btn_text_on_brand"
+                android:textSize="16sp"
+                android:textAllCaps="false"
+                app:cornerRadius="28dp"
+                app:rippleColor="#33FFFFFF"
+                android:elevation="4dp"
+                android:letterSpacing="0.01" />
+
+            <!-- Fine print -->
+            <TextView
+                android:id="@+id/tv_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="center"
+                android:text="Coins are added to your wallet automatically"
+                android:textColor="@color/reward_note_text"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter_regular" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Full-sheet confetti overlay — sits on top of all content -->
+    <com.gridee.parking.ui.views.ConfettiView
+        android:id="@+id/confetti_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:elevation="8dp" />
+
+    <!-- Bottom fog gradient — confetti dissolves into this -->
+    <View
+        android:id="@+id/view_bottom_fog"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:background="@drawable/bg_confetti_bottom_fog"
+        android:alpha="0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:elevation="9dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

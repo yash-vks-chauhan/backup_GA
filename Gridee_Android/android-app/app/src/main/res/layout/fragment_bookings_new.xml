@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/background_primary"
     android:fitsSystemWindows="false">
 
     <!-- AppBarLayout with Collapsing Toolbar -->
@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
-            app:contentScrim="#F5F5F5"
+            app:contentScrim="@color/background_primary"
             app:scrimAnimationDuration="400"
             app:titleEnabled="false"
             android:clipChildren="false"
@@ -58,7 +58,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Bookings"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="32sp"
                         android:textStyle="bold"
                         android:fontFamily="@font/inter_bold"
@@ -111,8 +111,8 @@
                 android:id="@+id/rv_bookings"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingTop="8dp"
-                android:paddingBottom="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="24dp"
                 android:clipToPadding="false"
                 android:scrollbars="none"
                 tools:listitem="@layout/item_booking" />
@@ -161,7 +161,7 @@
                 android:layout_height="wrap_content"
                 android:text="No active bookings"
                 android:textSize="24sp"
-                android:textColor="#374151"
+                android:textColor="@color/text_primary"
                 android:letterSpacing="-0.01"
                 android:fontFamily="@font/inter_bold"
                 android:textAlignment="center"
@@ -169,11 +169,12 @@
 
             <TextView
                 android:id="@+id/tv_empty_subtitle"
-                android:layout_width="300dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:maxWidth="320dp"
                 android:text="When you book a parking spot, you will see your active sessions here."
                 android:textSize="17sp"
-                android:textColor="#9CA3AF"
+                android:textColor="@color/text_tertiary"
                 android:fontFamily="@font/inter_medium"
                 android:gravity="center"
                 android:textAlignment="center"

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  iOS 26 floating tab bar: opaque capsule surface with a hairline stroke and an
+  outline-derived shadow from elevation. Corner radius 32dp gives a pill silhouette
+  on the standard ~60dp content height. Color tokens live in colors.xml so the
+  drawable auto-themes between light and dark.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@color/nav_floating_surface" />
+
+    <stroke
+        android:width="0.5dp"
+        android:color="@color/nav_floating_stroke" />
+
+    <corners android:radius="36dp" />
+
+</shape>

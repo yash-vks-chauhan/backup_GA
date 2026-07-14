@@ -4,9 +4,8 @@ import android.util.Patterns
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.gridee.parking.utils.AuthErrorMapper
 
 class ForgotPasswordViewModel : ViewModel() {
 
@@ -32,7 +31,10 @@ class ForgotPasswordViewModel : ViewModel() {
                 if (task.isSuccessful) {
                     _state.value = ForgotPasswordState.Success
                 } else {
-                    _state.value = ForgotPasswordState.Error(getErrorMessage(task.exception))
+                    val exception = task.exception
+                    val error = if (exception != null) AuthErrorMapper.fromException(exception) else
+                        AuthErrorMapper.UserFacingError("Reset Failed", "Failed to send reset email. Please try again.", isRetryable = true)
+                    _state.value = ForgotPasswordState.Error(error.title, error.message, error.isRetryable)
                 }
             }
     }
@@ -51,17 +53,14 @@ class ForgotPasswordViewModel : ViewModel() {
         return errors
     }
 
-    private fun getErrorMessage(exception: Exception?): String {
-        return when (exception) {
-            is FirebaseAuthInvalidUserException -> "No account found with this email"
-            is FirebaseTooManyRequestsException -> "Too many attempts. Try again later"
-            else -> exception?.message ?: "Failed to send reset email"
-        }
-    }
 }
 
 sealed class ForgotPasswordState {
     object Loading : ForgotPasswordState()
     object Success : ForgotPasswordState()
-    data class Error(val message: String) : ForgotPasswordState()
+    data class Error(
+        val title: String,
+        val message: String,
+        val isRetryable: Boolean = false
+    ) : ForgotPasswordState()
 }

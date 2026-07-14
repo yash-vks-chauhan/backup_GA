@@ -5,12 +5,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.gridee.parking.databinding.ActivityEmailVerificationBinding
+import com.gridee.parking.utils.NotificationHelper
 import com.gridee.parking.ui.main.MainContainerActivity
 import com.gridee.parking.ui.operator.OperatorDashboardActivity
 import com.gridee.parking.utils.AuthSession
@@ -42,8 +42,9 @@ class EmailVerificationActivity : AppCompatActivity() {
         binding = ActivityEmailVerificationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-        window.statusBarColor = android.graphics.Color.parseColor("#F5F5F5")
+        window.statusBarColor = androidx.core.content.ContextCompat.getColor(this, com.gridee.parking.R.color.background_primary)
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
+            !com.gridee.parking.utils.ThemeManager.isDarkMode(this)
 
         val email = intent.getStringExtra(EXTRA_EMAIL).orEmpty()
         if (email.isNotBlank()) {
@@ -96,7 +97,11 @@ class EmailVerificationActivity : AppCompatActivity() {
                 is EmailVerificationState.Error -> {
                     isExchanging = false
                     showLoading(false)
-                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    NotificationHelper.showError(
+                        binding.rootContainer,
+                        title = state.title,
+                        message = state.message
+                    )
                     if (!isCompleted) {
                         binding.tvStatus.text = "Waiting for verification..."
                         scheduleNextPoll()
@@ -126,7 +131,7 @@ class EmailVerificationActivity : AppCompatActivity() {
 
         val user = firebaseAuth.currentUser
         if (user == null) {
-            Toast.makeText(this, "Please sign in again to verify your email", Toast.LENGTH_LONG).show()
+            NotificationHelper.showError(binding.rootContainer, title = "Session Expired", message = "Please sign in again.")
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
@@ -164,7 +169,7 @@ class EmailVerificationActivity : AppCompatActivity() {
                 if (!tokenTask.isSuccessful) {
                     showLoading(false)
                     isExchanging = false
-                    Toast.makeText(this, "Failed to complete verification. Try again.", Toast.LENGTH_LONG).show()
+                    NotificationHelper.showWarning(binding.rootContainer, title = "Verification Failed", message = "Could not complete verification. Please try again.", onClick = { checkVerificationStatus() }, actionButtonText = "Try Again")
                     scheduleNextPoll()
                     return@addOnCompleteListener
                 }
@@ -173,7 +178,7 @@ class EmailVerificationActivity : AppCompatActivity() {
                 if (idToken.isNullOrBlank()) {
                     showLoading(false)
                     isExchanging = false
-                    Toast.makeText(this, "Missing verification token. Try again.", Toast.LENGTH_LONG).show()
+                    NotificationHelper.showWarning(binding.rootContainer, title = "Verification Failed", message = "Could not complete verification. Please try again.", onClick = { checkVerificationStatus() }, actionButtonText = "Try Again")
                     scheduleNextPoll()
                     return@addOnCompleteListener
                 }
@@ -185,16 +190,16 @@ class EmailVerificationActivity : AppCompatActivity() {
     private fun resendVerificationEmail() {
         val user = firebaseAuth.currentUser
         if (user == null) {
-            Toast.makeText(this, "Please sign in again to resend the email", Toast.LENGTH_LONG).show()
+            NotificationHelper.showError(binding.rootContainer, title = "Session Expired", message = "Please sign in again.")
             return
         }
 
         user.sendEmailVerification()
             .addOnSuccessListener {
-                Toast.makeText(this, "Verification email sent", Toast.LENGTH_LONG).show()
+                NotificationHelper.showSuccess(binding.rootContainer, message = "Verification email sent")
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to send email: ${e.message}", Toast.LENGTH_LONG).show()
+            .addOnFailureListener {
+                NotificationHelper.showError(binding.rootContainer, title = "Email Failed", message = "Could not send verification email. Please try again.")
             }
     }
 
@@ -207,7 +212,7 @@ class EmailVerificationActivity : AppCompatActivity() {
         if (intent.resolveActivity(packageManager) != null) {
             startActivity(intent)
         } else {
-            Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show()
+            NotificationHelper.showInfo(binding.rootContainer, message = "No email app found on this device")
         }
     }
 
@@ -229,6 +234,7 @@ class EmailVerificationActivity : AppCompatActivity() {
             else -> {
                 val intent = Intent(this, MainContainerActivity::class.java)
                 intent.putExtra("USER_NAME", user.name)
+                intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
             }
@@ -265,6 +271,7 @@ class EmailVerificationActivity : AppCompatActivity() {
             .putString("user_email", user.email)
             .putString("user_phone", user.phone)
             .putString("user_role", normalizedRole)
+            .putString("parking_lot_id", user.parkingLotId)
             .putString("parking_lot_name", user.parkingLotName)
             .putBoolean("is_logged_in", true)
             .apply()

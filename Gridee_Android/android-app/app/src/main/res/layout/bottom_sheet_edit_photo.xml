@@ -27,10 +27,10 @@
         android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
         android:text="Edit Profile Photo"
-        android:textColor="#212121"
+        android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:fontFamily="sans-serif-medium"
+        android:fontFamily="@font/inter_medium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/dragHandle" />
@@ -44,9 +44,9 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
         android:text="Choose a photo from your device"
-        android:textColor="#757575"
+        android:textColor="@color/text_secondary"
         android:textSize="14sp"
-        android:fontFamily="sans-serif"
+        android:fontFamily="@font/inter_regular"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvTitle" />
@@ -62,7 +62,7 @@
         android:visibility="gone"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
-        app:cardBackgroundColor="#F5F5F5"
+        app:cardBackgroundColor="@color/background_light"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
@@ -87,9 +87,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Tap below to change photo"
-                android:textColor="#757575"
+                android:textColor="@color/text_secondary"
                 android:textSize="13sp"
-                android:fontFamily="sans-serif"
+                android:fontFamily="@font/inter_regular"
                 android:layout_marginTop="12dp" />
 
         </LinearLayout>
@@ -109,7 +109,7 @@
         android:foreground="?attr/selectableItemBackground"
         app:cardCornerRadius="12dp"
         app:cardElevation="0dp"
-        app:cardBackgroundColor="#FFFFFF"
+        app:cardBackgroundColor="@color/background_secondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/cardPhotoPreview">
@@ -140,18 +140,18 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Choose from Gallery"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium" />
+                    android:fontFamily="@font/inter_medium" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Select an existing photo"
-                    android:textColor="#757575"
+                    android:textColor="@color/text_secondary"
                     android:textSize="13sp"
-                    android:fontFamily="sans-serif"
+                    android:fontFamily="@font/inter_regular"
                     android:layout_marginTop="2dp" />
 
             </LinearLayout>
@@ -160,7 +160,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_arrow_right"
-                android:tint="#9E9E9E" />
+                android:tint="@color/text_tertiary" />
 
         </LinearLayout>
 
@@ -179,7 +179,7 @@
         android:foreground="?attr/selectableItemBackground"
         app:cardCornerRadius="12dp"
         app:cardElevation="0dp"
-        app:cardBackgroundColor="#FFFFFF"
+        app:cardBackgroundColor="@color/background_secondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnGallery">
@@ -210,18 +210,18 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Take a Photo"
-                    android:textColor="#212121"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium" />
+                    android:fontFamily="@font/inter_medium" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Use your camera"
-                    android:textColor="#757575"
+                    android:textColor="@color/text_secondary"
                     android:textSize="13sp"
-                    android:fontFamily="sans-serif"
+                    android:fontFamily="@font/inter_regular"
                     android:layout_marginTop="2dp" />
 
             </LinearLayout>
@@ -230,7 +230,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_arrow_right"
-                android:tint="#9E9E9E" />
+                android:tint="@color/text_tertiary" />
 
         </LinearLayout>
 
@@ -251,7 +251,7 @@
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:fontFamily="sans-serif-medium"
+        android:fontFamily="@font/inter_medium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnCamera" />
@@ -267,9 +267,9 @@
         android:background="@drawable/button_grey_outline"
         android:text="Cancel"
         android:textAllCaps="false"
-        android:textColor="#757575"
+        android:textColor="@color/text_secondary"
         android:textSize="16sp"
-        android:fontFamily="sans-serif"
+        android:fontFamily="@font/inter_regular"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnSave" />

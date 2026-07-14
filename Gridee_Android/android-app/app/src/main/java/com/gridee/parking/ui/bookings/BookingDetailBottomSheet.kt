@@ -63,6 +63,11 @@ class BookingDetailBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -204,7 +209,7 @@ class BookingDetailBottomSheet : BottomSheetDialogFragment() {
         binding.btnCancelBooking.setOnClickListener {
             val b = booking ?: return@setOnClickListener
             if (!b.status.equals("pending", true)) {
-                Toast.makeText(requireContext(), "Only pending bookings can be cancelled", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Only booked bookings can be cancelled", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             MaterialAlertDialogBuilder(requireContext())
@@ -217,7 +222,17 @@ class BookingDetailBottomSheet : BottomSheetDialogFragment() {
                         try {
                             val result = bookingRepository.cancelBooking(b.id ?: "")
                             if (result.isSuccess) {
-                                Toast.makeText(requireContext(), "Booking cancelled", Toast.LENGTH_SHORT).show()
+                                // Use MainContainerActivity's robust intent receiver instead of fragile view posts
+                                val mainActivity = requireActivity()
+                                val refundIntent = Intent(mainActivity, com.gridee.parking.ui.main.MainContainerActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                    putExtra(com.gridee.parking.ui.main.MainContainerActivity.EXTRA_SHOW_WALLET_TRANSACTION, true)
+                                    putExtra(com.gridee.parking.ui.main.MainContainerActivity.EXTRA_WALLET_TRANSACTION_TITLE, "Booking Refund")
+                                    putExtra(com.gridee.parking.ui.main.MainContainerActivity.EXTRA_WALLET_TRANSACTION_AMOUNT, "+₹${String.format(java.util.Locale.getDefault(), "%.2f", b.amount)}")
+                                    putExtra(com.gridee.parking.ui.main.MainContainerActivity.EXTRA_WALLET_TRANSACTION_IS_CREDIT, true)
+                                }
+                                mainActivity.startActivity(refundIntent)
+                                
                                 dismissAllowingStateLoss()
                                 viewModel.loadUserBookings()
                             } else {
@@ -237,7 +252,7 @@ class BookingDetailBottomSheet : BottomSheetDialogFragment() {
     private fun updateUI(booking: Booking) {
         // Status styling chip using existing drawables and colors
         val statusNorm = booking.status.lowercase(Locale.getDefault())
-        binding.tvStatus.text = statusNorm.uppercase(Locale.getDefault())
+        binding.tvStatus.text = if (statusNorm == "pending") "BOOKED" else statusNorm.uppercase(Locale.getDefault())
         when (statusNorm) {
             "active" -> {
                 binding.tvStatus.background = resources.getDrawable(R.drawable.status_outlined_active, null)
@@ -282,7 +297,7 @@ class BookingDetailBottomSheet : BottomSheetDialogFragment() {
         val df = SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
         booking.checkInTime?.let { binding.tvCheckInTime.text = "Check-in: ${df.format(it)}" }
         booking.checkOutTime?.let { binding.tvCheckOutTime.text = "Check-out: ${df.format(it)}" }
-        binding.tvAmount.text = "₹${String.format("%.2f", booking.amount)}"
+        binding.tvAmount.text = String.format("%.2f", booking.amount)
     }
 
     private fun showExtendDialog() {
@@ -391,7 +406,7 @@ class BookingDetailBottomSheet : BottomSheetDialogFragment() {
         return when {
             key.contains("INVALID_QR") -> "This QR code doesn't match your booking"
             key.contains("WRONG_STATUS") -> "This booking cannot be checked in/out"
-            key.contains("ALREADY_ACTIVE") -> "Please check out from your current booking first"
+            key.contains("ALREADY_ACTIVE") -> "Your earlier booking is still active. Queued back-to-back bookings will activate automatically."
             key.contains("INSUFFICIENT_FUNDS") || key.contains("PAYMENT") -> "Please top up your wallet to pay penalties"
             key.contains("NOT_FOUND") -> "Booking not found"
             else -> raw

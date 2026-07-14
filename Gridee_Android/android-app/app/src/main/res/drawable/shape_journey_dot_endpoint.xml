@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Hollow ring used at the check-out (destination) stop. Pairs with the solid
+  brand dot at check-in: filled "you are here" → outlined "you'll arrive
+  here". A small but clear navigation cue.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/background_secondary" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/text_tertiary" />
+            <size
+                android:width="11dp"
+                android:height="11dp" />
+        </shape>
+    </item>
+</layer-list>

@@ -25,7 +25,7 @@
             android:layout_gravity="center"
             android:contentDescription="@string/wallet_transaction_icon_content_description"
             android:src="@drawable/ic_wallet_outline"
-            app:tint="#4B5563" />
+            app:tint="@color/icon_secondary" />
 
     </FrameLayout>
 
@@ -41,7 +41,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Wallet Top-up"
-            android:textColor="#111827"
+            android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:fontFamily="@font/inter_bold"
             android:textStyle="normal" />
@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="8 hours ago"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/text_tertiary"
             android:textSize="13sp"
             android:fontFamily="@font/inter_medium" />
 
@@ -70,6 +70,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:baselineAligned="false"
             android:paddingHorizontal="10dp"
             android:paddingVertical="6dp"
             android:background="@drawable/status_soft_active">
@@ -83,14 +84,41 @@
                 android:visibility="gone"/>
 
             <TextView
+                android:id="@+id/tv_sign"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+"
+                android:textColor="@color/status_text_credit"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_medium"
+                android:layout_marginEnd="3dp" />
+
+            <!-- Dynamic Coin Badge inside Pill -->
+            <TextView
+                android:id="@+id/tv_coin_badge"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:background="@drawable/bg_gridee_coin_transaction"
+                android:text="G"
+                android:textColor="@android:color/white"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter_bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingTop="1dp"
+                android:layout_marginEnd="3dp" />
+
+            <TextView
                 android:id="@+id/tv_amount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="+₹100.00"
-                android:textColor="#059669"
+                android:text="100.00"
+                android:textColor="@color/status_text_credit"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_medium" />
         </LinearLayout>
 
     </LinearLayout>

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary"
+    android:fitsSystemWindows="true"
+    tools:context=".ui.profile.SupportTicketChatActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_toolbar_frosted"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_back"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:contentDescription="@string/back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tv_chat_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card_36"
+            android:fontFamily="@font/inter_medium"
+            android:includeFontPadding="false"
+            android:letterSpacing="0"
+            android:paddingHorizontal="11dp"
+            android:paddingVertical="6dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="11.5sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tv_chat_title"
+            tools:text="In progress" />
+
+        <TextView
+            android:id="@+id/tv_chat_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="13dp"
+            android:layout_marginEnd="12dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/inter_bold"
+            android:includeFontPadding="false"
+            android:letterSpacing="0"
+            android:maxLines="1"
+            android:text="Support ticket"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toStartOf="@id/tv_chat_status"
+            app:layout_constraintStart_toEndOf="@id/btn_back"
+            app:layout_constraintTop_toTopOf="@id/btn_back" />
+
+        <TextView
+            android:id="@+id/tv_chat_meta"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="13dp"
+            android:layout_marginTop="6dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/inter_regular"
+            android:letterSpacing="0"
+            android:maxLines="1"
+            android:textColor="@color/booking_details_support_text"
+            android:textSize="12.5sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btn_back"
+            app:layout_constraintTop_toBottomOf="@id/tv_chat_title"
+            tools:text="High priority - Updated 12 Jun, 4:12 PM" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_messages"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="16dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/bottom_panel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_header">
+
+        <LinearLayout
+            android:id="@+id/messages_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="320dp"
+            android:orientation="vertical">
+
+            <ProgressBar
+                android:id="@+id/progress_ticket"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="32dp"
+                android:indeterminateTint="@color/text_tertiary"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tv_empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:fontFamily="@font/inter_medium"
+                android:gravity="center"
+                android:letterSpacing="0"
+                android:lineSpacingMultiplier="1.2"
+                android:paddingVertical="28dp"
+                android:textColor="@color/text_tertiary"
+                android:textSize="14sp"
+                android:visibility="gone"
+                tools:text="No messages yet" />
+
+            <LinearLayout
+                android:id="@+id/message_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        android:id="@+id/bottom_panel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/background_primary"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="14dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:id="@+id/reply_composer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card_36"
+            android:gravity="bottom"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <EditText
+                android:id="@+id/et_reply"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:fontFamily="@font/inter_regular"
+                android:gravity="center_vertical|start"
+                android:hint="Write a reply..."
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine|textCapSentences"
+                android:letterSpacing="0"
+                android:lineSpacingMultiplier="1.2"
+                android:maxLines="4"
+                android:minHeight="44dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="10dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tertiary"
+                android:textSize="15sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_send_reply"
+                android:layout_width="78dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="@color/brand_primary"
+                android:fontFamily="@font/inter_bold"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="Send"
+                android:textAllCaps="false"
+                android:textColor="@color/btn_text_on_brand"
+                android:textSize="14sp"
+                app:cornerRadius="22dp"
+                app:rippleColor="#33FFFFFF" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_closed_notice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card_36"
+            android:fontFamily="@font/inter_medium"
+            android:gravity="center"
+            android:letterSpacing="0"
+            android:lineSpacingMultiplier="1.22"
+            android:padding="17dp"
+            android:text="This ticket is closed. You can still review the conversation."
+            android:textColor="@color/booking_details_support_text"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,12 +5,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
+import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.data.model.AuthResponse
-import com.gridee.parking.data.model.ErrorResponse
 import com.gridee.parking.data.model.UpdateUserRequest
 import com.gridee.parking.data.model.User
 import com.gridee.parking.data.repository.UserRepository
+import com.gridee.parking.utils.AuthErrorMapper
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.JwtTokenManager
 import com.gridee.parking.utils.NotificationTokenManager
@@ -36,31 +36,43 @@ class EmailVerificationViewModel : ViewModel() {
                         val user = handleAuthSuccess(context, auth)
                         _state.value = EmailVerificationState.Success(user)
                     } ?: run {
-                        _state.value = EmailVerificationState.Error("Login successful but no token received")
+                        _state.value = EmailVerificationState.Error("Something Went Wrong", "Please try again.", isRetryable = true)
                     }
                 } else {
-                    _state.value = EmailVerificationState.Error(parseErrorMessage(response.code(), response.errorBody()?.string()))
+                    val error = AuthErrorMapper.fromHttpCode(response.code(), response.errorBody()?.string())
+                    _state.value = EmailVerificationState.Error(error.title, error.message, error.isRetryable)
                 }
             } catch (e: Exception) {
-                _state.value = EmailVerificationState.Error("Network error: ${e.message}")
+                val error = AuthErrorMapper.fromException(e)
+                _state.value = EmailVerificationState.Error(error.title, error.message, error.isRetryable)
             }
         }
     }
 
     private suspend fun handleAuthSuccess(context: Context, auth: AuthResponse): User {
+        val token = auth.token?.trim()?.takeIf { it.isNotEmpty() }
+            ?: throw IllegalStateException(
+                if (auth.mfaRequired == true) {
+                    "Additional verification is required for this account."
+                } else {
+                    "The server did not return a sign-in token. Please try again."
+                }
+            )
+
         val jwtManager = JwtTokenManager(context)
         jwtManager.saveAuthToken(
-            token = auth.token,
+            token = token,
             userId = auth.id,
             userName = auth.name,
             userRole = auth.role
         )
         AuthSession.syncLegacyPrefsFromJwt(context)
+        RemoteConfigManager.refresh(context)
         NotificationTokenManager.registerCurrentToken(context)
 
         val appliedUpdate = applyPendingProfileUpdate(context, auth.id, auth.email)
 
-        return User(
+        val user = User(
             id = auth.id,
             name = appliedUpdate?.name?.takeIf { it.isNotBlank() } ?: auth.name,
             email = auth.email,
@@ -70,6 +82,8 @@ class EmailVerificationViewModel : ViewModel() {
             parkingLotId = auth.user.parkingLotId,
             parkingLotName = appliedUpdate?.parkingLotName ?: auth.user.parkingLotName
         )
+        AuthSession.updateCachedUserProfile(context, user)
+        return user
     }
 
     private suspend fun applyPendingProfileUpdate(
@@ -99,30 +113,14 @@ class EmailVerificationViewModel : ViewModel() {
         return null
     }
 
-    private fun parseErrorMessage(code: Int, errorBody: String?): String {
-        return try {
-            if (!errorBody.isNullOrBlank()) {
-                val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-                errorResponse.message ?: getDefaultErrorMessage(code)
-            } else {
-                getDefaultErrorMessage(code)
-            }
-        } catch (e: Exception) {
-            getDefaultErrorMessage(code)
-        }
-    }
-
-    private fun getDefaultErrorMessage(code: Int): String {
-        return when (code) {
-            400, 401, 404 -> "Invalid credentials"
-            500 -> "Server error. Please try again later"
-            else -> "Login failed. Please check your connection"
-        }
-    }
 }
 
 sealed class EmailVerificationState {
     object Loading : EmailVerificationState()
     data class Success(val user: User) : EmailVerificationState()
-    data class Error(val message: String) : EmailVerificationState()
+    data class Error(
+        val title: String,
+        val message: String,
+        val isRetryable: Boolean = false
+    ) : EmailVerificationState()
 }

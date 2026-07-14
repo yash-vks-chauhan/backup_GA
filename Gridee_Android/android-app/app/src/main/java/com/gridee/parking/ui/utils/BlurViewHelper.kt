@@ -2,8 +2,8 @@ package com.gridee.parking.ui.utils
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
@@ -13,27 +13,48 @@ import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicBlur
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.view.WindowManager
 import androidx.annotation.RequiresApi
 
 /**
- * Helper class to apply backdrop blur effects to views
- * Provides Apple-style glassmorphism with actual blur behind elements
+ * Utilities for Android blur effects.
+ * Note: View RenderEffect blurs a view's rendered content, not arbitrary content behind it.
+ * For actual backdrop blur, Android exposes window-level blur APIs on Android 12+.
  */
 object BlurViewHelper {
 
     /**
-     * Apply backdrop blur to a view (API 31+)
-     * This uses the native RenderEffect for best performance
+     * Blur the rendered content of a view on Android 12+.
      */
     @RequiresApi(Build.VERSION_CODES.S)
-    fun applyModernBlur(view: View, blurRadius: Float = 25f) {
+    fun applyModernBlur(view: View, blurRadius: Float = 25f, saturation: Float = 1f) {
         try {
+            if (blurRadius <= 0.05f && saturation >= 0.999f) {
+                view.setRenderEffect(null)
+                return
+            }
+
+            val safeRadius = blurRadius.coerceAtLeast(0.01f)
             val blurEffect = RenderEffect.createBlurEffect(
-                blurRadius,
-                blurRadius,
+                safeRadius,
+                safeRadius,
                 Shader.TileMode.CLAMP
             )
-            view.setRenderEffect(blurEffect)
+
+            val effect = if (saturation < 0.999f) {
+                val colorMatrix = ColorMatrix().apply {
+                    setSaturation(saturation.coerceIn(0f, 1f))
+                }
+                RenderEffect.createColorFilterEffect(
+                    ColorMatrixColorFilter(colorMatrix),
+                    blurEffect
+                )
+            } else {
+                blurEffect
+            }
+
+            view.setRenderEffect(effect)
         } catch (e: Exception) {
             // Fallback silently if blur fails
             e.printStackTrace()
@@ -76,6 +97,34 @@ object BlurViewHelper {
      */
     fun supportsNativeBlur(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    }
+
+    /**
+     * Apply Android 12+ window blur when the UI is hosted in a separate window
+     * such as a dialog or bottom sheet.
+     */
+    @RequiresApi(Build.VERSION_CODES.S)
+    fun applyWindowBlur(
+        window: Window,
+        backgroundBlurRadius: Int = 48,
+        blurBehindRadius: Int = 20,
+        dimAmount: Float = 0.12f
+    ) {
+        val attributes = window.attributes
+        attributes.flags = attributes.flags or WindowManager.LayoutParams.FLAG_BLUR_BEHIND
+        attributes.blurBehindRadius = blurBehindRadius.coerceAtLeast(0)
+        attributes.dimAmount = dimAmount.coerceIn(0f, 1f)
+        window.attributes = attributes
+        window.setBackgroundBlurRadius(backgroundBlurRadius.coerceAtLeast(0))
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    fun clearWindowBlur(window: Window) {
+        val attributes = window.attributes
+        attributes.blurBehindRadius = 0
+        attributes.flags = attributes.flags and WindowManager.LayoutParams.FLAG_BLUR_BEHIND.inv()
+        window.attributes = attributes
+        window.setBackgroundBlurRadius(0)
     }
 
     /**

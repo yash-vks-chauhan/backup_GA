@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Layer 1: Full-height dissolve — long smooth tail -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="#F5F5F5"
+                android:centerColor="#CCF5F5F5"
+                android:endColor="#00F5F5F5"
+                android:centerY="0.38"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Layer 2: Mid-band reinforcement — fills the gap between solid top and tail -->
+    <item android:bottom="40dp">
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="#D9F5F5F5"
+                android:centerColor="#80F5F5F5"
+                android:endColor="#00F5F5F5"
+                android:centerY="0.5"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Layer 3: Top anchor — fully opaque behind title for readability -->
+    <item android:bottom="68dp">
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="#F5F5F5"
+                android:endColor="#00F5F5F5"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>

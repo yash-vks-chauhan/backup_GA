@@ -2,6 +2,7 @@ package com.gridee.parking.data.api
 
 import com.gridee.parking.data.model.AuthRequest
 import com.gridee.parking.data.model.AuthResponse
+import com.gridee.parking.data.model.AppConfigResponse
 import com.gridee.parking.data.model.Booking
 import com.gridee.parking.data.model.FirebaseTokenExchangeRequest
 import com.gridee.parking.data.model.ParkingLot
@@ -11,6 +12,7 @@ import com.gridee.parking.data.model.UserRegistration
 import com.gridee.parking.data.model.UpdateUserRequest
 import com.gridee.parking.data.model.WalletDetails
 import com.gridee.parking.data.model.WalletTransaction
+import com.gridee.parking.data.model.WalletTransactionsResponse
 import com.gridee.parking.data.model.PaymentInitiateRequest
 import com.gridee.parking.data.model.PaymentInitiateResponse
 import com.gridee.parking.data.model.PaymentCallbackRequest
@@ -23,6 +25,10 @@ import com.gridee.parking.data.model.CreateBookingRequest
 import com.gridee.parking.data.model.DeviceTokenRegisterRequest
 import com.gridee.parking.data.model.DeviceTokenUnregisterRequest
 import com.gridee.parking.data.model.SpotAvailabilityInfo
+import com.gridee.parking.data.model.AddSupportTicketMessageRequest
+import com.gridee.parking.data.model.CreateSupportTicketRequest
+import com.gridee.parking.data.model.SupportTicket
+import com.google.gson.JsonElement
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -34,6 +40,11 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
+
+    // ========== App Configuration ==========
+
+    @GET("api/config/all")
+    suspend fun getAppConfig(): Response<AppConfigResponse>
     
     // ========== Authentication Endpoints ==========
     
@@ -76,6 +87,27 @@ interface ApiService {
         @Body request: DeviceTokenUnregisterRequest
     ): Response<Void>
 
+    // ========== Support Ticket Endpoints ==========
+
+    @POST("api/support/tickets")
+    suspend fun createSupportTicket(
+        @Body request: CreateSupportTicketRequest
+    ): Response<SupportTicket>
+
+    @GET("api/support/tickets/my")
+    suspend fun getMySupportTickets(): Response<List<SupportTicket>>
+
+    @GET("api/support/tickets/{ticketId}")
+    suspend fun getSupportTicket(
+        @Path("ticketId") ticketId: String
+    ): Response<SupportTicket>
+
+    @POST("api/support/tickets/{ticketId}/messages")
+    suspend fun addSupportTicketMessage(
+        @Path("ticketId") ticketId: String,
+        @Body request: AddSupportTicketMessageRequest
+    ): Response<SupportTicket>
+
     @GET("api/users/{id}")
     suspend fun getUserById(@Path("id") userId: String): Response<User>
     
@@ -85,6 +117,9 @@ interface ApiService {
     // Parking lots and spots endpoints
     @GET("api/parking-lots")
     suspend fun getParkingLots(): Response<List<ParkingLot>>
+
+    @GET("api/parking-lots")
+    suspend fun getParkingLotsPayload(): Response<JsonElement>
     
     @GET("api/parking-lots/list/by-names")
     suspend fun getParkingLotNames(): Response<List<String>>
@@ -96,20 +131,74 @@ interface ApiService {
     @GET("api/parking-spots")
     suspend fun getParkingSpots(): Response<List<ParkingSpot>>
 
-    // Correct backend path for by-lot spots
+    @GET("api/parking-spots")
+    suspend fun getParkingSpotsPayload(): Response<JsonElement>
+
+    @GET("api/operator/parking-spots")
+    suspend fun getOperatorParkingSpots(): Response<List<ParkingSpot>>
+
+    @GET("api/operator/parking-spots")
+    suspend fun getOperatorParkingSpotsPayload(): Response<JsonElement>
+
+    // Latest public lot-scoped spot endpoints
+    @GET("api/parking-lots/{lotId}/spots")
+    suspend fun getParkingSpotsForLot(@Path("lotId") lotId: String): Response<List<ParkingSpot>>
+
+    @GET("api/parking-lots/{lotId}/spots")
+    suspend fun getParkingSpotsForLotPayload(@Path("lotId") lotId: String): Response<JsonElement>
+
+    // Legacy by-lot spot endpoints kept as fallback during backend rollout
     @GET("api/parking-spots/lot/{lotId}")
     suspend fun getParkingSpotsByLot(@Path("lotId") lotId: String): Response<List<ParkingSpot>>
+
+    @GET("api/parking-spots/lot/{lotId}")
+    suspend fun getParkingSpotsByLotPayload(@Path("lotId") lotId: String): Response<JsonElement>
 
     // Single spot by ID (non-admin)
     @GET("api/parking-spots/id/{id}")
     suspend fun getParkingSpotById(@Path("id") id: String): Response<ParkingSpot>
+
+    @GET("api/parking-lots/{lotId}/spots/{spotId}/available")
+    suspend fun isParkingSpotAvailableForLot(
+        @Path("lotId") lotId: String,
+        @Path("spotId") spotId: String,
+        @Query("startTime") startTime: String,
+        @Query("endTime") endTime: String
+    ): Response<Boolean>
     
-    // Backend endpoints for user bookings list/history
+    // Latest lot-scoped user booking endpoints
+    @GET("api/parking-lots/{lotId}/bookings/{userId}/all")
+    suspend fun getUserBookingsForLot(
+        @Path("lotId") lotId: String,
+        @Path("userId") userId: String
+    ): Response<JsonElement>
+
+    @GET("api/parking-lots/{lotId}/bookings/{userId}/history")
+    suspend fun getUserBookingHistoryForLot(
+        @Path("lotId") lotId: String,
+        @Path("userId") userId: String
+    ): Response<JsonElement>
+
+    @POST("api/parking-lots/{lotId}/bookings/{userId}/create")
+    suspend fun createBookingForLot(
+        @Path("lotId") lotId: String,
+        @Path("userId") userId: String,
+        @Body request: CreateBookingRequest
+    ): Response<Booking>
+
+    @GET("api/parking-lots/{lotId}/bookings/{userId}/{bookingId}")
+    suspend fun getBookingByIdForLot(
+        @Path("lotId") lotId: String,
+        @Path("userId") userId: String,
+        @Path("bookingId") bookingId: String
+    ): Response<Booking>
+
+    // Legacy backend endpoints for user bookings list/history
     @GET("api/bookings/{userId}/all")
-    suspend fun getUserBookings(@Path("userId") userId: String): Response<List<Booking>>
+    suspend fun getUserBookings(@Path("userId") userId: String): Response<JsonElement>
     
     @GET("api/bookings/{userId}/all/history")
-    suspend fun getUserBookingHistory(@Path("userId") userId: String): Response<List<Booking>>
+    suspend fun getUserBookingHistory(@Path("userId") userId: String): Response<JsonElement>
     
     // Booking creation endpoints
     // Create booking with JSON body per backend DTO
@@ -130,7 +219,12 @@ interface ApiService {
     suspend fun getWalletDetails(@Path("userId") userId: String): Response<WalletDetails>
     
     @GET("api/users/{userId}/wallet/transactions")
-    suspend fun getWalletTransactions(@Path("userId") userId: String): Response<List<WalletTransaction>>
+    suspend fun getWalletTransactions(
+        @Path("userId") userId: String,
+        @Query("page") page: Int? = null,
+        @Query("size") size: Int? = null,
+        @Query("sort") sort: List<String>? = null
+    ): Response<WalletTransactionsResponse>
     
     @POST("api/users/{userId}/wallet/topup")
     suspend fun topUpWallet(
@@ -184,12 +278,24 @@ interface ApiService {
         @Body request: CheckInRequest
     ): Response<Booking>
 
+    @POST("api/operator/parking-lots/{parkingLotId}/bookings/checkin")
+    suspend fun operatorCheckInForLot(
+        @Path("parkingLotId") parkingLotId: String,
+        @Body request: CheckInRequest
+    ): Response<Booking>
+
     /**
      * Operator check-out (no userId/bookingId required)
      * POST /api/operator/bookings/checkout
      */
     @POST("api/operator/bookings/checkout")
     suspend fun operatorCheckOut(
+        @Body request: CheckInRequest
+    ): Response<Booking>
+
+    @POST("api/operator/parking-lots/{parkingLotId}/bookings/checkout")
+    suspend fun operatorCheckOutForLot(
+        @Path("parkingLotId") parkingLotId: String,
         @Body request: CheckInRequest
     ): Response<Booking>
     
@@ -235,6 +341,13 @@ interface ApiService {
     @GET("api/parking-spots/available")
     suspend fun getAvailableSpots(
         @Query("lotId") lotId: String,
+        @Query("startTime") startTime: String,
+        @Query("endTime") endTime: String
+    ): Response<List<SpotAvailabilityInfo>>
+
+    @GET("api/parking-lots/{lotId}/spots/available")
+    suspend fun getAvailableSpotsForLot(
+        @Path("lotId") lotId: String,
         @Query("startTime") startTime: String,
         @Query("endTime") endTime: String
     ): Response<List<SpotAvailabilityInfo>>

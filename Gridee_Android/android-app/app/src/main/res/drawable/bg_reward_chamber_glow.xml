@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Warm gold halo behind the chamber medallion — tuned to the coin's own gold
+     (#E3B64A) so the light feels like it radiates from the minted face. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="150dp"
+        android:centerX="0.5"
+        android:centerY="0.5"
+        android:startColor="#3DE3B64A"
+        android:centerColor="#1FE3B64A"
+        android:endColor="#00E3B64A" />
+</shape>

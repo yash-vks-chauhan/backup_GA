@@ -4,124 +4,192 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/selectableItemBackground"
+    android:background="@drawable/bg_history_row_press"
     android:clickable="true"
-    android:focusable="true"
-    android:paddingHorizontal="24dp"
-    android:paddingTop="20dp">
+    android:focusable="true">
 
-    <!-- Left Icon Container -->
-    <FrameLayout
-        android:id="@+id/container_icon"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:background="@drawable/bg_icon_rounded_square_white"
+    <!-- Leading circular tile — soft status-tinted avatar with ticket icon.
+         Vertically centered with the text block. -->
+    <ImageView
+        android:id="@+id/iv_icon_tile"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="20dp"
+        android:background="@drawable/bg_history_tile_completed"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:padding="11dp"
+        android:src="@drawable/ic_booking_history_ticket"
+        app:layout_constraintBottom_toBottomOf="@id/tv_meta_secondary"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="@id/tv_parking_spot"
+        app:tint="@color/status_text_active" />
 
-        <ImageView
-            android:id="@+id/iv_icon"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_booking_history_ticket"
-            app:tint="#6B7280" />
-
-    </FrameLayout>
-
-    <!-- Content Section -->
-    <LinearLayout
-        android:id="@+id/layout_content"
+    <!-- Tier 1 — Spot identifier (hero). Matches the price weight on the right
+         (inter_bold, no synthetic) — same "in-between" bold as the header uses
+         minus the synthetic-bold boost. -->
+    <TextView
+        android:id="@+id/tv_parking_spot"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="12dp"
-        android:orientation="vertical"
-        android:gravity="center_vertical"
-        app:layout_constraintEnd_toStartOf="@+id/layout_status_pill"
-        app:layout_constraintStart_toEndOf="@id/container_icon"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/inter_bold"
+        android:includeFontPadding="false"
+        android:letterSpacing="-0.01"
+        android:maxLines="1"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toStartOf="@id/layout_amount"
+        app:layout_constraintStart_toEndOf="@id/iv_icon_tile"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="PL1" />
 
-        <!-- Spot Name -->
+    <!-- Tier 2 — Vehicle plate as a two-segment chip: a quiet leading
+         car glyph, a hairline divider, then the plate text. The two
+         zones give the chip more craft than a flat label without
+         adding visual weight. -->
+    <LinearLayout
+        android:id="@+id/chip_vehicle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_history_vehicle_plate"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:maxWidth="220dp"
+        android:minHeight="25dp"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="4dp"
+        app:layout_constraintStart_toEndOf="@id/iv_icon_tile"
+        app:layout_constraintTop_toBottomOf="@id/tv_parking_spot">
+
+        <ImageView
+            android:layout_width="13dp"
+            android:layout_height="13dp"
+            android:layout_marginEnd="7dp"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_car_outlined"
+            app:tint="@color/text_tertiary" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="12dp"
+            android:layout_marginEnd="7dp"
+            android:background="@color/divider_hairline" />
+
         <TextView
-            android:id="@+id/tv_parking_spot"
+            android:id="@+id/tv_meta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
-            android:fontFamily="@font/inter_bold"
+            android:fontFamily="@font/inter_semibold"
+            android:includeFontPadding="false"
             android:maxLines="1"
-            android:text="Spot A-15"
-            android:textColor="#111827"
-            android:textSize="16sp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            tools:text="KA 01 AB 1234" />
+
+    </LinearLayout>
+
+    <!-- Tier 3 — Timing: date · duration (hero-level utility per the spec). -->
+    <TextView
+        android:id="@+id/tv_meta_secondary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="3dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/inter_medium"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textColor="@color/text_tertiary"
+        android:textSize="13sp"
+        app:layout_constraintEnd_toStartOf="@id/layout_amount"
+        app:layout_constraintStart_toEndOf="@id/iv_icon_tile"
+        app:layout_constraintTop_toBottomOf="@id/chip_vehicle"
+        tools:text="Today, 2:30 PM  ·  1h 18m" />
+
+    <!-- Right column: G coin + amount (co-hero with the spot name) -->
+    <LinearLayout
+        android:id="@+id/layout_amount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/tv_parking_spot"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_parking_spot">
+
+        <TextView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_gridee_coin_brand"
+            android:fontFamily="@font/inter_bold"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:paddingTop="1dp"
+            android:text="G"
+            android:textColor="@color/background_primary"
+            android:textSize="11sp"
             android:textStyle="bold" />
 
-        <!-- Date -->
-        <TextView
-            android:id="@+id/tv_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:fontFamily="@font/inter_medium"
-            android:text="Oct 10, 2025"
-            android:textColor="#6B7280"
-            android:textSize="14sp" />
-
-        <!-- Price -->
         <TextView
             android:id="@+id/tv_price"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:fontFamily="@font/inter_bold"
-            android:text="₹150"
-            android:textColor="#111827"
-            android:textSize="14sp" />
+            android:fontFeatureSettings="tnum"
+            android:includeFontPadding="false"
+            android:letterSpacing="-0.01"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            tools:text="10.00" />
 
     </LinearLayout>
 
-    <!-- Status Pill (Right) -->
-    <LinearLayout
-        android:id="@+id/layout_status_pill"
+    <!-- Right column: status word, aligned with the vehicle line -->
+    <TextView
+        android:id="@+id/tv_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/status_soft_completed"
-        android:gravity="center"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="6dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginEnd="20dp"
+        android:fontFamily="@font/inter_medium"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.02"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@id/chip_vehicle"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="@id/chip_vehicle"
+        tools:text="Completed"
+        tools:textColor="@color/status_text_active" />
 
-        <TextView
-            android:id="@+id/tv_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/inter_bold"
-            android:text="Completed"
-            android:textColor="#374151"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- Bottom Spacer for padding consistency -->
-    <!-- Constrained to content to ensure full height -->
-    <View
-        android:id="@+id/view_spacer"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        app:layout_constraintBottom_toTopOf="@id/divider_line"
-        app:layout_constraintTop_toBottomOf="@id/layout_content"/>
-
-    <!-- Bottom Divider -->
-    <!-- Apple-style: 0.5dp hairline, #C6C6C8 separator color -->
+    <!-- Hairline divider — flush at the row boundary, 20dp below content,
+         inset to start where the text column starts. Uses the translucent
+         dark hairline (same as the profile page) so it stays visible against
+         the light #F5F5F5 background. -->
     <View
         android:id="@+id/divider_line"
         android:layout_width="0dp"
-        android:layout_height="1px"
-        android:background="#C6C6C8"
+        android:layout_height="0.5dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/divider_hairline"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@id/container_icon"
-        android:layout_marginTop="0dp" />
+        app:layout_constraintStart_toEndOf="@id/iv_icon_tile"
+        app:layout_constraintTop_toBottomOf="@id/tv_meta_secondary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

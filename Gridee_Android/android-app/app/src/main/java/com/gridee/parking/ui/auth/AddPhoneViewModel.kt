@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gridee.parking.data.model.UpdateUserRequest
 import com.gridee.parking.data.repository.UserRepository
+import com.gridee.parking.utils.AuthErrorMapper
 import kotlinx.coroutines.launch
 
 class AddPhoneViewModel : ViewModel() {
@@ -37,10 +38,11 @@ class AddPhoneViewModel : ViewModel() {
                 if (result) {
                     _state.value = AddPhoneState.Success(sanitized)
                 } else {
-                    _state.value = AddPhoneState.Error("Failed to save phone number. Please try again.")
+                    _state.value = AddPhoneState.Error("Save Failed", "Failed to save phone number. Please try again.", isRetryable = true)
                 }
             } catch (e: Exception) {
-                _state.value = AddPhoneState.Error("Network error: ${e.message}")
+                val error = AuthErrorMapper.fromException(e)
+                _state.value = AddPhoneState.Error(error.title, error.message, error.isRetryable)
             }
         }
     }
@@ -73,5 +75,9 @@ class AddPhoneViewModel : ViewModel() {
 sealed class AddPhoneState {
     object Loading : AddPhoneState()
     data class Success(val phone: String) : AddPhoneState()
-    data class Error(val message: String) : AddPhoneState()
+    data class Error(
+        val title: String,
+        val message: String,
+        val isRetryable: Boolean = false
+    ) : AddPhoneState()
 }

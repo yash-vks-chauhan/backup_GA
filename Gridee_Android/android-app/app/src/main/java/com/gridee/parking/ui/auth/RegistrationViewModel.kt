@@ -6,13 +6,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.data.model.User
 import com.gridee.parking.data.repository.ParkingRepository
+import com.gridee.parking.utils.AuthErrorMapper
 import com.gridee.parking.utils.PendingProfileUpdate
 import com.gridee.parking.utils.PendingProfileUpdateStore
 import kotlinx.coroutines.launch
@@ -45,6 +44,15 @@ class RegistrationViewModel : ViewModel() {
         password: String,
         parkingLotName: String
     ) {
+        RemoteConfigManager.loadCached(context)
+        if (!RemoteConfigManager.isEmailSignInEnabled()) {
+            _registrationState.value = RegistrationState.Error(
+                "Feature Unavailable",
+                "Email registration is temporarily unavailable."
+            )
+            return
+        }
+
         val normalizedParkingLot = parkingLotName.trim().ifBlank { null }
         val sanitizedPhone = phone.filter { it.isDigit() }
         // Validate input
@@ -59,13 +67,16 @@ class RegistrationViewModel : ViewModel() {
         firebaseAuth.createUserWithEmailAndPassword(email.trim().lowercase(), password)
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
-                    _registrationState.value = RegistrationState.Error(getFirebaseRegisterError(task.exception))
+                    val exception = task.exception
+                    val error = if (exception != null) AuthErrorMapper.fromException(exception) else
+                        AuthErrorMapper.UserFacingError("Registration Failed", "Please try again.", isRetryable = true)
+                    _registrationState.value = RegistrationState.Error(error.title, error.message, error.isRetryable)
                     return@addOnCompleteListener
                 }
 
                 val user = firebaseAuth.currentUser
                 if (user == null) {
-                    _registrationState.value = RegistrationState.Error("Registration failed. Please try again")
+                    _registrationState.value = RegistrationState.Error("Registration Failed", "Please try again.", isRetryable = true)
                     return@addOnCompleteListener
                 }
 
@@ -79,7 +90,9 @@ class RegistrationViewModel : ViewModel() {
                             .addOnCompleteListener { verifyTask ->
                                 if (!verifyTask.isSuccessful) {
                                     _registrationState.value = RegistrationState.Error(
-                                        "Failed to send verification email: ${verifyTask.exception?.message}"
+                                        "Verification Email Failed",
+                                        "We couldn't send a verification email. Please try again.",
+                                        isRetryable = true
                                     )
                                     return@addOnCompleteListener
                                 }
@@ -133,15 +146,6 @@ class RegistrationViewModel : ViewModel() {
         return errors
     }
 
-    private fun getFirebaseRegisterError(exception: Exception?): String {
-        return when (exception) {
-            is FirebaseAuthUserCollisionException -> "An account already exists with this email"
-            is FirebaseAuthWeakPasswordException -> "Password is too weak"
-            is FirebaseTooManyRequestsException -> "Too many attempts. Try again later"
-            else -> exception?.message ?: "Registration failed. Please try again"
-        }
-    }
-
     fun loadParkingLotNames(forceRefresh: Boolean = false) {
         if (!forceRefresh && !_parkingLotNames.value.isNullOrEmpty()) {
             return
@@ -157,11 +161,11 @@ class RegistrationViewModel : ViewModel() {
                     _parkingLotNames.value = names
                     _parkingLotError.value = if (names.isEmpty()) "No parking lots available yet" else null
                 } else {
-                    val error = runCatching { response.errorBody()?.string() }.getOrNull()
-                    _parkingLotError.value = error ?: "Unable to load parking lots"
+                    _parkingLotError.value = "Unable to load parking lots. Please try again."
                 }
             } catch (e: Exception) {
-                _parkingLotError.value = "Unable to load parking lots: ${e.message}"
+                val error = AuthErrorMapper.fromException(e)
+                _parkingLotError.value = error.message
             } finally {
                 _parkingLotLoading.value = false
             }
@@ -177,5 +181,9 @@ sealed class RegistrationState {
     object Loading : RegistrationState()
     data class Success(val user: User) : RegistrationState()
     data class VerificationSent(val email: String) : RegistrationState()
-    data class Error(val message: String) : RegistrationState()
+    data class Error(
+        val title: String,
+        val message: String,
+        val isRetryable: Boolean = false
+    ) : RegistrationState()
 }

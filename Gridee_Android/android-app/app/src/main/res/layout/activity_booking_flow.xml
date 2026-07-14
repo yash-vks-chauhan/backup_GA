@@ -7,19 +7,24 @@
     android:background="@color/background_primary"
     android:fitsSystemWindows="false">
 
-    <ImageButton
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnBack"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        style="@style/Widget.Gridee.BackButton.IOS26"
+        android:layout_width="@dimen/ios26_back_button_size"
+        android:layout_height="@dimen/ios26_back_button_size"
         android:layout_marginStart="20dp"
         android:layout_marginTop="20dp"
-        android:background="@drawable/bg_close_button"
-        android:contentDescription="@string/back"
-        android:padding="10dp"
-        android:src="@drawable/ic_arrow_back"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/text_primary" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="@dimen/ios26_back_icon_size"
+            android:layout_height="@dimen/ios26_back_icon_size"
+            android:layout_gravity="center"
+            android:contentDescription="@string/back"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/brand_primary" />
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/tvTitle"
@@ -31,7 +36,7 @@
         android:textColor="@color/text_primary"
         android:textSize="28sp"
         android:textStyle="bold"
-        android:fontFamily="sans-serif-medium"
+        android:fontFamily="@font/inter_medium"
         app:layout_constraintStart_toEndOf="@id/btnBack"
         app:layout_constraintTop_toTopOf="@id/btnBack"
         app:layout_constraintBottom_toBottomOf="@id/btnBack"
@@ -47,7 +52,7 @@
         android:text="Review your reservation details before confirming"
         android:textColor="@color/text_secondary"
         android:textSize="15sp"
-        android:fontFamily="sans-serif"
+        android:fontFamily="@font/inter_regular"
         app:layout_constraintTop_toBottomOf="@id/btnBack"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -74,7 +79,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="@android:color/white"
+                app:cardBackgroundColor="@color/background_secondary"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="4dp">
 
@@ -91,7 +96,7 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp"
                         android:textStyle="bold"
-                        android:fontFamily="sans-serif" />
+                        android:fontFamily="@font/inter_regular" />
 
                     <TextView
                         android:id="@+id/tvParkingName"
@@ -102,7 +107,7 @@
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium"
+                        android:fontFamily="@font/inter_medium"
                         tools:text="Phoenix Mall Parking" />
 
                     <TextView
@@ -113,7 +118,7 @@
                         android:text=""
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp"
-                        android:fontFamily="sans-serif"
+                        android:fontFamily="@font/inter_regular"
                         tools:text="Koramangala, Bengaluru" />
 
                     <TextView
@@ -125,7 +130,7 @@
                         android:textColor="@color/brand_primary"
                         android:textSize="15sp"
                         android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium"
+                        android:fontFamily="@font/inter_medium"
                         tools:text="₹150 per hour" />
 
                 </LinearLayout>
@@ -140,19 +145,18 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_medium" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardStartTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="@android:color/white"
+                app:cardBackgroundColor="@color/background_secondary"
                 app:cardCornerRadius="14dp"
                 app:cardElevation="3dp"
-                android:foreground="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
+                android:clickable="false"
+                android:focusable="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -180,7 +184,7 @@
                             android:text="Start Time"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
-                            android:fontFamily="sans-serif" />
+                            android:fontFamily="@font/inter_regular" />
 
                         <TextView
                             android:id="@+id/tvStartTime"
@@ -190,13 +194,14 @@
                             android:text="Select start time"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
-                            android:fontFamily="sans-serif" />
+                            android:fontFamily="@font/inter_regular" />
 
                     </LinearLayout>
 
                     <ImageView
                         android:layout_width="18dp"
                         android:layout_height="18dp"
+                        android:visibility="gone"
                         android:src="@drawable/ic_chevron_right"
                         android:tint="@color/text_secondary" />
 
@@ -209,12 +214,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="@android:color/white"
+                app:cardBackgroundColor="@color/background_secondary"
                 app:cardCornerRadius="14dp"
                 app:cardElevation="3dp"
-                android:foreground="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
+                android:clickable="false"
+                android:focusable="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -242,7 +246,7 @@
                             android:text="End Time"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
-                            android:fontFamily="sans-serif" />
+                            android:fontFamily="@font/inter_regular" />
 
                         <TextView
                             android:id="@+id/tvEndTime"
@@ -252,13 +256,14 @@
                             android:text="Select end time"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
-                            android:fontFamily="sans-serif" />
+                            android:fontFamily="@font/inter_regular" />
 
                     </LinearLayout>
 
                     <ImageView
                         android:layout_width="18dp"
                         android:layout_height="18dp"
+                        android:visibility="gone"
                         android:src="@drawable/ic_chevron_right"
                         android:tint="@color/text_secondary" />
 
@@ -274,14 +279,14 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_medium" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardVehicleSelection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="@android:color/white"
+                app:cardBackgroundColor="@color/background_secondary"
                 app:cardCornerRadius="14dp"
                 app:cardElevation="3dp"
                 android:foreground="?attr/selectableItemBackground"
@@ -314,7 +319,7 @@
                             android:text="Vehicle"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
-                            android:fontFamily="sans-serif" />
+                            android:fontFamily="@font/inter_regular" />
 
                         <TextView
                             android:id="@+id/tvSelectedVehicle"
@@ -324,7 +329,7 @@
                             android:text="Select your vehicle"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
-                            android:fontFamily="sans-serif-medium" />
+                            android:fontFamily="@font/inter_medium" />
 
                     </LinearLayout>
 
@@ -346,14 +351,14 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_medium" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardWallet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="@android:color/white"
+                app:cardBackgroundColor="@color/background_secondary"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="4dp">
 
@@ -388,7 +393,7 @@
                                 android:text="Wallet Balance"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="13sp"
-                                android:fontFamily="sans-serif" />
+                                android:fontFamily="@font/inter_regular" />
 
                             <TextView
                                 android:id="@+id/tvWalletBalance"
@@ -399,7 +404,7 @@
                                 android:textColor="@color/text_primary"
                                 android:textSize="24sp"
                                 android:textStyle="bold"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="@font/inter_medium" />
 
                         </LinearLayout>
 
@@ -416,7 +421,7 @@
                         android:textColor="@color/brand_primary"
                         android:textSize="15sp"
                         android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium"
+                        android:fontFamily="@font/inter_medium"
                         app:cornerRadius="12dp"
                         app:icon="@drawable/ic_add"
                         app:iconGravity="textStart"
@@ -437,14 +442,14 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif-medium" />
+                android:fontFamily="@font/inter_medium" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/btnSelectSpot"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="@android:color/white"
+                app:cardBackgroundColor="@color/background_secondary"
                 app:cardCornerRadius="14dp"
                 app:cardElevation="3dp"
                 android:foreground="?attr/selectableItemBackground"
@@ -477,7 +482,7 @@
                             android:text="Selected Spot"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
-                            android:fontFamily="sans-serif" />
+                            android:fontFamily="@font/inter_regular" />
 
                         <TextView
                             android:id="@+id/tvSelectedSpot"
@@ -487,7 +492,7 @@
                             android:text="Any available spot"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp"
-                            android:fontFamily="sans-serif" />
+                            android:fontFamily="@font/inter_regular" />
 
                     </LinearLayout>
 
@@ -509,7 +514,7 @@
         android:id="@+id/bookingSummary"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
+        android:background="@color/background_secondary"
         android:elevation="12dp"
         android:orientation="vertical"
         android:paddingStart="20dp"
@@ -538,7 +543,7 @@
                     android:text="Duration"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
-                    android:fontFamily="sans-serif" />
+                    android:fontFamily="@font/inter_regular" />
 
                 <TextView
                     android:id="@+id/tvDuration"
@@ -549,7 +554,7 @@
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium"
+                    android:fontFamily="@font/inter_medium"
                     tools:text="2h 30m" />
 
             </LinearLayout>
@@ -567,7 +572,7 @@
                     android:text="Total"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
-                    android:fontFamily="sans-serif" />
+                    android:fontFamily="@font/inter_regular" />
 
                 <TextView
                     android:id="@+id/tvTotalPrice"
@@ -578,7 +583,7 @@
                     android:textColor="@color/brand_primary"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium"
+                    android:fontFamily="@font/inter_medium"
                     tools:text="₹320.00" />
 
             </LinearLayout>
@@ -600,10 +605,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:text="Continue to Book"
-                android:textColor="@android:color/white"
+                android:textColor="@color/background_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/inter_medium"
                 android:gravity="center" />
 
         </androidx.cardview.widget.CardView>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Whisper of warm depth behind the hero. A single low-alpha gold radial that
+     reads on both true-black (dark) and #F5F5F5 (light) without ever looking
+     like a filled panel. Drives the tilt-parallax depth on the maintenance screen. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="50%"
+        android:startColor="#26DAA520"
+        android:centerColor="#12DAA520"
+        android:endColor="#00DAA520" />
+</shape>

@@ -11,10 +11,13 @@ abstract class BaseTabFragment<T : ViewBinding> : Fragment() {
 
     private var _binding: T? = null
     protected val binding get() = _binding ?: throw IllegalStateException("Fragment binding is not available yet")
+    protected val bindingOrNull: T? get() = _binding
 
     abstract fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): T
     abstract fun setupUI()
     abstract fun getScrollableView(): View?
+
+    protected fun hasViewBinding(): Boolean = _binding != null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,6 +58,20 @@ abstract class BaseTabFragment<T : ViewBinding> : Fragment() {
     }
 
     protected fun showToast(message: String) {
-        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_SHORT).show()
+        val parentView = activity?.findViewById<android.view.ViewGroup>(com.gridee.parking.R.id.fragment_container)
+            ?: activity?.findViewById<android.view.ViewGroup>(android.R.id.content)
+            
+        if (parentView != null) {
+            com.gridee.parking.utils.NotificationHelper.showInfoNoIcon(
+                parent = parentView,
+                title = "Notification",
+                message = message,
+                duration = 3000L
+            )
+        } else {
+            context?.let {
+                android.widget.Toast.makeText(it, message, android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
