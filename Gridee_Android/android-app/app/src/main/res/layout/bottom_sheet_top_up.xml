@@ -63,14 +63,16 @@
                 android:layout_marginBottom="16dp"
                 android:fontFamily="@font/inter_bold"
                 android:gravity="center"
-                android:text="Add Money"
+                android:text="@string/add_money"
                 android:textColor="@color/text_primary"
                 android:textSize="22sp" />
 
+            <!-- Legacy payment-aggregator notice; collapsed now that checkout is live. -->
             <LinearLayout
                 android:id="@+id/layout_notice_banner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:layout_marginBottom="28dp"
                 android:background="@drawable/bg_notice_banner"
                 android:gravity="center"
@@ -92,7 +94,7 @@
                     android:layout_weight="1"
                     android:fontFamily="@font/inter_medium"
                     android:lineSpacingExtra="3dp"
-                    android:text="Add Money is temporarily unavailable.\nWe're integrating with our payment aggregator."
+                    android:text="@string/add_money_is_temporarily_unavailable_were"
                     android:textColor="@color/status_text_debit"
                     android:textSize="12sp" />
 
@@ -109,7 +111,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CURRENT BALANCE"
+                    android:text="@string/current_balance_2"
                     android:letterSpacing="0.05"
                     android:fontFamily="@font/inter_medium"
                     android:textSize="12sp"
@@ -117,7 +119,7 @@
                     android:layout_marginBottom="12dp"/>
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
@@ -138,9 +140,8 @@
 
                     <TextView
                         android:id="@+id/tv_current_balance"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:maxLines="1"
                         android:text="0.00"
                         android:fontFamily="@font/inter_bold"
@@ -157,8 +158,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:text="Enter Amount"
+                android:text="@string/enter_amount"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter_medium"
@@ -169,7 +169,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:visibility="gone"
                 app:boxBackgroundMode="outline"
                 app:boxCornerRadiusBottomEnd="30dp"
                 app:boxCornerRadiusBottomStart="30dp"
@@ -201,7 +200,6 @@
                 android:layout_marginBottom="48dp"
                 android:baselineAligned="false"
                 android:orientation="horizontal"
-                android:visibility="gone"
                 android:weightSum="4">
 
                 <Button
@@ -281,8 +279,7 @@
                 android:id="@+id/btn_add_money_confirm"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:visibility="gone"
-                android:text="Add Money"
+                android:text="@string/add_money"
                 android:textSize="16sp"
                 android:fontFamily="@font/inter_semibold"
                 android:backgroundTint="@color/brand_primary"
@@ -315,25 +312,17 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Secured by"
+                    android:text="@string/secured_by"
                     android:fontFamily="@font/inter_medium"
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginEnd="6dp"
                     android:includeFontPadding="false"/>
 
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/ic_razorpay"
-                    android:scaleType="fitCenter"
-                    app:tint="@color/text_primary"
-                    android:layout_marginEnd="4dp" />
-                
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Razorpay"
+                    android:text="@string/payment_gateway_name"
                     android:fontFamily="@font/inter_bold"
                     android:textSize="12sp"
                     android:textColor="@color/text_primary"

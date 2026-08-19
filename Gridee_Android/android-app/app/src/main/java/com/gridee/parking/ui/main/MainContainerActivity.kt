@@ -13,6 +13,8 @@ import com.gridee.parking.R
 import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.databinding.ActivityMainContainerBinding
 import com.gridee.parking.ui.base.BaseActivityWithBottomNav
+import com.gridee.parking.ui.base.BottomOverlayHost
+import com.gridee.parking.ui.bottomsheet.PartnerReferralBottomSheet
 import com.gridee.parking.ui.bottomsheet.WelcomeGiftBottomSheet
 import com.gridee.parking.ui.components.CustomBottomNavigation
 import com.gridee.parking.ui.fragments.BookingsFragmentNew
@@ -27,7 +29,9 @@ import com.gridee.parking.utils.ThemeManager
 import android.util.TypedValue
 import android.widget.Toast
 
-class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBinding>() {
+class MainContainerActivity :
+    BaseActivityWithBottomNav<ActivityMainContainerBinding>(),
+    BottomOverlayHost {
 
     companion object {
         const val EXTRA_TARGET_TAB = "extra_target_tab"
@@ -42,6 +46,12 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
         const val EXTRA_SHOW_SIGNUP_GIFT = "extra_show_signup_gift"
         const val EXTRA_SHOW_LOGIN_WELCOME = "extra_show_login_welcome"
         private const val NOTIFICATION_PERMISSION_REQUEST = 1001
+
+        /** Resting gap between the floating dock controls and the tab bar, per the layout. */
+        private const val DOCK_REST_GAP_DP = 22f
+
+        /** Breathing room left between a transient banner and the lifted dock above it. */
+        private const val DOCK_OVERLAY_GAP_DP = 10f
     }
 
     private var currentFragment: Fragment? = null
@@ -49,6 +59,7 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
     private var statusBarInsetTop = 0
     private var renderedThemeMode: String? = null
     private var renderedDarkMode: Boolean? = null
+    private var activityResumedForAds = false
 
     private val tabAnimDurationMs: Long = 360L
     private val tabAnimInterpolator by lazy {
@@ -106,6 +117,7 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
         // Setup bottom navigation manually using binding
         setupBottomNavigationManually(binding.bottomNavigation)
         setupSwipeGesture()
+        setupPartnerReferralButton()
         
         val requestedInitialTab = if (savedInstanceState == null) {
             intent?.getIntExtra(EXTRA_TARGET_TAB, CustomBottomNavigation.TAB_HOME)
@@ -122,6 +134,7 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
             currentTabId = initialTab
             bottomNavigation.setActiveTab(currentTabId)
             currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+            updatePartnerReferralForTab(currentTabId)
         }
 
         handleNavigationIntent(intent, currentTabId)
@@ -147,10 +160,14 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
     override fun onResume() {
         super.onResume()
         if (!isViewReady) return // redirected to login; nothing was set up
+        activityResumedForAds = true
+        updateHomeNativeAdPresentation()
         refreshAfterDeferredThemeChangeIfNeeded()
     }
 
     override fun onPause() {
+        activityResumedForAds = false
+        setHomeNativeAdVisible(false)
         super.onPause()
     }
 
@@ -298,6 +315,7 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
         currentFragment = fragment
         currentTabId = tabId
         updateStatusBarForFragment(fragment, animate = !isInitialAttach)
+        updatePartnerReferralForTab(tabId)
 
         if (isInitialAttach) {
             outgoingFragment?.view?.let { transitionController.resetOutgoingTransform(it) }
@@ -320,6 +338,223 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
                 it.visibility = android.view.View.GONE
             }
             setupScrollBehaviorForCurrentFragment()
+        }
+    }
+
+    // ── Partner referral chip ───────────────────────────────────────
+    // A promo that lives on every tab becomes furniture, so the chip is scoped to
+    // Home and tucks itself off the right edge while the user is reading down the
+    // page — it returns the moment they scroll back up or reach the top.
+
+    private var referralChipShown = true
+    private var referralScrollHookedView: android.view.View? = null
+    private var referralLastScrollY = 0
+    private var homeNativeAdAvailable = false
+    private var homeNativeAdShown = false
+
+    private fun updatePartnerReferralForTab(tabId: Int) {
+        setPartnerReferralVisible(tabId == CustomBottomNavigation.TAB_HOME)
+        updateHomeNativeAdPresentation()
+    }
+
+    private fun setPartnerReferralVisible(visible: Boolean) {
+        if (!isViewReady) return
+        val chip = binding.btnPartnerReferral
+        if (referralChipShown == visible) return
+        referralChipShown = visible
+
+        chip.animate().cancel()
+        if (visible) chip.visibility = android.view.View.VISIBLE
+        // Slides out the way it came in — off its own edge — rather than fading in
+        // place, so it reads as tucking away instead of blinking out.
+        chip.animate()
+            .alpha(if (visible) 1f else 0f)
+            .translationX(if (visible) 0f else chip.width.toFloat())
+            .setDuration(if (visible) 240 else 180)
+            .setInterpolator(tabAnimInterpolator)
+            .withEndAction {
+                if (!visible) chip.visibility = android.view.View.INVISIBLE
+            }
+            .start()
+    }
+
+    /** Called by Home after the portrait native creative becomes available or is cleared. */
+    fun setHomeNativeAdAvailable(available: Boolean) {
+        if (!isViewReady) return
+        homeNativeAdAvailable = available
+        updateHomeNativeAdPresentation()
+    }
+
+    // Unlike the referral chip, the ad does NOT tuck away on scroll. The chip is a promo that
+    // would become furniture if it followed the user down the page; the ad is the placement
+    // itself, and its visible-time clock is what the unit earns from — pausing that every time
+    // someone reads down Home costs real revenue for no clarity gained. It stays pinned for as
+    // long as Home is the front tab.
+    private fun updateHomeNativeAdPresentation() {
+        setHomeNativeAdVisible(
+            activityResumedForAds &&
+                homeNativeAdAvailable &&
+                currentTabId == CustomBottomNavigation.TAB_HOME
+        )
+    }
+
+    /** Applies the newest UMP result without starting a request on a hidden Home tab. */
+    fun onAdsConsentResult(canRequestAds: Boolean) {
+        val home = supportFragmentManager.fragments
+            .filterIsInstance<HomeFragment>()
+            .firstOrNull()
+            ?: return
+        if (!canRequestAds) {
+            home.onAdsConsentUnavailable()
+        } else if (activityResumedForAds && currentTabId == CustomBottomNavigation.TAB_HOME) {
+            home.onAdsConsentReady()
+        }
+    }
+
+    private fun setHomeNativeAdVisible(visible: Boolean) {
+        if (!isViewReady) return
+        supportFragmentManager.fragments
+            .filterIsInstance<HomeFragment>()
+            .firstOrNull()
+            ?.onHomeNativeAdDockVisibilityChanged(visible)
+        if (homeNativeAdShown == visible) return
+        homeNativeAdShown = visible
+
+        val dock = binding.homeNativeAdDock
+        dock.animate().cancel()
+        if (visible) {
+            dock.visibility = android.view.View.VISIBLE
+            dock.alpha = 0f
+            dock.translationX = -12f * resources.displayMetrics.density
+        }
+        dock.animate()
+            .alpha(if (visible) 1f else 0f)
+            .translationX(if (visible) 0f else -dock.width.toFloat())
+            .setDuration(if (visible) 240 else 180)
+            .setInterpolator(tabAnimInterpolator)
+            .withEndAction {
+                if (!homeNativeAdShown) dock.visibility = android.view.View.INVISIBLE
+            }
+            .start()
+    }
+
+    // ── Transient-banner clearance ──────────────────────────────────
+    // The in-app banner is anchored to the same edge as the ad dock and the referral pill and
+    // outranks both on elevation, so left alone it draws straight over them — burying the ad's
+    // headline and call-to-action, and swallowing taps aimed at the ad while it was on screen.
+    // Instead the banner reports its footprint (see BottomOverlayHost) and the dock springs up
+    // out of the way, so the banner lands in genuinely empty space and the ad stays whole.
+
+    private var bottomOverlayLiftPx = 0f
+    private val dockLiftSprings = mutableListOf<androidx.dynamicanimation.animation.SpringAnimation>()
+
+    override fun onBottomOverlayHeightChanged(overlayHeightAboveNavPx: Int) {
+        if (!isViewReady) return
+        val density = resources.displayMetrics.density
+        // The dock already sits DOCK_REST_GAP_DP clear of the tab bar, so it only has to travel
+        // the part of the banner's footprint that reaches past that, plus a breathing gap.
+        val lift = (
+            overlayHeightAboveNavPx + (DOCK_OVERLAY_GAP_DP - DOCK_REST_GAP_DP) * density
+            ).coerceAtLeast(0f)
+        if (lift == bottomOverlayLiftPx) return
+        bottomOverlayLiftPx = lift
+        springDockTranslationY(-lift)
+    }
+
+    /**
+     * Mirrors the banner's own physics so the dock and the card feel like one gesture: the
+     * softer 280 spring on the way up matches its entry glide, the stiffer 750 on the way back
+     * matches its exit. Critically damped in both directions — the dock must never bounce.
+     *
+     * Deliberately a SpringAnimation on TRANSLATION_Y rather than the ViewPropertyAnimator the
+     * show/hide paths use: those own alpha and translationX, and their `.cancel()` would
+     * otherwise abandon the lift mid-travel.
+     */
+    private fun springDockTranslationY(target: Float) {
+        val stiffness = if (target < 0f) 280f else 750f
+        for (spring in dockLiftSprings) {
+            if (spring.isRunning) spring.cancel()
+        }
+        dockLiftSprings.clear()
+
+        for (view in listOf(binding.homeNativeAdDock, binding.btnPartnerReferral)) {
+            val anim = androidx.dynamicanimation.animation.SpringAnimation(
+                view,
+                androidx.dynamicanimation.animation.DynamicAnimation.TRANSLATION_Y
+            ).apply {
+                spring = androidx.dynamicanimation.animation.SpringForce(target).apply {
+                    dampingRatio =
+                        androidx.dynamicanimation.animation.SpringForce.DAMPING_RATIO_NO_BOUNCY
+                    this.stiffness = stiffness
+                }
+            }
+            dockLiftSprings.add(anim)
+            anim.start()
+        }
+    }
+
+    private fun hookPartnerReferralToScroll(scrollable: android.view.View) {
+        if (referralScrollHookedView === scrollable) return
+        referralScrollHookedView = scrollable
+
+        val readScrollY: () -> Int = when (scrollable) {
+            is androidx.core.widget.NestedScrollView -> { { scrollable.scrollY } }
+            is android.widget.ScrollView -> { { scrollable.scrollY } }
+            is androidx.recyclerview.widget.RecyclerView -> {
+                { scrollable.computeVerticalScrollOffset() }
+            }
+            else -> return
+        }
+
+        val density = resources.displayMetrics.density
+        // Ignore sub-pixel jitter and the rubber-band at the top; only a deliberate
+        // drag should move the chip.
+        val deltaThresholdPx = 8f * density
+        val topZonePx = 24f * density
+
+        referralLastScrollY = readScrollY()
+        scrollable.viewTreeObserver.addOnScrollChangedListener {
+            if (currentTabId != CustomBottomNavigation.TAB_HOME) return@addOnScrollChangedListener
+            val y = readScrollY()
+            val delta = y - referralLastScrollY
+            if (y <= topZonePx) {
+                referralLastScrollY = y
+                setPartnerReferralVisible(true)
+                return@addOnScrollChangedListener
+            }
+            if (kotlin.math.abs(delta) < deltaThresholdPx) return@addOnScrollChangedListener
+            referralLastScrollY = y
+            setPartnerReferralVisible(delta < 0)
+        }
+    }
+
+    private fun setupPartnerReferralButton() {
+        binding.btnPartnerReferral.setOnClickListener { view ->
+            view.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK)
+            // Same squish the other floating controls use, so the pill has weight.
+            // Pivot on the right edge: the button is docked flush to the screen edge,
+            // so a centre-pivot squish would peel it away and expose its square corner.
+            view.pivotX = view.width.toFloat()
+            view.pivotY = view.height / 2f
+            view.animate()
+                .scaleX(0.94f).scaleY(0.94f)
+                .setDuration(90)
+                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                .withEndAction {
+                    view.animate()
+                        .scaleX(1f).scaleY(1f)
+                        .setDuration(130)
+                        .setInterpolator(android.view.animation.DecelerateInterpolator())
+                        .start()
+                }
+                .start()
+
+            if (supportFragmentManager.findFragmentByTag(PartnerReferralBottomSheet.TAG) == null) {
+                PartnerReferralBottomSheet().show(
+                    supportFragmentManager,
+                    PartnerReferralBottomSheet.TAG
+                )
+            }
         }
     }
 
@@ -425,6 +660,7 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
                     incView.visibility = android.view.View.VISIBLE
 
                     updateStatusBarForFragment(incoming, animate = true)
+                    updatePartnerReferralForTab(targetTabId)
 
                     // Mark outgoing as stale so a swipe that interrupts this settle can clean it.
                     staleOutgoingView = outView
@@ -593,7 +829,10 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
     private fun setupScrollBehaviorForCurrentFragment() {
         currentFragment?.let { fragment ->
             when (fragment) {
-                is HomeFragment -> fragment.getScrollableView()?.let { setupScrollBehaviorForView(it) }
+                is HomeFragment -> fragment.getScrollableView()?.let {
+                    setupScrollBehaviorForView(it)
+                    hookPartnerReferralToScroll(it)
+                }
                 is BookingsFragmentNew -> fragment.getScrollableView()?.let { setupScrollBehaviorForView(it) }
                 is WalletFragmentNew -> fragment.getScrollableView()?.let { setupScrollBehaviorForView(it) }
                 is ProfileFragment -> fragment.getScrollableView()?.let { setupScrollBehaviorForView(it) }
@@ -604,9 +843,8 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
         }
     }
 
-    override fun onNewIntent(intent: android.content.Intent?) {
+    override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
-        intent ?: return
 
         setIntent(intent)
 
@@ -722,6 +960,8 @@ class MainContainerActivity : BaseActivityWithBottomNav<ActivityMainContainerBin
         }
         statusBarColorAnimator?.cancel()
         statusBarColorAnimator = null
+        activityResumedForAds = false
+        setHomeNativeAdVisible(false)
         transitionController.cancelAll()
         super.onDestroy()
     }

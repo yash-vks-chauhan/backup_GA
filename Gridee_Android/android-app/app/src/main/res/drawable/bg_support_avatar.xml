@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Support identity avatar in the chat header. Solid brand fill with the Gridee "G"
+     knocked out, matching the send button's treatment — the two are the only filled
+     brand shapes on the screen, so they read as a pair. Small enough (36dp) that the
+     dark-theme inversion to white stays a highlight rather than a glare. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/brand_primary" />
+</shape>

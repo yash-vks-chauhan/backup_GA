@@ -4,12 +4,14 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.TaskStackBuilder
 import com.google.firebase.messaging.RemoteMessage
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.gridee.parking.R
 import com.gridee.parking.ui.activities.TransactionHistoryActivity
 import com.gridee.parking.ui.auth.LoginActivity
 import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.ui.profile.SupportTicketChatActivity
 import com.gridee.parking.ui.components.CustomBottomNavigation
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.BackendTimestampParser
@@ -37,6 +39,10 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
             }
             "BOOKING_CHECKED_IN", "BOOKING_ACTIVE" -> {
                 handleBookingCheckedIn(data)
+                return
+            }
+            "SUPPORT_REPLY" -> {
+                handleSupportReply(data)
                 return
             }
             "BOOKING_CANCELLED", "BOOKING_CANCELED", "BOOKING_CANCEL",
@@ -72,6 +78,45 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    /**
+     * Support has replied. Opens straight into that ticket's conversation, with the
+     * support list beneath it so Back goes somewhere sensible rather than out of the
+     * app.
+     *
+     * Suppressed when the user is already reading that exact ticket — the message is
+     * on screen within seconds, and a notification for something you are looking at
+     * is noise. Any other ticket, or the app backgrounded, still notifies.
+     */
+    private fun handleSupportReply(data: Map<String, String>) {
+        val ticketId = data["ticketId"].orEmpty()
+        if (ticketId.isBlank()) return
+        if (SupportTicketChatActivity.isForegroundForTicket(ticketId)) return
+
+        val subject = data["subject"]?.takeIf { it.isNotBlank() }
+            ?: getString(R.string.op_menu_section_support)
+        val body = data["body"] ?: data["message"].orEmpty()
+        val signedIn = AuthSession.isAuthenticated(this)
+
+        // Signed out, the ticket is unreachable — send them to the login screen
+        // instead of a chat that would bounce them straight back out.
+        val intent = if (signedIn) {
+            Intent(this, SupportTicketChatActivity::class.java).apply {
+                putExtra(SupportTicketChatActivity.EXTRA_TICKET_ID, ticketId)
+                putExtra(SupportTicketChatActivity.EXTRA_TICKET_TITLE, subject)
+            }
+        } else {
+            buildDefaultIntent()
+        }
+
+        showNotification(
+            title = subject,
+            body = body,
+            intent = intent,
+            notificationId = ("support_$ticketId").hashCode(),
+            withParentStack = signedIn
+        )
+    }
+
     private fun handleRefund(data: Map<String, String>) {
         val amount = data["amount"] ?: "0"
         val bookingId = data["bookingId"].orEmpty()
@@ -89,6 +134,8 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
         val bookingId = data["bookingId"].orEmpty()
         val extra = data["additionalCharge"] ?: "0"
         val extraAmount = extra.toDoubleOrNull() ?: 0.0
+
+        BookingStatusEvents.publish(bookingId, "BOOKING_EXTENDED")
 
         val body = if (extraAmount > 0.0) {
             "Extra ₹$extra charged. New checkout time updated."
@@ -112,6 +159,9 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
 
     private fun handleBookingCheckedIn(data: Map<String, String>) {
         val bookingId = data["bookingId"].orEmpty()
+        // Wake a visible booking page even when the notification payload does not include an end
+        // time. The page reconciles with the backend before changing any UI.
+        BookingStatusEvents.publish(bookingId, "ACTIVE")
         val endTimeMillis = resolveBookingEndTime(data) ?: return
         BookingActiveNotificationManager.showOrUpdate(this, bookingId, endTimeMillis)
     }
@@ -119,6 +169,11 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
     private fun handleBookingEnded(data: Map<String, String>, remoteMessage: RemoteMessage) {
         val bookingId = data["bookingId"].orEmpty()
         val endTimeMillis = resolveBookingEndTime(data)
+
+        BookingStatusEvents.publish(
+            bookingId,
+            data["type"] ?: remoteMessage.data["type"] ?: "COMPLETED"
+        )
 
         if (bookingId.isNotBlank()) {
             BookingActiveNotificationManager.cancel(this, bookingId)
@@ -204,22 +259,30 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    /**
+     * [withParentStack] builds the destination's manifest parent chain behind it, so
+     * Back from a notification-launched screen walks back through the app instead of
+     * dropping the user straight out of it.
+     */
     private fun showNotification(
         title: String,
         body: String,
         intent: Intent,
-        notificationId: Int
+        notificationId: Int,
+        withParentStack: Boolean = false
     ) {
         if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) return
 
         NotificationChannels.ensureDefaultChannel(this)
 
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            notificationId,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        val pendingIntent = if (withParentStack) {
+            TaskStackBuilder.create(this)
+                .addNextIntentWithParentStack(intent)
+                .getPendingIntent(notificationId, flags)
+        } else {
+            PendingIntent.getActivity(this, notificationId, intent, flags)
+        }
 
         val notification = NotificationCompat.Builder(this, NotificationChannels.DEFAULT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notifications)

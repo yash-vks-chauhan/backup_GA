@@ -46,16 +46,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/drag_handle">
 
+        <!-- Name slot. The real TextView keeps its place in the layout (it is
+             masked with alpha, never GONE), so the frame is already the height
+             of one 24sp line — no minHeight needed, and centring the pill in it
+             lands the pill exactly on the cap band the letters will occupy.
+             Inter's cap height is 0.7275em, so 24sp → 18dp. -->
         <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:minHeight="30dp">
+            android:layout_height="wrap_content">
 
             <View
                 android:id="@+id/skelParkingName"
-                android:layout_width="180dp"
-                android:layout_height="22dp"
+                android:layout_width="150dp"
+                android:layout_height="18dp"
                 android:layout_gravity="center_vertical"
+                android:alpha="0.55"
                 android:background="@drawable/bg_skeleton_pill" />
 
             <TextView
@@ -74,14 +79,14 @@
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:minHeight="20dp">
+            android:layout_marginTop="6dp">
 
             <View
                 android:id="@+id/skelParkingMeta"
-                android:layout_width="120dp"
-                android:layout_height="14dp"
+                android:layout_width="124dp"
+                android:layout_height="11dp"
                 android:layout_gravity="center_vertical"
+                android:alpha="0.55"
                 android:background="@drawable/bg_skeleton_pill" />
 
             <TextView
@@ -98,6 +103,7 @@
 
         <!-- Badge Row -->
         <LinearLayout
+            android:id="@+id/badgeRow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -107,28 +113,33 @@
             <!-- Rate slot — skeleton and real badge overlap inside one frame so
                  the reveal swaps the value in place. They must not be laid out
                  as siblings: during the crossfade both are measured, which
-                 briefly doubled the row width and made the badges jump. -->
+                 briefly doubled the row width and made the badges jump.
+                 The badge is pinned to 28dp rather than padded to it so the
+                 placeholder can be the same 28dp — a skeleton that has to guess
+                 the height of the pill it replaces will always be a few dp off.
+                 Width is the measured span of a typical "G 150/hr". -->
             <FrameLayout
+                android:id="@+id/slotRateBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
                 <View
                     android:id="@+id/skelRateBadge"
-                    android:layout_width="74dp"
-                    android:layout_height="26dp"
+                    android:layout_width="82dp"
+                    android:layout_height="28dp"
                     android:layout_gravity="center_vertical"
+                    android:alpha="0.55"
                     android:background="@drawable/bg_skeleton_pill" />
 
                 <LinearLayout
                     android:id="@+id/layoutRateBadge"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="28dp"
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/bg_rate_badge"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:paddingHorizontal="12dp"
-                    android:paddingVertical="6dp"
                     android:visibility="gone">
 
                     <TextView
@@ -156,29 +167,31 @@
                 </LinearLayout>
             </FrameLayout>
 
-            <!-- Availability slot — same overlap pattern. -->
+            <!-- Availability slot — same overlap and same pinned height. Width is
+                 the measured span of a typical "• 12 Available". -->
             <FrameLayout
+                android:id="@+id/slotAvailability"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp">
 
                 <View
                     android:id="@+id/skelAvailability"
-                    android:layout_width="86dp"
-                    android:layout_height="26dp"
+                    android:layout_width="104dp"
+                    android:layout_height="28dp"
                     android:layout_gravity="center_vertical"
+                    android:alpha="0.55"
                     android:background="@drawable/bg_skeleton_pill" />
 
                 <LinearLayout
                     android:id="@+id/layoutAvailability"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="28dp"
                     android:layout_gravity="center_vertical"
                     android:background="@drawable/bg_availability_badge"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingHorizontal="10dp"
-                    android:paddingVertical="6dp"
                     android:visibility="gone">
 
                     <View
@@ -232,7 +245,7 @@
                 android:layout_marginStart="4dp"
                 android:fontFamily="@font/inter_bold"
                 android:letterSpacing="0.08"
-                android:text="SCHEDULE"
+                android:text="@string/schedule"
                 android:textColor="@color/text_tertiary"
                 android:textSize="11sp" />
 
@@ -260,7 +273,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_semibold"
-                        android:text="CHECK IN"
+                        android:text="@string/check_in_2"
                         android:textColor="@color/text_tertiary"
                         android:textSize="10sp"
                         android:letterSpacing="0.08" />
@@ -311,7 +324,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_semibold"
-                        android:text="CHECK OUT"
+                        android:text="@string/check_out_2"
                         android:textColor="@color/text_tertiary"
                         android:textSize="10sp"
                         android:letterSpacing="0.08" />
@@ -370,7 +383,7 @@
                 android:layout_marginStart="4dp"
                 android:fontFamily="@font/inter_bold"
                 android:letterSpacing="0.08"
-                android:text="DETAILS"
+                android:text="@string/details"
                 android:textColor="@color/text_tertiary"
                 android:textSize="11sp" />
 
@@ -417,21 +430,21 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_medium"
-                            android:text="Vehicle"
+                            android:text="@string/vehicle"
                             android:textColor="@color/text_tertiary"
                             android:textSize="12sp" />
 
                         <FrameLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:minHeight="20dp">
+                            android:layout_marginTop="2dp">
 
                             <View
                                 android:id="@+id/skelSelectedVehicle"
-                                android:layout_width="110dp"
-                                android:layout_height="14dp"
+                                android:layout_width="106dp"
+                                android:layout_height="11dp"
                                 android:layout_gravity="center_vertical"
+                                android:alpha="0.55"
                                 android:background="@drawable/bg_skeleton_pill" />
 
                             <TextView
@@ -493,7 +506,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_medium"
-                            android:text="Wallet Balance"
+                            android:text="@string/wallet_balance"
                             android:textColor="@color/text_tertiary"
                             android:textSize="12sp" />
 
@@ -520,14 +533,14 @@
 
                             <FrameLayout
                                 android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:minHeight="20dp">
+                                android:layout_height="wrap_content">
 
                                 <View
                                     android:id="@+id/skelWalletBalance"
-                                    android:layout_width="62dp"
-                                    android:layout_height="14dp"
+                                    android:layout_width="54dp"
+                                    android:layout_height="11dp"
                                     android:layout_gravity="center_vertical"
+                                    android:alpha="0.55"
                                     android:background="@drawable/bg_skeleton_pill" />
 
                                 <TextView
@@ -550,7 +563,7 @@
                         android:fontFamily="@font/inter_semibold"
                         android:gravity="center"
                         android:paddingHorizontal="16dp"
-                        android:text="Top Up"
+                        android:text="@string/top_up"
                         android:textColor="@color/text_primary"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -565,7 +578,7 @@
                 android:layout_marginStart="4dp"
                 android:fontFamily="@font/inter_bold"
                 android:letterSpacing="0.08"
-                android:text="REFUND &amp; PENALTY POLICY"
+                android:text="@string/refund_penalty_policy"
                 android:textColor="@color/text_tertiary"
                 android:textSize="11sp" />
 
@@ -597,7 +610,7 @@
                         android:layout_weight="1"
                         android:fontFamily="@font/inter_medium"
                         android:lineSpacingExtra="3dp"
-                        android:text="Your booking amount is fully refunded to your wallet upon successfully checking out on time."
+                        android:text="@string/your_booking_amount_is_fully_refunded"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -623,7 +636,7 @@
                         android:layout_weight="1"
                         android:fontFamily="@font/inter_medium"
                         android:lineSpacingExtra="3dp"
-                        android:text="Late checkouts incur a penalty starting at 20 G-Coins per 10 mins (after a 10 min grace period)."
+                        android:text="@string/late_checkouts_incur_a_penalty_starting"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -649,7 +662,7 @@
                         android:layout_weight="1"
                         android:fontFamily="@font/inter_medium"
                         android:lineSpacingExtra="3dp"
-                        android:text="Cancellations are 100% refunded if made 2+ hours prior, 50% up to 30 mins prior, and non-refundable otherwise."
+                        android:text="@string/cancellations_are_100_refunded_if_made"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -689,7 +702,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_medium"
-                    android:text="Total"
+                    android:text="@string/total"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:letterSpacing="0.02" />
@@ -717,14 +730,14 @@
 
                     <FrameLayout
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minHeight="32dp">
+                        android:layout_height="wrap_content">
 
                         <View
                             android:id="@+id/skelTotalPrice"
-                            android:layout_width="92dp"
-                            android:layout_height="24dp"
+                            android:layout_width="88dp"
+                            android:layout_height="19dp"
                             android:layout_gravity="center_vertical"
+                            android:alpha="0.55"
                             android:background="@drawable/bg_skeleton_pill" />
 
                         <TextView
@@ -740,25 +753,33 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Duration slot — the chip is pinned to 32dp so the placeholder can
+                 match it exactly. 68dp is the measured span of a typical "2h 0m",
+                 and holding the chip to that as a minimum does double duty: the
+                 skeleton hands over at exactly the chip's size, and the chip stops
+                 twitching as the user drags the check-in/out times around. -->
             <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
                 <View
                     android:id="@+id/skelDuration"
-                    android:layout_width="58dp"
-                    android:layout_height="26dp"
+                    android:layout_width="68dp"
+                    android:layout_height="32dp"
                     android:layout_gravity="center_vertical"
+                    android:alpha="0.55"
                     android:background="@drawable/bg_skeleton_pill" />
 
                 <TextView
                     android:id="@+id/tvDuration"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_vertical"
                     android:background="@drawable/bg_duration_chip"
                     android:fontFamily="@font/inter_semibold"
+                    android:gravity="center"
+                    android:minWidth="68dp"
                     android:paddingHorizontal="14dp"
-                    android:paddingVertical="8dp"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp"
                     tools:text="2h 0m" />
@@ -788,7 +809,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:fontFamily="@font/inter_semibold"
-                    android:text="Confirm Booking"
+                    android:text="@string/confirm_booking"
                     android:textAllCaps="false"
                     android:textColor="@color/confirm_btn_text"
                     android:textSize="16sp" />

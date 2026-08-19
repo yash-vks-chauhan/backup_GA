@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Day/time separator between blocks of messages. Two-tone in code: the day reads
+     first, the time sits back. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tv_separator"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fontFamily="@font/inter_medium"
+    android:gravity="center_horizontal"
+    android:includeFontPadding="false"
+    android:letterSpacing="0"
+    android:paddingTop="20dp"
+    android:paddingBottom="8dp"
+    android:textSize="11.5sp"
+    tools:text="Yesterday  9:28 PM" />

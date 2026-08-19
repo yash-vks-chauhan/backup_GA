@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One skeleton row for the lot-picker pages. Mirrors the real row geometry
+     (44dp tile, title line, meta line) so nothing shifts on reveal. Widths are
+     set per row in LotSkeleton; pills carry the shared SkeletonShimmer tag. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="16dp">
+
+    <View
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_skeleton_circle"
+        android:alpha="0.55"
+        android:tag="skeleton_pill" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="16dp"
+        android:orientation="vertical">
+
+        <View
+            android:id="@+id/skeletonTitle"
+            android:layout_width="150dp"
+            android:layout_height="14dp"
+            android:alpha="0.55"
+            android:tag="skeleton_pill"
+            android:background="@drawable/bg_skeleton_pill" />
+
+        <View
+            android:id="@+id/skeletonMeta"
+            android:layout_width="96dp"
+            android:layout_height="11dp"
+            android:layout_marginTop="9dp"
+            android:alpha="0.55"
+            android:tag="skeleton_pill"
+            android:background="@drawable/bg_skeleton_pill" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chip label. Selected sits on the brand fill so it takes the same inverted ink
+  every filled control in the app uses; unselected stays secondary, one step
+  below the headings above it, so an unpicked row doesn't compete with the copy.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/btn_text_on_brand" android:state_selected="true" />
+    <item android:color="@color/text_secondary" />
+</selector>

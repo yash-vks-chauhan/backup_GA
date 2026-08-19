@@ -21,8 +21,10 @@ import com.gridee.parking.ui.bottomsheet.LogoutConfirmationBottomSheet
 import com.gridee.parking.ui.profile.AccountSettingsActivity
 import com.gridee.parking.ui.profile.DisplayThemeActivity
 import com.gridee.parking.ui.profile.HelpSupportActivity
+import com.gridee.parking.ui.profile.LanguageRegionActivity
 import com.gridee.parking.ui.profile.NotificationsActivity
 import com.gridee.parking.ui.profile.ProfileViewModel
+import com.gridee.parking.utils.AppLocaleManager
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.NotificationHelper
 import com.gridee.parking.utils.ThemeManager
@@ -32,6 +34,11 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
     private lateinit var viewModel: ProfileViewModel
     private var isVehiclesExpanded = false
     private var isAnimating = false // Prevent double-tap glitches
+
+    // Change-parking-lot flow; refreshes the shown lot when the user returns.
+    private val changeLotLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { refreshParkingLotLabel() }
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentProfileBinding {
         return FragmentProfileBinding.inflate(inflater, container, false)
@@ -56,6 +63,7 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
         setupClickListeners()
         loadUserData()
         updateThemeModeLabel()
+        refreshParkingLotLabel()
 
         childFragmentManager.setFragmentResultListener("profile_updated", viewLifecycleOwner) { _, _ ->
             loadUserData()
@@ -66,8 +74,8 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
             
             com.gridee.parking.utils.NotificationHelper.showInfoNoIcon(
                 parent = parentView,
-                title = "Profile Update",
-                message = "Profile successfully updated",
+                title = getString(R.string.profile_update),
+                message = getString(R.string.profile_successfully_updated),
                 duration = 3000L
             )
         }
@@ -217,6 +225,13 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
              startActivity(Intent(requireContext(), com.gridee.parking.ui.profile.BookingHistoryPlaceholderActivity::class.java))
         }
 
+        binding.btnChangeParkingLot.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+            changeLotLauncher.launch(
+                com.gridee.parking.ui.lot.ChooseCategoryActivity.changeIntent(requireContext())
+            )
+        }
+
         // Vehicle Management category - Accordion Animation
         binding.btnMyVehicles.setOnClickListener {
             if (isAnimating) return@setOnClickListener
@@ -251,17 +266,9 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
 
 
 
-        binding.btnLanguageRegion.setOnClickListener { view ->
-            view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-            val parentView = requireActivity().findViewById<android.view.ViewGroup>(R.id.fragment_container)
-                ?: requireActivity().window.decorView as? android.view.ViewGroup
-                ?: binding.root
-            NotificationHelper.showInfo(
-                parent = parentView,
-                title = "Language & Region",
-                message = "Coming soon",
-                duration = 3000L
-            )
+        binding.btnLanguageRegion.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+            startActivity(Intent(requireContext(), LanguageRegionActivity::class.java))
         }
 
         // Support & Legal category
@@ -278,7 +285,7 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
                 val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(privacyPolicyUrl))
                 startActivity(intent)
             } catch (e: Exception) {
-                showToast("Unable to open Privacy Policy. Please try again.")
+                showToast(getString(R.string.unable_to_open_privacy_policy_please))
             }
         }
 
@@ -289,7 +296,7 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
                 val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(dataSafetyUrl))
                 startActivity(intent)
             } catch (e: Exception) {
-                showToast("Unable to open Data Safety page. Please try again.")
+                showToast(getString(R.string.unable_to_open_data_safety_page))
             }
         }
 
@@ -300,7 +307,7 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
                 val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(aboutUrl))
                 startActivity(intent)
             } catch (e: Exception) {
-                showToast("Unable to open About page. Please try again.")
+                showToast(getString(R.string.unable_to_open_about_page_please))
             }
         }
 
@@ -309,6 +316,19 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
             it.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
             showLogoutConfirmation()
         }
+    }
+
+    private fun refreshParkingLotLabel() {
+        if (view == null) return
+        val lotName = AuthSession.getParkingLotName(requireContext())?.takeIf { it.isNotBlank() }
+        binding.tvCurrentParkingLot.text = lotName ?: "Not selected"
+    }
+
+    /** Shows the active language in its own script on the Language & Region row. */
+    private fun refreshLanguageLabel() {
+        if (view == null) return
+        binding.tvLanguageRegionValue.text =
+            AppLocaleManager.getSavedLanguageInfo(requireContext()).nativeName
     }
 
     private fun loadUserData() {
@@ -321,10 +341,10 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
             viewModel.loadUserProfile(context, userId)
         } else if (isLoggedIn) {
             // User is logged in but we don't have user ID, ask them to log in again
-            showToast("Please log in again to access your profile")
+            showToast(getString(R.string.please_log_in_again_to_access))
             navigateToLogin()
         } else {
-            showToast("User session expired")
+            showToast(getString(R.string.user_session_expired))
             navigateToLogin()
         }
     }
@@ -361,6 +381,17 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
         super.onResume()
         if (view != null) {
             updateThemeModeLabel()
+            refreshLanguageLabel()
+        }
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden && view != null) {
+            // Other tabs can change the user's vehicles through their own ViewModels.
+            // Refresh when this retained/pre-warmed tab becomes visible so it never
+            // renders an older in-memory profile.
+            loadUserData()
         }
     }
 
@@ -393,8 +424,8 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
                     ?: binding.root
                 NotificationHelper.showSuccess(
                     parent = parentView,
-                    title = "Success",
-                    message = "Vehicle number saved successfully",
+                    title = getString(R.string.success),
+                    message = getString(R.string.vehicle_number_saved_successfully),
                     duration = 3000L
                 )
             },
@@ -412,8 +443,8 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
                     ?: binding.root
                 NotificationHelper.showSuccess(
                     parent = parentView,
-                    title = "Success",
-                    message = "Vehicle removed successfully",
+                    title = getString(R.string.success),
+                    message = getString(R.string.vehicle_removed_successfully),
                     duration = 3000L
                 )
             }
@@ -439,8 +470,8 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
                 ?: binding.root
             NotificationHelper.showSuccess(
                 parent = parentView,
-                title = "Success",
-                message = "Vehicle added successfully",
+                title = getString(R.string.success),
+                message = getString(R.string.vehicle_added_successfully),
                 duration = 3000L
             )
         }
@@ -461,7 +492,7 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
             startActivity(intent)
             requireActivity().finish()
         } catch (e: Exception) {
-            showToast("Unable to logout at this time")
+            showToast(getString(R.string.unable_to_logout_at_this_time))
         }
     }
 
@@ -492,7 +523,7 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
             val defaultVehicle = viewModel.userProfile.value?.defaultVehicle
             if (vehicleNumber == defaultVehicle) {
                 ivDefaultIndicator.visibility = View.VISIBLE
-                tvVehicleLabel.text = "Default Vehicle"
+                tvVehicleLabel.text = getString(R.string.default_vehicle)
             } else {
                 ivDefaultIndicator.visibility = View.GONE
             }

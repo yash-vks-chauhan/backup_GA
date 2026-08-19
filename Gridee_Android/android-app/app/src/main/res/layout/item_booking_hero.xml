@@ -89,7 +89,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_semibold"
                     android:letterSpacing="0.02"
-                    android:text="Booked"
+                    android:text="@string/booked"
                     android:textColor="@color/status_text_pending"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -212,7 +212,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_bold"
                             android:letterSpacing="0.12"
-                            android:text="CHECK-IN"
+                            android:text="@string/check_in_3"
                             android:textColor="@color/text_secondary"
                             android:textSize="10sp" />
                     </LinearLayout>
@@ -256,7 +256,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_bold"
                             android:letterSpacing="0.12"
-                            android:text="CHECK-OUT"
+                            android:text="@string/check_out_3"
                             android:textColor="@color/text_secondary"
                             android:textSize="10sp" />
                     </LinearLayout>
@@ -304,7 +304,7 @@
                     android:layout_marginTop="10dp"
                     android:fontFamily="@font/inter_bold"
                     android:letterSpacing="0.02"
-                    android:text="Show at entry"
+                    android:text="@string/show_at_entry"
                     android:textColor="@color/status_text_pending"
                     android:textSize="11sp"
                     android:textStyle="bold" />
@@ -315,7 +315,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:fontFamily="@font/inter_medium"
-                    android:text="Tap to enlarge"
+                    android:text="@string/tap_to_enlarge"
                     android:textColor="@color/text_tertiary"
                     android:textSize="10sp" />
             </LinearLayout>

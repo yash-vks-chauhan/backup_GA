@@ -44,7 +44,7 @@
             android:fontFamily="@font/inter_bold"
             android:includeFontPadding="false"
             android:letterSpacing="0"
-            android:text="New request"
+            android:text="@string/new_request"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             app:layout_constraintBottom_toBottomOf="@id/btn_back"
@@ -83,7 +83,7 @@
                 android:includeFontPadding="false"
                 android:letterSpacing="0"
                 android:lineSpacingMultiplier="1.08"
-                android:text="Tell us what's going on"
+                android:text="@string/tell_us_whats_going_on"
                 android:textColor="@color/text_primary"
                 android:textSize="22sp" />
 
@@ -94,7 +94,7 @@
                 android:fontFamily="@font/inter_medium"
                 android:letterSpacing="0"
                 android:lineSpacingMultiplier="1.25"
-                android:text="Share a few details and our team will follow up in the conversation."
+                android:text="@string/share_a_few_details_and_our"
                 android:textColor="@color/booking_details_support_text"
                 android:textSize="14sp" />
 
@@ -105,7 +105,7 @@
                 android:layout_marginTop="26dp"
                 android:fontFamily="@font/inter_semibold"
                 android:letterSpacing="0"
-                android:text="Subject"
+                android:text="@string/subject"
                 android:textColor="@color/booking_details_label_text"
                 android:textSize="13sp" />
 
@@ -116,7 +116,7 @@
                 android:layout_marginTop="10dp"
                 android:background="@drawable/bg_support_input_pill"
                 android:fontFamily="@font/inter_medium"
-                android:hint="What's the issue about?"
+                android:hint="@string/whats_the_issue_about"
                 android:importantForAutofill="no"
                 android:inputType="textCapSentences"
                 android:maxLines="1"
@@ -132,7 +132,7 @@
                 android:layout_marginTop="20dp"
                 android:fontFamily="@font/inter_semibold"
                 android:letterSpacing="0"
-                android:text="Description"
+                android:text="@string/description"
                 android:textColor="@color/booking_details_label_text"
                 android:textSize="13sp" />
 
@@ -144,7 +144,7 @@
                 android:background="@drawable/bg_support_input_pill"
                 android:fontFamily="@font/inter_regular"
                 android:gravity="top|start"
-                android:hint="Describe the issue in a little detail…"
+                android:hint="@string/describe_the_issue_in_a_little"
                 android:importantForAutofill="no"
                 android:inputType="textMultiLine|textCapSentences"
                 android:lineSpacingMultiplier="1.25"
@@ -162,7 +162,7 @@
                 android:layout_marginTop="22dp"
                 android:fontFamily="@font/inter_semibold"
                 android:letterSpacing="0"
-                android:text="Priority"
+                android:text="@string/priority"
                 android:textColor="@color/booking_details_label_text"
                 android:textSize="13sp" />
 
@@ -209,7 +209,7 @@
                             android:layout_gravity="center"
                             android:fontFamily="@font/inter_medium"
                             android:letterSpacing="0.01"
-                            android:text="Low"
+                            android:text="@string/low"
                             android:textColor="@color/segment_text_unselected"
                             android:textSize="14sp" />
 
@@ -230,7 +230,7 @@
                             android:layout_gravity="center"
                             android:fontFamily="@font/inter_medium"
                             android:letterSpacing="0.01"
-                            android:text="Medium"
+                            android:text="@string/medium"
                             android:textColor="@color/segment_text_unselected"
                             android:textSize="14sp" />
 
@@ -251,7 +251,7 @@
                             android:layout_gravity="center"
                             android:fontFamily="@font/inter_medium"
                             android:letterSpacing="0.01"
-                            android:text="High"
+                            android:text="@string/high"
                             android:textColor="@color/segment_text_unselected"
                             android:textSize="14sp" />
 
@@ -286,7 +286,7 @@
             android:fontFamily="@font/inter_bold"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text="Submit request"
+            android:text="@string/submit_request"
             android:textAllCaps="false"
             android:textColor="@color/btn_text_on_brand"
             android:textSize="15sp"

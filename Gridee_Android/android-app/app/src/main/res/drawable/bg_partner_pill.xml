@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Companion button to the floating tab bar. Shares the navbar's stroke token
+  (nav_floating_stroke) so it reads as part of the same floating layer, but takes
+  its fill from partner_pill_surface rather than nav_floating_surface: at #EDEDED
+  on the #F5F5F5 page the pill body was invisible in light mode. White gives it
+  the same white-on-gray separation the active nav pill uses. Both tokens
+  auto-theme between light and dark.
+
+  Half-pill: the button is docked flush to the right screen edge, so only the
+  leading corners are rounded (radius = half the 50dp height for a true pill
+  silhouette) and the trailing edge runs straight off the screen. The stroke is
+  drawn on all four sides but the right one lands off-screen, so it reads as an
+  open-ended tab rather than a floating chip.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/row_press_overlay">
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/partner_pill_surface" />
+            <stroke
+                android:width="0.5dp"
+                android:color="@color/nav_floating_stroke" />
+            <corners
+                android:topLeftRadius="25dp"
+                android:bottomLeftRadius="25dp"
+                android:topRightRadius="0dp"
+                android:bottomRightRadius="0dp" />
+        </shape>
+    </item>
+
+</ripple>

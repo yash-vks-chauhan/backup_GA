@@ -87,7 +87,7 @@ class BookingConfirmationActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        binding.tvTitle.text = "Booking Confirmed"
+        binding.tvTitle.text = getString(R.string.booking_confirmed)
 
         // Push the header, content, and footer past the system bars. Insets
         // are applied to the chrome (header + frost) and to the scroll's top
@@ -371,7 +371,7 @@ class BookingConfirmationActivity : AppCompatActivity() {
                     val notificationAnchor = binding.notificationAnchor
                     com.gridee.parking.utils.NotificationHelper.showWalletTransaction(
                         parent = notificationAnchor,
-                        title = "Booking Fee",
+                        title = getString(R.string.booking_fee),
                         amountText = String.format(java.util.Locale.getDefault(), "%.2f", details.totalAmount),
                         isCredit = false,
                         duration = 5000L,

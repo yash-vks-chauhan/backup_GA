@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mirror of bg_toolbar_frosted for the floating composer: messages dissolve as they
+     pass beneath. Three layers on purpose — a long tail alone can't stay opaque enough
+     behind the composer, and a single opaque band leaves a visible hard edge.
+
+     Colours come from the background_primary alpha ramp rather than literals, so this
+     tracks the page surface and resolves per theme from one file (no -night copy to
+     keep in sync). Resolved values are identical to the hex it replaced. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Layer 1: Full-height dissolve — long smooth tail upward -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="@color/background_primary"
+                android:centerColor="@color/background_primary_a80"
+                android:endColor="@color/background_primary_transparent"
+                android:centerY="0.62"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Layer 2: Mid-band reinforcement -->
+    <item android:top="40dp">
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="@color/background_primary_a85"
+                android:centerColor="@color/background_primary_a50"
+                android:endColor="@color/background_primary_transparent"
+                android:centerY="0.5"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Layer 3: Bottom anchor — fully opaque behind the composer -->
+    <item android:top="68dp">
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="@color/background_primary"
+                android:endColor="@color/background_primary_transparent"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>

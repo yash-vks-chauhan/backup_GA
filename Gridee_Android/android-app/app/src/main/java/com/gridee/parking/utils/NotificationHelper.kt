@@ -1,5 +1,7 @@
 package com.gridee.parking.utils
 
+import android.content.Context
+import android.content.ContextWrapper
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
@@ -13,6 +15,7 @@ import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
 import com.gridee.parking.R
 import com.gridee.parking.databinding.CustomNotificationBinding
+import com.gridee.parking.ui.base.BottomOverlayHost
 
 object NotificationHelper {
 
@@ -254,8 +257,34 @@ object NotificationHelper {
 
         animateIn(binding.root)
 
+        // Tell the host how much of the band above the tab bar this card is about to claim,
+        // so the floating controls parked there (Home's ad dock, the referral pill) lift clear
+        // instead of being drawn over. Reported from preDraw because the card's height isn't
+        // known until it has been measured, and reported on the same frame the entry spring
+        // starts so the dock and the card move as one gesture.
+        if (navbar != null) {
+            val overlayHost = overlayHostFor(host)
+            if (overlayHost != null) {
+                binding.root.doOnPreDraw { card ->
+                    if (currentNotification === card) {
+                        overlayHost.onBottomOverlayHeightChanged(card.height + gapAboveNav)
+                    }
+                }
+            }
+        }
+
         dismissRunnable = Runnable { dismissNotification(binding.root, host) }
         binding.root.postDelayed(dismissRunnable, duration)
+    }
+
+    /** Walks the host's context chain to the activity, when that activity hosts a bottom dock. */
+    private fun overlayHostFor(host: ViewGroup): BottomOverlayHost? {
+        var context: Context? = host.context
+        while (context != null) {
+            if (context is BottomOverlayHost) return context
+            context = (context as? ContextWrapper)?.baseContext
+        }
+        return null
     }
 
     /**
@@ -388,6 +417,11 @@ object NotificationHelper {
     private fun dismissNotification(view: View, host: ViewGroup) {
         if (isDismissing || currentNotification != view) return
         isDismissing = true
+
+        // Release the dock at the start of the exit, not at the end of it: the card recedes
+        // downward while the controls settle back down, so the two read as one motion rather
+        // than the dock dropping into a gap the card has already left.
+        overlayHostFor(host)?.onBottomOverlayHeightChanged(0)
 
         dismissRunnable?.let { view.removeCallbacks(it) }
         snapRunnable?.let { view.removeCallbacks(it); snapRunnable = null }

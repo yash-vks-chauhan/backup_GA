@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      Debug builds may talk to a staging backend over plain HTTP. The main manifest sets
+      usesCleartextTraffic="false"; override it here only, so the release variant stays HTTPS-only.
+      See app/src/debug/res/xml/network_security_config.xml.
+    -->
+    <application
+        android:usesCleartextTraffic="true"
+        tools:replace="android:usesCleartextTraffic">
+        <activity
+            android:name=".debug.BookingQrPassPreviewActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gridee.NoActionBar" />
+
+        <receiver
+            android:name=".debug.AdMobDebugReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.gridee.parking.DEBUG_SHOW_INTERSTITIAL" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".debug.AdFormatProbeReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.gridee.parking.DEBUG_PROBE_AD_FORMATS" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

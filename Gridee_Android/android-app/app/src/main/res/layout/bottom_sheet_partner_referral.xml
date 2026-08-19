@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Partner referral — a pitch that ends in a form.
+
+  The reader here is not a customer, they are about to be our salesperson, so the
+  page is ordered by what they need in the order they need it: what they earn,
+  who they might already know, the exact sentence to say to that person, what
+  Gridee is, what it's worth to the site, and only then the six fields. The form
+  was the whole screen before; it is now the last section of an argument.
+
+  One shape (bg_partner_surface) carries every section so the length reads as a
+  document rather than a stack of widgets, and gold appears only on money.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_bottom_sheet_universal"
+    android:fitsSystemWindows="false">
+
+    <!-- Fills the page and starts at the very top: content scrolls *under* the
+         header rather than beside it, which is what the frost has to dissolve.
+         Top padding (clipToPadding=false) holds the first line clear of the bar at
+         rest. -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingTop="56dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingBottom="34dp">
+
+            <!-- Weight comes from the Inter Bold file; textStyle="bold" on top of it would
+                 make the platform synthesise a second layer of boldness. The headline is two
+                 sentences, so it wraps — the collapsing header measures its real height. -->
+            <TextView
+                android:id="@+id/tv_title_large"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/inter_bold"
+                android:lineSpacingExtra="2dp"
+                android:text="@string/partner_referral_title"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp" />
+
+            <!-- ══ What this is ══════════════════════════════════════════════
+                 Four short lines and then the form. There is no pitch section,
+                 no scripted line to take to a decision-maker, and no figure of
+                 any kind: the offer is an introduction, so the page reads as
+                 one. -->
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/inter_regular"
+                android:lineSpacingExtra="5dp"
+                android:text="@string/partner_referral_question"
+                android:textColor="@color/text_secondary"
+                android:textSize="16sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_partner_surface"
+                android:orientation="vertical"
+                android:paddingHorizontal="18dp"
+                android:paddingVertical="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_semibold"
+                    android:text="@string/partner_referral_action"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/inter_regular"
+                    android:lineSpacingExtra="4dp"
+                    android:text="@string/partner_referral_outcome"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/inter_semibold"
+                android:letterSpacing="0.04"
+                android:text="@string/partner_referral_principles"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp" />
+
+            <!-- ══ The form ═══════════════════════════════════════════════════
+                 Anchored so the sticky bar at the bottom of the sheet can jump
+                 straight here for a reader who already knows who they'd refer. -->
+
+            <TextView
+                android:id="@+id/form_heading"
+                style="@style/Widget.Gridee.Partner.SectionHeading"
+                android:layout_marginTop="36dp"
+                android:text="@string/partner_form_heading" />
+
+            <TextView
+                style="@style/Widget.Gridee.Partner.SectionCaption"
+                android:text="@string/partner_form_subheading" />
+
+            <TextView
+                style="@style/Widget.Gridee.PartnerField.Label"
+                android:layout_marginTop="20dp"
+                android:text="@string/partner_field_org_name" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_org_name"
+                style="@style/Widget.Gridee.PartnerField.Box">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_org_name"
+                    style="@style/Widget.Gridee.PartnerField.Input"
+                    android:inputType="textCapWords" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/Widget.Gridee.PartnerField.Label"
+                android:text="@string/partner_field_contact_person" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_contact_person"
+                style="@style/Widget.Gridee.PartnerField.Box">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_contact_person"
+                    style="@style/Widget.Gridee.PartnerField.Input"
+                    android:inputType="textPersonName|textCapWords" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/Widget.Gridee.PartnerField.Label"
+                android:text="@string/partner_field_contact_number" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_contact_number"
+                style="@style/Widget.Gridee.PartnerField.Box">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_contact_number"
+                    style="@style/Widget.Gridee.PartnerField.Input"
+                    android:inputType="phone"
+                    android:maxLength="15" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Pre-filled from the segment chip: by this point the reader has
+                 already answered this question once, and asking twice is how a
+                 form loses the person it just convinced. -->
+            <TextView
+                style="@style/Widget.Gridee.PartnerField.Label"
+                android:text="@string/partner_field_org_type" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_org_type"
+                style="@style/Widget.Gridee.PartnerField.Box">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_org_type"
+                    style="@style/Widget.Gridee.PartnerField.Input"
+                    android:inputType="textCapWords" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/Widget.Gridee.PartnerField.Label"
+                android:text="@string/partner_field_city" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_city"
+                style="@style/Widget.Gridee.PartnerField.Box">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_city"
+                    style="@style/Widget.Gridee.PartnerField.Input"
+                    android:inputType="textCapWords" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                style="@style/Widget.Gridee.PartnerField.Label"
+                android:text="@string/partner_field_notes" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_notes"
+                style="@style/Widget.Gridee.PartnerField.Box">
+
+                <!-- The only placeholder in the form that isn't a repeat of its
+                     label — it asks for the two things that decide the tier. -->
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_notes"
+                    android:layout_width="match_parent"
+                    android:layout_height="112dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:gravity="top|start"
+                    android:hint="@string/partner_field_notes_hint"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:paddingTop="16dp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_tertiary"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:fontFamily="@font/inter_regular"
+                android:lineSpacingExtra="2dp"
+                android:text="@string/partner_referral_contact_note"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_send_referral"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/inter_semibold"
+                android:insetBottom="0dp"
+                android:insetTop="0dp"
+                android:stateListAnimator="@null"
+                android:text="@string/partner_referral_submit"
+                android:textAllCaps="false"
+                android:textColor="@color/selector_btn_text_on_brand"
+                android:textSize="16sp"
+                app:backgroundTint="@color/brand_primary"
+                app:cornerRadius="28dp"
+                app:elevation="0dp" />
+
+            <!-- ══ Eligibility ═══════════════════════════════════════════════
+                 Last thing above the fold of the send button, because it is what
+                 decides whether a referral should be sent at all. -->
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:fontFamily="@font/inter_regular"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/partner_referral_eligibility"
+                android:textColor="@color/text_tertiary"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- ── Collapsing header ──────────────────────────────────────────────
+         Declared after the scroll view so it draws on top of it.
+
+         At rest the bar is invisible and the large title reads as part of the
+         page. On scroll the frost ramps up and the title hands off to the
+         centred inline copy — the iOS large-title collapse. The frost is a
+         dissolve rather than a hard bar: text thins out into the surface
+         instead of being chopped by an edge. -->
+    <View
+        android:id="@+id/header_frost"
+        android:layout_width="0dp"
+        android:layout_height="112dp"
+        android:alpha="0"
+        android:background="@drawable/bg_sheet_header_frost"
+        android:clickable="false"
+        android:focusable="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/drag_handle"
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/handle_pill_minimal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/btn_close"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/bg_close_circle"
+        android:clickable="true"
+        android:contentDescription="@string/close"
+        android:focusable="true"
+        android:padding="9dp"
+        android:src="@drawable/ic_close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/text_secondary" />
+
+    <!-- Inline title: shares the close button's vertical centre, and is inset past
+         it on both sides so a longer localized string truncates instead of sliding
+         underneath. -->
+    <TextView
+        android:id="@+id/tv_title_inline"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="72dp"
+        android:layout_marginEnd="72dp"
+        android:alpha="0"
+        android:ellipsize="end"
+        android:fontFamily="@font/inter_semibold"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:text="@string/partner_referral_title_short"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@id/btn_close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_close" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -144,10 +144,19 @@ class RewardCoinView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
 
+        // The drawing is not vertically symmetric: the crown star's glow reaches
+        // STAR_ENVELOPE_ABOVE medallion-radii above the medallion centre, while the wreath and
+        // its contact shadow stop at one radius below it. Centring the medallion in the view —
+        // as this used to — leaves the glow no headroom, and its upper half is sliced off flat
+        // by the top bound, which reads as the star's shine being cut off rather than as a halo.
+        // Size and place the medallion from that asymmetric envelope instead.
+        val inset = 1.5f * density
+        val availW = (w - inset * 2f).coerceAtLeast(0f)
+        val availH = (h - inset * 2f).coerceAtLeast(0f)
+
         cx = w / 2f
-        cy = h / 2f
-        // Leave a hair of room so the star/leaves never clip the bounds.
-        medallionOuter = min(w, h) / 2f - 1.5f * density
+        medallionOuter = min(availW / 2f, availH / (STAR_ENVELOPE_ABOVE + ENVELOPE_BELOW))
+        cy = inset + medallionOuter * STAR_ENVELOPE_ABOVE
         coinRadius = medallionOuter * 0.68f
         stemRadius = medallionOuter * 0.86f
 
@@ -192,11 +201,11 @@ class RewardCoinView @JvmOverloads constructor(
 
         // Crown star sits in the gap at the top of the wreath.
         starCx = cx
-        starCy = cy - medallionOuter * 0.82f
-        starOuter = medallionOuter * 0.21f
+        starCy = cy - medallionOuter * STAR_CENTRE_RATIO
+        starOuter = medallionOuter * STAR_OUTER_RATIO
         starInner = starOuter * 0.44f
         starGlowPaint.shader = RadialGradient(
-            starCx, starCy, starOuter * 2.4f,
+            starCx, starCy, starOuter * STAR_GLOW_RATIO,
             intArrayOf(Color.parseColor("#FFE27A"), Color.TRANSPARENT),
             floatArrayOf(0.25f, 1f),
             Shader.TileMode.CLAMP
@@ -335,13 +344,13 @@ class RewardCoinView @JvmOverloads constructor(
     private fun drawStar(canvas: Canvas) {
         // Light catches the star as the coin glints → it twinkles in sync.
         val twinkle = glintAlpha
-        val scale = 1f + 0.10f * starActive * twinkle
+        val scale = 1f + (STAR_TWINKLE_SCALE_MAX - 1f) * starActive * twinkle
         val outer = starOuter * scale
         val inner = starInner * scale
 
         if (starActive > 0.01f) {
             starGlowPaint.alpha = (255 * starActive * (0.30f + 0.45f * twinkle)).toInt().coerceIn(0, 255)
-            canvas.drawCircle(starCx, starCy, outer * 2.2f, starGlowPaint)
+            canvas.drawCircle(starCx, starCy, outer * STAR_GLOW_DRAW_RATIO, starGlowPaint)
         }
 
         // Engraved shadow copy
@@ -607,5 +616,27 @@ class RewardCoinView @JvmOverloads constructor(
         // Shine ping window — mid-cycle, between coin sweeps (~0.52→0.66 ≈ 730ms).
         private const val SPARKLE_START = 0.52f
         private const val SPARKLE_END = 0.66f
+
+        // ── Crown-star geometry, as ratios ──────────────────────────────────
+        /** Star centre, in medallion radii above the medallion centre. */
+        private const val STAR_CENTRE_RATIO = 0.82f
+        /** Star radius, as a fraction of the medallion radius. */
+        private const val STAR_OUTER_RATIO = 0.21f
+        /** Radius of the glow's gradient, in star radii. */
+        private const val STAR_GLOW_RATIO = 2.4f
+        /** Radius of the glow circle drawn each frame, in star radii, before the twinkle scale. */
+        private const val STAR_GLOW_DRAW_RATIO = 2.2f
+        /** Peak scale the twinkle applies to the star, and so to its glow. */
+        private const val STAR_TWINKLE_SCALE_MAX = 1.10f
+
+        /**
+         * Highest point the view draws, in medallion radii above the medallion centre. The star's
+         * glow is the reach that matters — the sparkle ping tops out around 1.17 radii, inside it.
+         */
+        private val STAR_ENVELOPE_ABOVE = STAR_CENTRE_RATIO + STAR_OUTER_RATIO *
+            maxOf(STAR_GLOW_RATIO, STAR_GLOW_DRAW_RATIO * STAR_TWINKLE_SCALE_MAX)
+
+        /** Lowest point the view draws — the wreath's outer edge — in medallion radii below it. */
+        private const val ENVELOPE_BELOW = 1f
     }
 }

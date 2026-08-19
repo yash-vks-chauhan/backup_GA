@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pagination "load more" footer. Populated by the adapter with a couple of
+     header-less ghost rows that breathe, replacing the old spinner. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:importantForAccessibility="no"
+    android:paddingTop="4dp" />

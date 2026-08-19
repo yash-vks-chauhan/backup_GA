@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One ghost parking-spot card for the home list.
+
+     Mirrors item_parking_spot_home's geometry: same 16dp side margins, 30dp radius,
+     3dp elevation, card surface and 16dp/14dp inner padding, and the same four
+     elements across the row (44dp icon circle, name line, availability chip, Park
+     pill). The real cards therefore land where the ghosts stood instead of shifting
+     the page as they arrive.
+
+     Placeholder widths are set per card in HomeSpotSkeleton, and every placeholder
+     carries the shared skeleton_pill tag so a single SkeletonShimmer animator
+     breathes the whole block in unison. -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="16dp"
+    android:outlineAmbientShadowColor="#1A000000"
+    android:outlineSpotShadowColor="#33000000"
+    app:cardBackgroundColor="@color/background_secondary"
+    app:cardCornerRadius="30dp"
+    app:cardElevation="3dp"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
+
+        <View
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="14dp"
+            android:alpha="0.55"
+            android:background="@drawable/bg_skeleton_circle"
+            android:tag="skeleton_pill" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Stands in for the 16sp spot name, sized and offset to the glyphs
+                 themselves (measured on device: the name's ink sits 7dp below the
+                 content top and is 14dp tall) rather than to its line box, so the
+                 bar is where the text lands. -->
+            <View
+                android:id="@+id/skeleton_spot_name"
+                android:layout_width="138dp"
+                android:layout_height="14dp"
+                android:layout_marginTop="7dp"
+                android:layout_marginBottom="10dp"
+                android:alpha="0.55"
+                android:background="@drawable/bg_skeleton_pill"
+                android:tag="skeleton_pill" />
+
+            <!-- Full-size stand-in for the availability chip rather than a thin text
+                 line: the real element is a filled 30dp capsule, so a hairline bar
+                 would visibly inflate into a chip on reveal. -->
+            <View
+                android:id="@+id/skeleton_spot_availability"
+                android:layout_width="96dp"
+                android:layout_height="30dp"
+                android:alpha="0.55"
+                android:background="@drawable/bg_skeleton_pill"
+                android:tag="skeleton_pill" />
+
+        </LinearLayout>
+
+        <!-- The Park button's footprint, held so the button doesn't appear from
+             nowhere on the right edge. -->
+        <View
+            android:layout_width="68dp"
+            android:layout_height="43dp"
+            android:layout_marginStart="8dp"
+            android:alpha="0.55"
+            android:background="@drawable/bg_skeleton_pill"
+            android:tag="skeleton_pill" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

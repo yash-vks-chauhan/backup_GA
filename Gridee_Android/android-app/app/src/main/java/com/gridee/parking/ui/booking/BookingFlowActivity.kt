@@ -1,5 +1,7 @@
 package com.gridee.parking.ui.booking
 
+import com.gridee.parking.R
+
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -52,7 +54,7 @@ class BookingFlowActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        binding.tvTitle.text = "Book Parking"
+        binding.tvTitle.text = getString(R.string.book_parking)
         
         // Set default times based on current time and backend business rules
         val calendar = Calendar.getInstance()
@@ -388,7 +390,7 @@ class BookingFlowActivity : AppCompatActivity() {
             isAnySpotSelected = true
             updateSpotSelection(ivAnySpotSelected, true)
             spotAdapter.setSelectedSpot(null) // Clear adapter selection
-            showToast("Selected: Any available spot")
+            showToast(getString(R.string.selected_any_available_spot))
         }
         
         // Cancel button
@@ -402,8 +404,8 @@ class BookingFlowActivity : AppCompatActivity() {
             
             if (isAnySpotSelected) {
                 // User chose "Any available spot"
-                showToast("Applying: Any available spot")
-                binding.tvSelectedSpot.text = "Any available spot"
+                showToast(getString(R.string.applying_any_available_spot))
+                binding.tvSelectedSpot.text = getString(R.string.any_available_spot)
                 viewModel.setSelectedSpot(null)
             } else {
                 selectedSpot?.let { spot ->
@@ -434,9 +436,9 @@ class BookingFlowActivity : AppCompatActivity() {
                     }
                     viewModel.setParkingSpot(spot)
                 } ?: run {
-                    showToast("No specific spot selected, using Any available spot")
+                    showToast(getString(R.string.no_specific_spot_selected_using_any))
                     println("BookingFlowActivity: No spot selected, falling back to Any available spot")
-                    binding.tvSelectedSpot.text = "Any available spot"
+                    binding.tvSelectedSpot.text = getString(R.string.any_available_spot)
                     viewModel.setSelectedSpot(null)
                 }
             }
@@ -506,14 +508,14 @@ class BookingFlowActivity : AppCompatActivity() {
                     println("BookingFlowActivity: Add vehicle result: $success")
                     runOnUiThread {
                         if (success) {
-                            showToast("Vehicle added successfully!")
+                            showToast(getString(R.string.vehicle_added_successfully_2))
                             viewModel.loadUserVehicles() // Refresh the list
                             // Reopen the selection dialog after a short delay
                             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                 showVehicleSelectionDialog()
                             }, 500)
                         } else {
-                            showToast("Failed to add vehicle. Please check your connection.")
+                            showToast(getString(R.string.failed_to_add_vehicle_please_check))
                         }
                     }
                 }
@@ -529,7 +531,7 @@ class BookingFlowActivity : AppCompatActivity() {
                 viewModel.setSelectedVehicle(vehicle)
                 dialog.dismiss()
             } ?: run {
-                showToast("Please select a vehicle")
+                showToast(getString(R.string.please_select_a_vehicle))
             }
         }
         
@@ -548,7 +550,7 @@ class BookingFlowActivity : AppCompatActivity() {
             if (vehicleNumber.isNotEmpty()) {
                 onVehicleAdded(vehicleNumber)
             } else {
-                showToast("Please enter a vehicle number")
+                showToast(getString(R.string.please_enter_a_vehicle_number))
             }
         }
         builder.setNegativeButton("Cancel", null)
@@ -583,7 +585,7 @@ class BookingFlowActivity : AppCompatActivity() {
         val selectedVehicle = viewModel.selectedVehicle.value
         
         if (selectedVehicle == null) {
-            showToast("Please select a vehicle")
+            showToast(getString(R.string.please_select_a_vehicle))
             return
         }
         
@@ -610,13 +612,13 @@ class BookingFlowActivity : AppCompatActivity() {
                     if (amount > 0) {
                         initiateWalletTopUp(amount)
                     } else {
-                        showToast("Please enter a valid amount")
+                        showToast(getString(R.string.please_enter_a_valid_amount))
                     }
                 } catch (e: NumberFormatException) {
-                    showToast("Invalid amount format")
+                    showToast(getString(R.string.invalid_amount_format))
                 }
             } else {
-                showToast("Please enter an amount")
+                showToast(getString(R.string.please_enter_an_amount))
             }
         }
         
@@ -628,40 +630,23 @@ class BookingFlowActivity : AppCompatActivity() {
         val userId = AuthSession.getUserId(this)
         
         if (userId == null) {
-            showToast("Please log in to add money")
+            showToast(getString(R.string.please_log_in_to_add_money))
             return
         }
         
         lifecycleScope.launch {
-            try {
-                // Create a Razorpay order via the backend
-                val response = com.gridee.parking.data.api.ApiClient.apiService.initiatePayment(
-                    com.gridee.parking.data.model.PaymentInitiateRequest(
-                        userId = userId,
-                        amount = amount
-                    )
+            when (
+                val result = com.gridee.parking.ui.wallet.WalletTopUpLauncher.createTopUp(
+                    this@BookingFlowActivity,
+                    amount,
+                    parkingLotId = selectedLotId
                 )
-                
-                if (response.isSuccessful) {
-                    val result = response.body()
-                    if (result != null) {
-                        // Navigate to WalletTopUpActivity with order details
-                        val intent = Intent(this@BookingFlowActivity, com.gridee.parking.ui.wallet.WalletTopUpActivity::class.java).apply {
-                            putExtra("USER_ID", userId)
-                            putExtra("AMOUNT", amount)
-                            putExtra("ORDER_ID", result.orderId)
-                            putExtra("KEY_ID", result.keyId)
-                        }
-                        startActivity(intent)
-                    } else {
-                        showToast("Failed to initiate payment")
-                    }
-                } else {
-                    showToast("Error: ${response.message()}")
-                }
-            } catch (e: Exception) {
-                showToast("Error: ${e.message}")
-                e.printStackTrace()
+            ) {
+                is com.gridee.parking.ui.wallet.WalletTopUpLauncher.Result.Ready ->
+                    startActivity(result.intent)
+
+                is com.gridee.parking.ui.wallet.WalletTopUpLauncher.Result.Failed ->
+                    showToast(result.message)
             }
         }
     }

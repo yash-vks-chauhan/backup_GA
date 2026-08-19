@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A payout row lights up when it matches the segment the reader picked. This is
+  the one place gold is allowed onto a surface rather than into type: it is
+  marking *their* number, which is exactly what the accent is for. The tint is
+  the reward sheet's own chip pair (cream on light, deep amber on dark) so the
+  highlight belongs to the same metal as the hero figure.
+
+  Unselected rows draw nothing at all — no fill, no stroke — so the ladder reads
+  as a list with one line called out, not five boxes.
+-->
+<!-- The fade is what keeps the highlight from snapping between rows as the reader
+     tries different segments: the old row lets go while the new one takes hold. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="180"
+    android:exitFadeDuration="180">
+
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/reward_chip_bg" />
+            <corners android:radius="14dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/reward_chip_stroke" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+
+</selector>

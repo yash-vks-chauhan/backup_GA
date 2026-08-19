@@ -18,8 +18,23 @@ object RemoteConfigManager {
     private const val DEFAULT_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.gridee.parking"
     private const val MIN_FULL_DAY_BOOKING_DURATION_HOURS = 9
 
+    // Safe fallbacks for when the backend sends invalid or placeholder config
+    // (e.g. a config document saved with the OpenAPI/Swagger example defaults:
+    // "string", 0.0, additionalProp*). These guard a live production app against
+    // being bricked or degraded by a bad server-side config write. The frontend
+    // can never fix the server, so it must refuse to trust obviously-invalid values.
+    private const val FALLBACK_MIN_TOPUP = 1.0
+    private const val FALLBACK_MAX_TOPUP = 50000.0
+    private const val FALLBACK_CURRENCY = "INR"
+    private const val FALLBACK_CURRENCY_SYMBOL = "₹"
+    private const val FALLBACK_TIMEZONE = "Asia/Kolkata"
+    private const val FALLBACK_ENVIRONMENT = "PRODUCTION"
+    private const val FALLBACK_API_VERSION = "v1"
+
     private val gson = Gson()
-    private val repository = RemoteConfigRepository()
+    // Lazy so simply reading config (loadCached/sanitize) never forces the network
+    // stack (ApiClient → Application) to initialise; it is built on first refresh().
+    private val repository by lazy { RemoteConfigRepository() }
 
     @Volatile
     var currentConfig: AppRemoteConfig = AppRemoteConfig()
@@ -138,7 +153,6 @@ object RemoteConfigManager {
 
     private fun typedFeatureFlag(featureName: String): Boolean? {
         return when (normalizeFeatureKey(featureName)) {
-            "applesignin" -> currentConfig.features.appleSignInEnabled
             "googlesignin" -> currentConfig.features.googleSignInEnabled
             "emailsignin" -> currentConfig.features.emailSignInEnabled
             "wallet" -> currentConfig.features.walletFeatureEnabled
@@ -196,7 +210,8 @@ object RemoteConfigManager {
         return System.currentTimeMillis() - fetchedAt > ttlMs
     }
 
-    private fun sanitize(config: AppRemoteConfig): AppRemoteConfig {
+    // internal (not private) so unit tests can exercise the hardening directly.
+    internal fun sanitize(config: AppRemoteConfig): AppRemoteConfig {
         config.schemaVersion = max(1, config.schemaVersion)
         config.cacheTtlSeconds = config.cacheTtlSeconds.coerceIn(60L, 86400L)
 
@@ -204,7 +219,15 @@ object RemoteConfigManager {
         config.features.maintenanceMessage = config.features.maintenanceMessage.cleanedOr(
             "Gridee is taking a short break for maintenance. We'll be back in a few minutes."
         )
-        config.versions.minAndroidVersionCode = max(1, config.versions.minAndroidVersionCode)
+        // Brick-proofing: never let the server force this build to update to a
+        // version newer than the one actually running. A bad config (e.g.
+        // minAndroidVersionCode set higher than any published build) would
+        // otherwise trigger the non-dismissible force-update gate on the splash
+        // screen and lock every user out. Genuine forced updates are delegated to
+        // Google Play In-App Updates (InAppUpdateController), which only fire when
+        // a newer build truly exists on the Play Store.
+        config.versions.minAndroidVersionCode = config.versions.minAndroidVersionCode
+            .coerceIn(1, max(1, BuildConfig.VERSION_CODE))
         config.versions.latestAndroidVersionCode = max(
             config.versions.minAndroidVersionCode,
             config.versions.latestAndroidVersionCode
@@ -213,6 +236,24 @@ object RemoteConfigManager {
             "Please update to the latest version."
         }
         config.financial.welcomeBonusAmount = max(0.0, config.financial.welcomeBonusAmount)
+        // Guard wallet top-up bounds: a zero/placeholder or inverted range would
+        // block every top-up (isAmountAllowed: amount in min..max). We only floor
+        // the *bounds* here, never fabricate money-charging values (penalties,
+        // refunds) — those stay server-controlled so we can't overcharge a user.
+        if (config.financial.minWalletTopUpAmount <= 0.0) {
+            config.financial.minWalletTopUpAmount = FALLBACK_MIN_TOPUP
+        }
+        if (config.financial.maxWalletTopUpAmount <= config.financial.minWalletTopUpAmount) {
+            config.financial.maxWalletTopUpAmount =
+                max(FALLBACK_MAX_TOPUP, config.financial.minWalletTopUpAmount)
+        }
+        // Placeholder guard for platform strings. currency in particular is passed
+        // straight into the payment checkout options, so "string" must never reach it.
+        config.platform.currency = config.platform.currency.cleanedOr(FALLBACK_CURRENCY)
+        config.platform.currencySymbol = config.platform.currencySymbol.cleanedOr(FALLBACK_CURRENCY_SYMBOL)
+        config.platform.timezone = config.platform.timezone.cleanedOr(FALLBACK_TIMEZONE)
+        config.platform.environment = config.platform.environment.cleanedOr(FALLBACK_ENVIRONMENT)
+        config.platform.apiVersion = config.platform.apiVersion.cleanedOr(FALLBACK_API_VERSION)
         config.booking.maxConcurrentBookingsPerUser = max(1, config.booking.maxConcurrentBookingsPerUser)
         config.booking.minBookingDurationMinutes = max(1, config.booking.minBookingDurationMinutes)
         config.booking.maxBookingDurationHours = max(
@@ -220,6 +261,13 @@ object RemoteConfigManager {
             config.booking.maxBookingDurationHours
         )
         config.booking.noShowGraceMinutes = max(0, config.booking.noShowGraceMinutes)
+        // A zero/negative window would imply the backend finalizes an overdue checkout instantly,
+        // which would make any countdown the app derives from it nonsensical. Note we deliberately
+        // do NOT clamp overdueCheckoutPenaltyPercentage or maxLateCheckoutPenaltyPerMin: those are
+        // money-charging values and stay server-controlled, per the rule above. In particular
+        // maxLateCheckoutPenaltyPerMin == 0.0 legitimately means "no cap".
+        config.booking.autoFinalizeOverdueCheckoutMinutes =
+            max(1, config.booking.autoFinalizeOverdueCheckoutMinutes)
         return config
     }
 }

@@ -16,7 +16,7 @@ enum class VehicleNumberType {
  */
 object VehicleNumberValidator {
 
-    private const val EXAMPLES = "MH12AB1234, 22BH1234A, T0826KA1234AB, KAVAAB1234"
+    private const val EXAMPLES = "TN01 1234, MH12AB1234, 22BH1234A, T0826KA1234AB, KAVAAB1234"
 
     private val separatorPattern = Regex("[\\s\\-./]")
     private val bhPattern = Regex("^\\d{2}BH\\d{4}[A-HJ-NP-Z]{1,2}$")
@@ -28,8 +28,9 @@ object VehicleNumberValidator {
 
     // Intentionally broad: Indian civilian registrations are not safely limited
     // to one fixed 9-10 character shape across current and legacy series.
-    private val regularPattern = Regex("^[A-Z]{2}\\d{1,2}[A-Z]{1,3}\\d{1,4}$")
-    private val regularDisplayPattern = Regex("^([A-Z]{2})(\\d{1,2})([A-Z]{1,3})(\\d{1,4})$")
+    // The letter series is optional for valid legacy/state-issued marks such as TN 01 1234.
+    private val regularPattern = Regex("^[A-Z]{2}\\d{1,2}(?:[A-Z]{1,3}\\d{1,4}|\\d{4})$")
+    private val regularDisplayPattern = Regex("^([A-Z]{2})(\\d{1,2})([A-Z]{0,3})(\\d{1,4})$")
 
     fun normalize(number: String): String = number
         .trim()
@@ -45,7 +46,9 @@ object VehicleNumberValidator {
                 regularDisplayPattern.matchEntire(normalized)
                     ?.destructured
                     ?.let { (state, district, series, digits) ->
-                        "$state $district $series $digits"
+                        listOf(state, district, series, digits)
+                            .filter { it.isNotEmpty() }
+                            .joinToString(" ")
                     }
                     ?: normalized
             }

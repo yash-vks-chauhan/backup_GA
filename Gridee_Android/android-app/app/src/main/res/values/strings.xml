@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Gridee</string>
+    <string name="app_name" translatable="false">Gridee</string>
     <string name="camera_permission_required">Camera permission required</string>
     <string name="camera_permission_granted">Camera permission granted</string>
-    <string name="scan_to_check_in">Scan to Check-In</string>
     <string name="scan_to_check_out">Scan to Check-Out</string>
-    <string name="validating_qr">Validating QR…</string>
-    <string name="processing_check_in">Processing check-in…</string>
-    <string name="processing_check_out">Processing check-out…</string>
     <string name="vehicle_scan_hint">Align the license plate within the frame</string>
     <string name="vehicle_scan_detecting">Scanning license plate…</string>
     <string name="vehicle_scan_detected">Detected %1$s</string>
@@ -62,7 +58,7 @@
     <string name="scanner_processing_qr_checkout">Checking out booking QR…</string>
     <string name="scanner_checked_in_at">Checked in at %1$s</string>
     <string name="scanner_checked_out_at">Checked out at %1$s</string>
-    <string name="scanner_spot_meta">%1$s</string>
+    <string name="scanner_spot_meta" translatable="false">%1$s</string>
     <string name="scanner_open">Open Scanner</string>
     <string name="vehicle_sheet_status_fetching">Fetching active booking…</string>
     <string name="vehicle_sheet_status_not_found">No booking is linked to %1$s.</string>
@@ -77,7 +73,7 @@
     <string name="vehicle_sheet_scan_again">Scan again</string>
     <string name="vehicle_sheet_booking_status">Status: %1$s</string>
     <string name="vehicle_sheet_booking_location">Lot %1$s • Spot %2$s</string>
-    <string name="vehicle_sheet_booking_window">%1$s - %2$s</string>
+    <string name="vehicle_sheet_booking_window" translatable="false">%1$s - %2$s</string>
     <string name="vehicle_sheet_manual_label">Enter vehicle number manually</string>
     <string name="vehicle_sheet_manual_hint">Vehicle registration number</string>
     <string name="vehicle_sheet_manual_submit">Use vehicle number</string>
@@ -87,8 +83,7 @@
     <string name="vehicle_sheet_checkin_success">Check-in completed for %1$s</string>
     <string name="vehicle_sheet_checkout_success">Check-out completed for %1$s</string>
     <string name="vehicle_sheet_status_ready">Vehicle %1$s detected</string>
-    <string name="qr_invalid">Invalid QR code</string>
-    <string name="qr_validation_message">%1$s</string>
+    <string name="qr_validation_message" translatable="false">%1$s</string>
     <string name="registration_title">Create Account</string>
     <string name="registration_subtitle">Join Gridee for smart parking</string>
     <string name="login_link">Already have an account? Login</string>
@@ -116,22 +111,13 @@
     <string name="sign_in_with_google">Sign in with Google</string>
     <string name="sign_up_link">Don\'t have an account? Sign Up</string>
     <string name="back">Back</string>
+    <string name="send">Send</string>
     <string name="close">Close</string>
+    <string name="booking_qr_code">Booking QR code</string>
     <string name="cancel_booking">Cancel</string>
     <string name="booking_details">Booking Details</string>
     <string name="booking_directions">Directions</string>
     <string name="booking_share">Share</string>
-    <string name="extend_booking">Extend Booking</string>
-    <string name="current_end_time">Current end time: %s</string>
-    <string name="select_new_end_time">Select new end time:</string>
-    <string name="additional_charges">Charges: ₹%1$s</string>
-    <string name="confirm_extend_title">Confirm Extension</string>
-    <string name="confirm_extend_message">Are you sure you want to extend this booking?&#x0A;&#x0A;Additional charges will be deducted from your wallet.</string>
-    <string name="booking_extended_success">Booking extended successfully!</string>
-    <string name="insufficient_wallet_balance">Insufficient wallet balance. Please top up.</string>
-    <string name="spot_not_available_extended">Parking spot not available for selected time</string>
-    <string name="new_time_must_be_later">New end time must be after current end time</string>
-    <string name="extend_failed_default">Failed to extend booking</string>
     <string name="cancel">Cancel</string>
     <string name="content_desc_filter_bookings">Filter and sort bookings</string>
     <string name="sort_sheet_title">Sort &amp; Filter</string>
@@ -140,7 +126,6 @@
     <string name="sort_option_oldest">First to last</string>
     <string name="sort_option_spot">Parking spot (A-Z)</string>
     <string name="spot_filter_heading">Filter by parking spot</string>
-    <string name="spot_filter_all">All spots</string>
     <string name="spot_filter_no_data">Parking spots will appear once bookings are loaded.</string>
 
     <!-- Wallet -->
@@ -156,7 +141,7 @@
     <string name="payment_filter_cancel">Cancel</string>
 
     <!-- Search -->
-    <string name="transition_search_bar">home_search_bar</string>
+    <string name="transition_search_bar" translatable="false">home_search_bar</string>
     <string name="search_expanded_hint">Search parking spots, zones or locations</string>
     <string name="search_home_hint">Search for parking spots...</string>
     <string name="search_recent_header">Recent searches</string>
@@ -167,13 +152,11 @@
     <string name="search_empty_state">Start typing to find parking zones, garages, and offers around you.</string>
 
     <!-- Google Sign In -->
-    <string name="default_web_client_id">961075110838-610clma0pt3hk1ml56rcht1r90mtver8.apps.googleusercontent.com</string>
-    
-    <!-- Razorpay Key ID fallback. Prefer backend-supplied keyId; do not hardcode live keys. -->
-    <string name="razorpay_key_id">razorpay_key_id_placeholder</string>
+    <string name="default_web_client_id" translatable="false">961075110838-610clma0pt3hk1ml56rcht1r90mtver8.apps.googleusercontent.com</string>
     
     <!-- Splash Screen -->
-    <string name="app_name_gridee">Gridee</string>
+    <string name="app_name_gridee" translatable="false">Gridee</string>
+    <string name="splash_ownership" translatable="false">Owned by Gridee Private Limited</string>
     <string name="splash_loading_message">Setting things up for you</string>
     <string name="splash_loading_message_2">Finding parking near you</string>
     <string name="splash_loading_message_3">Almost ready</string>
@@ -225,11 +208,89 @@
     <string name="op_cancel">Cancel</string>
     <string name="op_confirm_logout">Logout</string>
     <string name="op_session_info">Operator: %1$s\nLocation: %2$s\nSession: Active</string>
+    <!-- Language names, rendered in whatever language the UI is currently in. -->
     <string name="language_english">English</string>
     <string name="language_hindi">Hindi</string>
     <string name="language_tamil">Tamil</string>
+    <string name="language_telugu">Telugu</string>
+    <string name="language_malayalam">Malayalam</string>
+    <string name="language_bengali">Bengali</string>
     <string name="select_language">Select Language</string>
-    
+
+    <!-- Endonyms: a language's own name, never translated. -->
+    <string name="language_native_english" translatable="false">English</string>
+    <string name="language_native_hindi" translatable="false">हिन्दी</string>
+    <string name="language_native_tamil" translatable="false">தமிழ்</string>
+    <string name="language_native_telugu" translatable="false">తెలుగు</string>
+    <string name="language_native_malayalam" translatable="false">മലയാളം</string>
+    <string name="language_native_bengali" translatable="false">বাংলা</string>
+
+    <!-- Single script glyph shown in each row's badge. -->
+    <string name="language_glyph_english" translatable="false">A</string>
+    <string name="language_glyph_hindi" translatable="false">अ</string>
+    <string name="language_glyph_tamil" translatable="false">அ</string>
+    <string name="language_glyph_telugu" translatable="false">అ</string>
+    <string name="language_glyph_malayalam" translatable="false">അ</string>
+    <string name="language_glyph_bengali" translatable="false">অ</string>
+
+    <!-- Language &amp; Region screen -->
+    <string name="language_region_title">Language &amp; Region</string>
+    <string name="language_section_title">App Language</string>
+    <string name="language_section_subtitle">Gridee will use this language everywhere in the app.</string>
+    <string name="language_region_section_title">Region</string>
+    <string name="language_region_section_subtitle">Sets your currency, date and number formats.</string>
+    <string name="language_region_row_label">Region</string>
+    <string name="language_region_india">India</string>
+    <string name="language_region_note">Gridee currently operates in India, so prices stay in rupees (₹) no matter which language you choose.</string>
+    <string name="language_changed_title">Language changed</string>
+    <string name="language_changed_message">Gridee is now in %1$s.</string>
+
+    <!-- ══ Refer a parking space ═════════════════════════════════════════════
+         A referral is an introduction, nothing more. The sheet states what to
+         refer, what happens if it lands, and who is not eligible — no amounts,
+         no tiers, no scripted pitch to take to a decision-maker. -->
+    <string name="partner_referral_cta">Refer a Parking Space</string>
+    <string name="partner_referral_title">Refer a Parking Space. Earn with GRIDEE.</string>
+    <!-- Collapsed header title: the same idea, cut to fit one line beside the close button. -->
+    <string name="partner_referral_title_short">Refer a Parking Space</string>
+
+    <string name="partner_referral_question">Know a campus, corporate office, society, mall, hospital, or public parking space that needs smarter parking?</string>
+    <string name="partner_referral_action">Share the contact with GRIDEE.</string>
+    <string name="partner_referral_outcome">If your referral becomes a verified GRIDEE client, you earn a referral reward.</string>
+    <string name="partner_referral_principles">Simple. Transparent. Ethical.</string>
+
+    <!-- Eligibility. Sits under the form as the last thing read before sending, because
+         it is the one line that decides whether a referral should be made at all. -->
+    <string name="partner_referral_eligibility">Rewards are only for valid introductions, not for influencing decisions. Referrers involved in procurement, approval, or vendor selection are not eligible.</string>
+
+    <string name="partner_form_heading">Share the contact</string>
+    <string name="partner_form_subheading">The first three fields are all we need. The rest just helps us prepare.</string>
+
+    <string name="partner_field_org_name">Organization Name</string>
+    <string name="partner_field_contact_person">Contact Person</string>
+    <string name="partner_field_contact_number">Contact Number</string>
+    <string name="partner_field_org_type">Organization Type</string>
+    <string name="partner_field_org_type_hint">Campus, office, society, mall, hospital…</string>
+    <string name="partner_field_city">City</string>
+    <string name="partner_field_notes">Additional Information</string>
+    <string name="partner_field_notes_hint">How do you know them? Roughly how many parking spaces?</string>
+    <string name="partner_referral_contact_note">Share a number and our team will get in touch. You can also expect a reply through your support tickets.</string>
+    <string name="partner_referral_submit">Send Referral</string>
+
+    <string name="partner_error_org_name">Enter the organization\'s name</string>
+    <string name="partner_error_contact_person">Enter a contact person</string>
+    <string name="partner_error_contact_number">Enter a valid contact number</string>
+    <string name="partner_error_submit">Couldn\'t send your referral. Please try again.</string>
+    <string name="partner_success_title">Referral sent</string>
+    <string name="partner_success_message">Our partnerships team will be in touch. Track it in your support tickets.</string>
+
+    <!-- A referral is filed as a support ticket, so these compose its body. That
+         is what the sheet promises the reader ("a reply through your support
+         tickets") and it means the lead lands in the same admin queue the team
+         already works. -->
+    <string name="partner_ticket_subject">Partnership referral: %1$s</string>
+    <string name="partner_ticket_intro">A partnership referral was submitted from the Gridee app.</string>
+
     <!-- Sidebar Menu -->
     <string name="menu_language">Language</string>
     <string name="menu_settings">Settings</string>
@@ -261,4 +322,654 @@
     <string name="maintenance_caption_checking">Checking…</string>
     <string name="maintenance_caption_just_now">Checking automatically · last checked just now</string>
     <string name="maintenance_caption_seconds">Checking automatically · last checked %1$ds ago</string>
+
+    <!-- ===== Externalized UI strings (auto-collected) ===== -->
+    <string name="account_settings_are_almost_here">Account settings are almost here</string>
+    <string name="were_building_a_comprehensive_way_to">We’re building a comprehensive way to manage your account details. Stay tuned for updates!</string>
+    <string name="back_to_profile">Back to Profile</string>
+    <string name="add_your_phone_number">Add your phone number</string>
+    <string name="we_will_use_this_to_confirm">We will use this to confirm bookings and support your account.</string>
+    <string name="phone_number">Phone number</string>
+    <string name="action_continue">Continue</string>
+    <string name="add_your_vehicle">Add your vehicle</string>
+    <string name="use_your_indian_registration_number_examples">Use your Indian registration number. Examples: MH12AB1234, 22BH1234A, T0826KA1234AB.</string>
+    <string name="skip_for_now">Skip for now</string>
+    <string name="booking_confirmed">Booking Confirmed</string>
+    <string name="your_spot_is_reserved">Your spot is reserved</string>
+    <string name="parking_name">Parking Name</string>
+    <string name="address">Address</string>
+    <string name="spot">Spot</string>
+    <string name="vehicle">Vehicle</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
+    <string name="duration">Duration</string>
+    <string name="total">Total</string>
+    <string name="wallet">Wallet</string>
+    <string name="paid">Paid</string>
+    <string name="booked_just_now">Booked just now</string>
+    <string name="confirmation">Confirmation</string>
+    <string name="view_booking">View Booking</string>
+    <string name="share_receipt">Share Receipt</string>
+    <string name="done">Done</string>
+    <string name="active">Active</string>
+    <string name="timeline">Timeline</string>
+    <string name="check_in">Check-in</string>
+    <string name="check_out">Check-out</string>
+    <string name="receipt">Receipt</string>
+    <string name="booked_on">Booked on</string>
+    <string name="reference">Reference</string>
+    <string name="couldnt_load_booking">Couldn\'t load booking</string>
+    <string name="please_try_again">Please try again.</string>
+    <string name="book_parking">Book Parking</string>
+    <string name="review_your_reservation_details_before_confirming">Review your reservation details before confirming</string>
+    <string name="parking_location">Parking Location</string>
+    <string name="select_parking_duration">Select Parking Duration</string>
+    <string name="start_time">Start Time</string>
+    <string name="select_start_time">Select start time</string>
+    <string name="end_time">End Time</string>
+    <string name="select_end_time">Select end time</string>
+    <string name="select_vehicle">Select Vehicle</string>
+    <string name="select_your_vehicle">Select your vehicle</string>
+    <string name="payment_wallet">Payment Wallet</string>
+    <string name="wallet_balance">Wallet Balance</string>
+    <string name="add_money">Add Money</string>
+    <string name="parking_spot">Parking Spot</string>
+    <string name="selected_spot">Selected Spot</string>
+    <string name="any_available_spot">Any available spot</string>
+    <string name="continue_to_book">Continue to Book</string>
+    <string name="no_booking_history_yet">No booking history yet</string>
+    <string name="completed_or_cancelled_bookings_will_appear">Completed or cancelled bookings will appear here.</string>
+    <string name="booking_history">Booking History</string>
+    <string name="choose_your_place">Choose your place</string>
+    <string name="where_do_you_usually_park_the">Where do you usually park? The number on each tile is how many spots are free right now.</string>
+    <string name="no_parking_locations_are_available_yet">No parking locations are available yet.</string>
+    <string name="display_theme">Display &amp; Theme</string>
+    <string name="appearance">Appearance</string>
+    <string name="choose_how_gridee_looks_on_your">Choose how Gridee looks on your device.</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="match_system">Match System</string>
+    <string name="hero_gradient">Hero Gradient</string>
+    <string name="the_banner_color_on_your_home">The banner color on your home screen.</string>
+    <string name="verify_your_email">Verify your email</string>
+    <string name="we_sent_a_verification_link_to">We sent a verification link to your email. Once verified, we will sign you in automatically.</string>
+    <string name="waiting_for_verification">Waiting for verification...</string>
+    <string name="open_email_app">Open email app</string>
+    <string name="resend_verification">Resend verification</string>
+    <string name="i_have_verified">I have verified</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="enter_the_email_associated_with_your">Enter the email associated with your account and we\'ll send you a link to reset your password.</string>
+    <string name="email">Email</string>
+    <string name="send_reset_link">Send Reset Link</string>
+    <string name="check_your_mail">Check your mail</string>
+    <string name="we_have_sent_a_password_recover">We have sent a password recover\ninstruction to your email.</string>
+    <string name="open_email_app_2">Open Email App</string>
+    <string name="get_help_with_bookings_payments_and">Get help with bookings, payments and your account.</string>
+    <string name="continue_conversation">Continue conversation</string>
+    <string name="start_a_request">Start a request</string>
+    <string name="no_requests_yet_anything_you_raise">No requests yet — anything you raise will show up here.</string>
+    <string name="we_couldnt_load_your_requests">We couldn\'t load your requests.</string>
+    <string name="dont_have_an_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="signing_in">Signing in...</string>
+    <string name="recent_activity">Recent Activity</string>
+    <string name="no_recent_parking_activity_start_by">No recent parking activity. Start by finding a parking spot!</string>
+    <string name="new_request">New request</string>
+    <string name="tell_us_whats_going_on">Tell us what\'s going on</string>
+    <string name="share_a_few_details_and_our">Share a few details and our team will follow up in the conversation.</string>
+    <string name="subject">Subject</string>
+    <string name="whats_the_issue_about">What\'s the issue about?</string>
+    <string name="description">Description</string>
+    <string name="describe_the_issue_in_a_little">Describe the issue in a little detail…</string>
+    <string name="priority">Priority</string>
+    <string name="low">Low</string>
+    <string name="medium">Medium</string>
+    <string name="high">High</string>
+    <string name="submit_request">Submit request</string>
+    <string name="notifications_are_almost_here">Notifications are almost here</string>
+    <string name="were_building_a_notification_center_to">We’re building a notification center to keep you updated. Stay tuned!</string>
+    <string name="parking_details">Parking Details</string>
+    <string name="book_now">Book Now</string>
+    <string name="find_parking">Find Parking</string>
+    <string name="search_by_location_or_address">Search by location or address</string>
+    <string name="map">Map</string>
+    <string name="list">List</string>
+    <string name="select_parking_location">Select Parking Location</string>
+    <string name="choose_a_parking_lot_to_view">Choose a parking lot to view available spots</string>
+    <string name="no_parking_lots_available">No parking lots available</string>
+    <string name="please_try_again_later">Please try again later</string>
+    <string name="select_parking_spot">Select Parking Spot</string>
+    <string name="choose_a_spot_in_this_parking">Choose a spot in this parking lot</string>
+    <string name="no_parking_spots_available">No parking spots available</string>
+    <string name="all_spots_in_this_lot_are">All spots in this lot are occupied</string>
+    <string name="payment">Payment</string>
+    <string name="total_amount">Total Amount</string>
+    <string name="select_payment_method">Select Payment Method</string>
+    <string name="credit_debit_card">Credit/Debit Card</string>
+    <string name="digital_wallet">Digital Wallet</string>
+    <string name="upi_payment">UPI Payment</string>
+    <string name="net_banking">Net Banking</string>
+    <string name="all_major_banks_supported">All major banks supported</string>
+    <string name="select_a_payment_method_to_continue">Select a payment method to continue</string>
+    <string name="privacy_security">Privacy &amp; Security</string>
+    <string name="data_privacy">Data Privacy</string>
+    <string name="data_collection">Data Collection</string>
+    <string name="allow_us_to_collect_usage_data">Allow us to collect usage data to improve app experience</string>
+    <string name="location_tracking">Location Tracking</string>
+    <string name="enable_location_services_for_finding_nearby">Enable location services for finding nearby parking</string>
+    <string name="analytics">Analytics</string>
+    <string name="help_us_understand_app_usage_patterns">Help us understand app usage patterns</string>
+    <string name="communication_preferences">Communication Preferences</string>
+    <string name="marketing_emails">Marketing Emails</string>
+    <string name="receive_promotional_offers_and_parking_deals">Receive promotional offers and parking deals</string>
+    <string name="data_management">Data Management</string>
+    <string name="export_my_data">Export My Data</string>
+    <string name="download_a_copy_of_your_personal">Download a copy of your personal data</string>
+    <string name="danger_zone">Danger Zone</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="permanently_delete_your_account_and_all">Permanently delete your account and all associated data. This action cannot be undone.</string>
+    <string name="join_us_and_start_parking_smarter">Join us and start parking smarter</string>
+    <string name="register">Register</string>
+    <string name="already_have_an_account">Already have an account?</string>
+    <string name="login">Login</string>
+    <string name="select_your_parking_lot">Select your parking lot</string>
+    <string name="pick_the_lot_you_park_at">Pick the lot you park at.</string>
+    <string name="no_parking_lots_are_available_yet">No parking lots are available yet.</string>
+    <string name="choose_a_lot_to_continue">Choose a lot to continue</string>
+    <string name="current">Current</string>
+    <string name="support_ticket">Support ticket</string>
+    <string name="message">Message</string>
+    <string name="this_ticket_is_closed_you_can">This ticket is closed. You can still review the conversation.</string>
+    <string name="start_a_new_request">Start a new request</string>
+    <string name="no_transactions">No Transactions</string>
+    <string name="you_havent_made_any_transactions_yet">You haven\'t made any transactions yet.</string>
+    <string name="amount">Amount</string>
+    <string name="type">Type</string>
+    <string name="date_range">Date Range</string>
+    <string name="this_month">This Month</string>
+    <string name="last_30_days">Last 30 Days</string>
+    <string name="last_90_days">Last 90 Days</string>
+    <string name="clear_all">Clear All</string>
+    <string name="apply">Apply</string>
+    <string name="filter_amount">Filter Amount</string>
+    <string name="all_transactions">All Transactions</string>
+    <string name="transaction_history_title">History</string>
+    <string name="status">Status</string>
+    <string name="no_transactions_yet">No Transactions Yet</string>
+    <string name="your_transaction_history_will_appear_here">Your transaction history will appear here</string>
+    <string name="vehicles">Vehicles</string>
+    <string name="add_money_is_temporarily_unavailable_were">Add Money is temporarily unavailable.\nWe\'re integrating with our payment aggregator.</string>
+    <string name="current_balance">Current Balance</string>
+    <string name="minimum_amount">Minimum amount</string>
+    <string name="secured_by">Secured by</string>
+    <string name="park_smarter_save_time_reduce_congestion">AI Parking\nEcosystem.\nFor India</string>
+    <string name="the_easiest_way_to_find_and">AI-driven parking infrastructure for India’s future cities.</string>
+    <string name="create_account_with_email">Create account with email</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="by_signing_up_you_agree_to">By signing up, you agree to our Terms, Privacy Policy, and Data Safety.</string>
+    <string name="log_in">Log in</string>
+    <string name="add_new_vehicle">Add New Vehicle</string>
+    <string name="enter_an_indian_registration_number_like">Enter an Indian registration number like MH12AB1234 or 22BH1234A</string>
+    <string name="add_vehicle">Add Vehicle</string>
+    <string name="cancel_booking_2">Cancel Booking</string>
+    <string name="booking_id">Booking ID</string>
+    <string name="vehicle_number">Vehicle Number</string>
+    <string name="check_in_time">Check-in Time</string>
+    <string name="check_out_time">Check-out Time</string>
+    <string name="amount_paid">Amount Paid</string>
+    <string name="booking_date">Booking Date</string>
+    <string name="today">Today</string>
+    <string name="technical_details">Technical Details</string>
+    <string name="extend">Extend</string>
+    <string name="booking_filters">Booking Filters</string>
+    <string name="sort_bookings">Sort Bookings</string>
+    <string name="newest_first">Newest First</string>
+    <string name="oldest_first">Oldest First</string>
+    <string name="clear">Clear</string>
+    <string name="from">From</string>
+    <string name="select_date">Select Date</string>
+    <string name="to">To</string>
+    <string name="no_spots_available_to_filter">No spots available to filter</string>
+    <string name="apply_filters">Apply Filters</string>
+    <string name="reset_filters">Reset Filters</string>
+    <string name="delete_vehicle">Delete Vehicle</string>
+    <string name="delete">Delete</string>
+    <string name="edit_profile_photo">Edit Profile Photo</string>
+    <string name="choose_a_photo_from_your_device">Choose a photo from your device</string>
+    <string name="tap_below_to_change_photo">Tap below to change photo</string>
+    <string name="choose_from_gallery">Choose from Gallery</string>
+    <string name="select_an_existing_photo">Select an existing photo</string>
+    <string name="take_a_photo">Take a Photo</string>
+    <string name="use_your_camera">Use your camera</string>
+    <string name="save_photo">Save Photo</string>
+    <string name="edit_vehicle">Edit Vehicle</string>
+    <string name="update_it_using_a_valid_indian">Update it using a valid Indian registration number</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="schedule">SCHEDULE</string>
+    <string name="check_in_2">CHECK IN</string>
+    <string name="check_out_2">CHECK OUT</string>
+    <string name="details">DETAILS</string>
+    <string name="top_up">Top Up</string>
+    <string name="refund_penalty_policy">REFUND &amp; PENALTY POLICY</string>
+    <string name="your_booking_amount_is_fully_refunded">Your booking amount is fully refunded to your wallet upon successfully checking out on time.</string>
+    <string name="late_checkouts_incur_a_penalty_starting">Late checkouts incur a penalty starting at 20 G-Coins per 10 mins (after a 10 min grace period).</string>
+    <string name="cancellations_are_100_refunded_if_made" formatted="false">Cancellations are 100% refunded if made 2+ hours prior, 50% up to 30 mins prior, and non-refundable otherwise.</string>
+    <string name="confirm_booking">Confirm Booking</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="enter_your_name">Enter your name</string>
+    <string name="mobile_number">Mobile Number</string>
+    <string name="enter_email_address">Enter email address</string>
+    <string name="daily_reward">Daily reward</string>
+    <string name="coins">coins</string>
+    <string name="watch_a_short_clip_minted_straight">Watch a short clip — minted straight to your wallet</string>
+    <string name="watch_claim">Watch &amp; claim</string>
+    <string name="enjoying_gridee">Enjoying Gridee?</string>
+    <string name="rate_us">Rate us</string>
+    <string name="a_new_reward_every_day">A new reward every day</string>
+    <string name="add_your_vehicle_to_get_started">Add your vehicle to get started with booking a parking spot.</string>
+    <string name="select_location">Select Location</string>
+    <string name="current_balance_2">CURRENT BALANCE</string>
+    <string name="enter_amount">Enter Amount</string>
+    <string name="daily_reward_2">Daily Reward</string>
+    <string name="wallet_credit">Wallet Credit</string>
+    <string name="watch_a_short_video_to_claim">Watch a short video to claim your daily reward</string>
+    <string name="claim_reward">Claim Reward</string>
+    <string name="come_back_daily_for_more_rewards">Come back daily for more rewards</string>
+    <string name="review_gridee_on_play_store">Review Gridee on Play Store</string>
+    <string name="manual_wallet_credit">Manual wallet credit</string>
+    <string name="write_a_review_on_play_store">Write a review on Play Store to earn 30 Gridee Coins. Our team will review it and award 30 Gridee Coins.</string>
+    <string name="open_play_store">Open Play Store</string>
+    <string name="vehicle_options">Vehicle Options</string>
+    <string name="manage_your_vehicle_settings">Manage your vehicle settings</string>
+    <string name="make_default">Make Default</string>
+    <string name="are_you_sure_you_want_to">Are you sure you want to remove this vehicle?</string>
+    <string name="welcome_to_gridee">Welcome to Gridee!</string>
+    <string name="free_coins">Free Coins</string>
+    <string name="weve_added_50_gridee_coins_to">We\'ve added 50 Gridee Coins to your wallet as a welcome gift. Use them for your first booking!</string>
+    <string name="start_exploring">Start Exploring</string>
+    <string name="coins_are_added_to_your_wallet">Coins are added to your wallet automatically</string>
+    <string name="home">Home</string>
+    <string name="bookings">Bookings</string>
+    <string name="profile">Profile</string>
+    <string name="success">Success</string>
+    <string name="vehicle_number_saved_successfully">Vehicle number saved successfully</string>
+    <string name="view">View</string>
+    <string name="booking_pass">BOOKING PASS</string>
+    <string name="are_you_sure_you_want_to_2">Are you sure you want to logout?</string>
+    <string name="manual_entry">Manual Entry</string>
+    <string name="submit">Submit</string>
+    <string name="choose_a_specific_parking_spot_or">Choose a specific parking spot or select any available spot</string>
+    <string name="any_available_spot_2">Any Available Spot</string>
+    <string name="let_us_assign_the_best_available">Let us assign the best available spot for you</string>
+    <string name="available_spots">Available Spots</string>
+    <string name="no_parking_spots_available_at_this">No parking spots available at this location</string>
+    <string name="select">Select</string>
+    <string name="no_active_bookings">No active bookings</string>
+    <string name="when_you_book_a_parking_spot">When you book a parking spot, you will see your active sessions here.</string>
+    <string name="where_do_you_want_to_park">Where do you want to park?</string>
+    <string name="morning">Morning</string>
+    <string name="afternoon">Afternoon</string>
+    <string name="standard">Standard</string>
+    <string name="quick">Quick</string>
+    <string name="no_connection">No Connection</string>
+    <string name="please_check_your_internet_and_try">Please check your internet and try again.</string>
+    <string name="try_again">Try Again</string>
+    <string name="parking_bookings_closed">Bookings are closed</string>
+    <string name="tomorrow_booking_opens_at_five">Tomorrow\'s bookings begin at 5:00 AM.</string>
+    <string name="booking_opens_at_five_this_morning">Bookings begin at 5:00 AM this morning.</string>
+    <string name="no_parking_found">No Parking Found</string>
+    <string name="try_adjusting_your_search_or_filters">Try adjusting your search or filters to find more parking options</string>
+    <string name="loading_parking_locations">Loading parking locations...</string>
+    <string name="account_settings">Account Settings</string>
+    <string name="notifications">Notifications</string>
+    <string name="bookings_vehicles">Bookings &amp; Vehicles</string>
+    <string name="not_selected">Not selected</string>
+    <string name="my_vehicles">My Vehicles</string>
+    <string name="preferences">Preferences</string>
+    <string name="system">System</string>
+    <string name="legal_support">Legal &amp; Support</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="data_safety_account_deletion">Data Safety &amp; Account Deletion</string>
+    <string name="about">About</string>
+    <string name="session">Session</string>
+    <string name="my_profile">My Profile</string>
+    <string name="my_wallet">My Wallet</string>
+    <string name="quick_top_up">Quick Top-up</string>
+    <string name="recent_transactions">Recent Transactions</string>
+    <string name="view_all">View All</string>
+    <string name="no_transactions_yet_2">No transactions yet</string>
+    <string name="balance">BALANCE</string>
+    <string name="earn_10">Earn 10</string>
+    <string name="activity">Activity</string>
+    <string name="your_recent_activity_will_show_up">Your recent activity will show up here</string>
+    <string name="booked">Booked</string>
+    <string name="check_in_3">CHECK-IN</string>
+    <string name="check_out_3">CHECK-OUT</string>
+    <string name="show_at_entry">Show at entry</string>
+    <string name="tap_to_enlarge">Tap to enlarge</string>
+    <string name="live">LIVE</string>
+    <string name="time_remaining">TIME REMAINING</string>
+    <string name="started">STARTED</string>
+    <string name="ends">ENDS</string>
+    <string name="show_at_exit">SHOW AT EXIT</string>
+    <string name="amount_2">Amount:</string>
+    <string name="booking">Booking</string>
+    <string name="parking_lot_name">Parking Lot Name</string>
+    <string name="amenities">Amenities:</string>
+    <string name="park">Park</string>
+    <string name="available">AVAILABLE</string>
+    <string name="spot_name">Spot Name</string>
+    <string name="checked_in">Checked In</string>
+    <string name="wallet_top_up">Wallet Top-up</string>
+    <string name="personal_vehicle">Personal Vehicle</string>
+
+    <!-- ===== Externalized Kotlin UI strings ===== -->
+    <string name="please_login_to_view_wallet">Please login to view wallet</string>
+    <string name="wallet_details_response_is_null">Wallet details response is null</string>
+    <string name="no_valid_transactions_found">No valid transactions found</string>
+    <string name="no_transactions_found">No transactions found</string>
+    <string name="please_enter_a_valid_amount">Please enter a valid amount</string>
+    <string name="please_login_to_add_money">Please login to add money</string>
+    <string name="add_money_temporarily_unavailable_during_payment">Add money temporarily unavailable during payment integration.</string>
+    <string name="session_expired_please_log_in_again">Session expired. Please log in again.</string>
+    <string name="wallet_is_temporarily_unavailable">Wallet is temporarily unavailable.</string>
+    <string name="no_real_wallet_data_available">No real wallet data available</string>
+    <string name="wallet_top_up_is_temporarily_unavailable">Wallet top-up is temporarily unavailable.</string>
+    <string name="please_enter_an_amount">Please enter an amount</string>
+    <string name="amount_must_be_greater_than_0">Amount must be greater than 0</string>
+    <string name="minimum_top_up_amount_is_10">Minimum top-up amount is ₹10</string>
+    <string name="maximum_top_up_amount_is_1000">Maximum top-up amount is ₹1000</string>
+    <string name="no_speech_detected">No speech detected</string>
+    <string name="voice_search_is_not_available_on">Voice search is not available on this device</string>
+    <string name="voice_search_is_not_available">Voice search is not available</string>
+    <string name="unable_to_start_voice_search">Unable to start voice search</string>
+    <string name="unable_to_open_link">Unable to open link</string>
+    <string name="couldnt_refresh">Couldn\'t refresh</string>
+    <string name="showing_your_latest_booking">Showing your latest booking</string>
+    <string name="please_login_to_view_your_bookings">Please login to view your bookings</string>
+    <string name="booking_id_copied">Booking ID copied</string>
+    <string name="booking_cancelled">Booking cancelled</string>
+    <string name="active_bookings_cannot_be_cancelled_please">Active bookings cannot be cancelled. Please check out.</string>
+    <string name="this_booking_is_already_finished">This booking is already finished.</string>
+    <string name="no_active_bookings_2">No Active Bookings</string>
+    <string name="your_active_parking_bookings_will_appear">Your active parking bookings will appear here</string>
+    <string name="no_booked_bookings_2">No Booked Bookings</string>
+    <string name="your_booked_parking_reservations_will_appear">Your booked parking reservations will appear here</string>
+    <string name="no_bookings">No Bookings</string>
+    <string name="your_bookings_will_appear_here">Your bookings will appear here</string>
+    <string name="unable_to_open_privacy_policy_please">Unable to open Privacy Policy. Please try again.</string>
+    <string name="unable_to_open_data_safety_page">Unable to open Data Safety page. Please try again.</string>
+    <string name="unable_to_open_about_page_please">Unable to open About page. Please try again.</string>
+    <string name="please_log_in_again_to_access">Please log in again to access your profile</string>
+    <string name="user_session_expired">User session expired</string>
+    <string name="unable_to_logout_at_this_time">Unable to logout at this time</string>
+    <string name="profile_update">Profile Update</string>
+    <string name="profile_successfully_updated">Profile successfully updated</string>
+    <string name="vehicle_removed_successfully">Vehicle removed successfully</string>
+    <string name="vehicle_added_successfully">Vehicle added successfully</string>
+    <string name="default_vehicle">Default Vehicle</string>
+    <string name="only_booked_bookings_can_be_cancelled">Only booked bookings can be cancelled</string>
+    <string name="select_a_time_after_current_end">Select a time after current end</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="missing_booking_id">Missing booking ID</string>
+    <string name="sign_in_unavailable">Sign-in unavailable</string>
+    <string name="account_sign_in_is_temporarily_unavailable">Account sign-in is temporarily unavailable.</string>
+    <string name="checking_verification_status">Checking verification status...</string>
+    <string name="email_verified_signing_you_in">Email verified. Signing you in...</string>
+    <string name="email_registration_is_temporarily_unavailable">Email registration is temporarily unavailable.</string>
+    <string name="please_select_a_payment_method">Please select a payment method</string>
+    <string name="payment_cancelled">Payment cancelled</string>
+    <string name="payment_is_pending">Payment is pending</string>
+    <string name="processing">Processing...</string>
+    <string name="selected_any_available_spot">Selected: Any available spot</string>
+    <string name="applying_any_available_spot">Applying: Any available spot</string>
+    <string name="no_specific_spot_selected_using_any">No specific spot selected, using Any available spot</string>
+    <string name="vehicle_added_successfully_2">Vehicle added successfully!</string>
+    <string name="failed_to_add_vehicle_please_check">Failed to add vehicle. Please check your connection.</string>
+    <string name="please_select_a_vehicle">Please select a vehicle</string>
+    <string name="please_enter_a_vehicle_number">Please enter a vehicle number</string>
+    <string name="invalid_amount_format">Invalid amount format</string>
+    <string name="please_log_in_to_add_money">Please log in to add money</string>
+    <string name="failed_to_initiate_payment">Failed to initiate payment</string>
+    <string name="booking_fee">Booking Fee</string>
+    <string name="filter_options_coming_soon">Filter options - Coming Soon!</string>
+    <string name="booking_feature_coming_soon">Booking feature - Coming Soon!</string>
+    <string name="voice_input">Voice Input</string>
+    <string name="scanner_error">Scanner Error</string>
+    <string name="unsupported_operator_scan_mode">Unsupported operator scan mode</string>
+    <string name="booking_feature_coming_soon_2">Booking feature coming soon!</string>
+    <string name="transaction_history_coming_soon">Transaction history coming soon!</string>
+    <string name="add_payment_method_coming_soon">Add payment method coming soon!</string>
+    <string name="edit_profile_coming_soon">Edit profile coming soon!</string>
+    <string name="find_parking_coming_soon">Find parking coming soon!</string>
+    <string name="quick_book_coming_soon">Quick book coming soon!</string>
+    <string name="my_bookings">My Bookings</string>
+    <string name="manage_your_parking_bookings">Manage your parking bookings</string>
+    <string name="view_all_bookings">View All Bookings</string>
+    <string name="book_new_parking">Book New Parking</string>
+    <string name="manage_your_payments_and_transactions">Manage your payments and transactions</string>
+    <string name="view_transactions">View Transactions</string>
+    <string name="add_payment_method">Add Payment Method</string>
+    <string name="welcome_to_gridee_2">Welcome to Gridee</string>
+    <string name="find_and_book_parking_spots_easily">Find and book parking spots easily</string>
+    <string name="quick_book">Quick Book</string>
+    <string name="booking_id_not_available">Booking ID not available</string>
+    <string name="please_enter_a_clear_subject">Please enter a clear subject</string>
+    <string name="please_describe_the_issue_in_detail">Please describe the issue in detail</string>
+    <string name="support_ticket_created">Support ticket created</string>
+    <string name="submitting">Submitting…</string>
+    <string name="data_export_request_submitted_you_will">Data export request submitted. You will receive an email shortly.</string>
+    <string name="confirmation_text_doesnt_match_account_deletion">Confirmation text doesn\'t match. Account deletion cancelled.</string>
+    <string name="account_deletion_request_submitted_you_will">Account deletion request submitted. You will receive a confirmation email.</string>
+    <string name="unable_to_open_this_ticket">Unable to open this ticket</string>
+    <string name="ticket_is_still_loading">Ticket is still loading</string>
+    <string name="this_ticket_is_closed">This ticket is closed</string>
+    <string name="copied">Copied</string>
+    <string name="unable_to_load_this_ticket">Unable to load this ticket</string>
+    <string name="start_the_conversation">Start the conversation</string>
+    <string name="send_a_message_and_our_team">Send a message and our team will reply right here.</string>
+    <string name="please_choose_your_parking_location_to">Please choose your parking location to continue.</string>
+    <string name="saving">Saving…</string>
+    <string name="parking_location_updated">Parking location updated</string>
+    <string name="photo_selected_save_to_apply">Photo selected! Save to apply.</string>
+    <string name="preparing_video">Preparing video…</string>
+    <string name="we_could_not_open_the_reward">We could not open the reward video. Please try again in a moment.</string>
+    <string name="reward_earned_processing_your_wallet_top">Reward earned! Processing your wallet top-up...</string>
+    <string name="redirecting_to_secure_checkout">Opening secure checkout...</string>
+    <string name="insufficient_balance">Insufficient Balance</string>
+    <string name="full">Full</string>
+    <string name="spot_currently_full">Spot Is Full</string>
+    <string name="unable_to_open_play_store">Unable to open Play Store</string>
+    <string name="invalid_payment_data">Invalid payment data</string>
+    <string name="payment_configuration_missing">Payment configuration missing</string>
+    <string name="payment_success_update_failed">Payment success, update failed</string>
+    <string name="payment_could_not_be_started">Could not open checkout. Please try again.</string>
+    <string name="payment_pending_confirmation">Payment is still being confirmed. Your wallet will update once it clears.</string>
+    <string name="payment_failed_or_cancelled">Payment failed or was cancelled. You have not been charged.</string>
+    <string name="payment_could_not_be_confirmed">We could not confirm this payment. Check your wallet in a moment.</string>
+    <string name="wallet_top_up_title">Wallet Top-up</string>
+    <string name="payment_gateway_name" translatable="false">Cashfree</string>
+    <string name="top_up_below_minimum">Minimum top-up is G %1$s.</string>
+    <string name="top_up_above_maximum">Maximum top-up is G %1$s.</string>
+
+    <!-- Payment outcome sheet -->
+    <string name="payment_trail_bank">Your bank</string>
+    <string name="payment_trail_gateway">Gridee</string>
+    <string name="payment_trail_wallet">Wallet</string>
+
+    <string name="payment_outcome_cancelled_title">Payment cancelled</string>
+    <string name="payment_outcome_cancelled_message">You closed the checkout before the payment went through.</string>
+    <string name="payment_outcome_not_charged">No money left your account.</string>
+
+    <string name="payment_outcome_pending_title">Payment pending</string>
+    <string name="payment_outcome_pending_message">Payment is being verified. Please wait.</string>
+    <string name="payment_outcome_pending_reassurance">Your wallet updates automatically once it clears.</string>
+    <string name="payment_outcome_still_pending">Still processing. Your bank has not confirmed it yet — this is normal for UPI.</string>
+
+    <string name="payment_outcome_unconfirmed_title">We couldn\'t confirm this</string>
+    <string name="payment_outcome_unconfirmed_message">The payment finished, but we haven\'t heard back from your bank yet.</string>
+    <string name="payment_outcome_unconfirmed_reassurance">If money was taken, it will reach your wallet automatically.</string>
+
+    <string name="payment_outcome_paid_title">Money added</string>
+    <string name="payment_outcome_paid_message">G %1$s has been added to your wallet.</string>
+    <string name="payment_outcome_paid_reassurance">Payment confirmed by your bank.</string>
+
+    <string name="payment_check_again">Check status</string>
+    <string name="payment_check_failed">Couldn\'t reach the server. Check your connection and try again.</string>
+    <string name="payment_try_again">Try again</string>
+    <string name="payment_back_to_wallet">Back to wallet</string>
+    <string name="payment_close">Close</string>
+    <string name="payment_copy_reference">Copy</string>
+    <string name="payment_reference_copied">Copied</string>
+    <string name="payment_amount_and_reference">G %1$s · ref %2$s</string>
+    <string name="coming_soon">Coming Soon</string>
+    <string name="filters_cleared">Filters cleared</string>
+    <string name="please_login_to_view_transaction_history">Please login to view transaction history</string>
+
+    <!-- Wallet transaction text is derived from backend codes and localized here. -->
+    <string name="yesterday">Yesterday</string>
+    <string name="this_week">This Week</string>
+    <string name="transaction_booking_refund">Booking Refund</string>
+    <string name="transaction_ad_top_up">Ad Reward</string>
+    <string name="transaction_welcome_bonus">Welcome Bonus</string>
+    <string name="transaction_daily_wallet_credit">Daily Wallet Credit</string>
+    <string name="transaction_refund">Refund</string>
+    <string name="transaction_penalty_fee">Penalty Fee</string>
+    <string name="transaction_late_check_in_penalty">Late Check-in Penalty</string>
+    <string name="transaction_late_check_out_penalty">Late Check-out Penalty</string>
+    <string name="transaction_reward_added">Reward Added</string>
+    <string name="transaction_booking_charge">Booking Charge</string>
+    <string name="transaction_failed_format">%1$s failed</string>
+    <string name="transaction_cancelled_format">%1$s cancelled</string>
+    <string name="wallet_month_year_format">%1$s %2$d</string>
+    <string name="loading_balance">Loading balance</string>
+    <string name="wallet_balance_content_description">Balance %1$s Gridee coins</string>
+    <string name="too_many_requests">Too many requests. Please wait a moment before trying again.</string>
+    <string name="wallet_load_error">Unable to load wallet. Please try again.</string>
+    <string name="wallet_balance_load_failed">Unable to load wallet balance (%1$d)</string>
+    <string name="wallet_transactions_load_failed">Unable to load transactions (%1$d)</string>
+    <string name="showing_transactions">Showing %1$s</string>
+    <string name="watch_ad_to_earn_coins">Watch an ad to earn coins</string>
+    <string name="custom_ad_label">Ad</string>
+    <string name="custom_ad_dismiss">Dismiss ad</string>
+    <string name="admob_sponsored">Sponsored</string>
+    <string name="admob_media_content">Sponsored media</string>
+    <string name="ad_privacy_choices">Ad privacy choices</string>
+    <string name="ad_privacy_choices_description">Review how Google uses data to show ads.</string>
+    <string name="add_money_to_wallet">Add money to wallet</string>
+    <string name="just_now">Just now</string>
+
+    <plurals name="wallet_transaction_count">
+        <item quantity="one">%d transaction</item>
+        <item quantity="other">%d transactions</item>
+    </plurals>
+    <plurals name="minutes_ago">
+        <item quantity="one">%d minute ago</item>
+        <item quantity="other">%d minutes ago</item>
+    </plurals>
+    <plurals name="hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <plurals name="days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+
+    <!-- ===================== SUPPORT CHAT ===================== -->
+    <!-- The header leads with the ticket subject — on a long thread it is the only
+         thing that says what this conversation is about — and names the counterparty
+         underneath, next to the live status. -->
+    <string name="support_chat_title">Gridee Support</string>
+    <!-- Honest: this is a REST fetch of a ticket, not a socket handshake. -->
+    <string name="support_chat_status_loading">Loading…</string>
+    <!-- Header subtitle. %1$s = "Gridee Support", %2$s = ticket status. -->
+    <string name="support_chat_identity_and_status">%1$s · %2$s</string>
+    <string name="support_chat_details_action">Request details</string>
+
+    <!-- Second line of the conversation-opening chip. %s = date the ticket was raised. -->
+    <string name="support_chat_opened">Opened %s</string>
+    <!-- Opener chip, with the reference the user needs to quote on a call or email.
+         %1$s = opened date, %2$s = short ticket reference. -->
+    <string name="support_chat_opened_with_ref">Opened %1$s · #%2$s</string>
+    <!-- Shown in the opener only while support has not replied even once. No fake
+         precision — the backend measures no response time, so this must stay vague. -->
+    <string name="support_chat_awaiting_first_reply">Our team usually replies within a few hours.</string>
+
+    <!-- ===================== REQUEST DETAILS SHEET ===================== -->
+    <string name="support_details_title">Request details</string>
+    <string name="support_details_reference">Reference</string>
+    <string name="support_details_opened">Opened</string>
+    <string name="support_details_updated">Last updated</string>
+    <string name="support_details_location">Parking location</string>
+    <string name="support_details_copy_reference">Copy reference</string>
+    <string name="support_details_stage_open">Open</string>
+    <string name="support_details_stage_in_progress">In progress</string>
+    <string name="support_details_stage_resolved">Resolved</string>
+
+    <!-- Delivery captions under the newest outgoing bubble. "Sent" and not
+         "Delivered"/"Seen": the server storing the message is all the backend can
+         actually tell us. -->
+    <string name="support_chat_sending">Sending…</string>
+    <string name="support_chat_sent">Sent</string>
+    <string name="support_chat_not_delivered">Not sent · Tap to retry</string>
+
+    <!-- Inline ticket events. %s = time of day. -->
+    <string name="support_chat_event_resolved">Marked resolved · %s</string>
+
+    <!-- Load failure. Deliberately free of HTTP codes and exception text. -->
+    <string name="support_chat_load_error_body">Check your connection and try again.</string>
+
+    <!-- Revealed timestamp under a bubble. %1$s = time, %2$s = delivery caption. -->
+    <string name="support_chat_time_and_state">%1$s · %2$s</string>
+
+    <!-- TalkBack: a bubble's text alone doesn't say who sent it. %s = message text. -->
+    <string name="support_chat_you_said">You said: %s</string>
+    <string name="support_chat_support_said">Support said: %s</string>
+
+    <!-- Shown in place of the composer when a ticket is neither open nor closed. -->
+    <string name="support_chat_replies_unavailable">Replies are unavailable for this ticket.</string>
+
+    <!-- Long-press menu on a message bubble. -->
+    <string name="support_chat_action_copy">Copy</string>
+    <string name="support_chat_action_retry">Try sending again</string>
+    <string name="support_chat_action_delete">Delete</string>
+
+    <!-- Transient capsule under the header while the device has no network. Says
+         "no connection", not "failed" — polls are silent by design, so without this
+         an offline thread is indistinguishable from one nobody is answering. -->
+    <string name="support_chat_offline">No internet connection</string>
+
+    <!-- Floating control that returns the reader to the newest message. -->
+    <string name="support_chat_jump_to_latest">Jump to latest message</string>
+    <plurals name="support_chat_new_messages">
+        <item quantity="one">%d new</item>
+        <item quantity="other">%d new</item>
+    </plurals>
+
+    <!-- ===================== BOOKING PASS ===================== -->
+    <string name="booking_pass_details">Booking details</string>
+    <string name="booking_pass_title">Booking Pass</string>
+    <string name="middot">·</string>
+    <string name="deck_header_near">%1$d near %2$s</string>
+    <string name="deck_header_nearby">%1$d nearby</string>
+    <string name="gridee_coin_glyph" translatable="false">G</string>
+    <string name="pass_state_live">Live</string>
+    <string name="pass_state_booked">Booked</string>
+    <string name="pass_hold_up_exit">Hold up to the exit scanner</string>
+    <string name="pass_hold_up_entry">Hold up to the entry scanner</string>
+    <string name="pass_time_left">%1$s left</string>
+    <string name="pass_time_left_until">%1$s left · until %2$s</string>
+    <string name="pass_ends_at">Ends %1$s</string>
+    <string name="pass_where_format">%1$s · %2$s</string>
+    <string name="house_promo_referral_title">Invite a driver, you both park free once</string>
+    <string name="house_promo_referral_source">Gridee rewards</string>
+    <string name="house_promo_referral_cta">Invite</string>
+    <string name="event_poster_content_description">Sponsored event</string>
+    <string name="spotlight_default_cta">Learn more</string>
+    <string name="spotlight_attribution">Ad · %1$s</string>
+    <string name="spotlight_attribution_generic">Sponsored</string>
+    <string name="booking_details_sheet_id">Booking ID</string>
+    <string name="booking_details_sheet_copy">Copy</string>
+    <string name="booking_details_sheet_copied">Booking ID copied</string>
 </resources>

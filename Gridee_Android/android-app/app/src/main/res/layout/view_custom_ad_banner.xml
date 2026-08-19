@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Custom ad creative. The image slot is sized by aspect ratio, never by the bitmap, so the
+  card occupies exactly the same height before and after the creative decodes and the content
+  below it never shifts.
+-->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_custom_ad"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/skeleton_base"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/iv_custom_ad"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:contentDescription="@string/custom_ad_label"
+                android:scaleType="centerCrop"
+                app:layout_constraintDimensionRatio="H,16:9"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:background="@color/skeleton_base" />
+
+            <TextView
+                android:id="@+id/tv_custom_ad_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:background="@drawable/bg_custom_ad_label"
+                android:fontFamily="@font/inter_medium"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:text="@string/custom_ad_label"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                app:layout_constraintBottom_toBottomOf="@id/iv_custom_ad"
+                app:layout_constraintStart_toStartOf="@id/iv_custom_ad" />
+
+            <ImageView
+                android:id="@+id/btn_custom_ad_dismiss"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_margin="8dp"
+                android:background="@drawable/bg_custom_ad_close"
+                android:contentDescription="@string/custom_ad_dismiss"
+                android:padding="6dp"
+                android:src="@drawable/ic_close"
+                app:layout_constraintEnd_toEndOf="@id/iv_custom_ad"
+                app:layout_constraintTop_toTopOf="@id/iv_custom_ad"
+                app:tint="#FFFFFF" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</merge>

@@ -313,7 +313,7 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
         if (userId != null && isLoggedIn) {
             viewModel.loadUserProfile(context, userId)
         } else {
-            Toast.makeText(requireContext(), "User session expired", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.user_session_expired), Toast.LENGTH_SHORT).show()
             dismiss()
         }
     }
@@ -375,7 +375,7 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
         val bottomSheet = EditPhotoBottomSheet { uri ->
             selectedPhotoUri = uri
             binding.tvUserInitials.visibility = View.GONE
-            Toast.makeText(requireContext(), "Photo selected! Save to apply.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.photo_selected_save_to_apply), Toast.LENGTH_SHORT).show()
         }
         
         bottomSheet.show(childFragmentManager, EditPhotoBottomSheet.TAG)

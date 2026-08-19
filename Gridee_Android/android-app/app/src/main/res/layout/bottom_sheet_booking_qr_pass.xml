@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Booking pass.
+
+  Three bands, top to bottom: the app's standard header, the code, and the ad rail.
+
+  One surface, one screen, nothing below the fold. The code and the booking it
+  belongs to sit at the top; everything sold sits below on the same page, separated
+  by space alone — no raised panel, no dividers, and no "PARTNER SPOTLIGHT" /
+  "ADVERTISEMENT" headings. Each creative carries its own label, so a slot with
+  nothing to show simply is not laid out rather than leaving a heading stranded
+  over a void.
+
+  The pass takes only the height it needs and sits at the top; the ad zone takes all
+  the rest, so its surface extends up to meet the pass instead of leaving a band of
+  page colour stranded in the middle on tall screens. The plate sizes itself against
+  what is left once the header and the zone's minimum are paid for. Nothing scrolls.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/qr_pass_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary"
+    android:orientation="vertical">
+
+    <!-- ───────── header ─────────
+         The app's own header, the one Display & Theme, Transaction History and the profile
+         page all use: the 44 dp IOS26 back disc at the start, a 20 dp brand-tinted arrow in
+         it, and a centred 20 sp inter_bold title. The pass used to wear a pair of one-off
+         34 dp circles on a bespoke drawable — the only screen in the app that looked like
+         that — with an ⓘ at the end.
+
+         Height is wrap_content, not a constant: the status-bar inset is added to paddingTop
+         in code, and applyPlateSize measures whatever this comes out to rather than assuming. -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/qr_pass_nav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="10dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_close_qr_pass"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:contentDescription="@string/back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter_bold"
+            android:text="@string/booking_pass_title"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- ───────── the pass ───────── -->
+    <LinearLayout
+        android:id="@+id/qr_pass_block"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="top|center_horizontal"
+        android:orientation="vertical"
+        android:paddingBottom="18dp"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="14dp">
+
+        <!-- Live status: breathing dot, state word, then the time that matters. -->
+        <LinearLayout
+            android:id="@+id/qr_pass_status_line"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/qr_pass_status_dot"
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginEnd="7dp"
+                android:background="@drawable/shape_pass_status_dot" />
+
+            <TextView
+                android:id="@+id/tv_qr_pass_state"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_semibold"
+                android:letterSpacing="0.13"
+                android:textAllCaps="true"
+                android:textSize="11sp"
+                tools:text="Live"
+                tools:textColor="@color/status_text_active" />
+
+            <TextView
+                android:id="@+id/tv_qr_pass_state_sep"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="6dp"
+                android:fontFamily="@font/inter_medium"
+                android:text="@string/middot"
+                android:textColor="@color/text_tertiary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tv_qr_pass_when"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_medium"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                tools:text="1h 24m left · until 10:51 pm" />
+        </LinearLayout>
+
+        <!-- White in both themes. See bg_qr_plate. -->
+        <!--
+          The shadow is the app's card idiom, not a default drop shadow: a large elevation
+          with tinted ambient/spot colours, the same pair the active booking card uses. A
+          small elevation on a white square reads as a hard grey smudge; a wide, cool,
+          low-opacity one reads as depth.
+        -->
+        <ImageView
+            android:id="@+id/iv_qr_pass_code"
+            android:layout_width="268dp"
+            android:layout_height="268dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_qr_plate"
+            android:contentDescription="@string/booking_qr_code"
+            android:elevation="12dp"
+            android:outlineAmbientShadowColor="#2B64748B"
+            android:outlineSpotShadowColor="#1A000000"
+            android:padding="16dp"
+            android:scaleType="fitCenter"
+            tools:src="@drawable/ic_code_shield"
+            tools:targetApi="p" />
+
+        <TextView
+            android:id="@+id/tv_qr_pass_instruction"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/inter_medium"
+            android:gravity="center"
+            android:textColor="@color/text_primary"
+            android:textSize="13.5sp"
+            tools:text="Hold up to the exit scanner" />
+
+        <!-- The spot name, the lot and the vehicle number used to print here. They belong to
+             the booking rather than to the scan, and the details sheet behind the (i) already
+             carries all three, so the code now ends on the instruction. -->
+    </LinearLayout>
+
+    <!-- ───────── the ad zone ─────────
+         One rail, full width, one creative at a time: the QR-specific AdMob native card is
+         the first page and partner campaigns follow it behind.
+
+         The two paid surfaces used to share a row, which split 371 dp between a 120 dp AdMob
+         column and a 235 dp poster. At that width the AdMob headline was 11 sp and its button
+         104 dp wide, and the poster beside it took every look — two half-width ads are worth
+         less than one full-width one to both. In a rail each gets the whole page, and the two
+         "Ad" badges twelve dp apart become one per creative.
+
+         A FrameLayout rather than a column: the rail is laid out underneath the skeleton
+         while it is still up, so the two overlap rather than stack. -->
+    <FrameLayout
+        android:id="@+id/qr_pass_tray"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingTop="16dp"
+        android:paddingBottom="18dp">
+
+        <!-- Where the AdMob card loads from the first frame without ever being drawn. A GONE
+             view is still attached to the window, which is all the load path needs, and it has
+             no area, so the SDK cannot log an impression for a card nobody has seen. It moves
+             into the rail only once it has a creative — see moveNativeAdIntoRail. -->
+        <FrameLayout
+            android:id="@+id/native_ad_host"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/campaign_deck_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:visibility="invisible"
+            tools:visibility="visible">
+
+            <!-- One creative full size with the rest stacked behind it. -->
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/deck_event_campaigns"
+                android:layout_width="match_parent"
+                android:layout_height="209dp"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:overScrollMode="never" />
+
+            <!-- Page markers, built in code. They replace a "1 / 3" counter that read like a
+                 spreadsheet and did nothing to say the rail could be swiped. -->
+            <LinearLayout
+                android:id="@+id/deck_dots"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:orientation="horizontal" />
+        </LinearLayout>
+
+        <!-- last rung: never a hole -->
+        <LinearLayout
+            android:id="@+id/house_promo_row"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_gravity="center_vertical"
+            android:baselineAligned="false"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="20dp"
+            android:visibility="gone"
+            tools:visibility="gone">
+
+            <TextView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_gridee_coin_dark"
+                android:fontFamily="@font/inter_bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="@string/gridee_coin_glyph"
+                android:textColor="@color/btn_text_on_brand"
+                android:textSize="24sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/inter_semibold"
+                    android:letterSpacing="-0.012"
+                    android:maxLines="2"
+                    android:text="@string/house_promo_referral_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13.5sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="@font/inter_medium"
+                    android:text="@string/house_promo_referral_source"
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="10.5sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btn_house_promo"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:background="@drawable/bg_brand_pill"
+                android:fontFamily="@font/inter_semibold"
+                android:gravity="center"
+                android:paddingHorizontal="14dp"
+                android:text="@string/house_promo_referral_cta"
+                android:textColor="@color/btn_text_on_brand"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!--
+          Reserves the rail's height from the first frame so nothing jumps.
+
+          Its own height is set to the whole pager plus the dot row, and the poster inside it
+          to the front card alone — the pager is taller than one card because the deck behind
+          peeks out below it, and matching only the card left the tray short by that peek and
+          resized the plate on reveal.
+        -->
+        <FrameLayout
+            android:id="@+id/tray_skeleton"
+            android:layout_width="match_parent"
+            android:layout_height="233dp"
+            android:layout_gravity="center_vertical"
+            android:paddingHorizontal="20dp"
+            tools:visibility="gone">
+
+            <View
+                android:id="@+id/skeleton_deck_poster"
+                android:layout_width="match_parent"
+                android:layout_height="209dp"
+                android:layout_gravity="top"
+                android:background="@drawable/bg_event_poster"
+                android:tag="skeleton_pill" />
+        </FrameLayout>
+    </FrameLayout>
+</LinearLayout>

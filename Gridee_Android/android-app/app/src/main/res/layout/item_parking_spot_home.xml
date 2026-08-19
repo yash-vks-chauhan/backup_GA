@@ -29,6 +29,7 @@
 
         <!-- Custom Icon Circle -->
         <FrameLayout
+            android:id="@+id/layout_spot_icon"
             android:layout_width="44dp"
             android:layout_height="44dp"
             android:background="@drawable/circle_light_gray_background"
@@ -113,7 +114,7 @@
                 android:paddingHorizontal="18dp"
                 android:paddingVertical="10dp"
                 android:fontFamily="@font/inter_semibold"
-                android:text="Park"
+                android:text="@string/park"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
         </com.google.android.material.card.MaterialCardView>

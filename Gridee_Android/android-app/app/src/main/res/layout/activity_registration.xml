@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/reg_title_margin_top"
-            android:text="Create Account"
+            android:text="@string/registration_title"
             android:textSize="@dimen/reg_title_text_size"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -39,7 +39,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Join us and start parking smarter"
+            android:text="@string/join_us_and_start_parking_smarter"
             android:textSize="16sp"
             android:textColor="@color/text_secondary"
             app:layout_constraintEnd_toEndOf="parent"
@@ -53,7 +53,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/reg_first_field_margin_top"
-            android:hint="Full Name"
+            android:hint="@string/name_hint"
             app:boxBackgroundColor="@color/background_secondary"
             app:boxCornerRadiusBottomEnd="28dp"
             app:boxCornerRadiusBottomStart="28dp"
@@ -86,7 +86,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/reg_field_gap"
-            android:hint="Email"
+            android:hint="@string/email"
             app:boxBackgroundColor="@color/background_secondary"
             app:boxCornerRadiusBottomEnd="28dp"
             app:boxCornerRadiusBottomStart="28dp"
@@ -119,7 +119,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/reg_field_gap"
-            android:hint="Phone Number"
+            android:hint="@string/phone_hint"
             app:prefixText="+91"
             app:boxBackgroundColor="@color/background_secondary"
             app:boxCornerRadiusBottomEnd="28dp"
@@ -155,7 +155,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/reg_field_gap"
-            android:hint="Password"
+            android:hint="@string/password_hint"
             app:boxBackgroundColor="@color/background_secondary"
             app:boxCornerRadiusBottomEnd="28dp"
             app:boxCornerRadiusBottomStart="28dp"
@@ -184,61 +184,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Parking Lot Selection -->
-        <ProgressBar
-            android:id="@+id/parkingLotProgress"
-            style="?android:attr/progressBarStyleSmall"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginTop="16dp"
-            android:indeterminate="true"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/tilParkingLot"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/tilParkingLot" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilParkingLot"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/reg_field_gap"
-            android:hint="Assigned Parking Lot"
-            app:boxBackgroundColor="@color/background_secondary"
-            app:boxCornerRadiusBottomEnd="32dp"
-            app:boxCornerRadiusBottomStart="32dp"
-            app:boxCornerRadiusTopEnd="32dp"
-            app:boxCornerRadiusTopStart="32dp"
-            app:boxStrokeColor="@color/input_field_outline"
-            app:boxStrokeWidth="1dp"
-            app:startIconDrawable="@drawable/ic_parking_lot"
-            app:startIconTint="@color/text_tertiary"
-            app:endIconMode="custom"
-            app:endIconDrawable="@drawable/ic_arrow_down_filled_rounded"
-            app:endIconTint="@color/text_tertiary"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilPassword">
-
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/etParkingLot"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:inputType="none"
-                android:maxLines="1"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_tertiary"
-                android:textSize="16sp"
-                android:popupBackground="@drawable/dropdown_menu_background"
-                android:focusable="true"
-                android:clickable="true"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:background="@null"
-                android:importantForAutofill="no" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
         <!-- Register Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRegister"
@@ -249,7 +194,7 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:stateListAnimator="@null"
-            android:text="Register"
+            android:text="@string/register"
             android:textAllCaps="false"
             android:textColor="@color/md3_on_primary"
             android:textSize="16sp"
@@ -258,7 +203,7 @@
             app:elevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilParkingLot" />
+            app:layout_constraintTop_toBottomOf="@id/tilPassword" />
 
         <!-- Progress Bar -->
         <ProgressBar
@@ -288,7 +233,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Already have an account?"
+                android:text="@string/already_have_an_account"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 
@@ -298,7 +243,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:text="Login"
+                android:text="@string/login"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textStyle="bold"

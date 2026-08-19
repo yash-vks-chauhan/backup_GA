@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night mirror of bg_sheet_header_frost — sheet surface is #1C1C1E. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Layer 1: Full-height dissolve — long smooth tail -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="#1C1C1E"
+                android:centerColor="#CC1C1C1E"
+                android:endColor="#001C1C1E"
+                android:centerY="0.38"
+                android:type="linear" />
+            <corners
+                android:topLeftRadius="40dp"
+                android:topRightRadius="40dp" />
+        </shape>
+    </item>
+    <!-- Layer 2: Mid-band reinforcement -->
+    <item android:bottom="40dp">
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="#D91C1C1E"
+                android:centerColor="#801C1C1E"
+                android:endColor="#001C1C1E"
+                android:centerY="0.5"
+                android:type="linear" />
+            <corners
+                android:topLeftRadius="40dp"
+                android:topRightRadius="40dp" />
+        </shape>
+    </item>
+    <!-- Layer 3: Top anchor — fully opaque behind the title -->
+    <item android:bottom="68dp">
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="#1C1C1E"
+                android:endColor="#001C1C1E"
+                android:type="linear" />
+            <corners
+                android:topLeftRadius="40dp"
+                android:topRightRadius="40dp" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The "Say this" block — the sentence the referrer actually repeats, and the only
+  part of the pitch card meant to be lifted out of it. Given a recessed fill and
+  a leading rule so it reads as a pull-quote inside the card rather than a third
+  paragraph: the eye should find it without the card having to shout.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/background_primary" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+
+    <!-- 3dp leading rule in the brand ink; the quote hangs off it. -->
+    <item android:width="3dp" android:gravity="start|fill_vertical">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/brand_primary" />
+            <corners
+                android:topLeftRadius="14dp"
+                android:bottomLeftRadius="14dp" />
+        </shape>
+    </item>
+
+</layer-list>

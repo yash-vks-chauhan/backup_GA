@@ -28,7 +28,8 @@ data class AppRemoteConfig(
 )
 
 data class RemoteFeatureFlags(
-    var appleSignInEnabled: Boolean = true,
+    // No appleSignInEnabled: Apple Sign-In is an iOS-only flow. The backend sends the flag for
+    // both platforms and Gson simply ignores it here, so there is nothing for Android to gate.
     var googleSignInEnabled: Boolean = true,
     var emailSignInEnabled: Boolean = true,
     var walletFeatureEnabled: Boolean = true,
@@ -68,17 +69,26 @@ data class RemoteAppVersions(
 
 data class RemoteFinancialSettings(
     var welcomeBonusAmount: Double = 50.0,
-    var minWalletTopUpAmount: Double = 100.0,
+    var minWalletTopUpAmount: Double = 1.0,
     var maxWalletTopUpAmount: Double = 50000.0,
     var lateCheckoutPenaltyPerMin: Double = 2.0,
     var lateCheckoutGracePeriodMinutes: Double = 10.0,
-    var maxLateCheckoutPenaltyPerMin: Double = 5.0,
+    /**
+     * Per-minute ceiling on the late-checkout penalty. **`0.0` means "no cap"**, not "cap at zero"
+     * — that is the backend's semantics (`AppGlobalConfig.FinancialSettings`), and the default here
+     * mirrors it. Any consumer must special-case `<= 0` as uncapped rather than clamping to it.
+     */
+    var maxLateCheckoutPenaltyPerMin: Double = 0.0,
     var penaltyEscalationIntervalMins: Int = 10,
+    /** Extra charge applied when the backend finalizes a checkout the user never performed. */
+    var overdueCheckoutPenaltyPercentage: Double = 10.0,
     var noShowDeduction: Double = 1.0,
     var cancellationRefundFullRefundHours: Double = 2.0,
     var cancellationRefundPartialRefundHours: Double = 1.0,
     var cancellationRefundPartialPercentage: Double = 50.0,
-    var razorpayTaxPercentage: Double = 0.0,
+    // Matches the backend's `paymentGatewayTaxPercentage`; the old provider-named key
+    // never matched the payload, so this always read as 0.0.
+    var paymentGatewayTaxPercentage: Double = 0.0,
     var customCharges: Map<String, Double> = emptyMap()
 )
 
@@ -89,8 +99,14 @@ data class RemoteBookingSettings(
     var autoActivateNextBooking: Boolean = true,
     var maxBookingDurationHours: Int = 24,
     var minBookingDurationMinutes: Int = 30,
-    var noShowGraceMinutes: Int = 120,
+    var noShowGraceMinutes: Int = 180,
     var maxPricingPerHour: Double = 100.0,
+    /**
+     * When true the backend closes out a booking the user never checked out of, [autoFinalizeOverdueCheckoutMinutes]
+     * after the booked end time — so a booking can change state with no action from the app.
+     */
+    var autoFinalizeOverdueCheckouts: Boolean = true,
+    var autoFinalizeOverdueCheckoutMinutes: Int = 90,
     var bookingValidationRules: Map<String, Any> = emptyMap()
 )
 
@@ -109,7 +125,7 @@ data class RemoteNotificationSettings(
 data class RemotePlatformSettings(
     var apiVersion: String = "v1",
     var debugMode: Boolean = false,
-    var rateLimitPerMinute: Int = 40,
+    var rateLimitPerMinute: Int = 200,
     var rateLimitPerHour: Int = 1000,
     var environment: String = "PRODUCTION",
     var timezone: String = "Asia/Kolkata",

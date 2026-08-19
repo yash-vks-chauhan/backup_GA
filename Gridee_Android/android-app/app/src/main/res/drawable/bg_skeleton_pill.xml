@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The app's one skeleton placeholder shape: a full-radius capsule.
+     Everything a skeleton stands in for is either a capsule (rate badge,
+     availability badge, duration chip, top-up pill) or a line of text — and a
+     thin bar at full radius reads as a rounded line — so a single shape covers
+     both cases and the loading state never disagrees with the content that
+     replaces it. skeleton_base is a translucent lift, so this sits correctly
+     on any surface it lands on. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="@color/skeleton_base" />
-    <corners android:radius="6dp" />
+    <corners android:radius="100dp" />
 </shape>

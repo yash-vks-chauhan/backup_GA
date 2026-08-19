@@ -18,6 +18,9 @@ data class UpdateUserRequest(
     @SerializedName("vehicleNumbers")
     val vehicleNumbers: List<String>? = null,
 
+    @SerializedName("parkingLotId")
+    val parkingLotId: String? = null,
+
     @SerializedName("parkingLotName")
     val parkingLotName: String? = null
 )

@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.gridee.parking.R
 import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.databinding.ActivityLoginBinding
+import com.gridee.parking.ui.lot.ChooseCategoryActivity
 import com.gridee.parking.ui.main.MainContainerActivity
 import com.gridee.parking.ui.operator.OperatorDashboardActivity
 import com.gridee.parking.utils.AuthSession
@@ -200,6 +201,7 @@ class LoginActivity : AppCompatActivity() {
                         else -> {
                             val requiresPhone = state.user.phone.isBlank()
                             val requiresVehicle = state.user.vehicleNumbers.isEmpty()
+                            val isNewUser = state.isNewUser
 
                             if (requiresPhone) {
                                 val intent = Intent(this, AddPhoneActivity::class.java)
@@ -207,6 +209,11 @@ class LoginActivity : AppCompatActivity() {
                                 intent.putExtra(AddPhoneActivity.EXTRA_USER_NAME, state.user.name)
                                 intent.putExtra(AddPhoneActivity.EXTRA_USER_ROLE, normalizedRole)
                                 intent.putExtra(AddPhoneActivity.EXTRA_REQUIRE_VEHICLE, requiresVehicle)
+                                intent.putExtra(
+                                    AddPhoneActivity.EXTRA_REQUIRE_PARKING_SELECTION,
+                                    isNewUser
+                                )
+                                intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, isNewUser)
                                 startActivity(intent)
                                 finish()
                             } else if (requiresVehicle) {
@@ -214,6 +221,20 @@ class LoginActivity : AppCompatActivity() {
                                 intent.putExtra(AddVehicleActivity.EXTRA_USER_ID, resolvedUserId)
                                 intent.putExtra(AddVehicleActivity.EXTRA_USER_NAME, state.user.name)
                                 intent.putExtra(AddVehicleActivity.EXTRA_USER_ROLE, normalizedRole)
+                                intent.putExtra(
+                                    AddVehicleActivity.EXTRA_REQUIRE_PARKING_SELECTION,
+                                    isNewUser
+                                )
+                                intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, isNewUser)
+                                startActivity(intent)
+                                finish()
+                            } else if (isNewUser) {
+                                val homeExtras = Bundle().apply {
+                                    putString("USER_NAME", state.user.name)
+                                    putBoolean(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
+                                }
+                                val intent = ChooseCategoryActivity.onboardingIntent(this, homeExtras)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 startActivity(intent)
                                 finish()
                             } else {
@@ -312,7 +333,7 @@ class LoginActivity : AppCompatActivity() {
                         binding.loadingScrim.visibility = View.GONE
                         binding.loadingContent.visibility = View.GONE
                         binding.btnSignIn.isEnabled = true
-                        binding.btnSignIn.text = "Sign In"
+                        binding.btnSignIn.text = getString(R.string.sign_in)
                         binding.btnSignInWithGoogle.isEnabled = true
                     }
                 })

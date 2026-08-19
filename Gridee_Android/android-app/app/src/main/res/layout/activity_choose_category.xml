@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Step 1 of the lot picker: pick a place. Grouped card + row anatomy mirror the
+     Profile page; each row's 44dp tile is a live SpotDialView. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_primary"
+    android:fitsSystemWindows="true">
+
+    <!-- Header bar — the app's standard iOS26 back button and 20dp gutter. -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnBack"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:contentDescription="@string/back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_primary" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </FrameLayout>
+
+    <!-- Title -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/choose_your_place"
+            android:textSize="@dimen/reg_title_text_size"
+            android:textColor="@color/text_primary"
+            android:letterSpacing="-0.01"
+            android:fontFamily="@font/inter_semibold" />
+
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/where_do_you_usually_park_the"
+            android:textSize="15sp"
+            android:textColor="@color/text_secondary"
+            android:fontFamily="@font/inter_regular"
+            android:lineSpacingMultiplier="1.15"
+            android:layout_marginTop="6dp" />
+
+    </LinearLayout>
+
+    <!-- Content -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:clipToPadding="false"
+            android:paddingBottom="24dp">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                app:cardCornerRadius="36dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/background_secondary">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/skeletonContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerCategories"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:overScrollMode="never"
+                        tools:listitem="@layout/item_select_category" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.core.widget.NestedScrollView>
+
+        <LinearLayout
+            android:id="@+id/emptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_location"
+                app:tint="@color/text_tertiary"
+                android:alpha="0.6"
+                android:layout_marginBottom="16dp"
+                android:importantForAccessibility="no" />
+
+            <TextView
+                android:id="@+id/tvEmptyMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/no_parking_locations_are_available_yet"
+                android:textSize="15sp"
+                android:textColor="@color/text_secondary"
+                android:fontFamily="@font/inter_regular"
+                android:gravity="center" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRetry"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/profile_vehicle_retry_action"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:fontFamily="@font/inter_medium"
+                app:strokeColor="@color/input_field_outline"
+                app:cornerRadius="24dp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

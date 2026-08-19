@@ -32,6 +32,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.gridee.parking.R
 import com.gridee.parking.databinding.ItemBookingBinding
 import com.gridee.parking.databinding.ItemBookingActivePassBinding
+import com.gridee.parking.ui.bookings.BookingPassText
 import com.gridee.parking.utils.BookingQrCodeGenerator
 import com.gridee.parking.utils.VehicleNumberValidator
 import java.io.Serializable
@@ -72,16 +73,18 @@ private enum class Urgency { GREEN, AMBER, RED }
 class BookingsAdapter(
     private var bookings: List<Booking>,
     private val onBookingClick: (Booking) -> Unit,
-    private val onExtendClick: (Booking) -> Unit,
     private val useCompactHistory: Boolean = false,
-    private val historySectionProvider: ((Booking) -> String)? = null
+    private val historySectionProvider: ((Booking) -> String)? = null,
+    private val onQrDialogVisibilityChanged: (bookingId: String, visible: Boolean) -> Unit = { _, _ -> },
+    private val onQrPassClick: ((booking: Booking) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val qrBitmapCache = mutableMapOf<String, Bitmap>()
+    private var visibleQrDialog: Dialog? = null
+    private var visibleQrBookingId: String? = null
 
     private sealed class Row {
         data class Card(val booking: Booking, val isHero: Boolean = false) : Row()
-        data class Queue(val nextBooking: Booking, val isHeader: Boolean) : Row()
         data class Section(val title: String) : Row()
     }
 
@@ -91,7 +94,6 @@ class BookingsAdapter(
         const val TYPE_ACTIVE_PASS = 1
         const val TYPE_DEFAULT = 2
         const val TYPE_HISTORY = 3
-        const val TYPE_QUEUE_CONNECTOR = 4
         const val TYPE_HISTORY_SECTION = 5
         const val TYPE_HERO_BOOKING = 6
         const val PAYLOAD_TIMER_UPDATE = "payload_timer_update"
@@ -117,30 +119,11 @@ class BookingsAdapter(
     }
 
 
-    private fun formatCountdown(targetMillis: Long, fallbackTime: String): String {
-        val safeFallback = fallbackTime.trim().ifEmpty { "--" }
-        if (targetMillis <= 0L) return "Starts at $safeFallback"
-        val diff = targetMillis - System.currentTimeMillis()
-        return when {
-            diff <= -60_000L -> "Started at $safeFallback"
-            diff <= 0L -> "Starting now"
-            diff < 60_000L -> "Starts in less than a minute"
-            diff < 60L * 60_000L -> {
-                val mins = (diff / 60_000L).toInt().coerceAtLeast(1)
-                "Starts in $mins min"
-            }
-            diff < 12L * 60L * 60_000L -> {
-                val hours = diff / (60L * 60_000L)
-                val mins = (diff % (60L * 60_000L)) / 60_000L
-                if (mins == 0L) "Starts in ${hours}h" else "Starts in ${hours}h ${mins}m"
-            }
-            else -> "Starts at $safeFallback"
-        }
-    }
+    private fun formatCountdown(targetMillis: Long, fallbackTime: String): String =
+        BookingPassText.countdown(targetMillis, fallbackTime)
 
     override fun getItemViewType(position: Int): Int {
         return when (val row = rows[position]) {
-            is Row.Queue -> TYPE_QUEUE_CONNECTOR
             is Row.Section -> TYPE_HISTORY_SECTION
             is Row.Card -> {
                 val status = row.booking.status
@@ -171,14 +154,6 @@ class BookingsAdapter(
                     false
                 )
                 HistoryBookingViewHolder(binding)
-            }
-            TYPE_QUEUE_CONNECTOR -> {
-                val binding = com.gridee.parking.databinding.ItemBookingQueueConnectorBinding.inflate(
-                    LayoutInflater.from(parent.context),
-                    parent,
-                    false
-                )
-                QueueConnectorViewHolder(binding)
             }
             TYPE_HISTORY_SECTION -> {
                 val binding = com.gridee.parking.databinding.ItemBookingHistorySectionBinding.inflate(
@@ -222,9 +197,6 @@ class BookingsAdapter(
                     is StandardBookingViewHolder -> holder.bind(booking)
                 }
             }
-            is Row.Queue -> {
-                if (holder is QueueConnectorViewHolder) holder.bind(row.nextBooking, row.isHeader)
-            }
             is Row.Section -> {
                 if (holder is HistorySectionViewHolder) holder.bind(row.title, position == 0)
             }
@@ -236,9 +208,6 @@ class BookingsAdapter(
             when (val row = rows.getOrNull(position)) {
                 is Row.Card -> {
                     if (holder is ActivePassViewHolder) holder.updateTimer(row.booking)
-                }
-                is Row.Queue -> {
-                    if (holder is QueueConnectorViewHolder) holder.bind(row.nextBooking, row.isHeader)
                 }
                 else -> { /* no-op */ }
             }
@@ -253,6 +222,20 @@ class BookingsAdapter(
         bookings = newBookings
         rows = buildRows(newBookings)
         notifyDataSetChanged()
+    }
+
+    /** Closes the enlarged pass once the backend confirms that this booking has transitioned. */
+    fun dismissBookingQrDialog(bookingId: String): Boolean {
+        if (visibleQrBookingId != bookingId) return false
+        val dialog = visibleQrDialog?.takeIf { it.isShowing } ?: return false
+        dialog.dismiss()
+        return true
+    }
+
+    fun dismissVisibleBookingQrDialog() {
+        visibleQrDialog?.takeIf { it.isShowing }?.dismiss()
+        visibleQrDialog = null
+        visibleQrBookingId = null
     }
 
     inner class ActivePassViewHolder(
@@ -380,9 +363,9 @@ class BookingsAdapter(
                 attachPressScale(layoutBookingQr)
                 layoutBookingQr.setOnClickListener { v ->
                     v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                    showBookingQrDialog(
+                    openBookingQrPass(
                         v,
-                        bookingId,
+                        booking,
                         title = "Show at exit",
                         subtitle = "Hold up to the exit scanner"
                     )
@@ -583,17 +566,8 @@ class BookingsAdapter(
     // Matches the type-driven hierarchy of the redesigned active card —
     // we don't need seconds visible at hour-scale, but we surface them
     // at minute-scale so the card doesn't appear frozen at "1m" forever.
-    private fun formatRemainingHero(remainingMillis: Long): String {
-        val totalSeconds = remainingMillis.coerceAtLeast(0L) / 1000
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
-        return when {
-            hours > 0 -> "${hours}h ${minutes}m"
-            minutes > 0 -> "${minutes}m"
-            else -> "${seconds}s"
-        }
-    }
+    private fun formatRemainingHero(remainingMillis: Long): String =
+        BookingPassText.remaining(remainingMillis)
 
     inner class StandardBookingViewHolder(
         private val binding: ItemBookingBinding
@@ -768,21 +742,6 @@ class BookingsAdapter(
 
                 attachPressScale(cardBooking)
             }
-        }
-    }
-
-    inner class QueueConnectorViewHolder(
-        private val binding: com.gridee.parking.databinding.ItemBookingQueueConnectorBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
-
-        fun bind(nextBooking: Booking, isHeader: Boolean) {
-            val time = nextBooking.startTime.trim()
-            val text = if (isHeader) {
-                formatCountdown(nextBooking.checkInTimestamp, time)
-            } else {
-                if (time.isNotEmpty()) "Then at $time" else "Then"
-            }
-            binding.tvQueueLabel.text = text.uppercase(Locale.getDefault())
         }
     }
 
@@ -1062,7 +1021,7 @@ class BookingsAdapter(
         }
         container.setOnClickListener { view ->
             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-            showBookingQrDialog(view, bookingId, title, dialogSubtitle)
+            openBookingQrPass(view, booking, title, dialogSubtitle)
         }
 
         // Time-aware caption: for a booked session whose check-in is imminent
@@ -1095,8 +1054,23 @@ class BookingsAdapter(
         }
     }
 
+    private fun openBookingQrPass(
+        anchor: View,
+        booking: Booking,
+        title: String,
+        subtitle: String
+    ) {
+        val externalHandler = onQrPassClick
+        if (externalHandler != null) {
+            externalHandler(booking)
+        } else {
+            showBookingQrDialog(anchor, booking.id.trim(), title, subtitle)
+        }
+    }
+
     private fun showBookingQrDialog(anchor: View, bookingId: String, title: String, subtitle: String) {
         val context = anchor.context
+        dismissVisibleBookingQrDialog()
         val dialog = Dialog(context)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
@@ -1164,7 +1138,17 @@ class BookingsAdapter(
             closeButton = closeButton
         )
 
+        visibleQrDialog = dialog
+        visibleQrBookingId = bookingId
+        dialog.setOnDismissListener {
+            if (visibleQrDialog === dialog) {
+                visibleQrDialog = null
+                visibleQrBookingId = null
+                onQrDialogVisibilityChanged(bookingId, false)
+            }
+        }
         dialog.show()
+        onQrDialogVisibilityChanged(bookingId, true)
     }
 
     // ───────── QR modal: open/close choreography + drag-to-dismiss ─────────

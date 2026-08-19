@@ -22,8 +22,11 @@
     <color name="text_tertiary">#636366</color>
     <color name="text_quaternary">#48484A</color>
 
-    <!-- Skeleton placeholder fill — used in bottom-sheet loading states -->
-    <color name="skeleton_base">#2A2B30</color>
+    <!-- Skeleton placeholder fill — see the light-theme note. Translucent here
+         matters most: the booking sheet's footer is a raised #2C2C2E while the
+         cards behind it are #1C1C1E, and the old flat #2A2B30 was invisible
+         against the footer. A 6% white lift reads identically on both. -->
+    <color name="skeleton_base">#10FFFFFF</color>
 
     <!-- Booking details page subtle column line / hairline -->
     <color name="booking_details_column_line">#14FFFFFF</color>
@@ -37,6 +40,8 @@
     <!-- Brand Colors (Inverted for dark) -->
     <color name="brand_primary">#FFFFFF</color>
     <color name="btn_text_on_brand">#000000</color>
+    <!-- Ripple that stays visible on a brand-filled surface (white button in dark mode) -->
+    <color name="ripple_on_brand">#26000000</color>
     <color name="brand_surface">#1C1C1E</color>
     <color name="brand_dark">#FFFFFF</color>
 
@@ -78,6 +83,9 @@
     <color name="nav_active_pill_fill">#3A3A3C</color>
     <color name="nav_active_pill_stroke">#33FFFFFF</color>
     <color name="nav_active_pill_on">@color/brand_primary</color>
+    <!-- Partner referral pill. Dark mode already separated cleanly against the #000000
+         page, so this keeps the previous nav_floating_surface value. -->
+    <color name="partner_pill_surface">#1C1C1E</color>
     <color name="nav_inactive_tint">#8E8E93</color>
     <color name="bottom_nav_surface">#1C1C1E</color>
     <color name="bottom_nav_indicator">#2C2C2E</color>
@@ -142,8 +150,6 @@
     <color name="search_ripple_color">#1AFFFFFF</color>
 
     <!-- Segmented Control -->
-    <color name="segment_shell_surface">#1C1C1E</color>
-    <color name="segment_shell_border">#38383A</color>
     <color name="segment_button_bg_checked">#3A3A3C</color>
     <color name="segment_button_bg_unchecked">#1C1C1E</color>
     <color name="segment_button_border_checked">#545456</color>
@@ -153,8 +159,6 @@
     <color name="segment_slider_fill">#3A3A3C</color>
     <color name="segment_slider_border">#00000000</color>
     <color name="segment_badge_bg">#2C2C3E</color>
-    <color name="segment_badge_text">#A8B8FF</color>
-    <color name="segment_ripple_active">#33FFFFFF</color>
     <color name="filter_button_ripple">#22FFFFFF</color>
     <color name="segment_track_color">#1C1C1E</color>
     <color name="segment_slider_shadow">#40000000</color>
@@ -269,6 +273,11 @@
     <!-- Circle Icon Background -->
     <color name="circle_icon_bg">#2C2C2E</color>
 
+    <!-- Lot picker choice dock (dark): iOS26 glass over the black background. -->
+    <color name="dock_glass_surface">#E61C1C1E</color>
+    <color name="dock_glass_stroke">#26FFFFFF</color>
+    <color name="btn_glass_disabled">#24FFFFFF</color>
+
     <!-- Slide-to-Book Slider -->
     <color name="slider_track">#3A3A3C</color>
     <color name="slider_thumb">#FFFFFF</color>
@@ -319,5 +328,27 @@
     <!-- Dark-mode hairline for the notification card — separates the elevated
          card surface from the pure-black page background. -->
     <color name="notification_card_stroke">@color/divider_hairline</color>
+
+    <!-- Script badge surface, lifted just off the card so the glyph stays legible. -->
+    <color name="script_badge_surface">#2C2C2E</color>
+
+    <!-- ===================== SUPPORT CHAT ===================== -->
+    <!-- See the light-theme note. Dark is where the old tokens hurt most: outgoing
+         bubbles resolved to pure #FFFFFF on pure #000000 — a luminance blast on every
+         scroll. Here outgoing is an elevated grey and incoming the standard card
+         surface; the pair is a deliberate one-step lift, and alignment plus the tail
+         carry the rest of the distinction (the same trick WhatsApp dark uses). -->
+    <color name="chat_bubble_outgoing">#3A3A3C</color>
+    <color name="chat_bubble_incoming">#1C1C1E</color>
+    <color name="chat_text_outgoing">#FFFFFF</color>
+    <color name="chat_text_incoming">#FFFFFF</color>
+    <color name="chat_bubble_outgoing_pressed">#4C4C4F</color>
+    <color name="chat_bubble_incoming_pressed">#2C2C2E</color>
+
+    <!-- Alpha ramp over background_primary for the frosted scrims. Same resolved
+         values as the literals they replace. -->
+    <color name="background_primary_a85">#D9000000</color>
+    <color name="background_primary_a80">#CC000000</color>
+    <color name="background_primary_a50">#80000000</color>
 
 </resources>

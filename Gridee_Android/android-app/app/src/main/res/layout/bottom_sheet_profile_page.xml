@@ -93,7 +93,7 @@
                     android:fontFamily="@font/inter_bold"
                     android:textStyle="bold"
                     android:gravity="center"
-                    android:text="Edit Profile"
+                    android:text="@string/edit_profile"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp" />
 
@@ -165,7 +165,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Full Name"
+                    android:text="@string/name_hint"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:fontFamily="@font/inter_medium"
@@ -181,7 +181,7 @@
                     app:boxCornerRadiusBottomStart="30dp"
                     app:boxCornerRadiusTopEnd="30dp"
                     app:boxCornerRadiusTopStart="30dp"
-                    app:boxStrokeColor="@color/selector_profile_input_outline"
+                    app:boxStrokeColor="@color/selector_input_outline"
                     app:boxStrokeWidth="@dimen/profile_input_outline_width"
                     app:endIconMode="clear_text"
                     app:endIconTint="@color/text_tertiary"
@@ -197,7 +197,7 @@
                         android:fontFamily="@font/inter_medium"
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp"
-                        android:hint="Enter your name"
+                        android:hint="@string/enter_your_name"
                         android:textColorHint="@color/text_tertiary"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -206,7 +206,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Mobile Number"
+                    android:text="@string/mobile_number"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:fontFamily="@font/inter_medium"
@@ -223,7 +223,7 @@
                     app:boxCornerRadiusBottomStart="30dp"
                     app:boxCornerRadiusTopEnd="30dp"
                     app:boxCornerRadiusTopStart="30dp"
-                    app:boxStrokeColor="@color/selector_profile_input_outline"
+                    app:boxStrokeColor="@color/selector_input_outline"
                     app:boxStrokeWidth="@dimen/profile_input_outline_width"
                     app:hintEnabled="false">
 
@@ -248,7 +248,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Email Address"
+                    android:text="@string/email_hint"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:fontFamily="@font/inter_medium"
@@ -264,7 +264,7 @@
                     app:boxCornerRadiusBottomStart="30dp"
                     app:boxCornerRadiusTopEnd="30dp"
                     app:boxCornerRadiusTopStart="30dp"
-                    app:boxStrokeColor="@color/selector_profile_input_outline"
+                    app:boxStrokeColor="@color/selector_input_outline"
                     app:boxStrokeWidth="@dimen/profile_input_outline_width"
                     app:hintEnabled="false">
 
@@ -281,7 +281,7 @@
                         android:enabled="false"
                         android:focusable="false"
                         android:backgroundTint="#FAFAFA"
-                        android:hint="Enter email address"
+                        android:hint="@string/enter_email_address"
                         android:textColorHint="@color/text_tertiary"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -295,7 +295,7 @@
                     android:paddingHorizontal="48dp"
                     android:backgroundTint="@color/brand_primary"
                     android:fontFamily="@font/inter_bold"
-                    android:text="Save Changes"
+                    android:text="@string/save_changes"
                     android:textColor="@color/md3_on_primary"
                     android:textSize="16sp"
                     android:textAllCaps="false"

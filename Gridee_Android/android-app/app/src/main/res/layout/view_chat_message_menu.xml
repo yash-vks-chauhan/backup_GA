@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press menu for a message bubble, shown in a PopupWindow anchored to the
+     bubble's near edge. A card rather than a system PopupMenu so it carries the
+     app's own surface, radius and type — a stock menu reads as OS chrome dropped
+     into a designed screen.
+
+     Rows are laid out for the widest case; the caller hides the ones that don't
+     apply, so a normal message shows only "Copy". Padding is generous enough to be
+     a comfortable touch target without turning the card into a sheet.
+
+     The radius is capsule-first, like the bubbles it opens over. A single "Copy" row
+     measures 56dp tall, so 28dp closes it into an exact pill — which is the case you
+     actually see, since Retry and Delete only appear on a message that failed to
+     send. The three-row form keeps the same 28dp and simply reads as generously
+     rounded. The old flat 14dp made a lone Copy look like a clipped card. -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@color/background_secondary"
+    app:cardCornerRadius="@dimen/radius_xl"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="168dp"
+        android:orientation="vertical"
+        android:paddingVertical="6dp">
+
+        <LinearLayout
+            android:id="@+id/row_copy"
+            style="@style/Widget.Gridee.ChatMenuRow">
+
+            <ImageView
+                android:layout_width="17dp"
+                android:layout_height="17dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_copy"
+                app:tint="@color/icon_secondary" />
+
+            <TextView
+                style="@style/Widget.Gridee.ChatMenuLabel"
+                android:text="@string/support_chat_action_copy" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/row_retry"
+            style="@style/Widget.Gridee.ChatMenuRow"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="17dp"
+                android:layout_height="17dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_refresh"
+                app:tint="@color/icon_secondary" />
+
+            <TextView
+                style="@style/Widget.Gridee.ChatMenuLabel"
+                android:text="@string/support_chat_action_retry" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/row_delete"
+            style="@style/Widget.Gridee.ChatMenuRow"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="17dp"
+                android:layout_height="17dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_delete_outlined"
+                app:tint="@color/red" />
+
+            <TextView
+                style="@style/Widget.Gridee.ChatMenuLabel"
+                android:text="@string/support_chat_action_delete"
+                android:textColor="@color/red" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

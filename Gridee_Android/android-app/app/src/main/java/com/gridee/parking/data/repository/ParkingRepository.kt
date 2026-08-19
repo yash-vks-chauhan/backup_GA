@@ -11,8 +11,8 @@ class ParkingRepository {
     
     private val apiService = ApiClient.apiService
     
-    suspend fun getParkingLots(): Response<List<ParkingLot>> {
-        return apiService.getParkingLots()
+    suspend fun getParkingLots(organizationType: String? = null): Response<List<ParkingLot>> {
+        return apiService.getParkingLotsByType(organizationType)
     }
 
     suspend fun getParkingLotsPayload(): Response<JsonElement> {
@@ -41,6 +41,10 @@ class ParkingRepository {
 
     suspend fun getOperatorParkingSpotsPayload(): Response<JsonElement> {
         return apiService.getOperatorParkingSpotsPayload()
+    }
+
+    suspend fun getOperatorParkingSpotsForLotPayload(lotId: String): Response<JsonElement> {
+        return apiService.getOperatorParkingSpotsForLotPayload(lotId)
     }
     
     suspend fun getParkingSpotsByLot(lotId: String): Response<List<ParkingSpot>> {

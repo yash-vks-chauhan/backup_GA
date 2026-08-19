@@ -35,7 +35,7 @@
             android:layout_marginTop="32dp"
             android:fontFamily="@font/inter_medium"
             android:gravity="center"
-            android:text="Account settings are almost here"
+            android:text="@string/account_settings_are_almost_here"
             android:textColor="@color/text_primary"
             android:textSize="24sp" />
 
@@ -46,7 +46,7 @@
             android:layout_marginTop="12dp"
             android:gravity="center"
             android:lineSpacingMultiplier="1.2"
-            android:text="We’re building a comprehensive way to manage your account details. Stay tuned for updates!"
+            android:text="@string/were_building_a_comprehensive_way_to"
             android:textColor="@color/text_secondary"
             android:textSize="16sp" />
 
@@ -61,7 +61,7 @@
         android:insetTop="0dp"
         android:insetBottom="0dp"
         android:stateListAnimator="@null"
-        android:text="Back to Profile"
+        android:text="@string/back_to_profile"
         android:textAllCaps="false"
         android:textColor="@color/md3_on_primary"
         android:textSize="16sp"

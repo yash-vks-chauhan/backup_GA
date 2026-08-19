@@ -1,9 +1,12 @@
 package com.gridee.parking.ui.views
 
 import android.content.Context
-import android.text.format.DateUtils
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
+import com.gridee.parking.R
+import java.text.DateFormat
+import java.util.Date
+import java.util.TimeZone
 
 /**
  * A TextView that renders a "time ago" label and updates itself while it is attached.
@@ -67,11 +70,28 @@ class RelativeTimeTextView @JvmOverloads constructor(
     private fun updateText() {
         val reference = referenceTimeMillis ?: return
         val now = System.currentTimeMillis()
-        val relative = DateUtils.getRelativeTimeSpanString(
-            reference,
-            now,
-            DateUtils.SECOND_IN_MILLIS
-        ).toString()
+        val elapsed = (now - reference).coerceAtLeast(0L)
+        val relative = when {
+            elapsed < MINUTE_MILLIS -> context.getString(R.string.just_now)
+            elapsed < HOUR_MILLIS -> {
+                val minutes = (elapsed / MINUTE_MILLIS).toInt()
+                resources.getQuantityString(R.plurals.minutes_ago, minutes, minutes)
+            }
+            elapsed < DAY_MILLIS -> {
+                val hours = (elapsed / HOUR_MILLIS).toInt()
+                resources.getQuantityString(R.plurals.hours_ago, hours, hours)
+            }
+            elapsed < WEEK_MILLIS -> {
+                val days = (elapsed / DAY_MILLIS).toInt()
+                resources.getQuantityString(R.plurals.days_ago, days, days)
+            }
+            else -> {
+                val locale = resources.configuration.locales[0]
+                DateFormat.getDateInstance(DateFormat.MEDIUM, locale).apply {
+                    timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+                }.format(Date(reference))
+            }
+        }
 
         isInternalTextUpdate = true
         try {
@@ -89,13 +109,20 @@ class RelativeTimeTextView @JvmOverloads constructor(
         val diff = kotlin.math.abs(now - reference)
 
         val delayMillis = when {
-            diff < DateUtils.MINUTE_IN_MILLIS -> DateUtils.SECOND_IN_MILLIS
-            diff < DateUtils.HOUR_IN_MILLIS -> DateUtils.MINUTE_IN_MILLIS
-            diff < DateUtils.DAY_IN_MILLIS -> DateUtils.HOUR_IN_MILLIS
-            else -> DateUtils.DAY_IN_MILLIS
+            diff < MINUTE_MILLIS -> SECOND_MILLIS
+            diff < HOUR_MILLIS -> MINUTE_MILLIS
+            diff < DAY_MILLIS -> HOUR_MILLIS
+            else -> DAY_MILLIS
         }
 
         postDelayed(updateRunnable, delayMillis)
     }
-}
 
+    private companion object {
+        const val SECOND_MILLIS = 1_000L
+        const val MINUTE_MILLIS = 60 * SECOND_MILLIS
+        const val HOUR_MILLIS = 60 * MINUTE_MILLIS
+        const val DAY_MILLIS = 24 * HOUR_MILLIS
+        const val WEEK_MILLIS = 7 * DAY_MILLIS
+    }
+}

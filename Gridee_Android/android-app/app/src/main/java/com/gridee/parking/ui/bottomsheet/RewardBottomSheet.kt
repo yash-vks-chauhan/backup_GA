@@ -546,7 +546,9 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
 
     private fun preloadRewardedAd() {
         if (isLoadingRewardedAd || rewardedAd != null) return
-        val appContext = requireContext().applicationContext
+        // Mediated networks such as Meta require an Activity context for rewarded requests.
+        // The request still uses the AdMob ad-unit ID and the normal Google Mobile Ads API.
+        val activity = requireActivity()
         val adUnitId = AdMobManager.rewardedAdUnitId
         isLoadingRewardedAd = true
 
@@ -557,7 +559,7 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
             }
 
             RewardedAd.load(
-                appContext,
+                activity,
                 adUnitId,
                 AdRequest.Builder().build(),
                 object : RewardedAdLoadCallback() {
@@ -613,7 +615,7 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
         binding.btnPrimary.alpha = if (isLoading) 0.7f else 1f
 
         if (isLoading) {
-            binding.btnPrimary.text = "Preparing video…"
+            binding.btnPrimary.text = getString(R.string.preparing_video)
             binding.btnPrimary.icon = buildButtonSpinner()
             binding.btnPrimary.iconTint = ColorStateList.valueOf(
                 ContextCompat.getColor(requireContext(), R.color.reward_button_text)
@@ -662,7 +664,7 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
                 setRewardedAdLoading(false)
                 Toast.makeText(
                     requireContext(),
-                    "We could not open the reward video. Please try again in a moment.",
+                    getString(R.string.we_could_not_open_the_reward),
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -676,7 +678,7 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
             creditRewardToWallet(rewardAmount)
             Toast.makeText(
                 requireContext(),
-                "Reward earned! Processing your wallet top-up...",
+                getString(R.string.reward_earned_processing_your_wallet_top),
                 Toast.LENGTH_SHORT
             ).show()
         }

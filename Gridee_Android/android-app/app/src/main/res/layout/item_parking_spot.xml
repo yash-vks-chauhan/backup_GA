@@ -149,7 +149,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Amenities:"
+                android:text="@string/amenities"
                 android:textColor="@color/text_tertiary"
                 android:textSize="12sp"
                 android:fontFamily="@font/inter_regular" />

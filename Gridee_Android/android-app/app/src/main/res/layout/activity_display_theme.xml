@@ -47,7 +47,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Display &amp; Theme"
+                android:text="@string/display_theme"
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -94,7 +94,7 @@
                 android:id="@+id/tv_appearance_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Appearance"
+                android:text="@string/appearance"
                 android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:fontFamily="@font/inter_semibold"
@@ -104,7 +104,7 @@
                 android:id="@+id/tv_appearance_sub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Choose how Gridee looks on your device."
+                android:text="@string/choose_how_gridee_looks_on_your"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 android:fontFamily="@font/inter_regular"
@@ -413,7 +413,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Light"
+                            android:text="@string/light"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:fontFamily="@font/inter_medium" />
@@ -705,7 +705,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Dark"
+                            android:text="@string/dark"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:fontFamily="@font/inter_medium" />
@@ -743,7 +743,7 @@
                     android:id="@+id/lbl_match_system"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Match System"
+                    android:text="@string/match_system"
                     android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:fontFamily="@font/inter_medium" />
@@ -759,7 +759,7 @@
                 android:id="@+id/tv_gradient_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Hero Gradient"
+                android:text="@string/hero_gradient"
                 android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:fontFamily="@font/inter_semibold"
@@ -769,7 +769,7 @@
                 android:id="@+id/tv_gradient_sub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="The banner color on your home screen."
+                android:text="@string/the_banner_color_on_your_home"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 android:fontFamily="@font/inter_regular"

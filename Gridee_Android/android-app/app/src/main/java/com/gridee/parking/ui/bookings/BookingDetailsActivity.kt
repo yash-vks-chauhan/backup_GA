@@ -103,7 +103,7 @@ class BookingDetailsActivity : BaseActivity<ActivityBookingDetailsBinding>() {
 
         bookingId = intent.getStringExtra(EXTRA_BOOKING_ID)
         if (bookingId.isNullOrBlank()) {
-            Toast.makeText(this, "Missing booking ID", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.missing_booking_id), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -604,7 +604,7 @@ class BookingDetailsActivity : BaseActivity<ActivityBookingDetailsBinding>() {
         icon.animate().cancel()
         icon.setImageResource(R.drawable.ic_copy_booking_reference_done)
         icon.imageTintList = ContextCompat.getColorStateList(this, R.color.text_primary)
-        referenceText.text = "Copied to clipboard"
+        referenceText.text = getString(R.string.copied_to_clipboard)
         referenceText.setTextColor(ContextCompat.getColor(this, R.color.text_primary))
         icon.scaleX = 0.6f; icon.scaleY = 0.6f; icon.alpha = 0f
         icon.animate()

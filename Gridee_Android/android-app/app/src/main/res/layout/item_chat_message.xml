@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One message row: the bubble, plus an optional caption underneath ("Delivered",
+     "Not delivered · Tap to retry"). The caption lives inside the row rather than
+     being its own list item so grouping and diffing stay about messages only.
+
+     Side-specific setup (gravity, colours, padding, bubble background) is applied
+     once per ViewHolder from the view type, not on every bind — outgoing and
+     incoming are separate view types, so a recycled holder never changes sides.
+
+     Vertical spacing is padding, not margin: grouped bubbles sit tight, ungrouped
+     ones get air, and padding avoids touching layout params on every bind. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/inter_regular"
+        android:includeFontPadding="false"
+        android:letterSpacing="0"
+        android:textSize="16sp"
+        tools:layout_gravity="end"
+        tools:text="Payment was deducted but the booking never confirmed."
+        tools:textColor="@color/chat_text_incoming" />
+
+    <TextView
+        android:id="@+id/tv_caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/inter_medium"
+        android:includeFontPadding="false"
+        android:letterSpacing="0"
+        android:textSize="11.5sp"
+        android:visibility="gone"
+        tools:layout_gravity="end"
+        tools:text="Delivered"
+        tools:visibility="visible" />
+
+</LinearLayout>

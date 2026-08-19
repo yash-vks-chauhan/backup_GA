@@ -60,7 +60,7 @@
                 android:fontFamily="@font/inter_semibold"
                 android:gravity="center"
                 android:letterSpacing="0.08"
-                android:text="Daily reward"
+                android:text="@string/daily_reward"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
 
@@ -86,7 +86,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:fontFamily="@font/inter_semibold"
-                    android:text="coins"
+                    android:text="@string/coins"
                     android:textColor="@color/text_secondary"
                     android:textSize="15sp" />
             </LinearLayout>
@@ -102,7 +102,7 @@
                 android:fontFamily="@font/inter_regular"
                 android:gravity="center"
                 android:lineSpacingExtra="3dp"
-                android:text="Watch a short clip — minted straight to your wallet"
+                android:text="@string/watch_a_short_clip_minted_straight"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 
@@ -116,7 +116,7 @@
                 android:insetBottom="0dp"
                 android:fontFamily="@font/inter_bold"
                 android:letterSpacing="0.01"
-                android:text="Watch &amp; claim"
+                android:text="@string/watch_claim"
                 android:textAllCaps="false"
                 android:textSize="17sp"
                 app:cornerRadius="28dp"
@@ -150,7 +150,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_regular"
-                    android:text="Enjoying Gridee?"
+                    android:text="@string/enjoying_gridee"
                     android:textColor="@color/text_secondary"
                     android:textSize="13.5sp" />
 
@@ -159,7 +159,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:fontFamily="@font/inter_bold"
-                    android:text="Rate us"
+                    android:text="@string/rate_us"
                     android:textColor="@color/reward_amount_text"
                     android:textSize="13.5sp" />
             </LinearLayout>
@@ -172,7 +172,7 @@
                 android:layout_marginTop="14dp"
                 android:fontFamily="@font/inter_regular"
                 android:gravity="center"
-                android:text="A new reward every day"
+                android:text="@string/a_new_reward_every_day"
                 android:textColor="@color/text_tertiary"
                 android:textSize="12sp" />
 

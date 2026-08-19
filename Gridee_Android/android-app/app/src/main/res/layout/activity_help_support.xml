@@ -37,8 +37,8 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_semibold"
                     android:includeFontPadding="false"
-                    android:letterSpacing="0"
-                    android:text="Support"
+                    android:letterSpacing="-0.01"
+                    android:text="@string/op_menu_section_support"
                     android:textColor="@color/text_primary"
                     android:textSize="30sp" />
 
@@ -49,7 +49,7 @@
                     android:fontFamily="@font/inter_medium"
                     android:letterSpacing="0"
                     android:lineSpacingMultiplier="1.25"
-                    android:text="Get help with bookings, payments and your account."
+                    android:text="@string/get_help_with_bookings_payments_and"
                     android:textColor="@color/booking_details_support_text"
                     android:textSize="14sp" />
 
@@ -58,12 +58,12 @@
                     android:id="@+id/card_active_conversation"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="26dp"
+                    android:layout_marginTop="24dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:visibility="gone"
                     app:cardBackgroundColor="@color/background_secondary"
-                    app:cardCornerRadius="36dp"
+                    app:cardCornerRadius="28dp"
                     app:cardElevation="0dp"
                     app:strokeWidth="0dp"
                     app:rippleColor="@color/row_press_overlay">
@@ -149,7 +149,7 @@
                                 android:fontFamily="@font/inter_semibold"
                                 android:includeFontPadding="false"
                                 android:letterSpacing="0"
-                                android:text="Continue conversation"
+                                android:text="@string/continue_conversation"
                                 android:textColor="@color/brand_primary"
                                 android:textSize="14sp" />
 
@@ -157,7 +157,7 @@
                                 android:layout_width="15dp"
                                 android:layout_height="15dp"
                                 android:layout_marginStart="5dp"
-                                android:contentDescription="@string/back"
+                                android:importantForAccessibility="no"
                                 android:src="@drawable/ic_arrow_right"
                                 app:tint="@color/brand_primary" />
 
@@ -167,113 +167,182 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ========== START A REQUEST ========== -->
+                <!-- ========== START A REQUEST (single-line capsule CTA) ========== -->
+                <!-- Height is fixed to 60dp and the corner radius to exactly half of it,
+                     so the card reads as a true capsule pill rather than an over-rounded
+                     multi-line card. The reassurance copy lives in the hero subtitle. -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_start_request"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="26dp"
+                    android:layout_marginTop="24dp"
                     android:clickable="true"
+                    android:contentDescription="Start a request"
                     android:focusable="true"
                     app:cardBackgroundColor="@color/background_secondary"
-                    app:cardCornerRadius="36dp"
+                    app:cardCornerRadius="30dp"
                     app:cardElevation="0dp"
                     app:strokeWidth="0dp"
                     app:rippleColor="@color/row_press_overlay">
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="60dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingHorizontal="20dp"
-                        android:paddingVertical="18dp">
+                        android:paddingStart="10dp"
+                        android:paddingEnd="20dp">
 
                         <FrameLayout
-                            android:layout_width="44dp"
-                            android:layout_height="44dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:layout_marginEnd="14dp"
                             android:background="@drawable/circle_background_grey_light">
 
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
                                 android:layout_gravity="center"
-                                android:contentDescription="@string/back"
-                                android:src="@drawable/ic_help"
-                                android:tint="@color/icon_secondary" />
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_edit"
+                                app:tint="@color/icon_secondary" />
 
                         </FrameLayout>
 
-                        <LinearLayout
+                        <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="@font/inter_semibold"
-                                android:includeFontPadding="false"
-                                android:letterSpacing="0"
-                                android:text="Start a request"
-                                android:textColor="@color/text_primary"
-                                android:textSize="16sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="3dp"
-                                android:fontFamily="@font/inter_regular"
-                                android:letterSpacing="0"
-                                android:text="Describe an issue and we'll follow up"
-                                android:textColor="@color/booking_details_support_text"
-                                android:textSize="12.5sp" />
-
-                        </LinearLayout>
+                            android:fontFamily="@font/inter_semibold"
+                            android:importantForAccessibility="no"
+                            android:includeFontPadding="false"
+                            android:letterSpacing="0"
+                            android:text="@string/start_a_request"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp" />
 
                         <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:layout_marginStart="8dp"
-                            android:contentDescription="@string/back"
-                            android:src="@drawable/ic_arrow_right"
-                            android:tint="@color/text_tertiary" />
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_marginStart="12dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/text_tertiary" />
 
                     </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- ========== YOUR TICKETS (flat, date-grouped like booking/transaction history) ========== -->
-                <ProgressBar
-                    android:id="@+id/progressTickets"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="30dp"
-                    android:indeterminateTint="@color/text_tertiary"
-                    android:visibility="gone" />
 
-                <TextView
-                    android:id="@+id/tvTicketEmpty"
+                <!-- Skeleton placeholder rows — shaped like real ticket rows so the
+                     swap to loaded content is seamless. Populated + pulsed in code. -->
+                <LinearLayout
+                    android:id="@+id/skeletonList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    android:fontFamily="@font/inter_medium"
-                    android:gravity="center"
-                    android:lineSpacingMultiplier="1.2"
-                    android:paddingVertical="22dp"
-                    android:text="No tickets yet — anything you raise will show up here."
-                    android:textColor="@color/text_tertiary"
-                    android:textSize="14sp"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical"
                     android:visibility="gone" />
+
+                <!-- Empty state — quiet icon tile grounds the message. -->
+                <LinearLayout
+                    android:id="@+id/layout_ticket_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingVertical="16dp"
+                    android:visibility="gone">
+
+                    <FrameLayout
+                        android:layout_width="58dp"
+                        android:layout_height="58dp"
+                        android:background="@drawable/circle_background_grey_light">
+
+                        <ImageView
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:layout_gravity="center"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_booking_history_ticket"
+                            app:tint="@color/icon_secondary" />
+
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tvTicketEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:fontFamily="@font/inter_medium"
+                        android:gravity="center"
+                        android:lineSpacingMultiplier="1.2"
+                        android:text="@string/no_requests_yet_anything_you_raise"
+                        android:textColor="@color/text_tertiary"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+                <!-- Error state — never a dead end; always offers a retry. -->
+                <LinearLayout
+                    android:id="@+id/layout_ticket_error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingVertical="16dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvTicketError"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_medium"
+                        android:gravity="center"
+                        android:lineSpacingMultiplier="1.25"
+                        android:paddingHorizontal="24dp"
+                        android:text="@string/we_couldnt_load_your_requests"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnTicketRetry"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:clickable="true"
+                        android:contentDescription="Try again"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/background_secondary"
+                        app:cardCornerRadius="21dp"
+                        app:cardElevation="0dp"
+                        app:rippleColor="@color/row_press_overlay"
+                        app:strokeWidth="0dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_semibold"
+                            android:importantForAccessibility="no"
+                            android:includeFontPadding="false"
+                            android:paddingHorizontal="24dp"
+                            android:paddingVertical="13dp"
+                            android:text="@string/maintenance_retry"
+                            android:textColor="@color/brand_primary"
+                            android:textSize="14sp" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/ticketList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="4dp"
                     android:orientation="vertical" />
 
             </LinearLayout>
@@ -323,7 +392,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter_bold"
-            android:text="Support"
+            android:text="@string/op_menu_section_support"
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -331,6 +400,28 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- New request action — shown only when an active conversation replaces the
+             "Start a request" pill below, so there is exactly one entry point at a time. -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_new_request"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            android:contentDescription="Start a new request"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_plus_thin"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

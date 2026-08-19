@@ -197,33 +197,6 @@
     </style>
 
     <!-- Date Picker (Dark mode) -->
-    <style name="CustomDatePickerTheme" parent="ThemeOverlay.Material3.MaterialCalendar">
-        <item name="colorPrimary">#FFFFFF</item>
-        <item name="colorOnPrimary">#000000</item>
-        <item name="colorSurface">#1C1C1E</item>
-        <item name="colorOnSurface">#FFFFFF</item>
-        <item name="colorSurfaceVariant">#2C2C2E</item>
-        <item name="colorOnSurfaceVariant">#8E8E93</item>
-        <item name="colorPrimaryContainer">#2C2C2E</item>
-        <item name="colorOnPrimaryContainer">#FFFFFF</item>
-        <item name="colorSecondary">#8E8E93</item>
-        <item name="colorOnSecondary">#000000</item>
-        <item name="colorSecondaryContainer">#3A3A3C</item>
-        <item name="colorOnSecondaryContainer">#EBEBF5</item>
-        <item name="colorOutline">#48484A</item>
-        <item name="colorOutlineVariant">#38383A</item>
-        <item name="android:colorBackground">#1C1C1E</item>
-        <item name="colorControlHighlight">#1AFFFFFF</item>
-        <item name="materialButtonStyle">@style/Widget.DatePicker.BlackButton</item>
-        <item name="borderlessButtonStyle">@style/Widget.DatePicker.BlackTextButton</item>
-        <item name="android:windowEnterAnimation">@anim/date_picker_enter</item>
-        <item name="android:windowExitAnimation">@anim/date_picker_exit</item>
-        <item name="textAppearanceBodyLarge">@style/TextAppearance.DatePicker.Body</item>
-        <item name="textAppearanceBodyMedium">@style/TextAppearance.DatePicker.Body</item>
-        <item name="textAppearanceLabelLarge">@style/TextAppearance.DatePicker.Label</item>
-        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.DatePicker.MediumComponent</item>
-        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.DatePicker.SmallComponent</item>
-    </style>
 
     <style name="TextAppearance.DatePicker.Body" parent="TextAppearance.Material3.BodyLarge">
         <item name="android:textColor">#FFFFFF</item>
@@ -247,12 +220,5 @@
     </style>
 
     <!-- Extend Booking Picker Theme (Dark) -->
-    <style name="ExtendBookingPickerTheme" parent="Theme.Material3.Dark">
-        <item name="android:colorBackground">@color/background_secondary</item>
-        <item name="colorSurface">@color/background_secondary</item>
-        <item name="colorOnSurface">@color/text_primary</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-    </style>
 
 </resources>

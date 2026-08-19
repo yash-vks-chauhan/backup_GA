@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Segment chip. Selected state is a filled pill in the brand ink (black in light
+  mode, white in dark) — the same "filled pill = active" rule the floating tab bar
+  uses, so selection means the same thing everywhere in the app. Unselected is a
+  plain hairline outline, no fill, so a row of eight chips stays quiet until one
+  is chosen.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_selected="true">
+        <ripple android:color="@color/row_press_overlay">
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/brand_primary" />
+                    <corners android:radius="19dp" />
+                </shape>
+            </item>
+        </ripple>
+    </item>
+
+    <item>
+        <ripple android:color="@color/row_press_overlay">
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/background_secondary" />
+                    <corners android:radius="19dp" />
+                    <stroke
+                        android:width="1dp"
+                        android:color="@color/divider" />
+                </shape>
+            </item>
+        </ripple>
+    </item>
+
+</selector>

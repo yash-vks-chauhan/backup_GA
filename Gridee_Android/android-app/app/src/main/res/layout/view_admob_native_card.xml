@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.gms.ads.nativead.NativeAdView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/native_ad_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!--
+      The card carries the floating layer's own language so it reads as part of the dock the
+      referral pill and the tab bar belong to, rather than a panel pasted over the page:
+
+      · Elevation lives HERE, not on the dock FrameLayout that wraps it. That FrameLayout has
+        no background, so it has no outline to derive a shadow from and its elevation only ever
+        set z-order — the card looked flat next to the referral pill, which does cast. 6dp with
+        the same ambient/spot colors matches the pill and the capsule exactly.
+      · The stroke is nav_floating_stroke at 0.5dp — the hairline the capsule and pill share.
+        It was border_light at 1dp, the heavier token meant for in-content surfaces, which is
+        what made the card read as content sitting on top of content.
+      · 24dp radius keeps it in family with the 25dp pill beside it.
+    -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:outlineAmbientShadowColor="#33000000"
+        android:outlineSpotShadowColor="#26000000"
+        app:cardBackgroundColor="@color/background_secondary"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="6dp"
+        app:strokeColor="@color/nav_floating_stroke"
+        app:strokeWidth="0.5dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.google.android.gms.ads.nativead.MediaView
+                android:id="@+id/ad_media"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/admob_media_content"
+                tools:background="@color/border_light" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="92dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_ad_media_scrim" />
+
+            <TextView
+                android:id="@+id/ad_attribution"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_marginStart="7dp"
+                android:layout_marginTop="7dp"
+                android:background="@drawable/bg_custom_ad_label"
+                android:fontFamily="@font/inter_semibold"
+                android:includeFontPadding="false"
+                android:paddingHorizontal="5dp"
+                android:paddingVertical="2dp"
+                android:text="@string/custom_ad_label"
+                android:textColor="#FFFFFF"
+                android:textSize="9sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:orientation="vertical"
+                android:paddingStart="8dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:id="@+id/ad_headline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/inter_semibold"
+                    android:includeFontPadding="false"
+                    android:maxLines="2"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    tools:text="A useful offer nearby" />
+
+                <TextView
+                    android:id="@+id/ad_advertiser"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:alpha="0.82"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/inter_regular"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:textColor="#FFFFFF"
+                    android:textSize="8sp"
+                    tools:text="Sponsored" />
+
+                <!--
+                  Fixed white on near-black, NOT the theme tokens. This button never sits on a
+                  page surface — it always sits on the creative's own dark scrim — so tinting it
+                  background_secondary meant that in dark mode a #1C1C1E button landed on a
+                  #D9000000 scrim and the button shape vanished, leaving a floating label. A
+                  call-to-action that doesn't look pressable is CTR left on the table.
+
+                  Neutral white rather than the app's gold on purpose: gold is the product's own
+                  accent, and spending it on a third-party creative would blur the line between
+                  our UI and an advertiser's — bad for trust and against native ad policy.
+                -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/ad_call_to_action"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:layout_marginTop="5dp"
+                    android:fontFamily="@font/inter_semibold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="6dp"
+                    android:textAllCaps="false"
+                    android:textColor="#0B0B0C"
+                    android:textSize="9sp"
+                    app:backgroundTint="#FFFFFF"
+                    app:cornerRadius="14dp"
+                    app:elevation="0dp"
+                    tools:text="Learn more" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</com.google.android.gms.ads.nativead.NativeAdView>

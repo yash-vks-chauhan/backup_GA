@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter_medium"
-            android:text="Add Money"
+            android:text="@string/add_money"
             android:textColor="@color/brand_primary"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -54,11 +54,16 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Notice Banner: Payment Aggregator -->
+    <!--
+      Legacy "integrating with our payment aggregator" notice, kept collapsed so it can be
+      brought back for a maintenance window. Gone rather than deleted because the content
+      below is constrained to it.
+    -->
     <LinearLayout
         android:id="@+id/layout_notice_banner"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         android:orientation="horizontal"
         android:gravity="center"
         android:background="@drawable/bg_notice_banner"
@@ -83,7 +88,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:fontFamily="@font/inter_medium"
-            android:text="Add Money is temporarily unavailable.\nWe're integrating with our payment aggregator."
+            android:text="@string/add_money_is_temporarily_unavailable_were"
             android:textColor="@color/status_text_debit"
             android:textSize="12sp"
             android:lineSpacingExtra="3dp" />
@@ -125,7 +130,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="6dp"
                     android:fontFamily="@font/inter_medium"
-                    android:text="Current Balance"
+                    android:text="@string/current_balance"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -183,7 +188,6 @@
                 android:layout_height="wrap_content"
                 android:minWidth="40dp"
                 android:background="@null"
-                android:enabled="false"
                 android:fontFamily="@font/inter_bold"
                 android:hint="0"
                 android:inputType="numberDecimal"
@@ -206,7 +210,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/inter_medium"
-                android:text="Minimum amount "
+                android:text="@string/minimum_amount"
                 android:textColor="@color/text_tertiary"
                 android:textSize="13sp" />
 
@@ -225,6 +229,7 @@
                 android:layout_marginEnd="3dp" />
 
             <TextView
+                android:id="@+id/tv_minimum_amount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/inter_medium"
@@ -263,7 +268,7 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:stateListAnimator="@animator/touch_scale"
-                android:text="Add Money"
+                android:text="@string/add_money"
                 android:textAllCaps="false"
                 android:textColor="@color/md3_on_primary"
                 android:textSize="16sp"
@@ -304,24 +309,16 @@
                 android:layout_marginEnd="6dp"
                 android:fontFamily="@font/inter_medium"
                 android:includeFontPadding="false"
-                android:text="Secured by"
+                android:text="@string/secured_by"
                 android:textColor="@color/brand_primary"
                 android:textSize="12sp" />
-
-            <ImageView
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:layout_marginEnd="4dp"
-                android:contentDescription="Razorpay"
-                android:src="@drawable/ic_razorpay"
-                app:tint="@color/brand_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/inter_bold"
                 android:includeFontPadding="false"
-                android:text="Razorpay"
+                android:text="@string/payment_gateway_name"
                 android:textColor="@color/brand_primary"
                 android:textSize="12sp" />
 

@@ -116,6 +116,18 @@ class OperatorMenuActivity : AppCompatActivity() {
             setAppLocale("ta")
             dialog.dismiss()
         }
+        view.findViewById<View>(R.id.btn_telugu)?.setOnClickListener {
+            setAppLocale("te")
+            dialog.dismiss()
+        }
+        view.findViewById<View>(R.id.btn_malayalam)?.setOnClickListener {
+            setAppLocale("ml")
+            dialog.dismiss()
+        }
+        view.findViewById<View>(R.id.btn_bengali)?.setOnClickListener {
+            setAppLocale("bn")
+            dialog.dismiss()
+        }
         
         dialog.show()
     }

@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
     id 'com.google.gms.google-services'
 }
 
@@ -16,19 +17,67 @@ def releaseKeyAlias = signingProps.getProperty("RELEASE_KEY_ALIAS") ?: project.f
 def releaseKeyPassword = signingProps.getProperty("RELEASE_KEY_PASSWORD") ?: project.findProperty("RELEASE_KEY_PASSWORD")
 def isReleaseTaskRequested = gradle.startParameter.taskNames.any { it.toLowerCase().contains("release") }
 
+// ---------------------------------------------------------------------------
+// Backend base URL
+//
+// The Play Store build must always talk to production. PROD_BASE_URL is baked
+// into the release variant unconditionally and no Gradle property can change
+// it, so a stray -PgrideeBaseUrl or a forgotten line in gradle.properties can
+// never ship a staging URL to live users.
+//
+// Only the debug variant is overridable, and it falls back to production when
+// nothing is set — an unconfigured debug build behaves exactly as it did when
+// the URL was a hardcoded constant in ApiConfig.kt.
+//
+//   ./gradlew :app:installDebug -PgrideeBaseUrl=http://192.168.1.42:8080/
+//
+// Set grideeFallbackBaseUrl too if you want the ApiClient retry path to reach a
+// second host; leaving it unset keeps base and fallback identical, which is the
+// current production behaviour (the retry is a no-op when the hosts match).
+// ---------------------------------------------------------------------------
+def PROD_BASE_URL = "https://gridee.onrender.com/"
+
+def normalizeBaseUrl(String propertyName, String rawUrl) {
+    def value = rawUrl?.trim()
+    if (!value) {
+        throw new GradleException("${propertyName} must not be blank.")
+    }
+    if (!value.startsWith("http://") && !value.startsWith("https://")) {
+        throw new GradleException("${propertyName} must start with http:// or https:// (was: '${value}').")
+    }
+    // Retrofit's baseUrl() rejects any URL that does not end in '/', and it fails
+    // at Retrofit construction time — i.e. app launch — so normalise it here.
+    return value.endsWith("/") ? value : value + "/"
+}
+
+def debugBaseUrl = normalizeBaseUrl(
+        "grideeBaseUrl",
+        (project.findProperty("grideeBaseUrl") ?: PROD_BASE_URL).toString())
+def debugFallbackBaseUrl = normalizeBaseUrl(
+        "grideeFallbackBaseUrl",
+        (project.findProperty("grideeFallbackBaseUrl") ?: debugBaseUrl).toString())
+
+if (debugBaseUrl != PROD_BASE_URL) {
+    logger.lifecycle("Gridee: debug build points at ${debugBaseUrl} (release stays on ${PROD_BASE_URL})")
+}
+
 android {
     namespace 'com.gridee.parking'
-    compileSdk 35
-    buildToolsVersion "35.0.0"
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.gridee.parking"
         minSdk 24
         targetSdk 36
-        versionCode 66
-        versionName "1.65"
+        versionCode 72
+        versionName "1.71"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Safety net: any variant that does not set these explicitly still gets
+        // production. Both buildTypes below override it, debug conditionally.
+        buildConfigField "String", "GRIDEE_BASE_URL", "\"${PROD_BASE_URL}\""
+        buildConfigField "String", "GRIDEE_FALLBACK_BASE_URL", "\"${PROD_BASE_URL}\""
     }
 
     signingConfigs {
@@ -56,12 +105,32 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // Hardcoded on purpose. Do NOT wire a Gradle property in here: the
+            // release variant is what reaches the Play Store, and it must be
+            // impossible to point it anywhere but production by accident.
+            buildConfigField "String", "GRIDEE_BASE_URL", "\"${PROD_BASE_URL}\""
+            buildConfigField "String", "GRIDEE_FALLBACK_BASE_URL", "\"${PROD_BASE_URL}\""
+        }
+
+        debug {
+            buildConfigField "String", "GRIDEE_BASE_URL", "\"${debugBaseUrl}\""
+            buildConfigField "String", "GRIDEE_FALLBACK_BASE_URL", "\"${debugFallbackBaseUrl}\""
         }
     }
 
     packaging {
         jniLibs {
             useLegacyPackaging = true
+        }
+    }
+
+    bundle {
+        language {
+            // Play delivers only the device-locale language split by default, which
+            // would leave the in-app language picker with nothing to switch to.
+            // Keep every locale in the base APK so hi/ta/te/ml/bn are always present.
+            enableSplit = false
         }
     }
     
@@ -80,10 +149,6 @@ android {
         compose true
     }
     
-    composeOptions {
-        kotlinCompilerExtensionVersion = '1.5.0'
-    }
-
     // Force 16 KB zip alignment for native libs (AGP module property).
     experimentalProperties["android.nativeLibraryAlignmentPageSize"] = "16k"
 }
@@ -130,18 +195,29 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment-ktx:2.7.5'
     implementation 'androidx.navigation:navigation-ui-ktx:2.7.5'
     implementation 'androidx.navigation:navigation-compose:2.7.5'
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
     
     // Lottie for animations
     implementation 'com.airbnb.android:lottie:6.1.0'
+
+    // Coil for remote image loading (custom ad creatives)
+    implementation 'io.coil-kt:coil:2.6.0'
     
     // Google Sign-In
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
     // Firebase Auth (email verification + password reset)
     implementation platform('com.google.firebase:firebase-bom:32.8.1')
     implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-messaging-ktx'
-    // Google Mobile Ads (AdMob) for rewarded videos
-    implementation 'com.google.android.gms:play-services-ads:22.6.0'
+    // Google Mobile Ads mediation for booking-transition interstitials, Home native ads,
+    // rewarded videos, and consent. Meta bundles its SDK transitively; Unity's adapter no
+    // longer bundles the Unity Ads SDK, so both Unity artifacts are required explicitly.
+    implementation 'com.google.android.gms:play-services-ads:25.4.0'
+    implementation 'com.google.ads.mediation:facebook:6.22.0.0'
+    implementation 'com.unity3d.ads:unity-ads:4.19.0'
+    implementation 'com.google.ads.mediation:unity:4.19.0.0'
+    implementation 'com.google.android.ump:user-messaging-platform:4.0.0'
     
     // Browser for Apple Sign-In web flow
     implementation 'androidx.browser:browser:1.7.0'
@@ -153,8 +229,8 @@ dependencies {
     // Google Play In-App Review
     implementation 'com.google.android.play:review:2.0.2'
 
-    // Razorpay Checkout SDK
-    implementation 'com.razorpay:checkout:1.6.41'
+    // Cashfree Payments PG Checkout SDK (drop-in checkout, driven by paymentSessionId)
+    implementation 'com.cashfree.pg:api:2.5.0'
 
     // QR scanning (ZXing)
     implementation 'com.google.zxing:core:3.5.2'

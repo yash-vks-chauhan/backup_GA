@@ -1,8 +1,13 @@
 package com.gridee.parking.ui.profile
 
+import com.gridee.parking.R
+
 import android.os.Bundle
+import androidx.core.view.isVisible
 import com.gridee.parking.databinding.ActivityPrivacySettingsBinding
 import com.gridee.parking.ui.base.BaseActivity
+import com.gridee.parking.utils.AdConsentManager
+import com.gridee.parking.utils.AdRevenueAnalytics
 import com.gridee.parking.utils.AuthSession
 
 class PrivacySettingsActivity : BaseActivity<ActivityPrivacySettingsBinding>() {
@@ -15,6 +20,7 @@ class PrivacySettingsActivity : BaseActivity<ActivityPrivacySettingsBinding>() {
         super.onCreate(savedInstanceState)
         setupClickListeners()
         loadSettings()
+        updateAdPrivacyChoicesVisibility()
     }
 
     private fun setupClickListeners() {
@@ -34,6 +40,7 @@ class PrivacySettingsActivity : BaseActivity<ActivityPrivacySettingsBinding>() {
 
         binding.switchAnalytics.setOnCheckedChangeListener { _, isChecked ->
             saveAnalyticsSetting(isChecked)
+            AdRevenueAnalytics.setCollectionEnabled(this, isChecked)
             showToast(if (isChecked) "Analytics enabled" else "Analytics disabled")
         }
 
@@ -47,8 +54,23 @@ class PrivacySettingsActivity : BaseActivity<ActivityPrivacySettingsBinding>() {
         }
 
         binding.btnExportData.setOnClickListener {
-            showToast("Data export request submitted. You will receive an email shortly.")
+            showToast(getString(R.string.data_export_request_submitted_you_will))
         }
+
+        binding.cardAdPrivacyChoices.setOnClickListener {
+            AdConsentManager.showPrivacyOptions(this) {
+                updateAdPrivacyChoicesVisibility()
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateAdPrivacyChoicesVisibility()
+    }
+
+    private fun updateAdPrivacyChoicesVisibility() {
+        binding.cardAdPrivacyChoices.isVisible = AdConsentManager.isPrivacyOptionsRequired(this)
     }
 
     private fun loadSettings() {
@@ -107,7 +129,7 @@ class PrivacySettingsActivity : BaseActivity<ActivityPrivacySettingsBinding>() {
             if (confirmation == "DELETE") {
                 deleteAccount()
             } else {
-                showToast("Confirmation text doesn't match. Account deletion cancelled.")
+                showToast(getString(R.string.confirmation_text_doesnt_match_account_deletion))
             }
         }
         
@@ -117,7 +139,7 @@ class PrivacySettingsActivity : BaseActivity<ActivityPrivacySettingsBinding>() {
 
     private fun deleteAccount() {
         // TODO: Implement actual account deletion API call
-        showToast("Account deletion request submitted. You will receive a confirmation email.")
+        showToast(getString(R.string.account_deletion_request_submitted_you_will))
         
         // For now, just clear local data
         AuthSession.clearSession(this)

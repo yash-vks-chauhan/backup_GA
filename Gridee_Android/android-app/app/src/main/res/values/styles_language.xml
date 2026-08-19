@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Row anatomy for the Language & Region selector. Extracted into styles because
+  the six rows are structurally identical — this keeps the layout readable and
+  guarantees the rows stay pixel-identical to each other.
+
+  Metrics deliberately match the Profile settings rows (18dp vertical padding,
+  20dp horizontal, 16dp gutter after the leading element, 16sp inter_medium
+  title, 13sp inter_regular subtitle) so the page feels continuous with Profile.
+-->
+<resources>
+
+    <style name="Widget.Gridee.LanguageRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingHorizontal">20dp</item>
+        <item name="android:paddingVertical">14dp</item>
+        <item name="android:background">@drawable/bg_ios_row_press</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="Widget.Gridee.LanguageRow.Badge" parent="">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:background">@drawable/bg_script_badge</item>
+    </style>
+
+    <!-- The language's own script, so a speaker can find their row without
+         reading English. -->
+    <style name="Widget.Gridee.LanguageRow.Glyph" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">@font/inter_medium</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="Widget.Gridee.LanguageRow.Labels" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">12dp</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="Widget.Gridee.LanguageRow.Native" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">@font/inter_medium</item>
+    </style>
+
+    <style name="Widget.Gridee.LanguageRow.Sub" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">1dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:fontFamily">@font/inter_regular</item>
+    </style>
+
+    <!-- Hidden until selected; the activity springs it in on selection. -->
+    <style name="Widget.Gridee.LanguageRow.Check" parent="">
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+        <item name="android:background">@drawable/bg_check_badge_brand</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="Widget.Gridee.LanguageRow.CheckIcon" parent="">
+        <item name="android:layout_width">13dp</item>
+        <item name="android:layout_height">13dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:src">@drawable/ic_check</item>
+        <item name="tint">@color/md3_on_primary</item>
+        <item name="android:contentDescription">@null</item>
+    </style>
+
+    <style name="Widget.Gridee.LanguageRow.Divider" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0.5dp</item>
+        <item name="android:layout_marginStart">76dp</item>
+        <item name="android:layout_marginEnd">20dp</item>
+        <item name="android:background">@color/divider_hairline</item>
+    </style>
+
+</resources>

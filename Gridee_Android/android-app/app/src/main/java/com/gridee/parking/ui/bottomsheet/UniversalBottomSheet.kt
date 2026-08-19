@@ -365,7 +365,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             .onFailure {
                 runCatching { startActivity(webIntent) }
                     .onFailure {
-                        Toast.makeText(requireContext(), "Unable to open Play Store", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), getString(R.string.unable_to_open_play_store), Toast.LENGTH_SHORT).show()
                     }
             }
     }
@@ -517,7 +517,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
 
         if (isLoading) {
             // Animated spinner inside the button so the user can see the ad is being fetched.
-            binding.btnPrimary.text = "Preparing video…"
+            binding.btnPrimary.text = getString(R.string.preparing_video)
             binding.btnPrimary.icon = buildButtonSpinner()
             binding.btnPrimary.iconTint = android.content.res.ColorStateList.valueOf(
                 ContextCompat.getColor(requireContext(), R.color.reward_button_text)
@@ -579,7 +579,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
                 setRewardedAdLoading(false)
                 Toast.makeText(
                     requireContext(),
-                    "We could not open the reward video. Please try again in a moment.",
+                    getString(R.string.we_could_not_open_the_reward),
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -594,7 +594,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             creditRewardToWallet(rewardAmount)
             Toast.makeText(
                 requireContext(),
-                "Reward earned! Processing your wallet top-up...",
+                getString(R.string.reward_earned_processing_your_wallet_top),
                 Toast.LENGTH_SHORT
             ).show()
         }

@@ -70,7 +70,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_bold"
                     android:letterSpacing="0.12"
-                    android:text="LIVE"
+                    android:text="@string/live"
                     android:textColor="@color/status_text_active"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -181,7 +181,7 @@
                 android:layout_marginTop="20dp"
                 android:fontFamily="@font/inter_bold"
                 android:letterSpacing="0.14"
-                android:text="TIME REMAINING"
+                android:text="@string/time_remaining"
                 android:textAllCaps="true"
                 android:textColor="@color/text_secondary"
                 android:textSize="10sp" />
@@ -266,7 +266,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_bold"
                         android:letterSpacing="0.12"
-                        android:text="STARTED"
+                        android:text="@string/started"
                         android:textColor="@color/text_tertiary"
                         android:textSize="9sp" />
 
@@ -293,7 +293,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_bold"
                         android:letterSpacing="0.12"
-                        android:text="ENDS"
+                        android:text="@string/ends"
                         android:textColor="@color/text_tertiary"
                         android:textSize="9sp" />
 
@@ -360,7 +360,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_bold"
                     android:letterSpacing="0.14"
-                    android:text="SHOW AT EXIT"
+                    android:text="@string/show_at_exit"
                     android:textAllCaps="true"
                     android:textColor="@color/text_secondary"
                     android:textSize="10sp" />
@@ -371,7 +371,7 @@
                     android:layout_marginTop="2dp"
                     android:fontFamily="@font/inter_bold"
                     android:letterSpacing="-0.01"
-                    android:text="Tap to enlarge"
+                    android:text="@string/tap_to_enlarge"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />

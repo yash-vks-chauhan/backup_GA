@@ -1,6 +1,7 @@
 package com.gridee.parking.ui.wallet
 
-import android.content.Intent
+import com.gridee.parking.R
+
 import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
@@ -22,8 +23,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.gridee.parking.config.RemoteConfigManager
-import com.gridee.parking.data.api.ApiClient
-import com.gridee.parking.data.model.PaymentInitiateRequest
 import com.gridee.parking.databinding.ActivityWalletAddMoneyBinding
 import com.gridee.parking.utils.AuthSession
 import kotlinx.coroutines.launch
@@ -56,7 +55,7 @@ class WalletAddMoneyActivity : AppCompatActivity() {
 
         RemoteConfigManager.loadCached(this)
         if (!RemoteConfigManager.isWalletEnabled()) {
-            Toast.makeText(this, "Wallet top-up is temporarily unavailable.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.wallet_top_up_is_temporarily_unavailable), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -70,9 +69,15 @@ class WalletAddMoneyActivity : AppCompatActivity() {
         currentBalance = intent.getDoubleExtra(EXTRA_CURRENT_BALANCE, 0.0)
 
         binding.tvCurrentBalance.text = DecimalFormat("#,##0.00").format(currentBalance)
+        // The label used to be a hardcoded "1" while the real gate is the configured minimum,
+        // so the button stayed dead for amounts the screen said were fine.
+        binding.tvMinimumAmount.text =
+            decimalFormat.format(WalletTopUpLauncher.minAmount(this))
         setupListeners()
-        disableAddMoney()
-        
+        // Availability is decided by the backend's walletFeatureEnabled flag, checked above —
+        // the screen is no longer hard-disabled while a gateway integration is pending.
+        updateAddButtonState()
+
         // Prepare for animation immediately so no flashing occurs
         binding.layoutHeader.alpha = 0f
         binding.layoutNoticeBanner.alpha = 0f
@@ -245,19 +250,8 @@ class WalletAddMoneyActivity : AppCompatActivity() {
                 showToast(topUpRangeMessage())
                 return@setOnClickListener
             }
-            startRazorpayCheckout(amount)
+            startCheckout(amount)
         }
-    }
-
-    private fun disableAddMoney() {
-        // Permanently disable the Add Money button
-        binding.btnAddMoneyConfirm.isEnabled = false
-        binding.btnAddMoneyConfirm.alpha = 0.5f
-        binding.btnAddMoneyConfirm.text = "Add Money"
-
-        // Disable the amount input
-        binding.etAmount.isEnabled = false
-        binding.etAmount.isFocusable = false
     }
 
     private fun playEntranceAnimation() {
@@ -383,10 +377,10 @@ class WalletAddMoneyActivity : AppCompatActivity() {
         }
     }
 
-    private fun startRazorpayCheckout(amount: Double) {
+    private fun startCheckout(amount: Double) {
         RemoteConfigManager.loadCached(this)
         if (!RemoteConfigManager.isWalletEnabled()) {
-            showToast("Wallet top-up is temporarily unavailable.")
+            showToast(getString(R.string.wallet_top_up_is_temporarily_unavailable))
             return
         }
         if (!isAmountAllowed(amount)) {
@@ -396,7 +390,7 @@ class WalletAddMoneyActivity : AppCompatActivity() {
 
         val userId = AuthSession.getUserId(this)
         if (userId.isNullOrBlank()) {
-            showToast("Please login to add money")
+            showToast(getString(R.string.please_login_to_add_money))
             return
         }
 
@@ -405,40 +399,15 @@ class WalletAddMoneyActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val initResp = ApiClient.apiService.initiatePayment(
-                    PaymentInitiateRequest(
-                        userId = userId,
-                        amount = amount
-                    )
-                )
+                when (val result = WalletTopUpLauncher.createTopUp(this@WalletAddMoneyActivity, amount)) {
+                    is WalletTopUpLauncher.Result.Ready -> {
+                        showToast(getString(R.string.redirecting_to_secure_checkout))
+                        startActivity(result.intent)
+                        finish()
+                    }
 
-                if (!initResp.isSuccessful) {
-                    showToast(walletErrorMessage(initResp.code()))
-                    return@launch
+                    is WalletTopUpLauncher.Result.Failed -> showToast(result.message)
                 }
-
-                val body = initResp.body()
-                val orderId = body?.orderId
-                val keyId = body?.keyId
-                if (orderId.isNullOrBlank()) {
-                    showToast("Add money temporarily unavailable during payment integration.")
-                    return@launch
-                }
-
-                showToast("Redirecting to Razorpay checkout...")
-                val intent = Intent(this@WalletAddMoneyActivity, WalletTopUpActivity::class.java).apply {
-                    putExtra("USER_ID", userId)
-                    putExtra("AMOUNT", amount)
-                    putExtra("ORDER_ID", orderId)
-                    keyId?.let { putExtra("KEY_ID", it) }
-                }
-                
-                // Allow the toast to show briefly before routing
-                kotlinx.coroutines.delay(600)
-                startActivity(intent)
-                finish()
-            } catch (e: Exception) {
-                showToast("Add money temporarily unavailable during payment integration.")
             } finally {
                 isSubmitting = false
                 if (!isFinishing && !isDestroyed) {
@@ -449,22 +418,12 @@ class WalletAddMoneyActivity : AppCompatActivity() {
     }
 
     private fun isAmountAllowed(amount: Double): Boolean {
-        val financial = RemoteConfigManager.currentConfig.financial
-        return amount >= financial.minWalletTopUpAmount && amount <= financial.maxWalletTopUpAmount
+        return amount >= WalletTopUpLauncher.minAmount(this) &&
+            amount <= WalletTopUpLauncher.maxAmount(this)
     }
 
     private fun topUpRangeMessage(): String {
-        val financial = RemoteConfigManager.currentConfig.financial
-        return "Enter an amount between ${decimalFormat.format(financial.minWalletTopUpAmount)} and ${decimalFormat.format(financial.maxWalletTopUpAmount)}."
-    }
-
-    private fun walletErrorMessage(code: Int): String {
-        return when (code) {
-            401 -> "Session expired. Please log in again."
-            429 -> "Too many requests. Please wait a moment before trying again."
-            503 -> "Wallet top-up is temporarily unavailable."
-            else -> "Add money temporarily unavailable during payment integration."
-        }
+        return "Enter an amount between ${decimalFormat.format(WalletTopUpLauncher.minAmount(this))} and ${decimalFormat.format(WalletTopUpLauncher.maxAmount(this))}."
     }
 
     private fun showToast(message: String) {
@@ -472,7 +431,7 @@ class WalletAddMoneyActivity : AppCompatActivity() {
         if (root != null) {
             com.gridee.parking.utils.NotificationHelper.showInfo(
                 parent = root,
-                title = "Wallet",
+                title = getString(R.string.wallet),
                 message = message,
                 duration = 3000L
             )

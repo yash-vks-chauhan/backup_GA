@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_universal"
+    android:paddingBottom="28dp"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <View
+        android:id="@+id/drag_handle"
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/handle_pill_minimal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Drawn status mark: ring closes, then the glyph strokes itself on. -->
+    <com.gridee.parking.ui.views.PaymentStatusGlyphView
+        android:id="@+id/glyph_status"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="28dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/drag_handle" />
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:fontFamily="@font/inter_bold"
+        android:gravity="center"
+        android:textColor="@color/text_primary"
+        android:textSize="22sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/glyph_status"
+        tools:text="Payment cancelled" />
+
+    <TextView
+        android:id="@+id/tv_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:fontFamily="@font/inter_regular"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_title"
+        tools:text="You closed the payment before it went through." />
+
+    <!-- Where the money actually is. The part that stops people worrying. -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_trail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:cardBackgroundColor="@color/background_primary"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_message">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="18dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="16dp">
+
+            <com.gridee.parking.ui.views.PaymentTrailView
+                android:id="@+id/trail_payment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/tv_reassurance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:fontFamily="@font/inter_semibold"
+                android:gravity="center"
+                android:lineSpacingExtra="3dp"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                tools:text="No money left your account." />
+
+            <!-- Amount + reference, tap to copy for support. -->
+            <LinearLayout
+                android:id="@+id/row_reference"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="?attr/selectableItemBackground"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="6dp">
+
+                <TextView
+                    android:id="@+id/tv_amount_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/inter_medium"
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="12sp"
+                    tools:text="G 100 · ref 852385e5da" />
+
+                <TextView
+                    android:id="@+id/tv_copy_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_semibold"
+                    android:text="@string/payment_copy_reference"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Live re-check. Shown only while an outcome is genuinely undecided. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_check_status"
+        android:layout_width="0dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="18dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:fontFamily="@font/inter_semibold"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="@string/payment_check_again"
+        android:textAllCaps="false"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp"
+        app:cornerRadius="26dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/card_trail"
+        app:strokeColor="@color/divider"
+        app:strokeWidth="1.5dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+    <ProgressBar
+        android:id="@+id/pb_checking"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:indeterminateTint="@color/text_primary"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/btn_check_status"
+        app:layout_constraintEnd_toEndOf="@id/btn_check_status"
+        app:layout_constraintStart_toStartOf="@id/btn_check_status"
+        app:layout_constraintTop_toTopOf="@id/btn_check_status" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_primary"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="10dp"
+        app:layout_goneMarginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:backgroundTint="@color/brand_primary"
+        android:fontFamily="@font/inter_semibold"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:stateListAnimator="@null"
+        android:textAllCaps="false"
+        android:textColor="@color/brand_surface"
+        android:textSize="16sp"
+        app:cornerRadius="28dp"
+        app:elevation="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_check_status"
+        tools:text="Try again" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_secondary"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:fontFamily="@font/inter_medium"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:textAllCaps="false"
+        android:textColor="@color/text_secondary"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_primary"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        tools:text="Back to wallet" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

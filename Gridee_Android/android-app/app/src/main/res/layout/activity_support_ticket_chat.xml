@@ -5,17 +5,202 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_primary"
-    android:fitsSystemWindows="true"
     tools:context=".ui.profile.SupportTicketChatActivity">
+
+    <!-- No fitsSystemWindows here on purpose. The frosted bars have to run edge to
+         edge — behind the status bar at the top and the gesture bar at the bottom —
+         so insets are applied to the header and composer individually in code
+         (applyWindowInsets), not as padding on this root. -->
+
+    <!-- ========== CONVERSATION (full-bleed, scrolls beneath both floating bars) ========== -->
+    <!-- stackFromEnd is set in code: the newest message hugs the composer and short
+         conversations sit at the bottom, like every messaging app. Top/bottom padding
+         is measured from the floating bars, with clipToPadding off so bubbles
+         dissolve into the scrims rather than stopping at them. -->
+    <!-- Pull-to-refresh wraps the list because the poll backs off to 30s on a quiet
+         thread, and someone who is actually waiting on an answer has no way to say
+         "check now". It only fires when the list can no longer scroll up, so on a
+         thread with older messages still to render it never competes with widening
+         the window — you reach the true top first, then a pull refreshes. -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_messages"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_messages"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="132dp"
+            android:paddingBottom="92dp"
+            android:scrollbars="none"
+            tools:listitem="@layout/item_chat_message" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Skeleton and empty/error states overlay the list rather than living inside
+         it: they are screen states, not rows, so they never enter the adapter or the
+         diff. Padding matches the list so they sit in the same optical frame. -->
+    <FrameLayout
+        android:id="@+id/overlay_states"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="132dp"
+        android:paddingBottom="92dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+            <!-- Loading state. Ghost bubbles rather than a spinner: the app's one
+                 loading idiom is a skeleton that mirrors the content it stands in
+                 for, breath-pulsed by SkeletonShimmer. Rows are built in code so the
+                 count adapts to the viewport height. -->
+            <LinearLayout
+                android:id="@+id/skeleton_conversation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:orientation="vertical"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="32dp"
+                android:visibility="gone">
+
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/circle_background_grey_light"
+                    android:importantForAccessibility="no">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_help"
+                        app:tint="@color/icon_secondary" />
+
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tv_empty_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:fontFamily="@font/inter_semibold"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="0"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14.5sp"
+                    tools:text="Start the conversation" />
+
+                <TextView
+                    android:id="@+id/tv_empty_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:fontFamily="@font/inter_regular"
+                    android:gravity="center"
+                    android:letterSpacing="0"
+                    android:lineSpacingMultiplier="1.25"
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="13sp"
+                    tools:text="Send a message and our team will reply right here." />
+
+                <!-- Shown only when loading failed. An error state that offers nothing
+                     is a dead end — the composer is hidden at that point, so this is
+                     the only way forward without backing out of the screen. -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/btn_empty_retry"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/background_secondary"
+                    app:cardCornerRadius="21dp"
+                    app:cardElevation="0dp"
+                    app:rippleColor="@color/row_press_overlay"
+                    app:strokeWidth="0dp"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_semibold"
+                        android:importantForAccessibility="no"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="0"
+                        android:paddingHorizontal="24dp"
+                        android:paddingVertical="13dp"
+                        android:text="@string/maintenance_retry"
+                        android:textColor="@color/brand_primary"
+                        android:textSize="14sp" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- ========== FLOATING TOP BAR ========== -->
+    <!-- The scrim is a solid slab sized to the header in code, plus a short dissolve
+         below it. Split in two on purpose: a single stretched gradient's opaque band
+         drifts with the header height (status bar, font scale), which let messages
+         show through behind the title. Solid-then-fade is legible at any height.
+
+         Both start transparent and fade in together only once messages actually pass
+         under them (see updateFrostedHeader). On a short conversation the header
+         floats over the page with nothing to hide, which keeps it feeling light. -->
+    <View
+        android:id="@+id/view_top_frost"
+        android:layout_width="0dp"
+        android:layout_height="128dp"
+        android:alpha="0"
+        android:background="@color/background_primary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/view_top_frost_tail"
+        android:layout_width="0dp"
+        android:layout_height="28dp"
+        android:alpha="0"
+        android:background="@drawable/bg_chat_header_tail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/view_top_frost" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_header"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_toolbar_frosted"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="10dp"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="6dp"
         android:paddingBottom="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.card.MaterialCardView
@@ -23,9 +208,9 @@
             style="@style/Widget.Gridee.BackButton.IOS26"
             android:layout_width="@dimen/ios26_back_button_size"
             android:layout_height="@dimen/ios26_back_button_size"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/header_avatar"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="@id/header_avatar">
 
             <ImageView
                 android:layout_width="@dimen/ios26_back_icon_size"
@@ -36,124 +221,212 @@
                 app:tint="@color/brand_primary" />
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:id="@+id/tv_chat_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_card_36"
-            android:fontFamily="@font/inter_medium"
-            android:includeFontPadding="false"
-            android:letterSpacing="0"
-            android:paddingHorizontal="11dp"
-            android:paddingVertical="6dp"
-            android:textColor="@color/text_secondary"
-            android:textSize="11.5sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/tv_chat_title"
-            tools:text="In progress" />
+        <!-- Centred identity stack: avatar, then the subject, then who you are talking
+             to and the live status.
 
-        <TextView
-            android:id="@+id/tv_chat_title"
+             This was briefly squeezed onto a single left-aligned row with the two
+             buttons — it fit, but a 34dp avatar, two lines of text and two 44dp
+             controls all shoulder to shoulder read as crowded. Stacked and centred,
+             the same information gets air on both sides and the eye lands on the
+             subject first.
+
+             It leads with the *subject* rather than the counterparty, because on a
+             long thread the subject is the only thing that says what the conversation
+             is about — it used to live solely in the opener chip, which scrolls away
+             and never comes back.
+
+             The avatar is decorative for accessibility: the identity is announced by
+             the block's own contentDescription, so labelling it too would make
+             TalkBack say the same thing twice. -->
+        <FrameLayout
+            android:id="@+id/header_avatar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_support_avatar"
+            android:importantForAccessibility="no"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="19dp"
+                android:layout_height="19dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_gridee_coin_g"
+                app:tint="@color/btn_text_on_brand" />
+
+        </FrameLayout>
+
+        <!-- The text pair is the tap target for the details sheet — the iOS Messages
+             gesture. Sized to the text rather than the full header width so the ripple
+             traces the words, not the whole bar. -->
+        <LinearLayout
+            android:id="@+id/header_identity"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="13dp"
-            android:layout_marginEnd="12dp"
-            android:ellipsize="end"
-            android:fontFamily="@font/inter_bold"
-            android:includeFontPadding="false"
-            android:letterSpacing="0"
-            android:maxLines="1"
-            android:text="Support ticket"
-            android:textColor="@color/text_primary"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toStartOf="@id/tv_chat_status"
-            app:layout_constraintStart_toEndOf="@id/btn_back"
-            app:layout_constraintTop_toTopOf="@id/btn_back" />
-
-        <TextView
-            android:id="@+id/tv_chat_meta"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="13dp"
-            android:layout_marginTop="6dp"
-            android:ellipsize="end"
-            android:fontFamily="@font/inter_regular"
-            android:letterSpacing="0"
-            android:maxLines="1"
-            android:textColor="@color/booking_details_support_text"
-            android:textSize="12.5sp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/bg_chat_identity_press"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="3dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/btn_back"
-            app:layout_constraintTop_toBottomOf="@id/tv_chat_title"
-            tools:text="High priority - Updated 12 Jun, 4:12 PM" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/header_avatar"
+            app:layout_constraintWidth_max="wrap"
+            app:layout_constraintWidth_percent="0.72">
+
+            <TextView
+                android:id="@+id/tv_chat_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="@font/inter_semibold"
+                android:gravity="center_horizontal"
+                android:includeFontPadding="false"
+                android:letterSpacing="-0.01"
+                android:maxLines="1"
+                android:text="@string/support_chat_title"
+                android:textColor="@color/text_primary"
+                android:textSize="15.5sp"
+                tools:text="Payment deducted but booking failed" />
+
+            <LinearLayout
+                android:id="@+id/layout_status_row"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/view_status_dot"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:layout_marginEnd="5dp" />
+
+                <TextView
+                    android:id="@+id/tv_chat_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/inter_medium"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="0"
+                    android:maxLines="1"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11.5sp"
+                    tools:text="Gridee Support · In progress" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- The right corner used to be dead. The ticket reference, when it was
+             raised, the location and the status timeline had nowhere to live at all —
+             the reference in particular was never shown to the user, so they had
+             nothing to quote on a call or in an email. -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_details"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            android:contentDescription="@string/support_chat_details_action"
+            app:layout_constraintBottom_toBottomOf="@id/header_avatar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/header_avatar">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_info"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/scroll_messages"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        android:overScrollMode="never"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp"
-        android:scrollbars="none"
-        app:layout_constraintBottom_toTopOf="@id/bottom_panel"
+    <!-- ========== OFFLINE BANNER ========== -->
+    <!-- With no network the poll just fails in silence — refreshTicketSilently
+         swallows the exception by design so a flaky connection can't spam errors —
+         and the screen sits there looking like a conversation nobody is answering.
+         This says which of the two it is.
+
+         A capsule under the header rather than a full-width bar: it is a transient
+         condition, not a permanent piece of chrome, and a bar would fight the frosted
+         header for the same edge. Declared after the header so it draws above the
+         scrim instead of being dimmed by it. -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/banner_offline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0"
+        android:visibility="invisible"
+        app:cardBackgroundColor="@color/background_secondary"
+        app:cardCornerRadius="@dimen/radius_pill"
+        app:cardElevation="3dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layout_header">
+        app:layout_constraintTop_toBottomOf="@id/layout_header"
+        app:strokeWidth="0dp"
+        tools:alpha="1"
+        tools:visibility="visible">
 
         <LinearLayout
-            android:id="@+id/messages_container"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minHeight="320dp"
-            android:orientation="vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="9dp">
 
-            <ProgressBar
-                android:id="@+id/progress_ticket"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="32dp"
-                android:indeterminateTint="@color/text_tertiary"
-                android:visibility="gone" />
+            <View
+                android:id="@+id/view_offline_dot"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_chat_offline_dot"
+                android:importantForAccessibility="no" />
 
             <TextView
-                android:id="@+id/tv_empty_state"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
                 android:fontFamily="@font/inter_medium"
-                android:gravity="center"
+                android:includeFontPadding="false"
                 android:letterSpacing="0"
-                android:lineSpacingMultiplier="1.2"
-                android:paddingVertical="28dp"
-                android:textColor="@color/text_tertiary"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:text="No messages yet" />
-
-            <LinearLayout
-                android:id="@+id/message_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:text="@string/support_chat_offline"
+                android:textColor="@color/text_secondary"
+                android:textSize="12.5sp" />
 
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ========== FLOATING BOTTOM BAR ========== -->
+    <!-- Height is re-measured in code from the composer panel, which grows by the
+         keyboard inset — a fixed height would stop scrimming the moment the IME
+         opens and messages would scroll past the composer unfaded. -->
+    <View
+        android:id="@+id/view_bottom_frost"
+        android:layout_width="0dp"
+        android:layout_height="132dp"
+        android:background="@drawable/bg_chat_bottom_frost"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
         android:id="@+id/bottom_panel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/background_primary"
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="14dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -162,10 +435,12 @@
             android:id="@+id/reply_composer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_card_36"
+            android:background="@drawable/bg_chat_composer_pill"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             android:gravity="bottom"
             android:orientation="horizontal"
-            android:padding="8dp">
+            android:padding="5dp">
 
             <EditText
                 android:id="@+id/et_reply"
@@ -175,52 +450,162 @@
                 android:background="@android:color/transparent"
                 android:fontFamily="@font/inter_regular"
                 android:gravity="center_vertical|start"
-                android:hint="Write a reply..."
+                android:hint="@string/message"
                 android:importantForAutofill="no"
                 android:inputType="textMultiLine|textCapSentences"
                 android:letterSpacing="0"
                 android:lineSpacingMultiplier="1.2"
-                android:maxLines="4"
-                android:minHeight="44dp"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="10dp"
+                android:maxLines="5"
+                android:minHeight="42dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="8dp"
+                android:paddingVertical="9dp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_tertiary"
-                android:textSize="15sp" />
+                android:textSize="16sp" />
 
-            <com.google.android.material.button.MaterialButton
+            <!-- Always present, never hidden. It used to be INVISIBLE until you typed,
+                 which kept the pill from reflowing but left a 42dp hole punched in its
+                 right end at rest — reserved space with nothing in it reads as a
+                 control that failed to load. It now rests as a muted tile and fills
+                 with brand colour when there is something to send, so the same
+                 affordance is visible the whole time.
+
+                 Colours here are the *idle* state; the active pair is applied in
+                 updateSendButtonState. -->
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btn_send_reply"
-                android:layout_width="78dp"
-                android:layout_height="44dp"
-                android:layout_marginStart="8dp"
-                android:backgroundTint="@color/brand_primary"
-                android:fontFamily="@font/inter_bold"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="Send"
-                android:textAllCaps="false"
-                android:textColor="@color/btn_text_on_brand"
-                android:textSize="14sp"
-                app:cornerRadius="22dp"
-                app:rippleColor="#33FFFFFF" />
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="4dp"
+                app:cardBackgroundColor="@color/circle_icon_bg"
+                app:cardCornerRadius="21dp"
+                app:cardElevation="0dp"
+                app:rippleColor="@color/ripple_on_brand"
+                app:strokeWidth="0dp">
+
+                <ImageView
+                    android:id="@+id/iv_send_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/send"
+                    android:src="@drawable/ic_send_arrow_up"
+                    app:tint="@color/text_tertiary" />
+
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tv_closed_notice"
+        <!-- Stands in for the composer on a ticket that can no longer be replied to.
+             One row rather than the old centred block with a filled pill under it:
+             it occupies the composer's slot, so it should read as a bar of the same
+             weight, not as a panel that shoulders the conversation upward. -->
+        <LinearLayout
+            android:id="@+id/closed_panel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_card_36"
-            android:fontFamily="@font/inter_medium"
-            android:gravity="center"
-            android:letterSpacing="0"
-            android:lineSpacingMultiplier="1.22"
-            android:padding="17dp"
-            android:text="This ticket is closed. You can still review the conversation."
-            android:textColor="@color/booking_details_support_text"
-            android:textSize="13sp"
-            android:visibility="gone" />
+            android:background="@drawable/bg_chat_composer_pill"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:minHeight="52dp"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="8dp"
+            android:paddingVertical="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tv_closed_notice"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/inter_medium"
+                android:letterSpacing="0"
+                android:lineSpacingMultiplier="1.22"
+                android:text="@string/this_ticket_is_closed_you_can"
+                android:textColor="@color/booking_details_support_text"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/btn_start_new_request"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_chat_identity_press"
+                android:fontFamily="@font/inter_semibold"
+                android:includeFontPadding="false"
+                android:letterSpacing="0"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="11dp"
+                android:text="@string/start_a_new_request"
+                android:textColor="@color/brand_primary"
+                android:textSize="13.5sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
     </LinearLayout>
+
+    <!-- ========== JUMP TO LATEST ========== -->
+    <!-- Appears only when the reader has scrolled away from the newest message.
+         One view covers both states: with the count hidden the row collapses to its
+         40dp minWidth and the 20dp radius makes it a circle; when support replies
+         while you are reading back, the count appears and it grows into a pill.
+
+         Anchored to the composer's top edge, so it rides up with the keyboard for
+         free rather than needing its own inset maths. Declared last so it draws
+         above the bottom scrim instead of being dimmed by it. -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btn_jump_to_latest"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="10dp"
+        android:alpha="0"
+        android:contentDescription="@string/support_chat_jump_to_latest"
+        android:visibility="invisible"
+        app:cardBackgroundColor="@color/background_secondary"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="3dp"
+        app:layout_constraintBottom_toTopOf="@id/bottom_panel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:rippleColor="@color/row_press_overlay"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:minWidth="40dp"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
+
+            <TextView
+                android:id="@+id/tv_jump_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="7dp"
+                android:fontFamily="@font/inter_semibold"
+                android:importantForAccessibility="no"
+                android:includeFontPadding="false"
+                android:letterSpacing="0"
+                android:textColor="@color/text_primary"
+                android:textSize="12.5sp"
+                android:visibility="gone"
+                tools:text="2 new"
+                tools:visibility="visible" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_arrow_down"
+                app:tint="@color/text_primary" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

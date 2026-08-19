@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Press feedback for the chat header's identity block. A rounded mask rather than
+     ?attr/selectableItemBackground: the block is a wide, short strip, and a square
+     ripple across it reads as a pressed toolbar rather than a tappable name. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/row_press_overlay">
+
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+
+</ripple>

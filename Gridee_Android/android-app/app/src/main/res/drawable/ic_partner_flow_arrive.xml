@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Beat 1 of the parking-session strip: the car pulls up.
+
+  The four flow glyphs are drawn as one set — 24dp box, 1.6 stroke, round caps
+  and joins, no fills — because they animate in sequence and any difference in
+  weight between them reads as one step being more important than the others.
+  Black stroke, tinted at runtime by PartnerFlowStrip.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Body: sill, bonnet, roof, boot, back to sill. -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M3 15 v-2.3 l2.6 -0.9 2 -3.4 h8.8 l2 3.4 2.6 0.9 v2.3"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.6" />
+
+    <!-- Sill, broken where the wheels sit. -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M3 15 h1.4 M9.4 15 h5.2 M19.6 15 h1.4"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.6" />
+
+    <!-- Belt line. -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M5.6 11.8 h12.8"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.6" />
+
+    <!-- Wheels. -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M5 15 a1.9 1.9 0 1 0 3.8 0 a1.9 1.9 0 1 0 -3.8 0"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.6" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M15.2 15 a1.9 1.9 0 1 0 3.8 0 a1.9 1.9 0 1 0 -3.8 0"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.6" />
+
+</vector>

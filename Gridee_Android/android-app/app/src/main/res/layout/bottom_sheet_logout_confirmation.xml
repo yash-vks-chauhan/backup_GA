@@ -50,7 +50,7 @@
         android:layout_marginTop="20dp"
         android:fontFamily="@font/inter_bold"
         android:gravity="center"
-        android:text="@string/op_logout_title"
+        android:text="@string/menu_logout"
         android:textColor="@color/text_primary"
         android:textSize="22sp"
         app:layout_constraintTop_toBottomOf="@id/icon_frame"

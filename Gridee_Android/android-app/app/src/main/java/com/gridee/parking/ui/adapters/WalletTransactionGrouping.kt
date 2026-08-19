@@ -1,6 +1,9 @@
 package com.gridee.parking.ui.adapters
 
+import android.content.Context
+import com.gridee.parking.R
 import java.util.Calendar
+import java.text.DateFormatSymbols
 import java.util.TimeZone
 
 object WalletTransactionGrouping {
@@ -8,6 +11,7 @@ object WalletTransactionGrouping {
     private val istTimeZone: TimeZone = TimeZone.getTimeZone("Asia/Kolkata")
 
     fun buildGroupedItems(
+        context: Context,
         transactions: List<Transaction>,
         maxItems: Int? = null
     ): List<WalletTransactionListItem> {
@@ -15,6 +19,7 @@ object WalletTransactionGrouping {
 
         val sorted = transactions.sortedByDescending { it.timestamp }
         val limited = maxItems?.let { sorted.take(it) } ?: sorted
+        val locale = context.resources.configuration.locales[0]
 
         val groupedItems = mutableListOf<WalletTransactionListItem>()
         
@@ -39,14 +44,13 @@ object WalletTransactionGrouping {
             val txnCal = Calendar.getInstance(istTimeZone).apply { time = transaction.timestamp }
             
             val sectionTitle = when {
-                txnCal.timeInMillis >= todayStart.timeInMillis -> "Today"
-                txnCal.timeInMillis >= yesterdayStart.timeInMillis -> "Yesterday"
-                txnCal.timeInMillis >= thisWeekStart.timeInMillis -> "This Week"
+                txnCal.timeInMillis >= todayStart.timeInMillis -> context.getString(R.string.today)
+                txnCal.timeInMillis >= yesterdayStart.timeInMillis -> context.getString(R.string.yesterday)
+                txnCal.timeInMillis >= thisWeekStart.timeInMillis -> context.getString(R.string.this_week)
                 else -> {
-                    // Format as "Month Year", e.g., "December 2025"
-                    val month = txnCal.getDisplayName(Calendar.MONTH, Calendar.LONG, java.util.Locale.getDefault())
+                    val month = DateFormatSymbols(locale).months[txnCal.get(Calendar.MONTH)]
                     val year = txnCal.get(Calendar.YEAR)
-                    "$month $year"
+                    context.getString(R.string.wallet_month_year_format, month, year)
                 }
             }
             

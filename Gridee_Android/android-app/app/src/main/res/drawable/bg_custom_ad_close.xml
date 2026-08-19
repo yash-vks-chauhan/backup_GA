@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dismiss affordance that sits on top of an unknown creative: dark disc so a white glyph
+     stays legible whatever the image behind it looks like. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33FFFFFF">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#73000000" />
+        </shape>
+    </item>
+</ripple>

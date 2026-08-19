@@ -65,4 +65,95 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Partner referral entry point. Sits above the tab bar rather than beside it:
+         the capsule is centred and wrap_content, so there is no room at its side on
+         narrow screens. Anchoring to the capsule's top edge keeps the gap correct
+         even as the bar's bottom margin changes.
+
+         Docked flush to the right screen edge (no end margin) so it reads as a tab
+         pulled in from the side — bg_partner_pill rounds only the leading corners to
+         match. 50dp tall with a 14sp label: still quieter than the tab bar so it reads
+         as an offer beside the navigation, not a competing primary action. The glyph
+         shrinks to 20dp as the pill grows — at 22dp against the smaller label it read
+         icon-heavy, and the smaller mark balances the taller pill.
+         The gold sits on the glyph alone — the one warm element below the fold —
+         while the label stays in the page's own text color. -->
+    <LinearLayout
+        android:id="@+id/btn_partner_referral"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="22dp"
+        android:background="@drawable/bg_partner_pill"
+        android:clickable="true"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="6dp"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="50dp"
+        android:orientation="horizontal"
+        android:outlineAmbientShadowColor="#33000000"
+        android:outlineSpotShadowColor="#26000000"
+        android:paddingStart="14dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_partner_referral"
+            app:tint="@color/gold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="@font/inter_semibold"
+            android:includeFontPadding="false"
+            android:text="@string/partner_referral_cta"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <!-- Home-only portrait video ad. It shares the referral pill's bottom baseline so the
+         lower controls read as one dock: ad on the left, referral action on the right.
+
+         No elevation here. This FrameLayout has no background, so it has no outline to cast a
+         shadow from — the elevation it used to carry bought z-order it already gets from being
+         declared last, while the card inside stayed visibly flat next to the referral pill's
+         shadow. The shadow now lives on the MaterialCardView in view_admob_native_card, at the
+         same 6dp the pill and the tab capsule use. clipChildren stays off so that shadow can
+         draw outside these bounds.
+
+         20dp start margin, not 16dp: the in-app banner insets 20dp from each edge and, when it
+         appears, this dock lifts to sit directly above it — matching the inset keeps their left
+         edges on one line instead of 4dp adrift. -->
+    <FrameLayout
+        android:id="@+id/home_native_ad_dock"
+        android:layout_width="120dp"
+        android:layout_height="213dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="22dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- clipChildren off the whole way down to the card, or this container's bounds
+             (identical to the card's) would clip the card's shadow back off. -->
+        <com.gridee.parking.ui.ads.AdMobNativeAdCardView
+            android:id="@+id/native_ad_home"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false" />
+
+    </FrameLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

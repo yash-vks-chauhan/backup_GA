@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Shared frosted header scrim. Colours come from the background_primary alpha ramp
+     rather than literals, so it tracks the page surface and resolves per theme from
+     this one file (no -night copy to keep in sync). Resolved values are identical to
+     the hex it replaced. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Layer 1: Full-height dissolve — long smooth tail -->
     <item>
         <shape>
             <gradient
                 android:angle="270"
-                android:startColor="#F5F5F5"
-                android:centerColor="#CCF5F5F5"
-                android:endColor="#00F5F5F5"
+                android:startColor="@color/background_primary"
+                android:centerColor="@color/background_primary_a80"
+                android:endColor="@color/background_primary_transparent"
                 android:centerY="0.38"
                 android:type="linear" />
         </shape>
@@ -17,9 +21,9 @@
         <shape>
             <gradient
                 android:angle="270"
-                android:startColor="#D9F5F5F5"
-                android:centerColor="#80F5F5F5"
-                android:endColor="#00F5F5F5"
+                android:startColor="@color/background_primary_a85"
+                android:centerColor="@color/background_primary_a50"
+                android:endColor="@color/background_primary_transparent"
                 android:centerY="0.5"
                 android:type="linear" />
         </shape>
@@ -29,8 +33,8 @@
         <shape>
             <gradient
                 android:angle="270"
-                android:startColor="#F5F5F5"
-                android:endColor="#00F5F5F5"
+                android:startColor="@color/background_primary"
+                android:endColor="@color/background_primary_transparent"
                 android:type="linear" />
         </shape>
     </item>

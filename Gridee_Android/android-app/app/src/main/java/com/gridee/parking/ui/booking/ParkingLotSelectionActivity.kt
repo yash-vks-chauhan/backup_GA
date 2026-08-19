@@ -1,5 +1,7 @@
 package com.gridee.parking.ui.booking
 
+import com.gridee.parking.R
+
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -33,8 +35,8 @@ class ParkingLotSelectionActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        binding.tvTitle.text = "Select Parking Location"
-        binding.tvSubtitle.text = "Choose a parking lot to view available spots"
+        binding.tvTitle.text = getString(R.string.select_parking_location)
+        binding.tvSubtitle.text = getString(R.string.choose_a_parking_lot_to_view)
     }
 
     private fun setupRecyclerView() {

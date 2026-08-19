@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Conversation opener: what the ticket is about, when it was raised, and the
+     reference to quote if the user ever has to chase it elsewhere.
+
+     Deliberately not a card — it is context, not content, so it reads as system text
+     between the header and the first bubble. The subject appears here in full even
+     though the header now carries it too: the header truncates to one line and is a
+     persistent echo, this is the thread's actual opening statement, seen once. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/tv_intro_subject"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="@font/inter_semibold"
+        android:gravity="center_horizontal"
+        android:includeFontPadding="false"
+        android:letterSpacing="0"
+        android:lineSpacingMultiplier="1.2"
+        android:maxLines="2"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        tools:text="Payment deducted but booking failed" />
+
+    <TextView
+        android:id="@+id/tv_intro_opened"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:fontFamily="@font/inter_medium"
+        android:gravity="center_horizontal"
+        android:includeFontPadding="false"
+        android:letterSpacing="0"
+        android:textColor="@color/text_tertiary"
+        android:textSize="11.5sp"
+        tools:text="Opened 29 Jul 2026 · #7F3A21" />
+
+    <!-- Sets the one expectation a support thread actually owes the reader. Shown
+         only until support replies for the first time — after that it is stale, and
+         the thread itself is the evidence of how fast the team answers.
+
+         Wording stays vague on purpose: nothing in the backend measures response
+         time, so any number here would be invented, which is the mistake the deleted
+         "Seen" receipt already made once. -->
+    <TextView
+        android:id="@+id/tv_intro_expectation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/inter_medium"
+        android:gravity="center_horizontal"
+        android:includeFontPadding="false"
+        android:letterSpacing="0"
+        android:lineSpacingMultiplier="1.2"
+        android:text="@string/support_chat_awaiting_first_reply"
+        android:textColor="@color/text_tertiary"
+        android:textSize="12sp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</LinearLayout>

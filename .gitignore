@@ -92,3 +92,10 @@ src/main/resources/static/html/
 # Additional Gradle caches
 .gradle-j17/
 *.zip
+
+############################
+# Build outputs (APK / AAB)
+############################
+apks/
+*.aab
+*.apk

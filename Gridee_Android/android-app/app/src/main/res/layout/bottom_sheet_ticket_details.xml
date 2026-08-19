@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Everything about the request that isn't the conversation.
+
+     This exists because the chat header's right corner was dead and the facts a
+     support thread depends on had nowhere to live: the ticket reference was never
+     shown to the user *anywhere* in the app, so someone phoning or emailing about a
+     request had nothing to quote.
+
+     Scrolls, because the subject wraps and the location string can be long — a fixed
+     sheet would clip both at large font scales. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_universal"
+    android:orientation="vertical">
+
+    <View
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/handle_pill_minimal"
+        android:importantForAccessibility="no" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="28dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_bold"
+                android:includeFontPadding="false"
+                android:letterSpacing="-0.01"
+                android:text="@string/support_details_title"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/tv_details_subject"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/inter_medium"
+                android:letterSpacing="0"
+                android:lineSpacingMultiplier="1.25"
+                android:textColor="@color/booking_details_support_text"
+                android:textSize="14.5sp"
+                tools:text="Payment deducted but booking failed" />
+
+            <!-- Status timeline. It answers "where has this got to", which a single
+                 status word can't: a resolved ticket and one that never left Open
+                 both read as one label, but they are very different states to be in
+                 as the person waiting. Built in code so the reached/current/upcoming
+                 treatment is decided in one place. -->
+            <LinearLayout
+                android:id="@+id/layout_status_timeline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:orientation="vertical" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="26dp"
+                android:background="@color/divider"
+                android:importantForAccessibility="no" />
+
+            <!-- The reference row is tappable: the only reason to show a reference is
+                 to use it somewhere else, and retyping six characters from a screen
+                 is a small, avoidable annoyance. -->
+            <LinearLayout
+                android:id="@+id/row_reference"
+                style="@style/Widget.Gridee.DetailRow"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_chat_identity_press"
+                android:clickable="true"
+                android:contentDescription="@string/support_details_copy_reference"
+                android:focusable="true">
+
+                <TextView
+                    style="@style/Widget.Gridee.DetailRowLabel"
+                    android:text="@string/support_details_reference" />
+
+                <TextView
+                    android:id="@+id/tv_details_reference"
+                    style="@style/Widget.Gridee.DetailRowValue"
+                    tools:text="#7F3A21" />
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:layout_marginStart="8dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_copy"
+                    android:tint="@color/icon_secondary" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_opened"
+                style="@style/Widget.Gridee.DetailRow">
+
+                <TextView
+                    style="@style/Widget.Gridee.DetailRowLabel"
+                    android:text="@string/support_details_opened" />
+
+                <TextView
+                    android:id="@+id/tv_details_opened"
+                    style="@style/Widget.Gridee.DetailRowValue"
+                    tools:text="29 Jul 2026, 2:14 PM" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_updated"
+                style="@style/Widget.Gridee.DetailRow">
+
+                <TextView
+                    style="@style/Widget.Gridee.DetailRowLabel"
+                    android:text="@string/support_details_updated" />
+
+                <TextView
+                    android:id="@+id/tv_details_updated"
+                    style="@style/Widget.Gridee.DetailRowValue"
+                    tools:text="31 Jul 2026, 9:02 AM" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/row_location"
+                style="@style/Widget.Gridee.DetailRow">
+
+                <TextView
+                    style="@style/Widget.Gridee.DetailRowLabel"
+                    android:text="@string/support_details_location" />
+
+                <TextView
+                    android:id="@+id/tv_details_location"
+                    style="@style/Widget.Gridee.DetailRowValue"
+                    tools:text="Phoenix Mall — Lot B" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

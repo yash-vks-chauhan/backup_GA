@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary"
+    android:fitsSystemWindows="true"
+    tools:context=".ui.profile.LanguageRegionActivity">
+
+    <!-- Content scrolls full-bleed behind the floating header, matching Profile. -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:clipToPadding="false"
+        android:paddingBottom="40dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="?attr/actionBarSize">
+
+            <!-- ─────────────────  APP LANGUAGE  ───────────────── -->
+
+            <TextView
+                android:id="@+id/tv_language_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:fontFamily="@font/inter_semibold"
+                android:text="@string/language_section_title"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tv_language_sub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="18dp"
+                android:fontFamily="@font/inter_regular"
+                android:text="@string/language_section_subtitle"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_languages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                app:cardBackgroundColor="@color/background_secondary"
+                app:cardCornerRadius="36dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- English -->
+                    <LinearLayout
+                        android:id="@+id/row_en"
+                        style="@style/Widget.Gridee.LanguageRow">
+
+                        <FrameLayout style="@style/Widget.Gridee.LanguageRow.Badge">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Glyph"
+                                android:text="@string/language_glyph_english" />
+                        </FrameLayout>
+
+                        <LinearLayout style="@style/Widget.Gridee.LanguageRow.Labels">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Native"
+                                android:text="@string/language_native_english" />
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Sub"
+                                android:text="@string/language_english" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/check_en"
+                            style="@style/Widget.Gridee.LanguageRow.Check">
+
+                            <ImageView style="@style/Widget.Gridee.LanguageRow.CheckIcon" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <View style="@style/Widget.Gridee.LanguageRow.Divider" />
+
+                    <!-- Hindi -->
+                    <LinearLayout
+                        android:id="@+id/row_hi"
+                        style="@style/Widget.Gridee.LanguageRow">
+
+                        <FrameLayout style="@style/Widget.Gridee.LanguageRow.Badge">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Glyph"
+                                android:text="@string/language_glyph_hindi" />
+                        </FrameLayout>
+
+                        <LinearLayout style="@style/Widget.Gridee.LanguageRow.Labels">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Native"
+                                android:text="@string/language_native_hindi" />
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Sub"
+                                android:text="@string/language_hindi" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/check_hi"
+                            style="@style/Widget.Gridee.LanguageRow.Check">
+
+                            <ImageView style="@style/Widget.Gridee.LanguageRow.CheckIcon" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <View style="@style/Widget.Gridee.LanguageRow.Divider" />
+
+                    <!-- Tamil -->
+                    <LinearLayout
+                        android:id="@+id/row_ta"
+                        style="@style/Widget.Gridee.LanguageRow">
+
+                        <FrameLayout style="@style/Widget.Gridee.LanguageRow.Badge">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Glyph"
+                                android:text="@string/language_glyph_tamil" />
+                        </FrameLayout>
+
+                        <LinearLayout style="@style/Widget.Gridee.LanguageRow.Labels">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Native"
+                                android:text="@string/language_native_tamil" />
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Sub"
+                                android:text="@string/language_tamil" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/check_ta"
+                            style="@style/Widget.Gridee.LanguageRow.Check">
+
+                            <ImageView style="@style/Widget.Gridee.LanguageRow.CheckIcon" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <View style="@style/Widget.Gridee.LanguageRow.Divider" />
+
+                    <!-- Telugu -->
+                    <LinearLayout
+                        android:id="@+id/row_te"
+                        style="@style/Widget.Gridee.LanguageRow">
+
+                        <FrameLayout style="@style/Widget.Gridee.LanguageRow.Badge">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Glyph"
+                                android:text="@string/language_glyph_telugu" />
+                        </FrameLayout>
+
+                        <LinearLayout style="@style/Widget.Gridee.LanguageRow.Labels">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Native"
+                                android:text="@string/language_native_telugu" />
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Sub"
+                                android:text="@string/language_telugu" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/check_te"
+                            style="@style/Widget.Gridee.LanguageRow.Check">
+
+                            <ImageView style="@style/Widget.Gridee.LanguageRow.CheckIcon" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <View style="@style/Widget.Gridee.LanguageRow.Divider" />
+
+                    <!-- Malayalam -->
+                    <LinearLayout
+                        android:id="@+id/row_ml"
+                        style="@style/Widget.Gridee.LanguageRow">
+
+                        <FrameLayout style="@style/Widget.Gridee.LanguageRow.Badge">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Glyph"
+                                android:text="@string/language_glyph_malayalam" />
+                        </FrameLayout>
+
+                        <LinearLayout style="@style/Widget.Gridee.LanguageRow.Labels">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Native"
+                                android:text="@string/language_native_malayalam" />
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Sub"
+                                android:text="@string/language_malayalam" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/check_ml"
+                            style="@style/Widget.Gridee.LanguageRow.Check">
+
+                            <ImageView style="@style/Widget.Gridee.LanguageRow.CheckIcon" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <View style="@style/Widget.Gridee.LanguageRow.Divider" />
+
+                    <!-- Bengali -->
+                    <LinearLayout
+                        android:id="@+id/row_bn"
+                        style="@style/Widget.Gridee.LanguageRow">
+
+                        <FrameLayout style="@style/Widget.Gridee.LanguageRow.Badge">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Glyph"
+                                android:text="@string/language_glyph_bengali" />
+                        </FrameLayout>
+
+                        <LinearLayout style="@style/Widget.Gridee.LanguageRow.Labels">
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Native"
+                                android:text="@string/language_native_bengali" />
+
+                            <TextView
+                                style="@style/Widget.Gridee.LanguageRow.Sub"
+                                android:text="@string/language_bengali" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/check_bn"
+                            style="@style/Widget.Gridee.LanguageRow.Check">
+
+                            <ImageView style="@style/Widget.Gridee.LanguageRow.CheckIcon" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- ─────────────────  REGION  ───────────────── -->
+
+            <TextView
+                android:id="@+id/tv_region_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="34dp"
+                android:fontFamily="@font/inter_semibold"
+                android:text="@string/language_region_section_title"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tv_region_sub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="18dp"
+                android:fontFamily="@font/inter_regular"
+                android:text="@string/language_region_section_subtitle"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_region"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                app:cardBackgroundColor="@color/background_secondary"
+                app:cardCornerRadius="36dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="18dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_language"
+                        app:tint="@color/icon_secondary" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/inter_medium"
+                        android:text="@string/language_region_row_label"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/tv_region_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_regular"
+                        android:text="@string/language_region_india"
+                        android:textColor="@color/text_tertiary"
+                        android:textSize="15sp" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/tv_region_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="24dp"
+                android:fontFamily="@font/inter_regular"
+                android:text="@string/language_region_note"
+                android:textColor="@color/text_tertiary"
+                android:textSize="12sp"
+                android:lineSpacingExtra="2dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Unified frosted header overlay — opaque at top, dissolving downward.
+         Fades in as content scrolls under it, same as the Profile page. -->
+    <View
+        android:id="@+id/view_toolbar_frost"
+        android:layout_width="match_parent"
+        android:layout_height="112dp"
+        android:layout_gravity="top"
+        android:alpha="0"
+        android:background="@drawable/bg_toolbar_frosted" />
+
+    <!-- Toolbar row — floats above everything, title centred like Profile. -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="top">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_back"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="20dp">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:contentDescription="@string/back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tv_toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:fontFamily="@font/inter_bold"
+            android:gravity="center"
+            android:text="@string/language_region_title"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </FrameLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

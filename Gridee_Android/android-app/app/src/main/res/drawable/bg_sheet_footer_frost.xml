@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Footer dissolve for full-page bottom sheets — the mirror of
+  bg_sheet_header_frost, same three-layer construction, flipped.
+
+  It exists for the same reason the header's does: a floating control shouldn't
+  meet live body text at a hard edge. Content thins out into the sheet surface as
+  it approaches the bottom, so the jump pill sits *on* something instead of on
+  top of a sentence. That is what lets the pill drop its drop shadow.
+
+  Anchored to @color/white (the sheet's own surface — #FFFFFF light) rather than
+  the page background, and square at the bottom because a full-page sheet is
+  flush with the screen edge there (bg_bottom_sheet_universal rounds top only).
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Layer 1: Full-height dissolve — long gentle tail upward -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="@color/white"
+                android:centerColor="#CCFFFFFF"
+                android:endColor="#00FFFFFF"
+                android:centerY="0.58"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Layer 2: Mid-band reinforcement — fills the gap between anchor and tail -->
+    <item android:top="40dp">
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="#D9FFFFFF"
+                android:centerColor="#80FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:centerY="0.45"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- Layer 3: Bottom anchor — opaque through the band the pill actually sits in -->
+    <item android:top="68dp">
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="@color/white"
+                android:endColor="#00FFFFFF"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>

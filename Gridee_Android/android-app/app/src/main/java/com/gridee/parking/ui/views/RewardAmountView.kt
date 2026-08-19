@@ -69,6 +69,21 @@ class RewardAmountView @JvmOverloads constructor(
     /** Fired once when the count-up reaches its final value (not when snapped). */
     var onCountSettled: (() -> Unit)? = null
 
+    /**
+     * How a value is rendered. Null keeps the reward sheet's bare digits; the
+     * partner sheet supplies one that prefixes ₹ and groups Indian-style, so the
+     * headline figure counts up as currency without needing a second view.
+     */
+    var textFormatter: ((Int) -> String)? = null
+        set(value) {
+            field = value
+            shownText = format(shownValue)
+            requestLayout()
+            invalidate()
+        }
+
+    private fun format(value: Int): String = textFormatter?.invoke(value) ?: value.toString()
+
     private var countAnimator: ValueAnimator? = null
     private var glintAnimator: ValueAnimator? = null
     private var glintAlpha = 0f
@@ -87,7 +102,7 @@ class RewardAmountView @JvmOverloads constructor(
         targetValue = value
         countAnimator?.cancel()
         shownValue = 0
-        shownText = "0"
+        shownText = format(0)
         requestLayout()
         invalidate()
     }
@@ -98,7 +113,7 @@ class RewardAmountView @JvmOverloads constructor(
         if (!animate || !animatorsEnabled()) {
             countAnimator?.cancel()
             shownValue = value
-            shownText = value.toString()
+            shownText = format(value)
             invalidate()
             return
         }
@@ -110,7 +125,7 @@ class RewardAmountView @JvmOverloads constructor(
                 val v = it.animatedValue as Int
                 if (v != shownValue) {
                     shownValue = v
-                    shownText = v.toString()
+                    shownText = format(v)
                     invalidate()
                 }
             }
@@ -123,9 +138,20 @@ class RewardAmountView @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Resize the figure. The reward sheet's 60sp hero is the default; the partner
+     * sheet sets it smaller, since there the number shares a line with copy rather
+     * than owning the screen.
+     */
+    fun setDisplayTextSizeSp(sp: Float) {
+        textPaint.textSize = sp * resources.displayMetrics.scaledDensity
+        requestLayout()
+        invalidate()
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // Reserve width for the *final* value so the digits never reflow mid-count.
-        val widest = targetValue.coerceAtLeast(shownValue).toString().ifEmpty { "0" }
+        val widest = format(targetValue.coerceAtLeast(shownValue)).ifEmpty { "0" }
         textPaint.getTextBounds(widest, 0, widest.length, measureBounds)
         val w = measureBounds.width() + paddingLeft + paddingRight + (4 * density).toInt()
         val fm = textPaint.fontMetrics

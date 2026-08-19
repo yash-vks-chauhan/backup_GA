@@ -62,23 +62,6 @@
                 android:alpha="0"
                 android:tag="textActiveBold" />
 
-            <TextView
-                android:id="@+id/badgeActive"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/segment_badge_background"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:text="0"
-                android:textColor="@color/segment_badge_text"
-                android:textSize="10sp"
-                android:fontFamily="@font/inter_medium"
-                android:visibility="gone" />
-
         </FrameLayout>
 
         <!-- Booked Segment -->
@@ -114,23 +97,6 @@
                 android:letterSpacing="0.01"
                 android:alpha="0"
                 android:tag="textPendingBold" />
-
-            <TextView
-                android:id="@+id/badgePending"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/segment_badge_background"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:text="0"
-                android:textColor="@color/segment_badge_text"
-                android:textSize="10sp"
-                android:fontFamily="@font/inter_medium"
-                android:visibility="gone" />
 
         </FrameLayout>
 

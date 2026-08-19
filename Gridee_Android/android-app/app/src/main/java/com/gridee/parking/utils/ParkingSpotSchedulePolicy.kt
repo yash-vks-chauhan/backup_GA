@@ -14,8 +14,8 @@ object ParkingSpotSchedulePolicy {
     // Testing override. Keep false for default time-based behavior.
     private const val FORCE_EVENING_ONLY_FOR_TESTING = false
 
-    private const val MORNING_STANDARD_OPEN_HOUR = 18 // 6:30 PM one day before
-    private const val MORNING_STANDARD_OPEN_MINUTE = 30
+    private const val DAILY_BOOKING_OPEN_HOUR = 5    // 5:00 AM
+    private const val DAILY_BOOKING_CLOSE_HOUR = 17  // 5:00 PM
     private const val MORNING_SESSION_START_HOUR = 7  // 7:30 AM
     private const val MORNING_SESSION_START_MINUTE = 30
     private const val MORNING_CLOSE_HOUR = 12         // 12:30 PM
@@ -49,6 +49,7 @@ object ParkingSpotSchedulePolicy {
         spots: List<ParkingSpot>,
         now: Calendar = currentTime()
     ): List<ParkingSpot> {
+        if (isBookingClosed(now)) return emptyList()
         return spots.filter { isVisibleNow(it, now) }
     }
 
@@ -78,6 +79,8 @@ object ParkingSpotSchedulePolicy {
         spot: ParkingSpot,
         now: Calendar = currentTime()
     ): Boolean {
+        if (isBookingClosed(now)) return false
+
         if (FORCE_EVENING_ONLY_FOR_TESTING) {
             return classifySlotSession(spot) == SlotSession.EVENING
         }
@@ -99,6 +102,8 @@ object ParkingSpotSchedulePolicy {
         spot: ParkingSpot,
         now: Calendar = currentTime()
     ): Boolean {
+        if (isBookingClosed(now)) return false
+
         return when (classifySlotSession(spot)) {
             SlotSession.EVENING -> isWithinAfternoonBookingWindow(now)
             SlotSession.MORNING -> {
@@ -116,6 +121,10 @@ object ParkingSpotSchedulePolicy {
         spot: ParkingSpot,
         now: Calendar = currentTime()
     ): String? {
+        if (isBookingClosed(now)) {
+            return "Parking bookings are closed. Booking begins at 5:00 AM."
+        }
+
         return when (classifySlotSession(spot)) {
             SlotSession.EVENING -> {
                 when {
@@ -132,16 +141,14 @@ object ParkingSpotSchedulePolicy {
                     when {
                         minutesOfDay(now) < QUICK_OPEN_MINUTES ->
                             "Quick slot booking opens at 8:00 AM on the parking day."
-                        minutesOfDay(now) >= QUICK_CLOSE_MINUTES &&
-                            minutesOfDay(now) < MORNING_STANDARD_OPEN_MINUTES ->
+                        minutesOfDay(now) >= QUICK_CLOSE_MINUTES ->
                             "Quick slot booking closes at 11:30 AM."
                         else -> null
                     }
                 } else {
                     when {
-                        minutesOfDay(now) >= MORNING_CLOSE_MINUTES &&
-                            minutesOfDay(now) < MORNING_STANDARD_OPEN_MINUTES ->
-                            "Morning slot booking opens at 6:30 PM one day before."
+                        minutesOfDay(now) >= MORNING_CLOSE_MINUTES ->
+                            "Morning slot booking begins at 5:00 AM on the parking day."
                         else -> null
                     }
                 }
@@ -217,6 +224,15 @@ object ParkingSpotSchedulePolicy {
     fun homeFilterAvailability(
         now: Calendar = currentTime()
     ): HomeFilterAvailability {
+        if (isBookingClosed(now)) {
+            return HomeFilterAvailability(
+                morningEnabled = false,
+                standardEnabled = false,
+                quickEnabled = false,
+                afternoonEnabled = false
+            )
+        }
+
         val morningEnabled = isWithinMorningStandardBookingWindow(now)
         return HomeFilterAvailability(
             morningEnabled = morningEnabled,
@@ -224,6 +240,12 @@ object ParkingSpotSchedulePolicy {
             quickEnabled = isWithinMorningQuickBookingWindow(now),
             afternoonEnabled = isWithinAfternoonVisibilityWindow(now)
         )
+    }
+
+    /** All parking discovery and booking is paused daily from 5:00 PM until 5:00 AM IST. */
+    fun isBookingClosed(now: Calendar = currentTime()): Boolean {
+        val minutes = minutesOfDay(now)
+        return minutes < DAILY_BOOKING_OPEN_MINUTES || minutes >= DAILY_BOOKING_CLOSE_MINUTES
     }
 
     fun classifySlotSession(spot: ParkingSpot): SlotSession {
@@ -257,7 +279,7 @@ object ParkingSpotSchedulePolicy {
 
     private fun isWithinMorningStandardBookingWindow(now: Calendar): Boolean {
         val minutes = minutesOfDay(now)
-        return minutes >= MORNING_STANDARD_OPEN_MINUTES || minutes < MORNING_CLOSE_MINUTES
+        return minutes in DAILY_BOOKING_OPEN_MINUTES until MORNING_CLOSE_MINUTES
     }
 
     private fun isWithinMorningQuickBookingWindow(now: Calendar): Boolean {
@@ -348,8 +370,8 @@ object ParkingSpotSchedulePolicy {
         }
     }
 
-    private const val MORNING_STANDARD_OPEN_MINUTES =
-        MORNING_STANDARD_OPEN_HOUR * 60 + MORNING_STANDARD_OPEN_MINUTE
+    private const val DAILY_BOOKING_OPEN_MINUTES = DAILY_BOOKING_OPEN_HOUR * 60
+    private const val DAILY_BOOKING_CLOSE_MINUTES = DAILY_BOOKING_CLOSE_HOUR * 60
     private const val QUICK_OPEN_MINUTES = QUICK_BOOKING_OPEN_HOUR * 60
     private const val QUICK_CLOSE_MINUTES = QUICK_BOOKING_CLOSE_HOUR * 60 + QUICK_BOOKING_CLOSE_MINUTE
     private const val MORNING_CLOSE_MINUTES = MORNING_CLOSE_HOUR * 60 + MORNING_CLOSE_MINUTE

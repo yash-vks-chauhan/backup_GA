@@ -8,7 +8,7 @@
     android:paddingBottom="10dp"
     android:paddingStart="4dp"
     android:paddingEnd="4dp"
-    android:text="Today"
+    android:text="@string/today"
     android:textAllCaps="false"
     android:textColor="@color/text_primary"
     android:textSize="15sp"

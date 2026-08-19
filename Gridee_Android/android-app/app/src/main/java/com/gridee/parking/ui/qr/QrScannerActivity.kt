@@ -184,15 +184,10 @@ class QrScannerActivity : AppCompatActivity() {
     private var camera: Camera? = null
     private var vehicleScannerSessionId: Long = 0L
     private var isTorchOn = false
-    private var lastAmbientLuma = 255f
-    private var manualTorchOverrideUntil = 0L
-    private val torchOnThreshold = 55f
-    private val torchOffThreshold = 90f
-    private val manualTorchOverrideDurationMs = 6000L
     private val analysisTargetResolution = Size(1280, 720)
     private val ocrCropHorizontalInsetRatio = 0.035f
     private val ocrCropVerticalInsetRatio = 0.16f
-    private val regularInstantPattern = Regex("^[A-Z]{2}\\d{2}[A-Z]{1,3}\\d{4}$")
+    private val regularInstantPattern = Regex("^[A-Z]{2}\\d{2}[A-Z]{0,3}\\d{4}$")
     private val ocrNoisePattern = Regex("[^A-Z0-9]")
     private val supportedPlateTemplates: List<String> = buildPlateTemplates()
 
@@ -283,8 +278,9 @@ class QrScannerActivity : AppCompatActivity() {
         )
 
         for (districtDigits in 1..2) {
-            for (seriesLetters in 1..3) {
-                for (numberDigits in 1..4) {
+            for (seriesLetters in 0..3) {
+                val numberDigitRange = if (seriesLetters == 0) 4..4 else 1..4
+                for (numberDigits in numberDigitRange) {
                     templates += buildString {
                         append("LL")
                         append("D".repeat(districtDigits))
@@ -818,7 +814,7 @@ class QrScannerActivity : AppCompatActivity() {
                 } else if (!granted) {
                     pendingVoiceStartAfterPermission = false
                     showScannerNotification(
-                        title = "Voice Input",
+                        title = getString(R.string.voice_input),
                         message = getString(R.string.vehicle_scan_voice_permission_required),
                         isError = true
                     )
@@ -975,8 +971,6 @@ class QrScannerActivity : AppCompatActivity() {
             return
         }
 
-        maybeHandleAutoTorch(imageProxy)
-
         val mediaImage = imageProxy.image
         if (mediaImage == null) {
             imageProxy.close()
@@ -1106,7 +1100,6 @@ class QrScannerActivity : AppCompatActivity() {
             return
         }
 
-        maybeHandleAutoTorch(imageProxy)
         val mediaImage = imageProxy.image
         if (mediaImage == null) {
             imageProxy.close()
@@ -1545,8 +1538,8 @@ class QrScannerActivity : AppCompatActivity() {
             updateOperatorInteractionState()
             setStatus(getString(R.string.vehicle_scan_error_generic), ScanState.ERROR, showProgress = false)
             showScannerNotification(
-                title = "Scanner Error",
-                message = "Unsupported operator scan mode",
+                title = getString(R.string.scanner_error),
+                message = getString(R.string.unsupported_operator_scan_mode),
                 isError = true
             )
             scheduleOperatorScanResume(delayMs = scannerResultHoldMs)
@@ -1567,7 +1560,7 @@ class QrScannerActivity : AppCompatActivity() {
             updateOperatorInteractionState()
             setStatus(getString(R.string.vehicle_sheet_manual_error), ScanState.ERROR, showProgress = false)
             showScannerNotification(
-                title = "Scanner Error",
+                title = getString(R.string.scanner_error),
                 message = getString(R.string.vehicle_sheet_manual_error),
                 isError = true
             )
@@ -1584,8 +1577,8 @@ class QrScannerActivity : AppCompatActivity() {
             updateOperatorInteractionState()
             setStatus(getString(R.string.vehicle_scan_error_generic), ScanState.ERROR, showProgress = false)
             showScannerNotification(
-                title = "Scanner Error",
-                message = "Unsupported operator scan mode",
+                title = getString(R.string.scanner_error),
+                message = getString(R.string.unsupported_operator_scan_mode),
                 isError = true
             )
             scheduleVehicleScanResume(delayMs = scannerResultHoldMs)
@@ -1904,15 +1897,13 @@ class QrScannerActivity : AppCompatActivity() {
         if (!isOperatorPlateMode()) return
         cancelScanTimeout()
         val runnable = Runnable {
+            scanTimeoutRunnable = null
             if (!vehicleScanCompleted) {
-                provideFeedback(FeedbackType.TIMEOUT)
-                animateCornerGlow(ScanState.WARNING)
-                stopVehicleScanner()
-                stopScanLineAnimation()
-                // Silently reset and restart scanning without showing a bottom sheet
-                vehicleScanCompleted = false
-                setStatus(getString(R.string.vehicle_scan_detecting), ScanState.SCANNING)
-                startVehicleScanner()
+                setStatus(
+                    getString(R.string.vehicle_scan_not_clear_hint),
+                    ScanState.WARNING,
+                    showProgress = false
+                )
             }
         }
         scanTimeoutRunnable = runnable
@@ -1950,47 +1941,12 @@ class QrScannerActivity : AppCompatActivity() {
         }
     }
 
-    private fun maybeHandleAutoTorch(imageProxy: ImageProxy) {
-        val cam = camera ?: return
-        if (!cam.cameraInfo.hasFlashUnit()) return
-        if (System.currentTimeMillis() < manualTorchOverrideUntil) return
-
-        val luma = measureLuma(imageProxy) ?: return
-        lastAmbientLuma = (lastAmbientLuma * 0.7f) + (luma * 0.3f)
-
-        if (!isTorchOn && lastAmbientLuma < torchOnThreshold) {
-            setTorch(true)
-        } else if (isTorchOn && lastAmbientLuma > torchOffThreshold) {
-            setTorch(false)
-        }
-    }
-
-    private fun measureLuma(imageProxy: ImageProxy): Float? {
-        val yPlane = imageProxy.planes.firstOrNull() ?: return null
-        val buffer = yPlane.buffer
-        val remaining = buffer.remaining()
-        if (remaining <= 0) return null
-
-        val sampleCount = 1500.coerceAtMost(remaining)
-        val step = (remaining / sampleCount).coerceAtLeast(1)
-        var sum = 0L
-        var count = 0
-        var index = 0
-        while (index < remaining) {
-            sum += buffer.get(index).toInt() and 0xFF
-            count++
-            index += step
-        }
-        return if (count > 0) sum.toFloat() / count else null
-    }
-
     private fun toggleFlash() {
         if (!isOperatorPlateMode()) return
         if (camera?.cameraInfo?.hasFlashUnit() != true) {
             Toast.makeText(this, R.string.vehicle_scan_flash_off, Toast.LENGTH_SHORT).show()
             return
         }
-        manualTorchOverrideUntil = System.currentTimeMillis() + manualTorchOverrideDurationMs
         setTorch(!isTorchOn)
     }
 
@@ -2483,7 +2439,7 @@ class QrScannerActivity : AppCompatActivity() {
 
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
             showScannerNotification(
-                title = "Voice Input",
+                title = getString(R.string.voice_input),
                 message = getString(R.string.vehicle_scan_voice_unavailable),
                 isError = true
             )
@@ -2498,7 +2454,7 @@ class QrScannerActivity : AppCompatActivity() {
 
         val recognizer = ensureSpeechRecognizer() ?: run {
             showScannerNotification(
-                title = "Voice Input",
+                title = getString(R.string.voice_input),
                 message = getString(R.string.vehicle_scan_voice_unavailable),
                 isError = true
             )
@@ -2527,7 +2483,7 @@ class QrScannerActivity : AppCompatActivity() {
                 voiceRecognitionInProgress = false
                 updateOperatorInteractionState()
                 showScannerNotification(
-                    title = "Voice Input",
+                    title = getString(R.string.voice_input),
                     message = getString(R.string.vehicle_scan_voice_start_error),
                     isError = true
                 )
@@ -3561,14 +3517,27 @@ class QrScannerActivity : AppCompatActivity() {
         dialog.show()
 
         lifecycleScope.launch {
-            val spots = loadScannerParkingSpots()
+            val result = loadScannerParkingSpots()
             if (scannerSpotSelectionDialog !== dialog) return@launch
+            val spots = result.spots
             android.util.Log.d("QrScannerActivity", "Showing ${spots.size} scanner parking spots")
             sheetBinding.progressBar.visibility = View.GONE
             if (spots.isEmpty()) {
-                sheetBinding.tvEmptyState.text = getString(R.string.op_select_spot_empty)
+                sheetBinding.tvEmptyState.text = result.emptyMessage
+                    ?: getString(R.string.op_select_spot_empty)
                 sheetBinding.tvEmptyState.visibility = View.VISIBLE
                 sheetBinding.rvSpots.visibility = View.GONE
+                sheetBinding.tvEmptyState.isClickable = result.retryable
+                sheetBinding.tvEmptyState.setOnClickListener(
+                    if (result.retryable) {
+                        View.OnClickListener {
+                            dialog.dismiss()
+                            rootView.post { showScannerSpotSelectionSheet() }
+                        }
+                    } else {
+                        null
+                    }
+                )
             } else {
                 sheetBinding.tvEmptyState.visibility = View.GONE
                 sheetBinding.rvSpots.visibility = View.VISIBLE
@@ -3582,7 +3551,7 @@ class QrScannerActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun loadScannerParkingSpots(): List<ParkingSpot> {
+    private suspend fun loadScannerParkingSpots(): OperatorParkingSpotLoader.LoadResult {
         return OperatorParkingSpotLoader.load(this, parkingRepository, "QrScannerActivity")
     }
 

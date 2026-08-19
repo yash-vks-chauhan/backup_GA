@@ -1,5 +1,7 @@
 package com.gridee.parking.ui.discovery
 
+import com.gridee.parking.R
+
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -33,7 +35,7 @@ class ParkingDiscoveryActivity : BaseActivityWithBottomNav<ActivityParkingDiscov
     }
 
     override fun setupUI() {
-        binding.tvTitle.text = "Find Parking"
+        binding.tvTitle.text = getString(R.string.find_parking)
         binding.etSearch.hint = "Search by location or address"
         
         // Set default view to map
@@ -144,7 +146,7 @@ class ParkingDiscoveryActivity : BaseActivityWithBottomNav<ActivityParkingDiscov
 
     private fun showFilterDialog() {
         // TODO: Implement filter dialog
-        showToast("Filter options - Coming Soon!")
+        showToast(getString(R.string.filter_options_coming_soon))
     }
 
     private fun updateMapMarkers(spots: List<ParkingSpot>) {

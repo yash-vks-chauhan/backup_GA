@@ -1,8 +1,14 @@
 package com.gridee.parking.ui.fragments
 
+import com.gridee.parking.R
+
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.view.LayoutInflater
@@ -25,9 +31,15 @@ import com.gridee.parking.data.repository.ParkingRepository
 import com.gridee.parking.databinding.FragmentHomeBinding
 import com.gridee.parking.ui.MainViewModel
 import com.gridee.parking.ui.adapters.ParkingSpotPageAdapter
+import com.gridee.parking.ui.ads.AdMobNativeAdCardView
+import com.gridee.parking.ui.ads.CustomAdPlacement
+import com.gridee.parking.ui.ads.CustomAdViewModel
 import com.gridee.parking.ui.base.BaseTabFragment
 import com.gridee.parking.ui.bottomsheet.ParkingSpotBottomSheet
+import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.ui.views.SkeletonShimmer
 import com.gridee.parking.utils.AuthErrorMapper
+import com.gridee.parking.utils.AdRevenueAnalytics
 import com.gridee.parking.utils.ParkingSpotSchedulePolicy
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -58,6 +70,13 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
     }
 
     private lateinit var viewModel: MainViewModel
+    private lateinit var customAdViewModel: CustomAdViewModel
+    private var nativeHomeAdView: AdMobNativeAdCardView? = null
+    private var forceCustomAdRefreshOnNativeFailure = false
+    private val nativeAdRefreshHandler = Handler(Looper.getMainLooper())
+    private var nativeAdVisibleSinceElapsedMs: Long? = null
+    private var nativeAdAccumulatedVisibleMs = 0L
+    private val nativeAdRefreshRunnable = Runnable { refreshNativeAdIfEligible() }
     private val parkingRepository = ParkingRepository()
     private lateinit var parkingSpotPageAdapter: ParkingSpotPageAdapter
     private var loadJob: Job? = null
@@ -66,6 +85,7 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
     private var defaultSearchHint: String = "Find a parking spot..."
     private var autoRefreshJob: Job? = null
     private val autoRefreshIntervalMs: Long = 10_000L
+    private var isShowingBookingClosedState = false
     private var slotFilterMode: SlotFilterMode = getDefaultSlotFilterMode()
     private var morningParkingMode: MorningParkingMode = MorningParkingMode.STANDARD
     private var showSlotFilters: Boolean = true
@@ -73,6 +93,7 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
     private var currentPage = 0
     private var filteredSpots: List<ParkingSpot> = emptyList()
     private val pagerSnapHelper = PagerSnapHelper()
+    private var skeletonBreath: ValueAnimator? = null
     
     // Physics-based Apple transition state trackers
     private var isSlidingRight: Boolean? = null
@@ -98,7 +119,7 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
             ?.trim()
 
         if (spokenText.isNullOrBlank()) {
-            showToast("No speech detected")
+            showToast(getString(R.string.no_speech_detected))
             return@registerForActivityResult
         }
 
@@ -129,9 +150,10 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         setupMorningModeToggle()
         applyHomeSlotFilterVisibility(animated = false)
         setupParkingSpots()
+        setupHomeAds()
         setupPullToRefresh()
         refreshParkingSpots(showBlockingLoading = true)
-        
+
         applyHeroGradient()
     }
 
@@ -139,10 +161,12 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         super.onStart()
         if (!isHidden) {
             startAutoRefresh()
+            loadNativeHomeAd()
         }
     }
 
     override fun onStop() {
+        onHomeNativeAdDockVisibilityChanged(false)
         super.onStop()
         stopAutoRefresh()
     }
@@ -150,9 +174,11 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (hidden) {
+            onHomeNativeAdDockVisibilityChanged(false)
             stopAutoRefresh()
         } else {
             startAutoRefresh()
+            loadNativeHomeAd()
         }
     }
     
@@ -191,7 +217,7 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
 
     private fun loadHomeSlotFilterSetting(): Boolean {
         RemoteConfigManager.loadCached(requireContext())
-        return RemoteConfigManager.shouldShowHomeSlotFilters()
+        return SHOW_SLOT_FILTERS && RemoteConfigManager.shouldShowHomeSlotFilters()
     }
 
     private fun applyHeroGradient() {
@@ -314,6 +340,12 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         binding.swipeRefresh.setColorSchemeResources(com.gridee.parking.R.color.text_primary)
         binding.swipeRefresh.setOnRefreshListener {
             refreshParkingSpots(showBlockingLoading = false, showSwipeRefresh = true)
+            // Keep a filled native ad stable. A manual content refresh must not manufacture
+            // additional ad requests or reset the ad's visible-time clock.
+            if (nativeHomeAdView?.hasAd != true) {
+                forceCustomAdRefreshOnNativeFailure = true
+                loadNativeHomeAd()
+            }
         }
         binding.swipeRefresh.setOnChildScrollUpCallback { _, _ ->
             binding.scrollContent.canScrollVertically(-1)
@@ -326,6 +358,192 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
             insets
         }
         ViewCompat.requestApplyInsets(binding.root)
+    }
+
+    /** Uses the activity's floating portrait AdMob card and an in-content campaign fallback. */
+    private fun setupHomeAds() {
+        setupCustomAd()
+        nativeHomeAdView = requireActivity().findViewById(R.id.native_ad_home)
+        nativeHomeAdView?.onAdLoaded = {
+            if (hasViewBinding()) {
+                resetNativeAdRefreshClock()
+                binding.customAdHome.clear()
+                forceCustomAdRefreshOnNativeFailure = false
+                (activity as? MainContainerActivity)?.setHomeNativeAdAvailable(true)
+            }
+        }
+        nativeHomeAdView?.onAdUnavailable = {
+            if (hasViewBinding()) {
+                resetNativeAdRefreshClock()
+                (activity as? MainContainerActivity)?.setHomeNativeAdAvailable(false)
+                val forceRefresh = forceCustomAdRefreshOnNativeFailure
+                forceCustomAdRefreshOnNativeFailure = false
+                loadHomeAd(forceRefresh)
+                // Mediation just gave the slot back; show the campaign we already have without
+                // waiting for the refresh to return a different creative.
+                applyCustomAdState()
+            }
+        }
+        nativeHomeAdView?.onLoadEvent = { event ->
+            context?.let { AdRevenueAnalytics.logLoad(it, event) }
+        }
+        nativeHomeAdView?.onAdImpression = {
+            context?.let { AdRevenueAnalytics.logImpression(it) }
+        }
+        nativeHomeAdView?.onAdClicked = {
+            context?.let { AdRevenueAnalytics.logClick(it) }
+        }
+        nativeHomeAdView?.onPaidEvent = { event ->
+            context?.let { AdRevenueAnalytics.logPaidEvent(it, event) }
+        }
+        nativeHomeAdView?.onVideoEvent = { action, muted ->
+            context?.let { AdRevenueAnalytics.logVideoEvent(it, action, muted) }
+        }
+        loadNativeHomeAd()
+    }
+
+    private fun setupCustomAd() {
+        customAdViewModel = ViewModelProvider(this)[CustomAdViewModel::class.java]
+
+        binding.customAdHome.apply {
+            onAdDisplayed = { ad -> customAdViewModel.onAdDisplayed(ad) }
+            onAdLoadFailed = { ad -> customAdViewModel.onImageFailed(ad) }
+            onAdDismiss = { ad -> customAdViewModel.dismiss(ad) }
+            onAdClick = { ad -> openAdClickUrl(ad) }
+        }
+
+        customAdViewModel.adState.observe(viewLifecycleOwner) { applyCustomAdState() }
+    }
+
+    /**
+     * Paints whatever the campaign slot should be showing right now.
+     *
+     * Driven by two independent signals — the campaign state changing, and the AdMob card
+     * taking or releasing the slot — so it reads the current state rather than an event
+     * payload. That matters on the release path: the view model suppresses re-emitting the
+     * same creative, so a mediation failure would otherwise never hand the space back to a
+     * campaign that had been hidden behind a native ad.
+     */
+    private fun applyCustomAdState() {
+        if (!hasViewBinding() || !::customAdViewModel.isInitialized) return
+
+        val state = customAdViewModel.adState.value
+        if (state is CustomAdViewModel.AdState.Visible && nativeHomeAdView?.hasAd != true) {
+            binding.customAdHome.bind(state.ad)
+        } else {
+            binding.customAdHome.clear()
+        }
+    }
+
+    private fun loadNativeHomeAd() {
+        if (!hasViewBinding()) return
+        nativeHomeAdView?.load()
+    }
+
+    /** Called after UMP has refreshed the current launch's consent state. */
+    fun onAdsConsentReady() {
+        if (hasViewBinding()) loadNativeHomeAd()
+    }
+
+    /** Clears an already loaded creative if the newest UMP state no longer permits ads. */
+    fun onAdsConsentUnavailable() {
+        if (!hasViewBinding()) return
+        resetNativeAdRefreshClock()
+        (activity as? MainContainerActivity)?.setHomeNativeAdAvailable(false)
+        nativeHomeAdView?.destroy()
+        loadHomeAd()
+    }
+
+    /**
+     * Called by MainContainerActivity when the floating dock actually becomes visible or hidden.
+     * Only visible Home time counts toward replacement, so a quick tab switch reuses the ad.
+     */
+    fun onHomeNativeAdDockVisibilityChanged(visible: Boolean) {
+        nativeHomeAdView?.setPlacementVisible(visible)
+        val now = SystemClock.elapsedRealtime()
+        if (!visible) {
+            nativeAdVisibleSinceElapsedMs?.let { startedAt ->
+                nativeAdAccumulatedVisibleMs += (now - startedAt).coerceAtLeast(0L)
+            }
+            nativeAdVisibleSinceElapsedMs = null
+            nativeAdRefreshHandler.removeCallbacks(nativeAdRefreshRunnable)
+            return
+        }
+
+        if (nativeHomeAdView?.hasAd != true || nativeAdVisibleSinceElapsedMs != null) return
+        nativeAdVisibleSinceElapsedMs = now
+        scheduleNativeAdRefresh()
+    }
+
+    private fun scheduleNativeAdRefresh() {
+        nativeAdRefreshHandler.removeCallbacks(nativeAdRefreshRunnable)
+        val remaining = (NATIVE_AD_VISIBLE_REFRESH_MS - nativeAdAccumulatedVisibleMs)
+            .coerceAtLeast(1L)
+        nativeAdRefreshHandler.postDelayed(nativeAdRefreshRunnable, remaining)
+    }
+
+    private fun refreshNativeAdIfEligible() {
+        val startedAt = nativeAdVisibleSinceElapsedMs ?: return
+        if (!hasViewBinding() || nativeHomeAdView?.hasAd != true) return
+
+        val now = SystemClock.elapsedRealtime()
+        val totalVisibleMs = nativeAdAccumulatedVisibleMs + (now - startedAt).coerceAtLeast(0L)
+        if (totalVisibleMs < NATIVE_AD_VISIBLE_REFRESH_MS) {
+            nativeAdAccumulatedVisibleMs = totalVisibleMs
+            nativeAdVisibleSinceElapsedMs = now
+            scheduleNativeAdRefresh()
+            return
+        }
+
+        resetNativeAdRefreshClock()
+        (activity as? MainContainerActivity)?.setHomeNativeAdAvailable(false)
+        nativeHomeAdView?.refresh()
+    }
+
+    private fun resetNativeAdRefreshClock() {
+        nativeAdRefreshHandler.removeCallbacks(nativeAdRefreshRunnable)
+        nativeAdVisibleSinceElapsedMs = null
+        nativeAdAccumulatedVisibleMs = 0L
+    }
+
+    private fun loadHomeAd(forceRefresh: Boolean = false) {
+        // onStart/onHiddenChanged can run before the view exists during tab restoration.
+        if (!::customAdViewModel.isInitialized) return
+        customAdViewModel.load(CustomAdPlacement.HOME, forceRefresh)
+    }
+
+    override fun onDestroyView() {
+        skeletonBreath?.cancel()
+        skeletonBreath = null
+        resetNativeAdRefreshClock()
+        (activity as? MainContainerActivity)?.setHomeNativeAdAvailable(false)
+        nativeHomeAdView?.apply {
+            onAdLoaded = null
+            onAdUnavailable = null
+            onLoadEvent = null
+            onAdImpression = null
+            onAdClicked = null
+            onPaidEvent = null
+            onVideoEvent = null
+            destroy()
+        }
+        nativeHomeAdView = null
+        super.onDestroyView()
+    }
+
+    /**
+     * Ad taps only ever open a web page: the URL was scheme-checked when the payload was
+     * parsed, and re-checked here because it may have come back from the cache since.
+     */
+    private fun openAdClickUrl(ad: com.gridee.parking.data.model.CustomAd) {
+        val url = ad.clickUrl?.trim().orEmpty()
+        if (url.isEmpty() ||
+            !com.gridee.parking.data.model.CustomAdPayloadParser.isOpenableClickUrl(url)
+        ) {
+            return
+        }
+        customAdViewModel.onAdClicked(ad)
+        openExternalUrl(url)
     }
 
     private fun handleParkingSpotSelection(spot: ParkingSpot) {
@@ -358,6 +576,21 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         showBlockingLoading: Boolean,
         showSwipeRefresh: Boolean = false
     ) {
+        if (ParkingSpotSchedulePolicy.isBookingClosed()) {
+            loadJob?.cancel()
+            loadJob = null
+            binding.swipeRefresh.isRefreshing = false
+            showParkingBookingsClosedState()
+            return
+        }
+
+        // At 5:00 AM, restore yesterday's cached cards immediately while the first fresh
+        // availability request runs. This keeps the scheduled transition independent of the
+        // network and the normal refresh replaces the cached values as soon as it completes.
+        if (isShowingBookingClosedState && allParkingSpots.isNotEmpty()) {
+            renderParkingSpotResults()
+        }
+
         // A manual action is one the user explicitly triggered (Try Again or pull-to-refresh),
         // as opposed to the silent 10s background sync.
         val isManual = showBlockingLoading || showSwipeRefresh
@@ -396,6 +629,8 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
             } catch (e: Exception) {
                 println("DEBUG HomeFragment.refreshParkingSpots: Exception - ${e.message}")
                 when {
+                    ParkingSpotSchedulePolicy.isBookingClosed() ->
+                        showParkingBookingsClosedState()
                     // Cold load with nothing on screen → full-screen error state with Retry.
                     allParkingSpots.isEmpty() -> showParkingSpotsErrorState(e)
                     // Spots are already showing → never wipe them on a transient blip. Tell the
@@ -417,6 +652,8 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
      * brief, dismissible banner instead of destroying the user's content.
      */
     private fun notifyRefreshFailed(e: Exception) {
+        // Nothing replaced the ghosts on this path, so take them down here.
+        hideSpotSkeleton()
         val error = if (e is retrofit2.HttpException) {
             AuthErrorMapper.fromHttpCode(e.code())
         } else {
@@ -427,7 +664,7 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
             ?: return
         com.gridee.parking.utils.NotificationHelper.showWarning(
             parent = parent,
-            title = "Couldn't refresh",
+            title = getString(R.string.couldnt_refresh),
             message = error.message,
             duration = 3000L
         )
@@ -439,14 +676,16 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         showSwipeRefresh: Boolean
     ) {
         if (!hasViewBinding()) return
-        if (showBlockingLoading) {
-            binding.progressParkingSpots.visibility = if (isRefreshing) View.VISIBLE else View.GONE
-            if (isRefreshing) {
-                binding.recyclerParkingSpots.visibility = View.GONE
-                binding.tvParkingSpotsEmpty.visibility = View.GONE
-                binding.layoutParkingSpotsError.visibility = View.GONE
-                binding.cardDotIndicator.visibility = View.GONE
-            }
+        // Only the start of a blocking load is handled here. Taking the skeleton back
+        // down belongs to whichever state replaces it — list, empty or error — so the
+        // ghosts stay put until real content is laid out instead of blinking out a
+        // frame early.
+        if (showBlockingLoading && isRefreshing) {
+            binding.recyclerParkingSpots.visibility = View.GONE
+            binding.tvParkingSpotsEmpty.visibility = View.GONE
+            binding.layoutParkingSpotsError.visibility = View.GONE
+            binding.cardDotIndicator.visibility = View.GONE
+            showSpotSkeleton()
         }
 
         if (showSwipeRefresh) {
@@ -462,9 +701,53 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         }
     }
 
+    /**
+     * Ghost cards while the spot list loads with nothing on screen. The block is sized
+     * to the page this user saw last time, so on every open after the first the real
+     * cards land exactly where the ghosts stood. Views are reused between shows and
+     * only re-inflated when the count actually changes.
+     */
+    private fun showSpotSkeleton() {
+        if (!hasViewBinding()) return
+        val container = binding.layoutParkingSpotsSkeleton
+        val cardCount = lastSpotPageSize()
+        if (container.childCount != cardCount) {
+            HomeSpotSkeleton.populate(container, cardCount)
+        }
+        container.visibility = View.VISIBLE
+        if (skeletonBreath == null) {
+            skeletonBreath = SkeletonShimmer.start(container)
+        }
+    }
+
+    private fun hideSpotSkeleton() {
+        skeletonBreath?.cancel()
+        skeletonBreath = null
+        if (!hasViewBinding()) return
+        if (binding.layoutParkingSpotsSkeleton.visibility != View.GONE) {
+            binding.layoutParkingSpotsSkeleton.visibility = View.GONE
+        }
+    }
+
+    /** Cards on the first page last time spots rendered; a full page until we've seen one. */
+    private fun lastSpotPageSize(): Int {
+        val prefs = context?.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+            ?: return PAGE_SIZE
+        return prefs.getInt(KEY_LAST_SPOT_PAGE_SIZE, PAGE_SIZE).coerceIn(1, PAGE_SIZE)
+    }
+
+    private fun rememberSpotPageSize(size: Int) {
+        val prefs = context?.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+            ?: return
+        val stored = size.coerceIn(1, PAGE_SIZE)
+        if (prefs.getInt(KEY_LAST_SPOT_PAGE_SIZE, -1) != stored) {
+            prefs.edit().putInt(KEY_LAST_SPOT_PAGE_SIZE, stored).apply()
+        }
+    }
+
     private fun startVoiceSearch() {
         if (!SpeechRecognizer.isRecognitionAvailable(requireContext())) {
-            showToast("Voice search is not available on this device")
+            showToast(getString(R.string.voice_search_is_not_available_on))
             return
         }
 
@@ -476,12 +759,12 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         }
 
         if (intent.resolveActivity(requireContext().packageManager) == null) {
-            showToast("Voice search is not available")
+            showToast(getString(R.string.voice_search_is_not_available))
             return
         }
 
         runCatching { voiceInputLauncher.launch(intent) }
-            .onFailure { showToast("Unable to start voice search") }
+            .onFailure { showToast(getString(R.string.unable_to_start_voice_search)) }
     }
 
     private fun applySearchQuery(query: String) {
@@ -516,6 +799,11 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
 
     private fun renderParkingSpotResults(animateLayout: Boolean = false) {
         if (!hasViewBinding()) return
+        if (ParkingSpotSchedulePolicy.isBookingClosed()) {
+            showParkingBookingsClosedState()
+            return
+        }
+
         val query = currentSearchQuery?.trim().orEmpty()
         val availability = syncFilterStateWithSchedule()
         val visibleNow = applyActiveSpotFilter(allParkingSpots, availability)
@@ -537,7 +825,9 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
             val pages = filteredSpots.chunked(PAGE_SIZE)
             val totalPages = pages.size
 
-            binding.progressParkingSpots.visibility = View.GONE
+            // Size the next cold open's ghost block to the list this user actually has.
+            rememberSpotPageSize(pages.first().size)
+            isShowingBookingClosedState = false
             binding.tvParkingSpotsEmpty.visibility = View.GONE
             binding.layoutParkingSpotsError.visibility = View.GONE
 
@@ -554,7 +844,11 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
                     if (pages.isEmpty()) return@submitList
                     binding.recyclerParkingSpots.post {
                         binding.recyclerParkingSpots.scrollToPosition(currentPage.coerceIn(0, pages.lastIndex))
-                        
+
+                        // Ghosts out and real cards in within the same layout pass, so the
+                        // block never blinks empty between the two.
+                        hideSpotSkeleton()
+
                         if (animateLayout || binding.recyclerParkingSpots.visibility != View.VISIBLE) {
                             binding.recyclerParkingSpots.visibility = View.VISIBLE
                             
@@ -987,7 +1281,7 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         availability: ParkingSpotSchedulePolicy.HomeFilterAvailability
     ): List<ParkingSpot> {
         if (!showSlotFilters) {
-            return ParkingSpotSchedulePolicy.filterUnsegmentedSpots(spots)
+            return ParkingSpotSchedulePolicy.filterVisibleSpots(spots)
         }
 
         if (slotFilterMode == SlotFilterMode.MORNING && !availability.morningEnabled) {
@@ -1053,17 +1347,25 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
     }
 
     private suspend fun fetchAllParkingSpots(): List<com.gridee.parking.data.model.ParkingSpot> {
-        println("DEBUG HomeFragment.fetchAllParkingSpots: Starting to fetch all parking spots")
+        // Multi-tenant: Home shows spots ONLY for the user's assigned parking lot. We use the
+        // lot-scoped endpoint rather than the global /api/parking-spots list (which mixes every
+        // lot and isn't lot-scoped on the stricter backend). The selection gate guarantees a
+        // lot is set before Home is shown. On a network/server failure we THROW so the caller
+        // shows a retryable error state — never fake or stale inventory a user could try to book.
+        val lotId = com.gridee.parking.utils.AuthSession.getParkingLotId(requireContext())
+        if (lotId.isNullOrBlank()) {
+            println("DEBUG HomeFragment.fetchAllParkingSpots: no assigned lot; nothing to show")
+            return emptyList()
+        }
 
-        // Fetch all spots directly. On a network/server failure we THROW so the caller can
-        // show a proper offline/error state with retry — never fake or stale inventory that
-        // a user could try to book. A successful-but-empty response is a genuine empty state.
-        val resp = parkingRepository.getParkingSpots()
-        println("DEBUG HomeFragment.fetchAllParkingSpots: status=${resp.code()}, success=${resp.isSuccessful}")
+        val resp = parkingRepository.getParkingSpotsByLot(lotId)
+        println("DEBUG HomeFragment.fetchAllParkingSpots: lot=$lotId status=${resp.code()}, success=${resp.isSuccessful}")
 
         if (resp.isSuccessful) {
-            val spots = resp.body() ?: emptyList()
-            println("DEBUG HomeFragment.fetchAllParkingSpots: /api/parking-spots returned ${spots.size} spots")
+            val spots = (resp.body() ?: emptyList())
+                // Defensive: never surface another lot's spots even if the API returns extras.
+                .filter { it.lotId.isBlank() || it.lotId == lotId }
+            println("DEBUG HomeFragment.fetchAllParkingSpots: lot returned ${spots.size} spots")
             return spots
         }
 
@@ -1151,7 +1453,7 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         }
 
         if (slotFilterMode == SlotFilterMode.MORNING && !availability.morningEnabled) {
-            return "Morning slots show from 6:30 PM one day before. Parking runs from 7:30 AM to 12:30 PM."
+            return "Morning slots open at 5:00 AM on the parking day and run from 7:30 AM to 12:30 PM."
         }
 
         if (slotFilterMode == SlotFilterMode.EVENING && !availability.afternoonEnabled) {
@@ -1168,14 +1470,15 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
 
     private fun syncFilterStateWithSchedule(): ParkingSpotSchedulePolicy.HomeFilterAvailability {
         val availability = ParkingSpotSchedulePolicy.homeFilterAvailability()
-        showSlotFilters = RemoteConfigManager.shouldShowHomeSlotFilters()
+        showSlotFilters = SHOW_SLOT_FILTERS && RemoteConfigManager.shouldShowHomeSlotFilters()
 
         applyHomeSlotFilterVisibility(animated = false)
         return availability
     }
 
     private fun showEmptyState(message: String) {
-        binding.progressParkingSpots.visibility = View.GONE
+        hideSpotSkeleton()
+        isShowingBookingClosedState = false
         binding.layoutParkingSpotsError.visibility = View.GONE
 
         // Hide recycler smoothly if it was visible
@@ -1197,6 +1500,44 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
             .start()
     }
 
+    /** Uses the same quiet status treatment as server errors, without a retry action. */
+    private fun showParkingBookingsClosedState() {
+        if (!hasViewBinding()) return
+        val now = ParkingSpotSchedulePolicy.currentTime()
+        val message = if (now.get(java.util.Calendar.HOUR_OF_DAY) >= 17) {
+            getString(R.string.tomorrow_booking_opens_at_five)
+        } else {
+            getString(R.string.booking_opens_at_five_this_morning)
+        }
+
+        hideSpotSkeleton()
+        isShowingBookingClosedState = true
+        filteredSpots = emptyList()
+        currentPage = 0
+        binding.tvParkingSpotsEmpty.visibility = View.GONE
+        binding.cardDotIndicator.visibility = View.GONE
+        binding.recyclerParkingSpots.animate().cancel()
+        binding.recyclerParkingSpots.visibility = View.GONE
+
+        binding.ivParkingSpotsError.setImageResource(R.drawable.ic_time)
+        binding.tvParkingSpotsErrorTitle.setText(R.string.parking_bookings_closed)
+        binding.tvParkingSpotsErrorMessage.text = message
+        binding.btnParkingSpotsRetry.visibility = View.GONE
+
+        val container = binding.layoutParkingSpotsError
+        if (container.visibility != View.VISIBLE) {
+            container.alpha = 0f
+            container.translationY = dpToPx(6).toFloat()
+            container.visibility = View.VISIBLE
+            container.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(250)
+                .setInterpolator(android.view.animation.DecelerateInterpolator(1.2f))
+                .start()
+        }
+    }
+
     /**
      * Distinguish a connectivity/server failure from a genuinely empty result. Maps the
      * exception to a user-facing message via [AuthErrorMapper] and offers Retry when the
@@ -1210,12 +1551,14 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
             AuthErrorMapper.fromException(e)
         }
 
-        binding.progressParkingSpots.visibility = View.GONE
+        hideSpotSkeleton()
+        isShowingBookingClosedState = false
         binding.tvParkingSpotsEmpty.visibility = View.GONE
         binding.cardDotIndicator.visibility = View.GONE
         binding.recyclerParkingSpots.animate().cancel()
         binding.recyclerParkingSpots.visibility = View.GONE
 
+        binding.ivParkingSpotsError.setImageResource(R.drawable.ic_no_connection)
         binding.tvParkingSpotsErrorTitle.text = error.title
         binding.tvParkingSpotsErrorMessage.text = error.message
         binding.btnParkingSpotsRetry.visibility = if (error.isRetryable) View.VISIBLE else View.GONE
@@ -1344,7 +1687,7 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
         runCatching {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }.onFailure {
-            showToast("Unable to open link")
+            showToast(getString(R.string.unable_to_open_link))
         }
     }
 
@@ -1361,10 +1704,14 @@ class HomeFragment : BaseTabFragment<FragmentHomeBinding>() {
 
     companion object {
         private const val PAGE_SIZE = 4
+        private const val PREFS_NAME = "gridee_prefs"
+        private const val KEY_LAST_SPOT_PAGE_SIZE = "home_last_spot_page_size"
         private const val INSTAGRAM_URL = "https://www.instagram.com/_gridee_?igsh=bHhxZmJ6eGs4Y2tk"
+        private const val NATIVE_AD_VISIBLE_REFRESH_MS = 90_000L
 
-        // Flip to false once the summer STEP session ends — no layout changes needed.
-        private const val SHOW_STEP_BANNER = true
+        // Keep these views available for a future campaign without showing them on Home today.
+        private const val SHOW_STEP_BANNER = false
+        private const val SHOW_SLOT_FILTERS = false
         private const val MENU_FILTER_AUTO = 1
         private const val MENU_FILTER_MORNING = 2
         private const val MENU_FILTER_EVENING = 3

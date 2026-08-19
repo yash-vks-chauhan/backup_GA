@@ -53,7 +53,7 @@ class PaymentViewModel : ViewModel() {
             PaymentMethodInfo(
                 method = PaymentMethod.UPI,
                 title = "UPI Payment",
-                subtitle = "PhonePe, Google Pay, Paytm",
+                subtitle = "Pay using any UPI app",
                 isEnabled = true
             ),
             PaymentMethodInfo(

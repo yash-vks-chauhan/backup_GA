@@ -1,5 +1,7 @@
 package com.gridee.parking.ui.auth
 
+import com.gridee.parking.R
+
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -11,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.gridee.parking.databinding.ActivityEmailVerificationBinding
 import com.gridee.parking.utils.NotificationHelper
+import com.gridee.parking.ui.lot.ChooseCategoryActivity
 import com.gridee.parking.ui.main.MainContainerActivity
 import com.gridee.parking.ui.operator.OperatorDashboardActivity
 import com.gridee.parking.utils.AuthSession
@@ -20,6 +23,7 @@ class EmailVerificationActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_EMAIL = "extra_email"
+        const val EXTRA_NEW_ACCOUNT = "extra_new_account"
         private const val POLL_INTERVAL_MS = 4000L
     }
 
@@ -92,7 +96,12 @@ class EmailVerificationActivity : AppCompatActivity() {
                     isCompleted = true
                     showLoading(false)
                     persistLegacySession(state.user)
-                    handlePostVerification(state.user)
+                    val isNewAccount = state.isNewUser ||
+                        intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false)
+                    handlePostVerification(
+                        user = state.user,
+                        requireParkingSelection = isNewAccount
+                    )
                 }
                 is EmailVerificationState.Error -> {
                     isExchanging = false
@@ -103,7 +112,7 @@ class EmailVerificationActivity : AppCompatActivity() {
                         message = state.message
                     )
                     if (!isCompleted) {
-                        binding.tvStatus.text = "Waiting for verification..."
+                        binding.tvStatus.text = getString(R.string.waiting_for_verification)
                         scheduleNextPoll()
                     }
                 }
@@ -138,13 +147,13 @@ class EmailVerificationActivity : AppCompatActivity() {
         }
 
         isChecking = true
-        binding.tvStatus.text = "Checking verification status..."
+        binding.tvStatus.text = getString(R.string.checking_verification_status)
 
         user.reload()
             .addOnCompleteListener { task ->
                 isChecking = false
                 if (!task.isSuccessful) {
-                    binding.tvStatus.text = "Waiting for verification..."
+                    binding.tvStatus.text = getString(R.string.waiting_for_verification)
                     scheduleNextPoll()
                     return@addOnCompleteListener
                 }
@@ -152,7 +161,7 @@ class EmailVerificationActivity : AppCompatActivity() {
                 if (user.isEmailVerified) {
                     onVerified(user)
                 } else {
-                    binding.tvStatus.text = "Waiting for verification..."
+                    binding.tvStatus.text = getString(R.string.waiting_for_verification)
                     scheduleNextPoll()
                 }
             }
@@ -161,7 +170,7 @@ class EmailVerificationActivity : AppCompatActivity() {
     private fun onVerified(user: FirebaseUser) {
         isExchanging = true
         stopPolling()
-        binding.tvStatus.text = "Email verified. Signing you in..."
+        binding.tvStatus.text = getString(R.string.email_verified_signing_you_in)
         showLoading(true)
 
         user.getIdToken(true)
@@ -223,7 +232,10 @@ class EmailVerificationActivity : AppCompatActivity() {
         binding.btnIHaveVerified.isEnabled = !show
     }
 
-    private fun navigateToHome(user: com.gridee.parking.data.model.User) {
+    private fun navigateToHome(
+        user: com.gridee.parking.data.model.User,
+        requireParkingSelection: Boolean
+    ) {
         val normalizedRole = user.role?.uppercase(Locale.ROOT) ?: "USER"
         when (normalizedRole) {
             "OPERATOR" -> {
@@ -232,20 +244,29 @@ class EmailVerificationActivity : AppCompatActivity() {
                 startActivity(intent)
             }
             else -> {
-                val intent = Intent(this, MainContainerActivity::class.java)
-                intent.putExtra("USER_NAME", user.name)
-                intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
+                val homeExtras = Bundle().apply {
+                    putString("USER_NAME", user.name)
+                    putBoolean(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
+                }
+                val nextIntent = if (requireParkingSelection) {
+                    ChooseCategoryActivity.onboardingIntent(this, homeExtras)
+                } else {
+                    Intent(this, MainContainerActivity::class.java).apply { putExtras(homeExtras) }
+                }
+                nextIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(nextIntent)
             }
         }
         finish()
     }
 
-    private fun handlePostVerification(user: com.gridee.parking.data.model.User) {
+    private fun handlePostVerification(
+        user: com.gridee.parking.data.model.User,
+        requireParkingSelection: Boolean
+    ) {
         val normalizedRole = user.role?.uppercase(Locale.ROOT) ?: "USER"
         if (normalizedRole == "OPERATOR") {
-            navigateToHome(user)
+            navigateToHome(user, requireParkingSelection = false)
             return
         }
         if (user.vehicleNumbers.isEmpty()) {
@@ -253,10 +274,12 @@ class EmailVerificationActivity : AppCompatActivity() {
             intent.putExtra(AddVehicleActivity.EXTRA_USER_ID, user.id)
             intent.putExtra(AddVehicleActivity.EXTRA_USER_NAME, user.name)
             intent.putExtra(AddVehicleActivity.EXTRA_USER_ROLE, user.role)
+            intent.putExtra(AddVehicleActivity.EXTRA_REQUIRE_PARKING_SELECTION, requireParkingSelection)
+            intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
             startActivity(intent)
             finish()
         } else {
-            navigateToHome(user)
+            navigateToHome(user, requireParkingSelection)
         }
     }
 

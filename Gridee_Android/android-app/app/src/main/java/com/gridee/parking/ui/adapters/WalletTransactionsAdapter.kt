@@ -1,10 +1,12 @@
 package com.gridee.parking.ui.adapters
 
+import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.gridee.parking.databinding.ItemTransactionBinding
 import com.gridee.parking.databinding.ItemWalletTransactionHeaderBinding
+import com.gridee.parking.ui.views.SkeletonShimmer
 
 sealed class WalletTransactionListItem {
     data class Header(val title: String) : WalletTransactionListItem()
@@ -40,8 +42,8 @@ class WalletTransactionsAdapter(
                 HeaderViewHolder(binding)
             }
             TYPE_LOADING -> {
-                val view = layoutInflater.inflate(com.gridee.parking.R.layout.item_loading_footer, parent, false)
-                LoadingViewHolder(view)
+                val view = layoutInflater.inflate(com.gridee.parking.R.layout.item_transaction_skeleton_footer, parent, false)
+                LoadingViewHolder(view as ViewGroup)
             }
             else -> {
                 val binding = ItemTransactionBinding.inflate(layoutInflater, parent, false)
@@ -54,8 +56,13 @@ class WalletTransactionsAdapter(
         when (val item = items[position]) {
             is WalletTransactionListItem.Header -> (holder as HeaderViewHolder).bind(item)
             is WalletTransactionListItem.Item -> (holder as TransactionViewHolder).bind(item.transaction)
-            is WalletTransactionListItem.Loading -> { /* No binding needed */ }
+            is WalletTransactionListItem.Loading -> (holder as LoadingViewHolder).startBreath()
         }
+    }
+
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        if (holder is LoadingViewHolder) holder.stopBreath()
+        super.onViewRecycled(holder)
     }
 
     fun updateItems(newItems: List<WalletTransactionListItem>) {
@@ -87,5 +94,25 @@ class WalletTransactionsAdapter(
 
     fun getItems(): List<WalletTransactionListItem> = items
 
-    private class LoadingViewHolder(view: android.view.View) : RecyclerView.ViewHolder(view)
+    private class LoadingViewHolder(container: ViewGroup) : RecyclerView.ViewHolder(container) {
+        private var animator: ValueAnimator? = null
+
+        init {
+            SkeletonShimmer.populate(container, PAGINATION_SKELETON_ROWS, includeHeaders = false)
+        }
+
+        fun startBreath() {
+            animator?.cancel()
+            animator = SkeletonShimmer.start(itemView)
+        }
+
+        fun stopBreath() {
+            animator?.cancel()
+            animator = null
+        }
+
+        private companion object {
+            const val PAGINATION_SKELETON_ROWS = 2
+        }
+    }
 }

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Frosted header for full-page bottom sheets — same three-layer construction as
+  bg_toolbar_frosted, retuned to the sheet's own surface (@color/white = #FFFFFF
+  light / #1C1C1E dark) instead of the page background, since the sheet sits on
+  its own surface color.
+
+  Content doesn't hit a hard edge under the bar: it dissolves through the tail,
+  which is what sells the glass read on Android (a live backdrop blur is a
+  window-level effect here, not something an in-window bar can sample).
+
+  Top corners are rounded to the sheet's 40dp so the opaque band never squares
+  off the sheet's own corner curve.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Layer 1: Full-height dissolve — long smooth tail -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="@color/white"
+                android:centerColor="#CCFFFFFF"
+                android:endColor="#00FFFFFF"
+                android:centerY="0.38"
+                android:type="linear" />
+            <corners
+                android:topLeftRadius="40dp"
+                android:topRightRadius="40dp" />
+        </shape>
+    </item>
+    <!-- Layer 2: Mid-band reinforcement — fills the gap between solid top and tail -->
+    <item android:bottom="40dp">
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="#D9FFFFFF"
+                android:centerColor="#80FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:centerY="0.5"
+                android:type="linear" />
+            <corners
+                android:topLeftRadius="40dp"
+                android:topRightRadius="40dp" />
+        </shape>
+    </item>
+    <!-- Layer 3: Top anchor — fully opaque behind the title for readability -->
+    <item android:bottom="68dp">
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="@color/white"
+                android:endColor="#00FFFFFF"
+                android:type="linear" />
+            <corners
+                android:topLeftRadius="40dp"
+                android:topRightRadius="40dp" />
+        </shape>
+    </item>
+</layer-list>

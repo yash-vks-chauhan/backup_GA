@@ -127,7 +127,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Account"
+            android:text="@string/menu_account"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -177,7 +177,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Account Settings"
+                        android:text="@string/account_settings"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
@@ -221,7 +221,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Notifications"
+                        android:text="@string/notifications"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
@@ -242,7 +242,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bookings &amp; Vehicles"
+            android:text="@string/bookings_vehicles"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -292,7 +292,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Booking History"
+                        android:text="@string/booking_history"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
@@ -311,6 +311,71 @@
                     android:layout_marginStart="60dp"
                     android:layout_marginEnd="20dp"
                     android:background="@color/divider_hairline" />
+
+                <!-- Parking Location -->
+                <LinearLayout
+                    android:id="@+id/btn_change_parking_lot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="18dp"
+                    android:paddingHorizontal="20dp"
+                    android:background="@drawable/bg_ios_row_press"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_parking_lot"
+                        android:tint="@color/icon_secondary"
+                        android:layout_marginEnd="16dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/parking_location"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter_medium" />
+
+                        <TextView
+                            android:id="@+id/tv_current_parking_lot"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/not_selected"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp"
+                            android:fontFamily="@font/inter_regular"
+                            android:layout_marginTop="2dp"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:tint="@color/text_tertiary" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@color/divider_hairline"
+                    android:visibility="gone" />
 
                 <!-- My Vehicles (Accordion) -->
                 <LinearLayout
@@ -341,7 +406,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="My Vehicles"
+                            android:text="@string/my_vehicles"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:fontFamily="@font/inter_medium" />
@@ -402,7 +467,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Preferences"
+            android:text="@string/preferences"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -452,7 +517,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Display &amp; Theme"
+                        android:text="@string/display_theme"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
@@ -461,7 +526,7 @@
                         android:id="@+id/tv_display_theme_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="System"
+                        android:text="@string/system"
                         android:textColor="@color/text_tertiary"
                         android:textSize="15sp"
                         android:fontFamily="@font/inter_regular"
@@ -506,7 +571,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Language &amp; Region"
+                        android:text="@string/language_region_title"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
@@ -537,7 +602,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Legal &amp; Support"
+            android:text="@string/legal_support"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -587,7 +652,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Help &amp; Support"
+                        android:text="@string/menu_help"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
@@ -631,7 +696,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Privacy Policy"
+                        android:text="@string/privacy_policy"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
@@ -675,7 +740,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Data Safety &amp; Account Deletion"
+                        android:text="@string/data_safety_account_deletion"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
@@ -719,7 +784,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="About"
+                        android:text="@string/about"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:fontFamily="@font/inter_medium" />
@@ -740,7 +805,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Session"
+            android:text="@string/session"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -784,7 +849,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Logout"
+                    android:text="@string/menu_logout"
                     android:textColor="@color/text_destructive"
                     android:textSize="16sp"
                     android:fontFamily="@font/inter_medium" />
@@ -814,7 +879,7 @@
         android:layout_width="wrap_content"
         android:layout_height="?attr/actionBarSize"
         android:layout_gravity="top|center_horizontal"
-        android:text="My Profile"
+        android:text="@string/my_profile"
         android:textColor="@color/text_primary"
         android:textSize="20sp"
         android:textStyle="bold"

@@ -29,7 +29,9 @@ import com.gridee.parking.ui.adapters.Transaction
 import com.gridee.parking.ui.adapters.TransactionType
 import com.gridee.parking.ui.adapters.WalletTransactionGrouping
 import com.gridee.parking.ui.adapters.WalletTransactionListItem
+import com.gridee.parking.ui.adapters.WalletTransactionText
 import com.gridee.parking.ui.adapters.WalletTransactionsAdapter
+import com.gridee.parking.ui.views.SkeletonShimmer
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.BackendTimestampParser
 import com.gridee.parking.utils.NotificationHelper
@@ -51,6 +53,7 @@ class TransactionHistoryActivity : AppCompatActivity() {
     private var isLoading = false
     private var isLastPage = false
     private val pageSize = 20
+    private var skeletonAnimator: android.animation.ValueAnimator? = null
 
     private var currentSubtitleText: String? = null
     private var isSubtitleAnimating = false
@@ -79,7 +82,18 @@ class TransactionHistoryActivity : AppCompatActivity() {
         setupRecyclerView()
         setupFrostedToolbar()
         setupFilterButtons()
+        populateHistorySkeleton()
         fetchAllTransactions()
+    }
+
+    private fun populateHistorySkeleton() {
+        val metrics = resources.displayMetrics
+        val screenHeightDp = metrics.heightPixels / metrics.density
+        // ~80dp per row incl. margin; overscan a row so the skeleton always reaches
+        // the bottom of the viewport rather than stopping short.
+        val rows = (Math.ceil((screenHeightDp / 80f).toDouble()).toInt() + 1)
+            .coerceIn(HISTORY_SKELETON_MIN_ROWS, HISTORY_SKELETON_MAX_ROWS)
+        SkeletonShimmer.populate(binding.layoutTransactionSkeletonContainer, rows)
     }
 
     private fun setupToolbar() {
@@ -140,7 +154,11 @@ class TransactionHistoryActivity : AppCompatActivity() {
 
         // Set RecyclerView top padding dynamically after header is measured
         binding.layoutHeader.doOnLayout { header ->
-            binding.rvAllTransactions.updatePadding(top = header.height + 4f.dpToPx().toInt())
+            val topInset = header.height + 4f.dpToPx().toInt()
+            binding.rvAllTransactions.updatePadding(top = topInset)
+            // Skeleton sits in the same visual slot as the list, so it clears the
+            // frosted header by the same amount.
+            binding.layoutTransactionSkeletonContainer.updatePadding(top = topInset)
         }
     }
 
@@ -293,7 +311,7 @@ class TransactionHistoryActivity : AppCompatActivity() {
     private fun showFilterComingSoon() {
         NotificationHelper.showInfoNoIcon(
             parent = binding.root,
-            title = "Coming Soon",
+            title = getString(R.string.coming_soon),
             message = ""
         )
     }
@@ -352,7 +370,17 @@ class TransactionHistoryActivity : AppCompatActivity() {
             isLoading = false
             loadPage(0)
 
-            Toast.makeText(this, "Showing ${filteredTransactionList?.size} transactions", Toast.LENGTH_SHORT).show()
+            val count = filteredTransactionList?.size ?: 0
+            val countLabel = resources.getQuantityString(
+                R.plurals.wallet_transaction_count,
+                count,
+                count
+            )
+            Toast.makeText(
+                this,
+                getString(R.string.showing_transactions, countLabel),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -365,7 +393,7 @@ class TransactionHistoryActivity : AppCompatActivity() {
         isLoading = false
         loadPage(0)
 
-        Toast.makeText(this, "Filters cleared", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.filters_cleared), Toast.LENGTH_SHORT).show()
     }
 
     private fun applyFilters() {
@@ -382,8 +410,15 @@ class TransactionHistoryActivity : AppCompatActivity() {
             binding.rvAllTransactions.visibility = View.VISIBLE
             binding.layoutEmptyState.visibility = View.GONE
             binding.tvTransactionCount.visibility = View.VISIBLE
-            binding.tvTransactionCount.text = "${transactions.size} transactions"
-            val groupedItems = WalletTransactionGrouping.buildGroupedItems(transactions).toMutableList()
+            binding.tvTransactionCount.text = resources.getQuantityString(
+                R.plurals.wallet_transaction_count,
+                transactions.size,
+                transactions.size
+            )
+            val groupedItems = WalletTransactionGrouping.buildGroupedItems(
+                this,
+                transactions
+            ).toMutableList()
 
             if (isLoadingMore) {
                 groupedItems.add(WalletTransactionListItem.Loading)
@@ -408,16 +443,18 @@ class TransactionHistoryActivity : AppCompatActivity() {
 
         renderTransactions(displayedTransactions, isLoadingMore = true)
 
+        // Data is already in memory; this short delay just lets the footer skeleton
+        // register as an intentional "loading more" beat rather than a flash.
         binding.rvAllTransactions.postDelayed({
             loadPage(currentPage)
             isLoading = false
-        }, 1500)
+        }, LOAD_MORE_DELAY_MS)
     }
 
     private fun fetchAllTransactions() {
         val userId = getUserId()
         if (userId == null) {
-            Toast.makeText(this, "Please login to view transaction history", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.please_login_to_view_transaction_history), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -439,13 +476,16 @@ class TransactionHistoryActivity : AppCompatActivity() {
                     val rawTransactions = response.body()?.content.orEmpty()
 
                     val processedTransactions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-                        rawTransactions.mapNotNull { transaction ->
-                            try {
-                                convertToUITransaction(transaction)
-                            } catch (e: Exception) {
-                                null
-                            }
-                        }.sortedByDescending { it.timestamp }
+                        rawTransactions
+                            // A top-up the gateway never settled is an attempt, not money.
+                            .filter { com.gridee.parking.ui.adapters.WalletTransactionVisibility.isListable(it) }
+                            .mapNotNull { transaction ->
+                                try {
+                                    convertToUITransaction(transaction)
+                                } catch (e: Exception) {
+                                    null
+                                }
+                            }.sortedByDescending { it.timestamp }
                     }
 
                     fullTransactionList.clear()
@@ -457,11 +497,19 @@ class TransactionHistoryActivity : AppCompatActivity() {
                         loadPage(0)
                     }
                 } else {
-                    Toast.makeText(this@TransactionHistoryActivity, "Failed to load transactions: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@TransactionHistoryActivity,
+                        getString(R.string.wallet_transactions_load_failed, response.code()),
+                        Toast.LENGTH_SHORT
+                    ).show()
                     showEmptyState()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@TransactionHistoryActivity, "Error loading transactions: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@TransactionHistoryActivity,
+                    getString(R.string.wallet_load_error),
+                    Toast.LENGTH_SHORT
+                ).show()
                 showEmptyState()
             } finally {
                 showLoading(false)
@@ -523,24 +571,14 @@ class TransactionHistoryActivity : AppCompatActivity() {
             "WALLET_TOP_UP" -> TransactionType.TOP_UP
             "AD_TOP_UP" -> TransactionType.BONUS
             "WELCOME_BONUS" -> TransactionType.BONUS
+            "DAILY_WALLET_RESET" -> TransactionType.BONUS
             "REFUND" -> TransactionType.REFUND
             "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> TransactionType.PARKING_PAYMENT
             else -> null
         }
-        val backendBaseDescription = when (backendType) {
-            "BOOKING_FEE" -> "Booking Fee"
-            "BOOKING_REFUND" -> "Booking Refund"
-            "WALLET_TOP_UP" -> "Wallet Top-up"
-            "AD_TOP_UP" -> "Ad Top-up"
-            "WELCOME_BONUS" -> "Welcome Bonus"
-            "REFUND" -> "Refund"
-            "PENALTY_FEE" -> "Penalty Fee"
-            "LATE_CHECK_IN_PENALTY" -> "Late Check-in Penalty"
-            "LATE_CHECK_OUT_PENALTY" -> "Late Check-out Penalty"
-            else -> null
-        }
         val backendIsCredit = when (backendType) {
-            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "WELCOME_BONUS", "REFUND" -> true
+            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "WELCOME_BONUS",
+            "DAILY_WALLET_RESET", "REFUND" -> true
             "BOOKING_FEE", "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> false
             else -> null
         }
@@ -635,40 +673,19 @@ class TransactionHistoryActivity : AppCompatActivity() {
         }
 
         val resolvedBookingRelated = if (backendUiType != null) backendIsBookingRelated else isBookingRelated
-        val baseDescription = backendBaseDescription ?: when {
-            isReward -> "Reward Added"
-            transactionType == TransactionType.TOP_UP -> "Wallet Top-up"
-            transactionType == TransactionType.PARKING_PAYMENT -> "Booking Charge"
-            transactionType == TransactionType.REFUND && resolvedBookingRelated -> "Booking Refund"
-            transactionType == TransactionType.REFUND -> "Refund"
-            else -> "Wallet Top-up"
-        }
-        val description = when (statusNorm) {
-            "failed" -> "$baseDescription Failed"
-            "cancelled", "canceled" -> "$baseDescription Cancelled"
-            else -> when {
-                isReward -> baseDescription
-                transactionType == TransactionType.REFUND ->
-                    if (descriptionLower?.contains("refund") == true) normalizedDescription ?: baseDescription else baseDescription
-                else -> normalizedDescription ?: baseDescription
-            }
-        }
-        val locationLabel = listOfNotNull(
-            walletTransaction.lotName?.trim()?.takeIf { it.isNotEmpty() }
-                ?: walletTransaction.lotId?.trim()?.takeIf { it.isNotEmpty() },
-            walletTransaction.spotId?.trim()?.takeIf { it.isNotEmpty() }?.let { "Spot $it" }
-        ).joinToString(" • ").takeIf { it.isNotEmpty() }
-        val displayDescription = if (locationLabel != null && resolvedBookingRelated) {
-            "$description • $locationLabel"
-        } else {
-            description
-        }
-
+        val description = WalletTransactionText.resolve(
+            context = this,
+            backendType = backendType,
+            transactionType = transactionType,
+            isReward = isReward,
+            isBookingRelated = resolvedBookingRelated,
+            status = statusNorm
+        )
         return Transaction(
             id = id,
             type = transactionType,
             amount = displayAmount,
-            description = displayDescription,
+            description = description,
             timestamp = parsedTimestamp,
             balanceAfter = walletTransaction.balanceAfter ?: 0.0,
             paymentMethod = null,
@@ -678,6 +695,9 @@ class TransactionHistoryActivity : AppCompatActivity() {
 
     companion object {
         private const val REWARD_AMOUNT_RUPEES = 20.0
+        private const val HISTORY_SKELETON_MIN_ROWS = 8
+        private const val HISTORY_SKELETON_MAX_ROWS = 14
+        private const val LOAD_MORE_DELAY_MS = 850L
         const val VIEW_ALL_TRANSITION_NAME = "wallet_view_all_transition"
     }
 
@@ -687,13 +707,47 @@ class TransactionHistoryActivity : AppCompatActivity() {
     }
 
     private fun showLoading(show: Boolean) {
-        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
+        val skeleton = binding.layoutTransactionSkeletonContainer
+        binding.progressBar.visibility = View.GONE
+
         if (show) {
             binding.rvAllTransactions.visibility = View.GONE
             binding.layoutEmptyState.visibility = View.GONE
-        } else if (binding.layoutEmptyState.visibility != View.VISIBLE) {
+            skeleton.animate().cancel()
+            skeleton.alpha = 1f
+            skeleton.visibility = View.VISIBLE
+            skeletonAnimator?.cancel()
+            skeletonAnimator = SkeletonShimmer.start(skeleton)
+            return
+        }
+
+        // Loading finished — renderTransactions/showEmptyState already set the
+        // correct target visible. Drop the skeleton instantly and let the content
+        // settle in (staggered rise) — no crossfade.
+        val skeletonWasVisible = skeleton.visibility == View.VISIBLE
+        skeletonAnimator?.cancel()
+        skeletonAnimator = null
+        skeleton.visibility = View.GONE
+
+        if (binding.layoutEmptyState.visibility != View.VISIBLE) {
             binding.rvAllTransactions.visibility = View.VISIBLE
         }
+
+        if (!skeletonWasVisible) return
+
+        if (binding.layoutEmptyState.visibility == View.VISIBLE) {
+            binding.layoutEmptyState.alpha = 1f
+            SkeletonShimmer.revealView(binding.layoutEmptyState)
+        } else {
+            binding.rvAllTransactions.alpha = 1f
+            SkeletonShimmer.revealStagger(binding.rvAllTransactions)
+        }
+    }
+
+    override fun onDestroy() {
+        skeletonAnimator?.cancel()
+        skeletonAnimator = null
+        super.onDestroy()
     }
 
     private fun getUserId(): String? {

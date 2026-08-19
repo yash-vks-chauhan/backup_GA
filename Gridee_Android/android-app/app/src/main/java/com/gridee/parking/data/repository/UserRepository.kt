@@ -16,6 +16,21 @@ class UserRepository {
     suspend fun registerUser(userRegistration: UserRegistration): Response<AuthResponse> {
         return apiService.registerUser(userRegistration)
     }
+
+    /**
+     * Assign / change the user's parking lot. The backend resolves the lot by id
+     * (preferred) or name and persists it on the user via PUT /api/users/{id}.
+     */
+    suspend fun assignParkingLot(
+        userId: String,
+        lotId: String,
+        lotName: String?
+    ): Response<Void> {
+        return apiService.updateUser(
+            userId,
+            UpdateUserRequest(parkingLotId = lotId, parkingLotName = lotName)
+        )
+    }
     
     /**
      * JWT-based authentication using /api/auth/login endpoint
@@ -32,18 +47,6 @@ class UserRepository {
     suspend fun exchangeFirebaseToken(idToken: String): Response<AuthResponse> {
         val request = FirebaseTokenExchangeRequest(idToken = idToken)
         return apiService.exchangeFirebaseToken(request)
-    }
-    
-    /**
-     * Legacy login using /api/users/login endpoint
-     * Returns User object without JWT token
-     */
-    suspend fun loginUser(email: String, password: String): Response<User> {
-        val credentials = mapOf(
-            "email" to email,
-            "password" to password
-        )
-        return apiService.loginUser(credentials)
     }
     
     suspend fun getUserById(userId: String): User? {

@@ -5,44 +5,30 @@ import android.util.Patterns
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.data.model.User
-import com.gridee.parking.data.repository.ParkingRepository
 import com.gridee.parking.utils.AuthErrorMapper
 import com.gridee.parking.utils.PendingProfileUpdate
 import com.gridee.parking.utils.PendingProfileUpdateStore
-import kotlinx.coroutines.launch
 
 class RegistrationViewModel : ViewModel() {
-    
-    private val parkingRepository = ParkingRepository()
+
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
-    
+
     private val _registrationState = MutableLiveData<RegistrationState>()
     val registrationState: LiveData<RegistrationState> = _registrationState
-    
+
     private val _validationErrors = MutableLiveData<Map<String, String>>()
     val validationErrors: LiveData<Map<String, String>> = _validationErrors
 
-    private val _parkingLotNames = MutableLiveData<List<String>>()
-    val parkingLotNames: LiveData<List<String>> = _parkingLotNames
-
-    private val _parkingLotLoading = MutableLiveData<Boolean>()
-    val parkingLotLoading: LiveData<Boolean> = _parkingLotLoading
-
-    private val _parkingLotError = MutableLiveData<String?>()
-    val parkingLotError: LiveData<String?> = _parkingLotError
-    
     fun registerUser(
         context: Context,
         name: String,
         email: String,
         phone: String,
-        password: String,
-        parkingLotName: String
+        password: String
     ) {
         RemoteConfigManager.loadCached(context)
         if (!RemoteConfigManager.isEmailSignInEnabled()) {
@@ -53,17 +39,16 @@ class RegistrationViewModel : ViewModel() {
             return
         }
 
-        val normalizedParkingLot = parkingLotName.trim().ifBlank { null }
         val sanitizedPhone = phone.filter { it.isDigit() }
         // Validate input
-        val errors = validateInput(name, email, sanitizedPhone, password, normalizedParkingLot)
+        val errors = validateInput(name, email, sanitizedPhone, password)
         if (errors.isNotEmpty()) {
             _validationErrors.value = errors
             return
         }
-        
+
         _registrationState.value = RegistrationState.Loading
-        
+
         firebaseAuth.createUserWithEmailAndPassword(email.trim().lowercase(), password)
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
@@ -97,12 +82,14 @@ class RegistrationViewModel : ViewModel() {
                                     return@addOnCompleteListener
                                 }
 
+                                // Parking lot is chosen after sign-in via the selection gate,
+                                // so it is intentionally not part of the pending profile here.
                                 PendingProfileUpdateStore(context).save(
                                     PendingProfileUpdate(
                                         email = email.trim().lowercase(),
                                         name = name.trim(),
                                         phone = sanitizedPhone,
-                                        parkingLotName = normalizedParkingLot
+                                        parkingLotName = null
                                     )
                                 )
 
@@ -111,32 +98,31 @@ class RegistrationViewModel : ViewModel() {
                     }
             }
     }
-    
+
     private fun validateInput(
         name: String,
         email: String,
         phone: String,
-        password: String,
-        parkingLotName: String?
+        password: String
     ): Map<String, String> {
         val errors = mutableMapOf<String, String>()
-        
+
         if (name.isBlank()) {
             errors["name"] = "Name is required"
         }
-        
+
         if (email.isBlank()) {
             errors["email"] = "Email is required"
         } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             errors["email"] = "Invalid email format"
         }
-        
+
         if (phone.isBlank()) {
             errors["phone"] = "Phone number is required"
         } else if (phone.length < 10) {
             errors["phone"] = "Phone number must be at least 10 digits"
         }
-        
+
         if (password.isBlank()) {
             errors["password"] = "Password is required"
         } else if (password.length < 6) {
@@ -146,32 +132,6 @@ class RegistrationViewModel : ViewModel() {
         return errors
     }
 
-    fun loadParkingLotNames(forceRefresh: Boolean = false) {
-        if (!forceRefresh && !_parkingLotNames.value.isNullOrEmpty()) {
-            return
-        }
-
-        _parkingLotLoading.value = true
-
-        viewModelScope.launch {
-            try {
-                val response = parkingRepository.getParkingLotNames()
-                if (response.isSuccessful) {
-                    val names = response.body().orEmpty()
-                    _parkingLotNames.value = names
-                    _parkingLotError.value = if (names.isEmpty()) "No parking lots available yet" else null
-                } else {
-                    _parkingLotError.value = "Unable to load parking lots. Please try again."
-                }
-            } catch (e: Exception) {
-                val error = AuthErrorMapper.fromException(e)
-                _parkingLotError.value = error.message
-            } finally {
-                _parkingLotLoading.value = false
-            }
-        }
-    }
-    
     fun clearErrors() {
         _validationErrors.value = emptyMap()
     }

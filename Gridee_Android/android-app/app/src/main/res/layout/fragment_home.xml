@@ -81,11 +81,15 @@
                         android:clickable="true"
                         android:focusable="true">
 
+                        <!-- 64dp of view rather than 56dp plus a 4dp margin: same footprint, but
+                             the crown star's glow needs headroom above the medallion and only the
+                             view itself can give it that. The medallion consequently sits low in
+                             its own box, so it is nudged back up to stay level with the wordmark. -->
                         <com.gridee.parking.ui.views.RewardCoinView
                             android:id="@+id/hero_reward_coin"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
-                            android:layout_margin="4dp"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:translationY="-4dp"
                             android:contentDescription="Daily reward" />
 
                     </FrameLayout>
@@ -126,7 +130,7 @@
                         android:layout_marginEnd="4dp"
                         android:background="@null"
                         android:fontFamily="@font/inter_regular"
-                        android:hint="Where do you want to park?"
+                        android:hint="@string/where_do_you_want_to_park"
                         android:imeOptions="actionSearch"
                         android:inputType="text"
                         android:maxLines="1"
@@ -190,9 +194,11 @@
                     android:layout_marginEnd="28dp"
                     android:clickable="true"
                     android:focusable="true"
+                    android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/search_bar_container" />
+                    app:layout_constraintTop_toBottomOf="@id/search_bar_container"
+                    tools:visibility="visible" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/layout_filter_cards"
@@ -201,12 +207,14 @@
                     android:layout_marginStart="24dp"
                     android:layout_marginTop="24dp"
                     android:layout_marginEnd="24dp"
+                    android:visibility="gone"
                     app:layout_constraintTop_toBottomOf="@id/layout_step_banner"
                     app:cardBackgroundColor="#33000000"
                     app:cardCornerRadius="100dp"
                     app:cardElevation="0dp"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#1AFFFFFF">
+                    app:strokeColor="#1AFFFFFF"
+                    tools:visibility="visible">
 
                     <FrameLayout
                         android:layout_width="match_parent"
@@ -265,7 +273,7 @@
                                         android:layout_marginStart="6dp"
                                         android:fontFamily="@font/inter_medium"
                                         android:includeFontPadding="false"
-                                        android:text="Morning"
+                                        android:text="@string/morning"
                                         android:textColor="@color/border_light"
                                         android:textSize="14sp" />
                                 </LinearLayout>
@@ -305,7 +313,7 @@
                                         android:layout_marginStart="6dp"
                                         android:fontFamily="@font/inter_medium"
                                         android:includeFontPadding="false"
-                                        android:text="Afternoon"
+                                        android:text="@string/afternoon"
                                         android:textColor="@color/border_light"
                                         android:textSize="14sp" />
                                 </LinearLayout>
@@ -360,7 +368,7 @@
                                     android:fontFamily="@font/inter_medium"
                                     android:gravity="center"
                                     android:includeFontPadding="false"
-                                    android:text="Standard"
+                                    android:text="@string/standard"
                                     android:textColor="@color/uber_toggle_selected_text"
                                     android:textSize="14sp" />
                             </LinearLayout>
@@ -386,7 +394,7 @@
                                     android:fontFamily="@font/inter_medium"
                                     android:gravity="center"
                                     android:includeFontPadding="false"
-                                    android:text="Quick"
+                                    android:text="@string/quick"
                                     android:textColor="@color/uber_toggle_unselected_text"
                                     android:textSize="14sp" />
                             </LinearLayout>
@@ -396,13 +404,17 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <ProgressBar
-                    android:id="@+id/progress_parking_spots"
-                    android:layout_width="wrap_content"
+                <!-- Cold-load placeholder for the spot list. Sits in the recycler's slot
+                     with the same top margin, and is filled with one page of ghost cards
+                     by HomeSpotSkeleton. Only ever shown for a blocking load (first open
+                     and Try Again) — the 10s background sync and pull-to-refresh leave the
+                     real cards on screen. -->
+                <LinearLayout
+                    android:id="@+id/layout_parking_spots_skeleton"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="32dp"
-                    android:indeterminateTint="@color/text_primary"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical"
                     android:visibility="gone"
                     tools:visibility="visible" />
 
@@ -414,7 +426,7 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginEnd="24dp"
                     android:gravity="center"
-                    android:text="No parking spots available"
+                    android:text="@string/no_parking_spots_available"
                     android:textColor="@color/text_secondary"
                     android:textSize="15sp"
                     android:visibility="gone"
@@ -454,7 +466,7 @@
                         android:layout_marginTop="18dp"
                         android:fontFamily="@font/inter_semibold"
                         android:gravity="center"
-                        android:text="No Connection"
+                        android:text="@string/no_connection"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp" />
 
@@ -465,7 +477,7 @@
                         android:layout_marginTop="6dp"
                         android:fontFamily="@font/inter_regular"
                         android:gravity="center"
-                        android:text="Please check your internet and try again."
+                        android:text="@string/please_check_your_internet_and_try"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
@@ -497,7 +509,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
                             android:fontFamily="@font/inter_medium"
-                            android:text="Try Again"
+                            android:text="@string/try_again"
                             android:textColor="@color/confirm_btn_text"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -550,6 +562,19 @@
                             android:background="@drawable/bg_dot_inactive" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
+
+                <!--
+                  Existing first-party campaign slot, retained as an in-content fallback when
+                  the floating portrait AdMob placement is disabled or cannot fill.
+                -->
+                <com.gridee.parking.ui.ads.CustomAdBannerView
+                    android:id="@+id/custom_ad_home"
+                    android:layout_width="280dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="4dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 

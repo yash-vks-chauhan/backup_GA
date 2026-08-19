@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared styles for the transaction-list skeleton (item_transaction_skeleton).
+     Kept here so every skeleton row stays a clean one-liner and the geometry lives
+     in one place. All placeholder Views carry tag="skeleton_pill" so SkeletonShimmer
+     can drive them off a single synchronized breath animator. -->
+<resources>
+
+    <!-- Row shell — mirrors item_transaction root exactly (padding, card bg, spacing). -->
+    <style name="WalletSkeletonRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingHorizontal">16dp</item>
+        <item name="android:paddingVertical">18dp</item>
+        <item name="android:layout_marginBottom">16dp</item>
+        <item name="android:background">@drawable/bg_transaction_item</item>
+    </style>
+
+    <!-- 44dp circle — mirrors the circular icon holder. -->
+    <style name="WalletSkeletonIcon">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:background">@drawable/bg_skeleton_circle</item>
+        <item name="android:alpha">0.55</item>
+        <item name="android:tag">skeleton_pill</item>
+    </style>
+
+    <!-- Title + timestamp column (weighted, 14dp inset like the real row). -->
+    <style name="WalletSkeletonTextGroup">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_marginStart">14dp</item>
+    </style>
+
+    <!-- Title line (~15sp text height). Width set per row for natural variation. -->
+    <style name="WalletSkeletonTitle">
+        <item name="android:layout_height">13dp</item>
+        <item name="android:background">@drawable/bg_skeleton_pill</item>
+        <item name="android:alpha">0.55</item>
+        <item name="android:tag">skeleton_pill</item>
+    </style>
+
+    <!-- Timestamp line (~13sp text height). Width set per row. -->
+    <style name="WalletSkeletonSubtitle">
+        <item name="android:layout_height">10dp</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:background">@drawable/bg_skeleton_pill</item>
+        <item name="android:alpha">0.55</item>
+        <item name="android:tag">skeleton_pill</item>
+    </style>
+
+    <!-- Right-side amount/status pill. Width set per row. -->
+    <style name="WalletSkeletonAmount">
+        <item name="android:layout_width">64dp</item>
+        <item name="android:layout_height">26dp</item>
+        <item name="android:background">@drawable/bg_skeleton_pill</item>
+        <item name="android:alpha">0.55</item>
+        <item name="android:tag">skeleton_pill</item>
+    </style>
+
+</resources>

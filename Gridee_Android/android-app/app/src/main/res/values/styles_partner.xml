@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Field anatomy for the partner-referral sheet. Six structurally identical
+  label + input pairs, so the metrics live here rather than being repeated.
+  Box styling matches the Add Vehicle sheet (28dp radius, background_secondary
+  fill, 1dp divider stroke) so the form feels native to the app.
+-->
+<resources>
+
+    <!--
+      Labels are deliberately quieter than the values they describe: 13sp secondary
+      against 16sp primary inside the box. That gives the form one readable rule in
+      dark mode — grey is chrome, white is content — instead of labels, body copy
+      and answers all competing at the same weight.
+    -->
+    <style name="Widget.Gridee.PartnerField.Label" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">18dp</item>
+        <item name="android:layout_marginBottom">7dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFamily">@font/inter_semibold</item>
+    </style>
+
+    <style name="Widget.Gridee.PartnerField.Box" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="boxBackgroundColor">@color/background_secondary</item>
+        <item name="boxCornerRadiusTopStart">28dp</item>
+        <item name="boxCornerRadiusTopEnd">28dp</item>
+        <item name="boxCornerRadiusBottomStart">28dp</item>
+        <item name="boxCornerRadiusBottomEnd">28dp</item>
+        <item name="boxStrokeColor">@color/selector_input_outline</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="hintTextColor">@color/text_tertiary</item>
+        <!--
+          No floating hint: every field already carries a label directly above it,
+          so a hint repeating the same words was printing each field's name twice.
+          Fields that genuinely need an example set android:hint on the EditText,
+          which renders as a plain placeholder that clears on the first keystroke.
+        -->
+        <item name="hintEnabled">false</item>
+    </style>
+
+    <style name="Widget.Gridee.PartnerField.Input" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_tertiary</item>
+        <item name="android:fontFamily">@font/inter_medium</item>
+    </style>
+
+    <!--
+      ══ Pitch sections ═══════════════════════════════════════════════════════
+      The sheet leading into the form is six sections that all share one rhythm:
+      a heading, an optional caption under it, then a card. Holding the three
+      metrics here is what keeps them identical down the page — a heading that
+      drifts by 1sp between sections is exactly what makes a long scroll feel
+      assembled rather than authored.
+    -->
+
+    <style name="Widget.Gridee.Partner.SectionHeading" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">32dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">@font/inter_semibold</item>
+    </style>
+
+    <!-- Sits directly under a heading, so it owns only the gap to the card. -->
+    <style name="Widget.Gridee.Partner.SectionCaption" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:fontFamily">@font/inter_regular</item>
+    </style>
+
+    <!-- Body copy inside a card. Secondary, never primary: on this sheet primary
+         weight is reserved for headings and for money. -->
+    <style name="Widget.Gridee.Partner.CardBody" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+        <item name="android:fontFamily">@font/inter_regular</item>
+    </style>
+
+    <!-- One line of the "what the site gets" list. Paired with a tick glyph in a
+         horizontal row, hence wrap_content height and no top margin of its own. -->
+    <style name="Widget.Gridee.Partner.ValueLine" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:fontFamily">@font/inter_regular</item>
+    </style>
+
+</resources>

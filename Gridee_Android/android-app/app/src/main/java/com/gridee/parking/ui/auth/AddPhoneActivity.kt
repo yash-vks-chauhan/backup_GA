@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.gridee.parking.databinding.ActivityAddPhoneBinding
 import com.gridee.parking.utils.NotificationHelper
+import com.gridee.parking.ui.lot.ChooseCategoryActivity
 import com.gridee.parking.ui.main.MainContainerActivity
 import com.gridee.parking.ui.operator.OperatorDashboardActivity
 import com.gridee.parking.utils.AuthSession
@@ -20,6 +21,7 @@ class AddPhoneActivity : AppCompatActivity() {
         const val EXTRA_USER_NAME = "extra_user_name"
         const val EXTRA_USER_ROLE = "extra_user_role"
         const val EXTRA_REQUIRE_VEHICLE = "extra_require_vehicle"
+        const val EXTRA_REQUIRE_PARKING_SELECTION = "extra_require_parking_selection"
     }
 
     private lateinit var binding: ActivityAddPhoneBinding
@@ -29,6 +31,7 @@ class AddPhoneActivity : AppCompatActivity() {
     private var userName: String? = null
     private var userRole: String? = null
     private var requireVehicle: Boolean = false
+    private var requireParkingSelection: Boolean = false
     private var showSignupGift: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,6 +47,7 @@ class AddPhoneActivity : AppCompatActivity() {
         userName = intent.getStringExtra(EXTRA_USER_NAME) ?: AuthSession.getUserName(this)
         userRole = intent.getStringExtra(EXTRA_USER_ROLE) ?: AuthSession.getUserRole(this)
         requireVehicle = intent.getBooleanExtra(EXTRA_REQUIRE_VEHICLE, false)
+        requireParkingSelection = intent.getBooleanExtra(EXTRA_REQUIRE_PARKING_SELECTION, false)
         showSignupGift = intent.getBooleanExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, false)
 
         if (userId.isNullOrBlank()) {
@@ -126,16 +130,17 @@ class AddPhoneActivity : AppCompatActivity() {
             intent.putExtra(AddVehicleActivity.EXTRA_USER_ID, userId)
             intent.putExtra(AddVehicleActivity.EXTRA_USER_NAME, userName)
             intent.putExtra(AddVehicleActivity.EXTRA_USER_ROLE, userRole)
+            intent.putExtra(AddVehicleActivity.EXTRA_REQUIRE_PARKING_SELECTION, requireParkingSelection)
             intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, showSignupGift)
             startActivity(intent)
             finish()
             return
         }
 
-        navigateToHome()
+        navigateAfterProfileSetup()
     }
 
-    private fun navigateToHome() {
+    private fun navigateAfterProfileSetup() {
         val normalizedRole = userRole?.uppercase(Locale.ROOT) ?: "USER"
         when (normalizedRole) {
             "OPERATOR" -> {
@@ -144,11 +149,19 @@ class AddPhoneActivity : AppCompatActivity() {
                 startActivity(intent)
             }
             else -> {
-                val intent = Intent(this, MainContainerActivity::class.java)
-                userName?.let { intent.putExtra("USER_NAME", it) }
-                intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, showSignupGift)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
+                val homeExtras = Bundle().apply {
+                    userName?.let { putString("USER_NAME", it) }
+                    putBoolean(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, showSignupGift)
+                }
+                val nextIntent = if (requireParkingSelection) {
+                    // Phone/vehicle setup is followed immediately by the same two-step
+                    // parking-location flow used from Profile.
+                    ChooseCategoryActivity.onboardingIntent(this, homeExtras)
+                } else {
+                    Intent(this, MainContainerActivity::class.java).apply { putExtras(homeExtras) }
+                }
+                nextIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(nextIntent)
             }
         }
         finish()

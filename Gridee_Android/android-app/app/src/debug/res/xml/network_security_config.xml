@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DEBUG ONLY. This file shadows app/src/main/res/xml/network_security_config.xml for the debug
+  variant, so a debug build can reach a staging backend without hardcoding IPs:
+
+    - cleartext HTTP, for a backend run with server.ssl.enabled=false on any LAN host
+    - user-installed CAs, so a self-signed cert (the local profile serves HTTPS on 8443 with
+      keystore.p12) is trusted once you install it on the device
+
+  The release variant keeps the strict main config: HTTPS only, system CAs only. Nothing here can
+  reach the Play Store build — debug-overrides is ignored unless android:debuggable is true.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

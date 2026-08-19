@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Something that happened to the ticket, not something someone said. Centred
+     system text with no bubble and no side, so it reads as the thread's own voice
+     rather than a participant's. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tv_event"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fontFamily="@font/inter_medium"
+    android:gravity="center_horizontal"
+    android:includeFontPadding="false"
+    android:letterSpacing="0"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="18dp"
+    android:paddingBottom="6dp"
+    android:textColor="@color/text_tertiary"
+    android:textSize="11.5sp"
+    tools:text="Marked resolved · 2:14 PM" />

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The AdMob native card as a page of the booking pass ad rail.
+
+  This is deliberately the same frame as item_event_deck_card: 16 dp radius, no
+  elevation, no stroke, filling the page slot the adapter sizes. The two ad kinds
+  share one rail, so any difference in radius or shadow reads as two unrelated
+  widgets rather than one deck of creatives. The card it replaced was Home's
+  floating-dock card — 24 dp radius, 6 dp elevation — squeezed into a 120 dp
+  column beside the campaign deck, where its headline and button were too small
+  to read and the wide poster next to it took every look.
+
+  Text sits over a bottom scrim rather than on a surface below the media, so the
+  creative fills the whole 16:9 frame exactly as a campaign poster does.
+-->
+<com.google.android.gms.ads.nativead.NativeAdView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/native_ad_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:cardBackgroundColor="@color/skeleton_base"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.google.android.gms.ads.nativead.MediaView
+                android:id="@+id/ad_media"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/admob_media_content"
+                tools:background="@color/skeleton_base" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="118dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_ad_media_scrim" />
+
+            <!-- Opposite the SDK-rendered AdChoices asset, which is placed top-right. -->
+            <TextView
+                android:id="@+id/ad_attribution"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_margin="10dp"
+                android:background="@drawable/bg_custom_ad_label"
+                android:fontFamily="@font/inter_semibold"
+                android:includeFontPadding="false"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2.5dp"
+                android:text="@string/custom_ad_label"
+                android:textColor="#FFFFFF"
+                android:textSize="9sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/ad_headline"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/inter_semibold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.012"
+                        android:maxLines="2"
+                        android:shadowColor="#66000000"
+                        android:shadowDx="0"
+                        android:shadowDy="1"
+                        android:shadowRadius="4"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        tools:text="Track every trip automatically" />
+
+                    <TextView
+                        android:id="@+id/ad_advertiser"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:alpha="0.82"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/inter_regular"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        tools:text="Fuelio · Sponsored" />
+                </LinearLayout>
+
+                <!--
+                  Fixed white on near-black, NOT the theme tokens. This button never sits on a
+                  page surface — it always sits on the creative's own dark scrim — so tinting it
+                  background_secondary meant that in dark mode a #1C1C1E button landed on a
+                  #D9000000 scrim and the button shape vanished, leaving a floating label. A
+                  call-to-action that doesn't look pressable is CTR left on the table.
+
+                  Neutral white rather than the app's gold on purpose: gold is the product's own
+                  accent, and spending it on a third-party creative would blur the line between
+                  our UI and an advertiser's — bad for trust and against native ad policy.
+                -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/ad_call_to_action"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:fontFamily="@font/inter_semibold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="16dp"
+                    android:textAllCaps="false"
+                    android:textColor="#0B0B0C"
+                    android:textSize="12sp"
+                    app:backgroundTint="#FFFFFF"
+                    app:cornerRadius="17dp"
+                    app:elevation="0dp"
+                    tools:text="Learn more" />
+            </LinearLayout>
+        </FrameLayout>
+    </com.google.android.material.card.MaterialCardView>
+</com.google.android.gms.ads.nativead.NativeAdView>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The AdMob page of the ad rail — an empty slot the pass drops its already-loaded
+  BookingQrNativeAdView into.
+
+  Same page geometry as item_event_deck_card: match_parent in both axes because
+  ViewPager2 rejects a wrap_content page, the same 2 dp side padding, and the slot
+  pinned to the top of the taller page so the campaigns stacked behind can peek out
+  from under it.
+
+  The card is not inflated here. It is loaded off-screen from the first frame and
+  only joins the rail once it has a creative, so this page never exists empty.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingHorizontal="2dp">
+
+    <FrameLayout
+        android:id="@+id/native_page_slot"
+        android:layout_width="match_parent"
+        android:layout_height="208dp"
+        android:layout_gravity="top" />
+</FrameLayout>

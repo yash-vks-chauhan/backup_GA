@@ -125,8 +125,8 @@ class WelcomeActivity : AppCompatActivity() {
         if (!emailEnabled && !googleEnabled) {
             NotificationHelper.showWarning(
                 parent = binding.rootContainer,
-                title = "Sign-in unavailable",
-                message = "Account sign-in is temporarily unavailable."
+                title = getString(R.string.sign_in_unavailable),
+                message = getString(R.string.account_sign_in_is_temporarily_unavailable)
             )
         }
     }
@@ -219,7 +219,7 @@ class WelcomeActivity : AppCompatActivity() {
                 }
                 is LoginState.Success -> {
                     showLoading(false)
-                    handleLoginSuccess(state.user)
+                    handleLoginSuccess(state.user, state.isNewUser)
                 }
                 is LoginState.VerificationRequired -> {
                     showLoading(false)
@@ -334,7 +334,7 @@ class WelcomeActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun handleLoginSuccess(user: User) {
+    private fun handleLoginSuccess(user: User, backendSaysNewUser: Boolean) {
         val normalizedRole = user.role?.uppercase(Locale.ROOT) ?: "USER"
         val resolvedUserId = user.id ?: AuthSession.getUserId(this)
 
@@ -361,8 +361,9 @@ class WelcomeActivity : AppCompatActivity() {
                 val requiresPhone = user.phone.isBlank()
                 val requiresVehicle = user.vehicleNumbers.isEmpty()
 
-                // New Google users need phone/vehicle — thread signup gift flag through
-                val isNewUser = requiresPhone || requiresVehicle
+                // Only the backend's account-creation result starts parking onboarding.
+                // Missing profile fields alone can also occur on returning accounts.
+                val isNewUser = backendSaysNewUser
 
                 if (requiresPhone) {
                     val intent = Intent(this, AddPhoneActivity::class.java)
@@ -370,7 +371,8 @@ class WelcomeActivity : AppCompatActivity() {
                     intent.putExtra(AddPhoneActivity.EXTRA_USER_NAME, user.name)
                     intent.putExtra(AddPhoneActivity.EXTRA_USER_ROLE, normalizedRole)
                     intent.putExtra(AddPhoneActivity.EXTRA_REQUIRE_VEHICLE, requiresVehicle)
-                    intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
+                    intent.putExtra(AddPhoneActivity.EXTRA_REQUIRE_PARKING_SELECTION, isNewUser)
+                    intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, isNewUser)
                     startActivity(intent)
                     finish()
                 } else if (requiresVehicle) {
@@ -378,13 +380,17 @@ class WelcomeActivity : AppCompatActivity() {
                     intent.putExtra(AddVehicleActivity.EXTRA_USER_ID, resolvedUserId)
                     intent.putExtra(AddVehicleActivity.EXTRA_USER_NAME, user.name)
                     intent.putExtra(AddVehicleActivity.EXTRA_USER_ROLE, normalizedRole)
-                    intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
+                    intent.putExtra(AddVehicleActivity.EXTRA_REQUIRE_PARKING_SELECTION, isNewUser)
+                    intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, isNewUser)
                     startActivity(intent)
                     finish()
                 } else if (isNewUser) {
-                    val intent = Intent(this, MainContainerActivity::class.java)
-                    intent.putExtra("USER_NAME", user.name)
-                    intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
+                    val homeExtras = Bundle().apply {
+                        putString("USER_NAME", user.name)
+                        putBoolean(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, true)
+                    }
+                    val intent = com.gridee.parking.ui.lot.ChooseCategoryActivity
+                        .onboardingIntent(this, homeExtras)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()

@@ -107,7 +107,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="தமிழ் (Tamil)"
+                    android:text="@string/language_native_tamil"
                     android:textSize="16sp"
                     android:textColor="@color/text_primary"
                     android:fontFamily="@font/inter_medium" />
@@ -133,12 +133,90 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="हिंदी (Hindi)"
+                    android:text="@string/language_native_hindi"
                     android:textSize="16sp"
                     android:textColor="@color/text_primary"
                     android:fontFamily="@font/inter_medium" />
             </LinearLayout>
-            
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider" />
+
+            <!-- Telugu -->
+            <LinearLayout
+                android:id="@+id/btn_telugu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/language_native_telugu"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="@font/inter_medium" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider" />
+
+            <!-- Malayalam -->
+            <LinearLayout
+                android:id="@+id/btn_malayalam"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/language_native_malayalam"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="@font/inter_medium" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider" />
+
+            <!-- Bengali -->
+            <LinearLayout
+                android:id="@+id/btn_bengali"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/language_native_bengali"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="@font/inter_medium" />
+            </LinearLayout>
+
              <!-- Extra Bottom Spacing for rounded corners effect at bottom if needed, or margin -->
              <View
                 android:layout_width="match_parent"

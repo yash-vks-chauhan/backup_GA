@@ -67,7 +67,7 @@ abstract class BaseActivityWithBottomNav<T : ViewBinding> : AppCompatActivity(),
 
         // Keep legacy prefs in sync for older screens that still rely on "gridee_prefs".
         AuthSession.syncLegacyPrefsFromJwt(this)
-        
+
         configureEdgeToEdge()
         
         _binding = getViewBinding()

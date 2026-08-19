@@ -91,7 +91,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="12dp"
-                android:text="Loading parking locations..."
+                android:text="@string/loading_parking_locations"
                 android:textColor="#1976D2"
                 android:textSize="14sp"
                 android:textStyle="bold"

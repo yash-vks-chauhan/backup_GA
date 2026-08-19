@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One skeleton transaction row. Inflated N times by SkeletonShimmer.populate so
+     the row count can adapt per screen (5 on the wallet tab, a screenful on the
+     history page). Mirrors item_transaction geometry and reuses the real card bg.
+     Placeholder widths are overridden per row in code for natural variation. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/WalletSkeletonRow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View style="@style/WalletSkeletonIcon" />
+
+    <LinearLayout style="@style/WalletSkeletonTextGroup">
+
+        <View
+            android:id="@+id/skeleton_title"
+            style="@style/WalletSkeletonTitle"
+            android:layout_width="140dp" />
+
+        <View
+            android:id="@+id/skeleton_subtitle"
+            style="@style/WalletSkeletonSubtitle"
+            android:layout_width="80dp" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/skeleton_amount"
+        style="@style/WalletSkeletonAmount" />
+
+</LinearLayout>

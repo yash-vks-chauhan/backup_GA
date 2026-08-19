@@ -233,7 +233,10 @@ class LoginViewModel : ViewModel() {
             parkingLotName = appliedUpdate?.parkingLotName ?: auth.user.parkingLotName
         )
         AuthSession.updateCachedUserProfile(context, user)
-        _loginState.value = LoginState.Success(user)
+        _loginState.value = LoginState.Success(
+            user = user,
+            isNewUser = auth.isNewUser == true
+        )
     }
 
     private suspend fun applyPendingProfileUpdate(
@@ -340,7 +343,7 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 android.util.Log.d("LoginViewModel", "Sending Google sign-in request to backend...")
-                android.util.Log.d("LoginViewModel", "  - Endpoint: POST /api/users/social-signin")
+                android.util.Log.d("LoginViewModel", "  - Endpoint: POST /api/auth/google")
                 android.util.Log.d("LoginViewModel", "  - idToken: ${account.idToken?.take(30)}...")
                 android.util.Log.d("LoginViewModel", "  - email: ${account.email}")
                 android.util.Log.d("LoginViewModel", "  - name: ${account.displayName}")
@@ -407,7 +410,10 @@ class LoginViewModel : ViewModel() {
                         )
                         AuthSession.updateCachedUserProfile(context, user)
                         android.util.Log.d("LoginViewModel", "User object created, setting Success state")
-                        _loginState.value = LoginState.Success(user)
+                        _loginState.value = LoginState.Success(
+                            user = user,
+                            isNewUser = auth.isNewUser == true
+                        )
                     } ?: run {
                         android.util.Log.e("LoginViewModel", "❌ Response body is NULL")
                         _loginState.value = LoginState.Error("Something Went Wrong", "Please try again.", isRetryable = true)
@@ -448,7 +454,10 @@ class LoginViewModel : ViewModel() {
 
 sealed class LoginState {
     object Loading : LoginState()
-    data class Success(val user: User) : LoginState()
+    data class Success(
+        val user: User,
+        val isNewUser: Boolean = false
+    ) : LoginState()
     data class VerificationRequired(val email: String) : LoginState()
     data class Error(
         val title: String,

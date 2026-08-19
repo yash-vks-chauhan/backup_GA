@@ -82,9 +82,6 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
             onBookingClick = { booking ->
                 openBookingDetails(booking)
             },
-            onExtendClick = { _ ->
-                // Extend is not applicable for history items
-            },
             useCompactHistory = true,
             historySectionProvider = { booking ->
                 bookingSectionTitles[booking.id] ?: ""
@@ -99,7 +96,7 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
 
     private fun openBookingDetails(booking: UiBooking) {
         if (booking.id.isBlank() || booking.id == "Unknown") {
-            Toast.makeText(this, "Booking ID not available", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.booking_id_not_available), Toast.LENGTH_SHORT).show()
             return
         }
         val intent = android.content.Intent(this, BookingDetailsActivity::class.java)

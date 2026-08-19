@@ -71,6 +71,11 @@
     <!-- Active icon/label color (sits on the white pill). brand_primary = #000000
          in light mode → reads cleanly on the white pill. -->
     <color name="nav_active_pill_on">@color/brand_primary</color>
+    <!-- Partner referral pill. Deliberately NOT nav_floating_surface: at #EDEDED the
+         button sat ~1.02:1 against the #F5F5F5 page and the pill body was invisible
+         in light mode — only the gold glyph and label registered. Pure white gives it
+         the same white-on-gray separation the active nav pill already uses. -->
+    <color name="partner_pill_surface">#FFFFFF</color>
     <!-- Inactive icon/label color — quieter gray on the dark track. -->
     <color name="nav_inactive_tint">#8E8E93</color>
     <color name="bottom_nav_surface">#F8F9FA</color>
@@ -83,6 +88,8 @@
     <color name="red">#F44336</color>
     <!-- Tokens for Brand Buttons -->
     <color name="btn_text_on_brand">#FFFFFF</color>
+    <!-- Ripple that stays visible on a brand-filled surface (black in light, white in dark) -->
+    <color name="ripple_on_brand">#33FFFFFF</color>
 
     <color name="divider_color">#E0E0E0</color>
     <color name="darker_gray">#666666</color>
@@ -212,8 +219,6 @@
 
     <!-- Segmented control interactions -->
     <color name="segment_ripple_white">#26FFFFFF</color>
-    <color name="segment_shell_surface">#F5F6FA</color>
-    <color name="segment_shell_border">#EDEFF5</color>
     <color name="segment_button_bg_checked">#FFFFFFFF</color>
     <color name="segment_button_bg_unchecked">#E8EBF3</color>
     <color name="segment_button_border_checked">#D5D9E3</color>
@@ -223,8 +228,6 @@
     <color name="segment_slider_fill">#FFFFFFFF</color>
     <color name="segment_slider_border">#00FFFFFF</color>
     <color name="segment_badge_bg">#EEF2FF</color>
-    <color name="segment_badge_text">#4758F3</color>
-    <color name="segment_ripple_active">#33FFFFFF</color>
     <color name="filter_button_ripple">#22000000</color>
 
     <!-- Scanner palette -->
@@ -311,8 +314,11 @@
     <color name="text_tertiary">#9CA3AF</color>
     <color name="text_quaternary">#C8CCD2</color>
 
-    <!-- Skeleton placeholder fill — used in bottom-sheet loading states -->
-    <color name="skeleton_base">#ECEDF0</color>
+    <!-- Skeleton placeholder fill. Deliberately translucent: skeletons land on
+         several surfaces (sheet body, card, raised footer) and a flat colour can
+         only be tuned against one of them. A 7.5% ink wash is the same visible
+         step off every surface. Over #FFFFFF this resolves to ~#EDEEEF. -->
+    <color name="skeleton_base">#13121826</color>
     <color name="price_primary">@color/brand_primary</color>
 
     <!-- Booking details page subtle column line / hairline -->
@@ -352,6 +358,14 @@
     
     <!-- Circle Icon Background -->
     <color name="circle_icon_bg">#F3F4F6</color>
+
+    <!-- Lot picker choice dock — iOS26-style glass panel pinned above the confirm
+         button. Surface is deliberately translucent so list content scrolls behind. -->
+    <color name="dock_glass_surface">#E8FFFFFF</color>
+    <color name="dock_glass_stroke">#14000000</color>
+    <!-- Confirm button while no lot is chosen: a quiet glass chip that solidifies
+         to brand_primary once a choice is made. -->
+    <color name="btn_glass_disabled">#141C1C1E</color>
 
     <!-- Slide-to-Book Slider -->
     <color name="slider_track">#1A1A1A</color>
@@ -407,5 +421,33 @@
          as a hard pencil line against #FFFFFF on #F5F5F5), visible in dark mode
          where the card surface (#1C1C1E) needs definition against pure black. -->
     <color name="notification_card_stroke">@android:color/transparent</color>
+
+    <!-- Neutral surface behind the script glyph in the language selector. Kept
+         grey rather than tinted so the rows read as content, not as chips. -->
+    <color name="script_badge_surface">#F2F2F7</color>
+
+    <!-- ===================== SUPPORT CHAT ===================== -->
+    <!-- Bubbles need their own tokens rather than brand_primary/background_secondary.
+         Those two invert between themes, which made outgoing bubbles pure black here
+         and pure white in dark, and left incoming bubbles (#FFFFFF) at 1.07:1 against
+         the #F5F5F5 page — effectively invisible. These are fixed per theme instead,
+         so each side keeps its intended weight in both.
+         Light: outgoing is near-black ink (not #000, which reads as a hole), incoming
+         is the iMessage grey that separates cleanly from the page. -->
+    <color name="chat_bubble_outgoing">#111214</color>
+    <color name="chat_bubble_incoming">#E9E9EB</color>
+    <color name="chat_text_outgoing">#FFFFFF</color>
+    <color name="chat_text_incoming">#191C19</color>
+    <!-- Pressed fills, used by the bubble drawable's state list. One perceptual step
+         off the resting fill — enough to confirm the long-press, never a flash. -->
+    <color name="chat_bubble_outgoing_pressed">#2A2C31</color>
+    <color name="chat_bubble_incoming_pressed">#DCDCE1</color>
+
+    <!-- Alpha ramp over background_primary, for the frosted top/bottom scrims.
+         Previously hardcoded as #CCF5F5F5 etc. inside the drawables, which silently
+         breaks the moment the page colour changes. Same resolved values. -->
+    <color name="background_primary_a85">#D9F5F5F5</color>
+    <color name="background_primary_a80">#CCF5F5F5</color>
+    <color name="background_primary_a50">#80F5F5F5</color>
 
 </resources>

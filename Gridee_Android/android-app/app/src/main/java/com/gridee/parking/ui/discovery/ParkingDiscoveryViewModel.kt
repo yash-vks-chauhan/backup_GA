@@ -37,7 +37,7 @@ class ParkingDiscoveryViewModel : ViewModel() {
     
     // Filter options
     private val _maxPrice = MutableLiveData<Double>()
-    private val _maxDistance = MutableLiveData<Double>()
+    private val _maxDistance = MutableLiveData<Double?>()
     private val _selectedAmenities = MutableLiveData<List<String>>()
     private val _availableOnly = MutableLiveData<Boolean>()
 

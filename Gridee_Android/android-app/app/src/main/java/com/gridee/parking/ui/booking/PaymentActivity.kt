@@ -1,5 +1,7 @@
 package com.gridee.parking.ui.booking
 
+import com.gridee.parking.R
+
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -36,7 +38,7 @@ class PaymentActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        binding.tvTitle.text = "Payment"
+        binding.tvTitle.text = getString(R.string.payment)
         
         // Load available payment methods
         viewModel.loadPaymentMethods()
@@ -60,7 +62,6 @@ class PaymentActivity : AppCompatActivity() {
             selectPaymentMethod(PaymentMethod.UPI)
         }
 
-        // Future payment methods (ready for Razorpay integration)
         binding.cardNetBanking.setOnClickListener {
             selectPaymentMethod(PaymentMethod.NET_BANKING)
         }
@@ -86,7 +87,7 @@ class PaymentActivity : AppCompatActivity() {
                 android.view.View.VISIBLE else android.view.View.GONE
             
             if (isProcessing) {
-                binding.tvPayButtonAmount.text = "Processing..."
+                binding.tvPayButtonAmount.text = getString(R.string.processing)
             }
         }
 
@@ -141,7 +142,7 @@ class PaymentActivity : AppCompatActivity() {
                 PaymentMethod.NET_BANKING -> processNetBankingPayment()
             }
         } ?: run {
-            showToast("Please select a payment method")
+            showToast(getString(R.string.please_select_a_payment_method))
         }
     }
 
@@ -184,10 +185,10 @@ class PaymentActivity : AppCompatActivity() {
                 showToast("Payment failed: ${result.errorMessage}")
             }
             PaymentStatus.CANCELLED -> {
-                showToast("Payment cancelled")
+                showToast(getString(R.string.payment_cancelled))
             }
             PaymentStatus.PENDING -> {
-                showToast("Payment is pending")
+                showToast(getString(R.string.payment_is_pending))
             }
         }
     }

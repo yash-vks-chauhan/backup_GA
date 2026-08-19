@@ -34,7 +34,7 @@ import com.gridee.parking.databinding.BottomSheetTopUpBinding
 import com.gridee.parking.ui.booking.BookingConfirmationActivity
 import com.gridee.parking.ui.booking.BookingViewModel
 import com.gridee.parking.ui.booking.ParkingSpotSelectionAdapter
-import com.gridee.parking.ui.wallet.WalletTopUpActivity
+import com.gridee.parking.ui.wallet.WalletTopUpLauncher
 import kotlinx.coroutines.launch
 import retrofit2.Response
 import java.text.SimpleDateFormat
@@ -61,6 +61,10 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
 
 
     private var isBookingInProgress = false
+    // The sheet can outlive the availability the user tapped on (Home polls on an interval, and
+    // the last spot can go while this sheet is open), so Confirm is gated on the spot the sheet
+    // itself resolved — not on what the card promised.
+    private var isSelectedSpotFull = false
     private var btnFullWidth = 0
     private var glowAnimator: android.animation.ValueAnimator? = null
     private var pendingConfirmationIntent: Intent? = null
@@ -633,7 +637,7 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
         btn.layoutParams = lp
         binding.tvConfirmBooking.alpha = 1f
-        binding.tvConfirmBooking.text = "Confirm Booking"
+        binding.tvConfirmBooking.text = getString(R.string.confirm_booking)
         binding.progressConfirm.visibility = View.GONE
         binding.ivConfirmCheck.visibility = View.GONE
         resetConfirmButtonBackground()
@@ -1053,20 +1057,27 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         val btn = binding.btnConfirmContainer
         val label = binding.tvConfirmBooking
 
-        if (insufficient) {
+        if (isSelectedSpotFull) {
+            // Stays clickable so the tap still gets an answer (shake + notice) instead of dying
+            // silently — same contract as the full card on Home.
+            btn.isClickable = true
+            btn.alpha = 0.5f
+            label.text = getString(R.string.spot_currently_full)
+            stopIdleGlow()
+        } else if (insufficient) {
             btn.isClickable = false
             btn.alpha = 0.5f
-            label.text = "Insufficient Balance"
+            label.text = getString(R.string.insufficient_balance)
             stopIdleGlow()
         } else if (!hasVehicle) {
             btn.isClickable = true
             btn.alpha = 0.75f
-            label.text = "Confirm Booking"
+            label.text = getString(R.string.confirm_booking)
             stopIdleGlow()
         } else {
             btn.isClickable = true
             btn.alpha = 1f
-            label.text = "Confirm Booking"
+            label.text = getString(R.string.confirm_booking)
             startIdleGlow()
         }
     }
@@ -1317,31 +1328,36 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
                 binding.tvHourlyRate.text =
                     "${String.format(Locale.getDefault(), "%.2f", hourlyRate)}/hour"
                 binding.tvRateBadge.text = "${String.format(Locale.getDefault(), "%.0f", hourlyRate)}/hr"
-                revealBadge(REVEAL_ORDER_RATE, binding.skelRateBadge, binding.layoutRateBadge, makeVisible = true)
+                revealBadge(REVEAL_ORDER_RATE, binding.skelRateBadge, binding.layoutRateBadge, binding.slotRateBadge, makeVisible = true)
             } else if (!isFakeSpot) {
                 binding.tvHourlyRate.text = ""
-                revealBadge(REVEAL_ORDER_RATE, binding.skelRateBadge, binding.layoutRateBadge, makeVisible = false)
+                revealBadge(REVEAL_ORDER_RATE, binding.skelRateBadge, binding.layoutRateBadge, binding.slotRateBadge, makeVisible = false)
             }
 
-            // Availability badge — same rule, fake spot keeps skeleton.
+            // Availability badge — same rule, fake spot keeps skeleton. A resolved-but-full spot
+            // also locks Confirm; a fake/unresolved spot must never lock it (capacity == 0 there).
             if (spot.available > 0) {
+                isSelectedSpotFull = false
+                updateConfirmButtonState()
                 binding.tvAvailability.text = "${spot.available} Available"
                 binding.viewAvailabilityDot.backgroundTintList =
                     ContextCompat.getColorStateList(requireContext(), R.color.parking_spot_available)
                 binding.tvAvailability.setTextColor(
                     ContextCompat.getColor(requireContext(), R.color.parking_spot_available)
                 )
-                revealBadge(REVEAL_ORDER_AVAILABILITY, binding.skelAvailability, binding.layoutAvailability, makeVisible = true)
+                revealBadge(REVEAL_ORDER_AVAILABILITY, binding.skelAvailability, binding.layoutAvailability, binding.slotAvailability, makeVisible = true)
             } else if (spot.capacity > 0) {
-                binding.tvAvailability.text = "Full"
+                isSelectedSpotFull = true
+                updateConfirmButtonState()
+                binding.tvAvailability.text = getString(R.string.full)
                 binding.viewAvailabilityDot.backgroundTintList =
                     ContextCompat.getColorStateList(requireContext(), R.color.parking_spot_unavailable)
                 binding.tvAvailability.setTextColor(
                     ContextCompat.getColor(requireContext(), R.color.parking_spot_unavailable)
                 )
-                revealBadge(REVEAL_ORDER_AVAILABILITY, binding.skelAvailability, binding.layoutAvailability, makeVisible = true)
+                revealBadge(REVEAL_ORDER_AVAILABILITY, binding.skelAvailability, binding.layoutAvailability, binding.slotAvailability, makeVisible = true)
             } else if (!isFakeSpot) {
-                revealBadge(REVEAL_ORDER_AVAILABILITY, binding.skelAvailability, binding.layoutAvailability, makeVisible = false)
+                revealBadge(REVEAL_ORDER_AVAILABILITY, binding.skelAvailability, binding.layoutAvailability, binding.slotAvailability, makeVisible = false)
             }
 
             val spotName = spot.name ?: spot.zoneName ?: spot.spotCode ?: "Any available spot"
@@ -1774,8 +1790,10 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
 
     // For badges that may or may not appear depending on data (rate=0 hides
     // the rate badge entirely). Either way, the skeleton goes away — the badge
-    // only fades in when the data justifies it.
-    private fun revealBadge(order: Int, skel: View, badge: View, makeVisible: Boolean) {
+    // only fades in when the data justifies it. [slot] is the frame the pill and
+    // the badge share, so a badge that never arrives can take its slot with it
+    // instead of leaving the gap the placeholder was holding open.
+    private fun revealBadge(order: Int, skel: View, badge: View, slot: View, makeVisible: Boolean) {
         if (_binding == null) return
         if (skel in resolvingSkeletons || skel in scheduledReveals) return
         if (shouldReduceMotion()) {
@@ -1788,14 +1806,15 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
                 badge.visibility = View.VISIBLE
             } else {
                 badge.visibility = View.GONE
+                collapseBadgeSlot(slot)
             }
             stopBreathIfAllResolved()
             return
         }
-        scheduleReveal(order, skel) { animateRevealBadge(skel, badge, makeVisible) }
+        scheduleReveal(order, skel) { animateRevealBadge(skel, badge, slot, makeVisible) }
     }
 
-    private fun animateRevealBadge(skel: View, badge: View, makeVisible: Boolean) {
+    private fun animateRevealBadge(skel: View, badge: View, slot: View, makeVisible: Boolean) {
         if (_binding == null) return
         scheduledReveals.remove(skel)
         if (skel.visibility == View.VISIBLE && skel !in resolvingSkeletons) {
@@ -1811,9 +1830,14 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
                     skel.visibility = View.GONE
                     skel.translationY = 0f
                     resolvingSkeletons.remove(skel)
+                    // Collapse only once the pill has finished fading — hiding the
+                    // slot any earlier would cut the fade off mid-way.
+                    if (!makeVisible) collapseBadgeSlot(slot)
                     stopBreathIfAllResolved()
                 }
                 .start()
+        } else if (!makeVisible) {
+            collapseBadgeSlot(slot)
         }
         if (makeVisible) {
             if (badge.visibility != View.VISIBLE) {
@@ -1831,6 +1855,20 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             }
         } else {
             badge.visibility = View.GONE
+        }
+    }
+
+    // Close up the header when a badge turns out to have no data behind it. The
+    // slot held the placeholder's width, so leaving it visible would keep an
+    // empty pill-shaped hole (and its 8dp gap) next to the surviving badge; if
+    // neither badge survives, the whole row goes with its top margin.
+    private fun collapseBadgeSlot(slot: View) {
+        slot.visibility = View.GONE
+        val b = _binding ?: return
+        if (b.slotRateBadge.visibility == View.GONE &&
+            b.slotAvailability.visibility == View.GONE
+        ) {
+            b.badgeRow.visibility = View.GONE
         }
     }
 
@@ -2037,6 +2075,13 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun createBooking() {
+        // Spot filled up while the sheet was open — never send a booking for a full spot.
+        if (isSelectedSpotFull) {
+            shakeDisabledButton()
+            showBookingNotice("This spot is full right now.")
+            return
+        }
+
         // Check insufficient balance — shake the button
         val balance = viewModel.walletBalance.value ?: 0.0
         val price = viewModel.totalPrice.value ?: 0.0
@@ -2144,11 +2189,11 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             val amountText = bottomSheetBinding.etAmount.text.toString()
             val amount = amountText.toDoubleOrNull()
             if (amount != null && amount > 0) {
-                showToast("Redirecting to Razorpay checkout...")
+                showToast(getString(R.string.redirecting_to_secure_checkout))
                 initiateWalletTopUp(amount)
                 animateAndDismiss(bottomSheetDialog)
             } else {
-                showToast("Please enter a valid amount")
+                showToast(getString(R.string.please_enter_a_valid_amount))
             }
         }
 
@@ -2191,38 +2236,20 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         val userId = AuthSession.getUserId(requireContext())
 
         if (userId == null) {
-            showToast("Please log in to add money")
+            showToast(getString(R.string.please_log_in_to_add_money))
             return
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val response = ApiClient.apiService.initiatePayment(
-                    com.gridee.parking.data.model.PaymentInitiateRequest(
-                        userId = userId,
-                        amount = amount
-                    )
+            when (
+                val result = WalletTopUpLauncher.createTopUp(
+                    requireContext(),
+                    amount,
+                    parkingLotId = selectedLotId
                 )
-
-                if (response.isSuccessful) {
-                    val result = response.body()
-                    if (result != null) {
-                        val intent = Intent(requireContext(), WalletTopUpActivity::class.java).apply {
-                            putExtra("USER_ID", userId)
-                            putExtra("AMOUNT", amount)
-                            putExtra("ORDER_ID", result.orderId)
-                            putExtra("KEY_ID", result.keyId)
-                        }
-                        startActivity(intent)
-                    } else {
-                        showToast("Failed to initiate payment")
-                    }
-                } else {
-                    showToast("Error: ${response.message()}")
-                }
-            } catch (e: Exception) {
-                showToast("Error: ${e.message}")
-                e.printStackTrace()
+            ) {
+                is WalletTopUpLauncher.Result.Ready -> startActivity(result.intent)
+                is WalletTopUpLauncher.Result.Failed -> showToast(result.message)
             }
         }
     }

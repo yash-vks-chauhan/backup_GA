@@ -1,5 +1,7 @@
 package com.gridee.parking.ui.details
 
+import com.gridee.parking.R
+
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -25,7 +27,7 @@ class ParkingDetailsActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        binding.tvTitle.text = "Parking Details"
+        binding.tvTitle.text = getString(R.string.parking_details)
     }
 
     private fun setupClickListeners() {
@@ -35,7 +37,7 @@ class ParkingDetailsActivity : AppCompatActivity() {
 
         binding.btnBookNow.setOnClickListener {
             // TODO: Navigate to booking screen
-            showToast("Booking feature - Coming Soon!")
+            showToast(getString(R.string.booking_feature_coming_soon))
         }
     }
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status swatch on the offline capsule. Muted rather than red: being offline is a
+     condition to report, not a failure to alarm about, and the header already uses a
+     coloured dot for ticket status — a red one here would read as the ticket having
+     gone wrong. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/text_tertiary" />
+</shape>

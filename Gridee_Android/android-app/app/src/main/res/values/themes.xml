@@ -176,13 +176,6 @@
     </style>
 
     <!-- Light theme overlay for native spinner pickers in extend booking dialog -->
-    <style name="ExtendBookingPickerTheme" parent="Theme.Material3.Light">
-        <item name="android:colorBackground">@color/background_secondary</item>
-        <item name="colorSurface">@color/background_secondary</item>
-        <item name="colorOnSurface">@color/text_primary</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-    </style>
 
     <style name="ShapeAppearance.Gridee.Circle" parent="">
         <item name="cornerFamily">rounded</item>
@@ -237,54 +230,6 @@
     </style>
     
     <!-- Custom Material Date Picker Theme - White & Grey with Black Buttons -->
-    <style name="CustomDatePickerTheme" parent="ThemeOverlay.Material3.MaterialCalendar">
-        <!-- Primary color (selected date) - Black -->
-        <item name="colorPrimary">#1A1A1A</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        
-        <!-- Container colors - White & Light Grey -->
-        <item name="colorSurface">#FFFFFF</item>
-        <item name="colorOnSurface">#1A1A1A</item>
-        <item name="colorSurfaceVariant">#F5F5F5</item>
-        <item name="colorOnSurfaceVariant">#666666</item>
-        
-        <!-- Header background - Light Grey -->
-        <item name="colorPrimaryContainer">#F8F8F8</item>
-        <item name="colorOnPrimaryContainer">#1A1A1A</item>
-        
-        <!-- Secondary colors for today indicator -->
-        <item name="colorSecondary">#757575</item>
-        <item name="colorOnSecondary">#FFFFFF</item>
-        <item name="colorSecondaryContainer">#E8E8E8</item>
-        <item name="colorOnSecondaryContainer">#424242</item>
-        
-        <!-- Outline color - Grey border -->
-        <item name="colorOutline">#D0D0D0</item>
-        <item name="colorOutlineVariant">#E8E8E8</item>
-        
-        <!-- Background -->
-        <item name="android:colorBackground">#FFFFFF</item>
-        
-        <!-- Ripple color for date cells - Subtle black -->
-        <item name="colorControlHighlight">#1A000000</item>
-        
-        <!-- Button colors - Black for action buttons -->
-        <item name="materialButtonStyle">@style/Widget.DatePicker.BlackButton</item>
-        <item name="borderlessButtonStyle">@style/Widget.DatePicker.BlackTextButton</item>
-        
-        <!-- Smooth animations -->
-        <item name="android:windowEnterAnimation">@anim/date_picker_enter</item>
-        <item name="android:windowExitAnimation">@anim/date_picker_exit</item>
-        
-        <!-- Text appearance -->
-        <item name="textAppearanceBodyLarge">@style/TextAppearance.DatePicker.Body</item>
-        <item name="textAppearanceBodyMedium">@style/TextAppearance.DatePicker.Body</item>
-        <item name="textAppearanceLabelLarge">@style/TextAppearance.DatePicker.Label</item>
-        
-        <!-- Shape and corners -->
-        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.DatePicker.MediumComponent</item>
-        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.DatePicker.SmallComponent</item>
-    </style>
     
     <!-- Text Appearances for Date Picker -->
     <style name="TextAppearance.DatePicker.Body" parent="TextAppearance.Material3.BodyLarge">
@@ -321,10 +266,6 @@
     </style>
     
     <!-- Date Picker Dialog Animation Style -->
-    <style name="DatePickerDialogAnimation" parent="Animation.AppCompat.Dialog">
-        <item name="android:windowEnterAnimation">@anim/date_picker_enter</item>
-        <item name="android:windowExitAnimation">@anim/date_picker_exit</item>
-    </style>
     
     <style name="ShapeAppearance.Gridee.Sidebar" parent="ShapeAppearance.Material3.Corner.None">
         <item name="cornerFamily">rounded</item>
@@ -350,6 +291,66 @@
         <item name="cornerSizeTopLeft">0dp</item>
         <item name="cornerSizeBottomLeft">0dp</item>
     </style>
-    
-    
+
+    <!-- Rows in the chat message long-press menu. -->
+    <style name="Widget.Gridee.ChatMenuRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <!-- Inset to clear the capsule's corners: at 16dp the icon sat inside the
+             curve and the row looked clipped rather than centred. -->
+        <item name="android:paddingHorizontal">22dp</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="Widget.Gridee.ChatMenuLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">13dp</item>
+        <item name="android:fontFamily">@font/inter_medium</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">14.5sp</item>
+    </style>
+
+    <!-- Label/value pair in the request-details sheet. The label sits back and the
+         value carries the weight, so the column of values is what the eye scans. -->
+    <style name="Widget.Gridee.DetailRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:baselineAligned">false</item>
+    </style>
+
+    <style name="Widget.Gridee.DetailRowLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/inter_medium</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:textSize">13.5sp</item>
+    </style>
+
+    <style name="Widget.Gridee.DetailRowValue" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:gravity">end</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
 </resources>

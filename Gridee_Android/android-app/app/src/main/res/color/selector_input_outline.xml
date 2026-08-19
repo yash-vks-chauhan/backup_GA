@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Uniform outline for TextInputLayout boxes.
+
+  This has to be a state list even though every state resolves to the same color:
+  given a plain color, Material treats boxStrokeColor as the *focused* color only
+  and falls back to its own mtrl_textinput_default_box_stroke_color at rest —
+  which reads near-black on our dark theme. A stateful list makes @color/divider
+  the resting color too, so the field keeps one calm hairline whether or not it
+  has focus.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/divider" android:state_focused="true" />
+    <item android:color="@color/divider" android:state_hovered="true" />
+    <item android:color="@color/divider" />
+</selector>

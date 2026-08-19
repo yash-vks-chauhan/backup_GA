@@ -39,6 +39,24 @@ class ParkingSpotSchedulePolicyTest {
         assertAvailability(
             hour = 18,
             minute = 30,
+            morningEnabled = false,
+            standardEnabled = false,
+            quickEnabled = false,
+            afternoonEnabled = false
+        )
+
+        assertAvailability(
+            hour = 4,
+            minute = 59,
+            morningEnabled = false,
+            standardEnabled = false,
+            quickEnabled = false,
+            afternoonEnabled = false
+        )
+
+        assertAvailability(
+            hour = 5,
+            minute = 0,
             morningEnabled = true,
             standardEnabled = true,
             quickEnabled = false,
@@ -93,8 +111,8 @@ class ParkingSpotSchedulePolicyTest {
         assertAvailability(
             hour = 20,
             minute = 0,
-            morningEnabled = true,
-            standardEnabled = true,
+            morningEnabled = false,
+            standardEnabled = false,
             quickEnabled = false,
             afternoonEnabled = false
         )
@@ -106,9 +124,11 @@ class ParkingSpotSchedulePolicyTest {
         val quickMorningSpot = parkingSpot(id = "quick", name = "TP Avenue Quick")
         val afternoonSpot = parkingSpot(id = "afternoon", slotName = "afternoon", name = "TP Avenue Afternoon")
 
-        assertTrue(ParkingSpotSchedulePolicy.canBookNow(standardMorningSpot, calendarAt(20, 0)))
-        assertTrue(ParkingSpotSchedulePolicy.canBookNow(standardMorningSpot, calendarAt(18, 30)))
+        assertFalse(ParkingSpotSchedulePolicy.canBookNow(standardMorningSpot, calendarAt(20, 0)))
+        assertFalse(ParkingSpotSchedulePolicy.canBookNow(standardMorningSpot, calendarAt(18, 30)))
         assertFalse(ParkingSpotSchedulePolicy.canBookNow(standardMorningSpot, calendarAt(18, 29)))
+        assertFalse(ParkingSpotSchedulePolicy.canBookNow(standardMorningSpot, calendarAt(4, 59)))
+        assertTrue(ParkingSpotSchedulePolicy.canBookNow(standardMorningSpot, calendarAt(5, 0)))
 
         assertFalse(ParkingSpotSchedulePolicy.canBookNow(quickMorningSpot, calendarAt(7, 59)))
         assertTrue(ParkingSpotSchedulePolicy.canBookNow(quickMorningSpot, calendarAt(8, 0)))
@@ -135,7 +155,29 @@ class ParkingSpotSchedulePolicyTest {
         assertEquals(listOf("standard", "quick", "afternoon"), atEight.map { it.id })
 
         val atEveningOpen = ParkingSpotSchedulePolicy.filterVisibleSpots(spots, calendarAt(18, 30))
-        assertEquals(listOf("standard"), atEveningOpen.map { it.id })
+        assertTrue(atEveningOpen.isEmpty())
+    }
+
+    @Test
+    fun `daily booking closure uses exact five AM and five PM boundaries`() {
+        assertTrue(ParkingSpotSchedulePolicy.isBookingClosed(calendarAt(4, 59)))
+        assertFalse(ParkingSpotSchedulePolicy.isBookingClosed(calendarAt(5, 0)))
+        assertFalse(ParkingSpotSchedulePolicy.isBookingClosed(calendarAt(16, 59)))
+        assertTrue(ParkingSpotSchedulePolicy.isBookingClosed(calendarAt(17, 0)))
+    }
+
+    @Test
+    fun `daily closure also hides and blocks unsegmented spots`() {
+        val unsegmentedSpot = parkingSpot(id = "step", name = "STEP Parking")
+
+        assertFalse(ParkingSpotSchedulePolicy.isVisibleNow(unsegmentedSpot, calendarAt(17, 0)))
+        assertFalse(ParkingSpotSchedulePolicy.canBookNow(unsegmentedSpot, calendarAt(17, 0)))
+        assertTrue(
+            ParkingSpotSchedulePolicy.bookingRestrictionMessage(
+                unsegmentedSpot,
+                calendarAt(17, 0)
+            )?.contains("5:00 AM") == true
+        )
     }
 
     @Test

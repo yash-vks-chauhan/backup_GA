@@ -100,19 +100,19 @@ class NewSupportRequestActivity : BaseActivity<ActivityNewSupportRequestBinding>
         when {
             subject.length < 3 -> {
                 binding.etSubject.requestFocus()
-                showToast("Please enter a clear subject")
+                showToast(getString(R.string.please_enter_a_clear_subject))
                 return
             }
             description.length < 10 -> {
                 binding.etDescription.requestFocus()
-                showToast("Please describe the issue in detail")
+                showToast(getString(R.string.please_describe_the_issue_in_detail))
                 return
             }
         }
 
         isSubmitting = true
         binding.btnSubmitTicket.isEnabled = false
-        binding.btnSubmitTicket.text = "Submitting…"
+        binding.btnSubmitTicket.text = getString(R.string.submitting)
 
         lifecycleScope.launch {
             try {
@@ -129,7 +129,7 @@ class NewSupportRequestActivity : BaseActivity<ActivityNewSupportRequestBinding>
                 if (response.isSuccessful && response.body() != null) {
                     val createdTicket = response.body()!!
                     val ticketId = createdTicket.id
-                    showToast("Support ticket created")
+                    showToast(getString(R.string.support_ticket_created))
                     if (!ticketId.isNullOrBlank()) {
                         startActivity(
                             Intent(this@NewSupportRequestActivity, SupportTicketChatActivity::class.java)
@@ -147,7 +147,7 @@ class NewSupportRequestActivity : BaseActivity<ActivityNewSupportRequestBinding>
             } finally {
                 isSubmitting = false
                 binding.btnSubmitTicket.isEnabled = true
-                binding.btnSubmitTicket.text = "Submit request"
+                binding.btnSubmitTicket.text = getString(R.string.submit_request)
             }
         }
     }

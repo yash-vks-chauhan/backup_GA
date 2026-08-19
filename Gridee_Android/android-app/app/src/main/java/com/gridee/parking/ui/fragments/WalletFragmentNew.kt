@@ -24,14 +24,19 @@ import com.gridee.parking.ui.activities.TransactionHistoryActivity
 import com.gridee.parking.ui.adapters.Transaction
 import com.gridee.parking.ui.adapters.TransactionType
 import com.gridee.parking.ui.adapters.WalletTransactionGrouping
+import com.gridee.parking.ui.adapters.WalletTransactionText
+import com.gridee.parking.ui.adapters.WalletTransactionVisibility
 import com.gridee.parking.ui.adapters.WalletTransactionsAdapter
 import com.gridee.parking.ui.base.BaseTabFragment
 import com.gridee.parking.ui.compose.DotLottieAnimation
 import com.gridee.parking.ui.compose.DotLottieSource
 import com.gridee.parking.ui.compose.Mode
+import com.gridee.parking.ui.views.SkeletonShimmer
 import com.gridee.parking.ui.wallet.WalletAddMoneyActivity
+import com.gridee.parking.ui.wallet.WalletTopUpLauncher
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.BackendTimestampParser
+import com.gridee.parking.utils.WalletCache
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
@@ -47,7 +52,9 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
     private var balanceAnimator: android.animation.ValueAnimator? = null
     private var balanceColorAnimator: android.animation.ValueAnimator? = null
     private var shimmerAnimator: android.animation.ValueAnimator? = null
+    private var skeletonAnimator: android.animation.ValueAnimator? = null
     private var hasLoadedBalance = false
+    private var hasLoadedTransactions = false
     private var hasAnimatedCardIn = false
     private var userTransactions = mutableListOf<Transaction>()
     private val indianLocale = java.util.Locale("en", "IN")
@@ -80,8 +87,39 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         setupPullToRefresh()
         setupClickListeners()
         animateCardEntrance()
-        startBalanceShimmer()
+        SkeletonShimmer.populate(binding.layoutTransactionSkeleton, WALLET_SKELETON_ROWS)
+
+        // Stale-while-revalidate: if we have a cached snapshot, paint it instantly
+        // (no shimmer, no skeleton) and let the network refresh reconcile in the
+        // background. Only the true first-ever open falls back to the loading state.
+        val restored = restoreFromCache()
+        if (!restored) {
+            startBalanceShimmer()
+        }
         loadWalletData()
+    }
+
+    private fun restoreFromCache(): Boolean {
+        val userId = getUserId() ?: return false
+        val snapshot = WalletCache.get(requireContext(), userId) ?: return false
+
+        // Balance — show immediately; a background refresh will count-up if it changed.
+        currentBalance = snapshot.balance
+        displayedBalance = snapshot.balance
+        hasLoadedBalance = true
+        renderBalance(snapshot.balance, isAnimating = false)
+
+        // Transactions — render immediately, no skeleton.
+        userTransactions.clear()
+        userTransactions.addAll(
+            snapshot.transactions
+                // Snapshots written before this filter existed can still hold unsettled top-ups.
+                .filter { WalletTransactionVisibility.isListable(it) }
+                .map { convertToUITransaction(it) }
+                .sortedByDescending { it.timestamp }
+        )
+        updateTransactionsDisplay()
+        return true
     }
 
     private fun animateCardEntrance() {
@@ -111,6 +149,8 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         balanceColorAnimator = null
         shimmerAnimator?.cancel()
         shimmerAnimator = null
+        skeletonAnimator?.cancel()
+        skeletonAnimator = null
         super.onDestroyView()
     }
 
@@ -146,7 +186,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         binding.swipeRefresh.setProgressBackgroundColorSchemeResource(R.color.background_secondary)
         binding.swipeRefresh.setColorSchemeResources(R.color.text_primary)
         binding.swipeRefresh.setOnRefreshListener {
-            loadWalletData()
+            loadWalletData(userInitiated = true)
         }
     }
 
@@ -181,7 +221,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         
         binding.btnAddMoney.setOnClickListener { view ->
             if (!RemoteConfigManager.isWalletEnabled()) {
-                showToast("Wallet is temporarily unavailable.")
+                showToast(getString(R.string.wallet_is_temporarily_unavailable))
                 return@setOnClickListener
             }
             view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
@@ -200,25 +240,36 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         }
         
         // Quick Add chip buttons - with bounce animation
-        binding.btnQuickAdd10.setOnClickListener { view ->
-            animateChipBounce(view) {
-                startRazorpayCheckout(50.0)
+        setupQuickTopUpChips()
+    }
+
+    /** Builds the fixed quick top-up chips that fall within the configured payment limits. */
+    private fun setupQuickTopUpChips() {
+        val min = WalletTopUpLauncher.minAmount(requireContext())
+        val max = WalletTopUpLauncher.maxAmount(requireContext())
+        val amounts = QUICK_TOP_UP_AMOUNTS.filter { it in min..max }
+
+        val chips = listOf(
+            binding.btnQuickAdd10 to binding.tvQuickAdd50,
+            binding.btnQuickAdd20 to binding.tvQuickAdd100,
+            binding.btnQuickAdd100 to binding.tvQuickAdd200
+        )
+
+        chips.forEachIndexed { index, (button, label) ->
+            val amount = amounts.getOrNull(index)
+            if (amount == null) {
+                // The configured payment limits exclude this preset.
+                button.visibility = View.GONE
+                return@forEachIndexed
             }
-        }
-        
-        binding.btnQuickAdd20.setOnClickListener { view ->
-            animateChipBounce(view) {
-                startRazorpayCheckout(100.0)
-            }
-        }
-        
-        binding.btnQuickAdd100.setOnClickListener { view ->
-            animateChipBounce(view) {
-                startRazorpayCheckout(200.0)
+            button.visibility = View.VISIBLE
+            label.text = integerFormatter.format(amount)
+            button.setOnClickListener { view ->
+                animateChipBounce(view) { startCheckout(amount) }
             }
         }
     }
-    
+
     /**
      * Animates a chip with a satisfying press-down and spring-back effect.
      * Uses spring physics for premium feel.
@@ -296,25 +347,33 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         startActivity(intent, options.toBundle())
     }
 
-    private fun loadWalletData() {
+    private fun loadWalletData(userInitiated: Boolean = false) {
         RemoteConfigManager.loadCached(requireContext())
         if (!RemoteConfigManager.isWalletEnabled()) {
             currentBalance = 0.0
             updateBalanceDisplay()
             transactionsAdapter.updateItems(emptyList())
-            showToast("Wallet is temporarily unavailable.")
+            showToast(getString(R.string.wallet_is_temporarily_unavailable))
             setRefreshing(false)
             applyFeatureSwitches()
             return
         }
 
-        setRefreshing(true)
-        
         val userId = getUserId()
         if (userId == null) {
-            showToast("Please login to view wallet")
+            showToast(getString(R.string.please_login_to_view_wallet))
             setRefreshing(false)
             return
+        }
+
+        // First-ever load (no data / no cache) shows the skeleton. A user-initiated
+        // pull-to-refresh shows the swipe spinner. Everything else — onResume, a
+        // cached open — refreshes silently in the background so the data on screen
+        // never flickers.
+        if (!hasLoadedTransactions) {
+            showTransactionSkeleton()
+        } else if (userInitiated) {
+            setRefreshing(true)
         }
 
         // Bind to the view lifecycle, not the fragment lifecycle: this coroutine touches
@@ -328,7 +387,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
                 loadWalletTransactions(userId)
             } catch (e: Exception) {
                 android.util.Log.e("WalletFragmentNew", "Unexpected error loading wallet data", e)
-                showToast("Error loading wallet data: ${e.message}")
+                showToast(getString(R.string.wallet_load_error))
             } finally {
                 setRefreshing(false)
             }
@@ -354,14 +413,19 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
                 } else {
                     stopBalanceShimmer()
                     if (!hasLoadedBalance) renderBalance(currentBalance, isAnimating = false)
-                    showToast(walletErrorMessage(response.code(), "Unable to load wallet balance (${response.code()})"))
+                    showToast(
+                        walletErrorMessage(
+                            response.code(),
+                            getString(R.string.wallet_balance_load_failed, response.code())
+                        )
+                    )
                 }
             }
         } catch (e: Exception) {
             stopBalanceShimmer()
             if (!hasLoadedBalance) renderBalance(currentBalance, isAnimating = false)
             android.util.Log.e("WalletFragmentNew", "Error loading wallet balance", e)
-            showToast("Error loading balance: ${e.message}")
+            showToast(getString(R.string.wallet_load_error))
         }
     }
 
@@ -375,29 +439,45 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
             )
             android.util.Log.d("WalletFragmentNew", "Wallet transactions API response: ${transactionResponse.code()}")
             if (transactionResponse.isSuccessful) {
+                // Drop top-ups the gateway never settled. The backend records a pending row at
+                // order-creation time, so an abandoned checkout would otherwise be listed as
+                // money received.
                 val backendTransactions = transactionResponse.body()?.content.orEmpty()
+                    .filter { WalletTransactionVisibility.isListable(it) }
                 userTransactions.clear()
-                
+
                 val convertedTransactions = backendTransactions.map { convertToUITransaction(it) }
                 userTransactions.addAll(convertedTransactions.sortedByDescending { it.timestamp })
                 reconcileBalanceFromTransactions(backendTransactions)
-                
+
                 android.util.Log.d("WalletFragmentNew", "Loaded ${userTransactions.size} transactions from API")
                 updateTransactionsDisplay()
+
+                // Persist the fresh snapshot for the next instant open.
+                WalletCache.save(requireContext(), userId, currentBalance, backendTransactions)
             } else {
                 if (transactionResponse.code() == 401) {
                     handleUnauthorized()
                 } else {
-                userTransactions.clear()
-                updateTransactionsDisplay()
-                showToast(walletErrorMessage(transactionResponse.code(), "Unable to load transactions (${transactionResponse.code()})"))
-            }
+                    // Keep whatever's on screen (cached / previously loaded) on a
+                    // failed refresh; only fall through to the empty state when we
+                    // genuinely have nothing to show.
+                    if (userTransactions.isEmpty()) updateTransactionsDisplay()
+                    showToast(
+                        walletErrorMessage(
+                            transactionResponse.code(),
+                            getString(
+                                R.string.wallet_transactions_load_failed,
+                                transactionResponse.code()
+                            )
+                        )
+                    )
+                }
             }
         } catch (e: Exception) {
             android.util.Log.e("WalletFragmentNew", "Error loading wallet transactions", e)
-            userTransactions.clear()
-            updateTransactionsDisplay()
-            showToast("Error loading transactions: ${e.message}")
+            if (userTransactions.isEmpty()) updateTransactionsDisplay()
+            showToast(getString(R.string.wallet_load_error))
         }
     }
 
@@ -433,7 +513,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
     }
 
     private fun handleUnauthorized() {
-        showToast("Session expired. Please log in again.")
+        showToast(getString(R.string.session_expired_please_log_in_again))
         AuthSession.clearSession(requireContext())
         // Navigate to login
         val intent = android.content.Intent(requireContext(), com.gridee.parking.ui.auth.LoginActivity::class.java)
@@ -520,7 +600,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         if (hasLoadedBalance) return
         shimmerAnimator?.cancel()
         binding.tvBalanceAmount.text = "—"
-        binding.tvBalanceAmount.contentDescription = "Loading balance"
+        binding.tvBalanceAmount.contentDescription = getString(R.string.loading_balance)
         shimmerAnimator = android.animation.ValueAnimator.ofFloat(0.35f, 0.75f).apply {
             duration = 900
             repeatMode = android.animation.ValueAnimator.REVERSE
@@ -576,26 +656,54 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
                 )
             }
             binding.tvBalanceAmount.contentDescription =
-                "Balance ${balanceFormatter.format(safe)} Gridee coins"
+                getString(
+                    R.string.wallet_balance_content_description,
+                    balanceFormatter.format(safe)
+                )
         }
         binding.tvBalanceAmount.text = ssb
     }
 
+    private fun showTransactionSkeleton() {
+        val skeleton = bindingOrNull?.layoutTransactionSkeleton ?: return
+        binding.rvTransactions.visibility = View.GONE
+        binding.layoutEmptyState.visibility = View.GONE
+        skeleton.animate().cancel()
+        skeleton.alpha = 1f
+        skeleton.visibility = View.VISIBLE
+        skeletonAnimator?.cancel()
+        skeletonAnimator = SkeletonShimmer.start(skeleton)
+    }
+
     private fun updateTransactionsDisplay() {
+        // Instant hand-off: drop the skeleton the moment data lands and let the
+        // incoming rows carry the reveal (staggered settle-in) — no crossfade.
+        val skeletonWasVisible =
+            bindingOrNull?.layoutTransactionSkeleton?.visibility == View.VISIBLE
+        skeletonAnimator?.cancel()
+        skeletonAnimator = null
+        bindingOrNull?.layoutTransactionSkeleton?.visibility = View.GONE
+        hasLoadedTransactions = true
+
         if (userTransactions.isEmpty()) {
             binding.rvTransactions.visibility = View.GONE
             binding.layoutEmptyState.visibility = View.VISIBLE
             transactionsAdapter.updateItems(emptyList())
+            binding.layoutEmptyState.alpha = 1f
+            if (skeletonWasVisible) SkeletonShimmer.revealView(binding.layoutEmptyState)
         } else {
             binding.rvTransactions.visibility = View.VISIBLE
             binding.layoutEmptyState.visibility = View.GONE
-            
+
             val groupedItems = WalletTransactionGrouping.buildGroupedItems(
+                requireContext(),
                 userTransactions,
                 MAX_RECENT_TRANSACTIONS
             )
             android.util.Log.d("WalletFragmentNew", "Rendering ${groupedItems.size} grouped transaction items")
+            binding.rvTransactions.alpha = 1f
             transactionsAdapter.updateItems(groupedItems)
+            if (skeletonWasVisible) SkeletonShimmer.revealStagger(binding.rvTransactions)
         }
     }
 
@@ -608,7 +716,7 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         updateBalanceDisplay()
         userTransactions.clear()
         updateTransactionsDisplay()
-        showToast("No real wallet data available")
+        showToast(getString(R.string.no_real_wallet_data_available))
     }
 
     private fun convertToUITransaction(backendTransaction: WalletTransaction): Transaction {
@@ -629,24 +737,14 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
             "WALLET_TOP_UP" -> TransactionType.TOP_UP
             "AD_TOP_UP" -> TransactionType.BONUS
             "WELCOME_BONUS" -> TransactionType.BONUS
+            "DAILY_WALLET_RESET" -> TransactionType.BONUS
             "REFUND" -> TransactionType.REFUND
             "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> TransactionType.PARKING_PAYMENT
             else -> null
         }
-        val backendBaseDescription = when (backendType) {
-            "BOOKING_FEE" -> "Booking Fee"
-            "BOOKING_REFUND" -> "Booking Refund"
-            "WALLET_TOP_UP" -> "Wallet Top-up"
-            "AD_TOP_UP" -> "Ad Top-up"
-            "WELCOME_BONUS" -> "Welcome Bonus"
-            "REFUND" -> "Refund"
-            "PENALTY_FEE" -> "Penalty Fee"
-            "LATE_CHECK_IN_PENALTY" -> "Late Check-in Penalty"
-            "LATE_CHECK_OUT_PENALTY" -> "Late Check-out Penalty"
-            else -> null
-        }
         val backendIsCredit = when (backendType) {
-            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "WELCOME_BONUS", "REFUND" -> true
+            "BOOKING_REFUND", "WALLET_TOP_UP", "AD_TOP_UP", "WELCOME_BONUS",
+            "DAILY_WALLET_RESET", "REFUND" -> true
             "BOOKING_FEE", "PENALTY_FEE", "LATE_CHECK_IN_PENALTY", "LATE_CHECK_OUT_PENALTY" -> false
             else -> null
         }
@@ -746,42 +844,20 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         
         android.util.Log.d("WalletFragmentNew", "Converting transaction: type=${backendTransaction.type}, originalAmount=$amountValue, displayAmount=$displayAmount")
         
-        // Build a user-friendly description, respecting status
         val resolvedBookingRelated = if (backendUiType != null) backendIsBookingRelated else isBookingRelated
-        val baseDescription = backendBaseDescription ?: when {
-            isReward -> "Reward Added"
-            transactionType == TransactionType.TOP_UP -> "Wallet Top-up"
-            transactionType == TransactionType.PARKING_PAYMENT -> "Booking Charge"
-            transactionType == TransactionType.REFUND && resolvedBookingRelated -> "Booking Refund"
-            transactionType == TransactionType.REFUND -> "Refund"
-            else -> "Wallet Top-up"
-        }
-        val description = when (statusNorm) {
-            "failed" -> "$baseDescription Failed"
-            "cancelled", "canceled" -> "$baseDescription Cancelled"
-            else -> when {
-                isReward -> baseDescription
-                transactionType == TransactionType.REFUND ->
-                    if (descriptionLower?.contains("refund") == true) normalizedDescription ?: baseDescription else baseDescription
-                else -> normalizedDescription ?: baseDescription
-            }
-        }
-        val locationLabel = listOfNotNull(
-            backendTransaction.lotName?.trim()?.takeIf { it.isNotEmpty() }
-                ?: backendTransaction.lotId?.trim()?.takeIf { it.isNotEmpty() },
-            backendTransaction.spotId?.trim()?.takeIf { it.isNotEmpty() }?.let { "Spot $it" }
-        ).joinToString(" • ").takeIf { it.isNotEmpty() }
-        val displayDescription = if (locationLabel != null && resolvedBookingRelated) {
-            "$description • $locationLabel"
-        } else {
-            description
-        }
-
+        val description = WalletTransactionText.resolve(
+            context = requireContext(),
+            backendType = backendType,
+            transactionType = transactionType,
+            isReward = isReward,
+            isBookingRelated = resolvedBookingRelated,
+            status = statusNorm
+        )
         return Transaction(
             id = backendTransaction.id ?: "Unknown",
             type = transactionType,
             amount = displayAmount,
-            description = displayDescription,
+            description = description,
             timestamp = timestamp,
             balanceAfter = backendTransaction.balanceAfter ?: 0.0,
             status = backendTransaction.status
@@ -794,16 +870,16 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         bottomSheet.show(parentFragmentManager, com.gridee.parking.ui.bottomsheet.RewardBottomSheet.TAG)
     }
 
-    private fun startRazorpayCheckout(amount: Double) {
+    private fun startCheckout(amount: Double) {
         RemoteConfigManager.loadCached(requireContext())
         if (!RemoteConfigManager.isWalletEnabled()) {
-            showToast("Wallet top-up is temporarily unavailable.")
+            showToast(getString(R.string.wallet_top_up_is_temporarily_unavailable))
             return
         }
 
         val userId = getUserId()
         if (userId == null) {
-            showToast("Please login to add money")
+            showToast(getString(R.string.please_login_to_add_money))
             return
         }
 
@@ -811,36 +887,10 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
 
         lifecycleScope.launch {
             try {
-                // 1) Create Razorpay order via backend
-                val initResp = ApiClient.apiService.initiatePayment(
-                    com.gridee.parking.data.model.PaymentInitiateRequest(
-                        userId = userId,
-                        amount = amount
-                    )
-                )
-
-                if (!initResp.isSuccessful) {
-                    showToast(walletErrorMessage(initResp.code(), "Add money temporarily unavailable during payment integration."))
-                    return@launch
+                when (val result = WalletTopUpLauncher.createTopUp(requireContext(), amount)) {
+                    is WalletTopUpLauncher.Result.Ready -> startActivity(result.intent)
+                    is WalletTopUpLauncher.Result.Failed -> showToast(result.message)
                 }
-
-                val body = initResp.body()
-                val orderId = body?.orderId
-                val keyId = body?.keyId
-                if (orderId.isNullOrBlank()) {
-                    showToast("Add money temporarily unavailable during payment integration.")
-                    return@launch
-                }
-
-                // 2) Open Razorpay Checkout in a dedicated activity
-                val intent = android.content.Intent(requireContext(), com.gridee.parking.ui.wallet.WalletTopUpActivity::class.java)
-                intent.putExtra("USER_ID", userId)
-                intent.putExtra("AMOUNT", amount)
-                intent.putExtra("ORDER_ID", orderId)
-                keyId?.let { intent.putExtra("KEY_ID", it) }
-                startActivity(intent)
-            } catch (e: Exception) {
-                showToast("Add money temporarily unavailable during payment integration.")
             } finally {
                 setRefreshing(false)
             }
@@ -889,9 +939,9 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
 
     private fun walletErrorMessage(code: Int, fallback: String): String {
         return when (code) {
-            401 -> "Session expired. Please log in again."
-            429 -> "Too many requests. Please wait a moment before trying again."
-            503 -> "Wallet is temporarily unavailable."
+            401 -> getString(R.string.session_expired_please_log_in_again)
+            429 -> getString(R.string.too_many_requests)
+            503 -> getString(R.string.wallet_is_temporarily_unavailable)
             else -> fallback
         }
     }
@@ -899,6 +949,9 @@ class WalletFragmentNew : BaseTabFragment<FragmentWalletNewBinding>() {
         private const val EMPTY_STATE_DOTLOTTIE_URL =
             "https://lottie.host/501bcbee-2a36-496c-a127-bedca0ef0ce8/D2DCOt93Jv.lottie"
         private const val MAX_RECENT_TRANSACTIONS = 5
+        private const val WALLET_SKELETON_ROWS = 5
+
+        private val QUICK_TOP_UP_AMOUNTS = listOf(100.0, 200.0, 500.0)
         private const val REWARD_AMOUNT_RUPEES = 20.0
         private const val BALANCE_EPSILON = 0.01
     }

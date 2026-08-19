@@ -441,15 +441,28 @@ class OperatorDashboardActivity : AppCompatActivity() {
         dialog.show()
 
         lifecycleScope.launch {
-            val spots = loadAllParkingSpots()
+            val result = loadAllParkingSpots()
             if (spotSelectionDialog !== dialog) return@launch
+            val spots = result.spots
             Log.d("OperatorDashboard", "Showing ${spots.size} operator parking spots")
             sheetBinding.progressBar.visibility = View.GONE
 
             if (spots.isEmpty()) {
-                sheetBinding.tvEmptyState.text = getString(R.string.op_select_spot_empty)
+                sheetBinding.tvEmptyState.text = result.emptyMessage
+                    ?: getString(R.string.op_select_spot_empty)
                 sheetBinding.tvEmptyState.visibility = View.VISIBLE
                 sheetBinding.rvSpots.visibility = View.GONE
+                sheetBinding.tvEmptyState.isClickable = result.retryable
+                sheetBinding.tvEmptyState.setOnClickListener(
+                    if (result.retryable) {
+                        View.OnClickListener {
+                            dialog.dismiss()
+                            binding.root.post { showSpotSelectionSheet() }
+                        }
+                    } else {
+                        null
+                    }
+                )
             } else {
                 sheetBinding.tvEmptyState.visibility = View.GONE
                 sheetBinding.rvSpots.visibility = View.VISIBLE
@@ -500,7 +513,7 @@ class OperatorDashboardActivity : AppCompatActivity() {
             .apply()
     }
 
-    private suspend fun loadAllParkingSpots(): List<ParkingSpot> {
+    private suspend fun loadAllParkingSpots(): OperatorParkingSpotLoader.LoadResult {
         return OperatorParkingSpotLoader.load(this, parkingRepository, "OperatorDashboard")
     }
 
@@ -958,6 +971,18 @@ class OperatorDashboardActivity : AppCompatActivity() {
         }
         view.findViewById<View>(R.id.btn_tamil)?.setOnClickListener {
             setAppLocale("ta")
+            dialog.dismiss()
+        }
+        view.findViewById<View>(R.id.btn_telugu)?.setOnClickListener {
+            setAppLocale("te")
+            dialog.dismiss()
+        }
+        view.findViewById<View>(R.id.btn_malayalam)?.setOnClickListener {
+            setAppLocale("ml")
+            dialog.dismiss()
+        }
+        view.findViewById<View>(R.id.btn_bengali)?.setOnClickListener {
+            setAppLocale("bn")
             dialog.dismiss()
         }
         

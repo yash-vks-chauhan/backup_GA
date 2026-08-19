@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Declares the languages Gridee ships. On Android 13+ this surfaces Gridee in
+  Settings > System > Languages > App languages, so the OS-level per-app
+  language picker stays in sync with our in-app selector.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="hi" />
+    <locale android:name="ta" />
+    <locale android:name="te" />
+    <locale android:name="ml" />
+    <locale android:name="bn" />
+</locale-config>

@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -36,11 +37,13 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
 
     private companion object {
         val ACTIVE_TICKET_STATUSES = setOf("OPEN", "IN_PROGRESS")
+        const val SKELETON_ROW_COUNT = 3
     }
 
     private var hasLoadedTickets = false
     private var currentTickets: List<SupportTicket> = emptyList()
     private var liveDotAnimator: ValueAnimator? = null
+    private var skeletonAnimator: ValueAnimator? = null
     private val ticketDateFormat by lazy { SimpleDateFormat("dd MMM, h:mm a", Locale.getDefault()) }
     private val istTimeZone: TimeZone by lazy { TimeZone.getTimeZone("Asia/Kolkata") }
 
@@ -74,6 +77,8 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
     override fun onDestroy() {
         liveDotAnimator?.cancel()
         liveDotAnimator = null
+        skeletonAnimator?.cancel()
+        skeletonAnimator = null
         super.onDestroy()
     }
 
@@ -120,16 +125,23 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener { finish() }
         binding.swipeRefresh.setOnRefreshListener { refreshTickets(showInlineLoader = false) }
-        binding.cardStartRequest.setOnClickListener {
-            startActivity(Intent(this, NewSupportRequestActivity::class.java))
-        }
+        binding.cardStartRequest.setOnClickListener { startNewRequest() }
+        // Persistent header action — reachable even when an active conversation
+        // is pinned in place of the "Start a request" pill.
+        binding.btnNewRequest.setOnClickListener { startNewRequest() }
+        binding.btnTicketRetry.setOnClickListener { refreshTickets() }
+    }
+
+    private fun startNewRequest() {
+        startActivity(Intent(this, NewSupportRequestActivity::class.java))
     }
 
     private fun refreshTickets(showInlineLoader: Boolean = true) {
-        if (showInlineLoader) {
-            binding.progressTickets.isVisible = binding.ticketList.childCount == 0
+        // Only the first load shows skeletons; refreshes keep existing content in place.
+        if (showInlineLoader && binding.ticketList.childCount == 0) {
+            showSkeleton()
         }
-        binding.tvTicketEmpty.isVisible = false
+        binding.layoutTicketError.isVisible = false
 
         lifecycleScope.launch {
             try {
@@ -137,12 +149,12 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
                 if (response.isSuccessful) {
                     renderTickets(response.body().orEmpty())
                 } else {
-                    showTicketsError("Unable to load tickets (${response.code()})")
+                    showTicketsError("We couldn't load your requests (${response.code()}).")
                 }
             } catch (e: Exception) {
-                showTicketsError(e.message ?: "Unable to load tickets")
+                showTicketsError("We couldn't load your requests. Check your connection and try again.")
             } finally {
-                binding.progressTickets.isVisible = false
+                hideSkeleton()
                 binding.swipeRefresh.isRefreshing = false
                 hasLoadedTickets = true
             }
@@ -150,12 +162,15 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
     }
 
     private fun showTicketsError(message: String) {
+        hideSkeleton()
         binding.ticketList.isVisible = false
-        binding.tvTicketEmpty.text = message
-        binding.tvTicketEmpty.isVisible = true
+        binding.layoutTicketEmpty.isVisible = false
+        binding.tvTicketError.text = message
+        binding.layoutTicketError.isVisible = true
     }
 
     private fun renderTickets(tickets: List<SupportTicket>) {
+        binding.layoutTicketError.isVisible = false
         currentTickets = tickets.sortedByDescending { it.updatedAt ?: it.createdAt ?: Date(0) }
 
         val activeTicket = currentTickets.firstOrNull { canReplyToTicket(it) }
@@ -169,13 +184,12 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
         if (pastTickets.isEmpty()) {
             binding.ticketList.isVisible = false
             // Only nudge the user when there are no tickets at all.
-            binding.tvTicketEmpty.text = "No tickets yet — anything you raise will show up here."
-            binding.tvTicketEmpty.isVisible = activeTicket == null
+            binding.layoutTicketEmpty.isVisible = activeTicket == null
             return
         }
 
         binding.ticketList.isVisible = true
-        binding.tvTicketEmpty.isVisible = false
+        binding.layoutTicketEmpty.isVisible = false
 
         // Group by date section (Today / Yesterday / This Week / Month Year) like the history pages.
         val groups = LinkedHashMap<String, MutableList<SupportTicket>>()
@@ -196,7 +210,8 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
             textSize = 15f
             includeFontPadding = false
             setTextColor(ContextCompat.getColor(this@HelpSupportActivity, R.color.text_primary))
-            setPadding(dp(4), dp(20), dp(4), dp(8))
+            // Align to the 20dp page margin (hero, cards, and the booking/transaction lists).
+            setPadding(0, dp(20), 0, dp(8))
         }
     }
 
@@ -230,6 +245,8 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
         val hasActive = activeTicket != null
         binding.cardActiveConversation.isVisible = hasActive
         binding.cardStartRequest.isVisible = !hasActive
+        // The header ＋ stands in for the pill only when the pill is hidden.
+        binding.btnNewRequest.isVisible = hasActive
 
         if (activeTicket == null) {
             stopLiveDot()
@@ -283,6 +300,92 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
         binding.viewActiveLiveDot.alpha = 1f
     }
 
+    // ---- Skeleton loading state ------------------------------------------------
+
+    private fun showSkeleton() {
+        val container = binding.skeletonList
+        if (container.childCount == 0) {
+            repeat(SKELETON_ROW_COUNT) { container.addView(buildSkeletonRow()) }
+        }
+        container.isVisible = true
+        binding.ticketList.isVisible = false
+        binding.layoutTicketEmpty.isVisible = false
+        binding.layoutTicketError.isVisible = false
+        startSkeletonPulse()
+    }
+
+    private fun hideSkeleton() {
+        stopSkeletonPulse()
+        binding.skeletonList.isVisible = false
+    }
+
+    /** A ghost row that mirrors [createTicketRow]'s geometry so the swap is seamless. */
+    private fun buildSkeletonRow(): View {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(12), 0, dp(12))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Leading circular tile placeholder.
+        row.addView(View(this).apply {
+            background = skeletonShape(dp(22).toFloat())
+            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginEnd = dp(14) }
+        })
+
+        val column = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        column.addView(View(this).apply {
+            background = skeletonShape(dp(6).toFloat())
+            layoutParams = LinearLayout.LayoutParams(dp(168), dp(13))
+        })
+        column.addView(View(this).apply {
+            background = skeletonShape(dp(6).toFloat())
+            layoutParams = LinearLayout.LayoutParams(dp(104), dp(11)).apply { topMargin = dp(9) }
+        })
+        row.addView(column)
+
+        // Trailing status-pill placeholder.
+        row.addView(View(this).apply {
+            background = skeletonShape(dp(11).toFloat())
+            layoutParams = LinearLayout.LayoutParams(dp(60), dp(22)).apply { marginStart = dp(10) }
+        })
+
+        return row
+    }
+
+    private fun skeletonShape(radiusPx: Float): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(ContextCompat.getColor(this@HelpSupportActivity, R.color.skeleton_base))
+        }
+    }
+
+    private fun startSkeletonPulse() {
+        if (skeletonAnimator?.isRunning == true) return
+        skeletonAnimator = ValueAnimator.ofFloat(0.5f, 1f).apply {
+            duration = 850L
+            interpolator = AccelerateDecelerateInterpolator()
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            addUpdateListener { binding.skeletonList.alpha = it.animatedValue as Float }
+            start()
+        }
+    }
+
+    private fun stopSkeletonPulse() {
+        skeletonAnimator?.cancel()
+        skeletonAnimator = null
+        binding.skeletonList.alpha = 1f
+    }
+
     private fun createTicketRow(ticket: SupportTicket): View {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -290,7 +393,7 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
             background = ContextCompat.getDrawable(this@HelpSupportActivity, R.drawable.bg_ios_row_press)
             isClickable = true
             isFocusable = true
-            setPadding(dp(4), dp(12), dp(4), dp(12))
+            setPadding(0, dp(12), 0, dp(12))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -344,7 +447,7 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
     private fun openTicketConversation(ticket: SupportTicket) {
         val ticketId = ticket.id
         if (ticketId.isNullOrBlank()) {
-            showToast("Unable to open this ticket")
+            showToast(getString(R.string.unable_to_open_this_ticket))
             return
         }
         startActivity(
@@ -475,7 +578,7 @@ class HelpSupportActivity : BaseActivity<ActivityHelpSupportBinding>() {
 
     private fun statusColor(status: String): Int {
         return when (normalizedStatus(status)) {
-            "RESOLVED", "CLOSED" -> ContextCompat.getColor(this, R.color.success_green)
+            "RESOLVED", "CLOSED" -> ContextCompat.getColor(this, R.color.status_text_active)
             "IN_PROGRESS" -> ContextCompat.getColor(this, R.color.brand_primary)
             else -> ContextCompat.getColor(this, R.color.text_secondary)
         }

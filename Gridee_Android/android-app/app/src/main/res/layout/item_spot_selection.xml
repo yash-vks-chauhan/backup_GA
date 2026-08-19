@@ -35,7 +35,7 @@
                 android:id="@+id/tv_spot_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Spot Name"
+                android:text="@string/spot_name"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:fontFamily="@font/inter_medium" />

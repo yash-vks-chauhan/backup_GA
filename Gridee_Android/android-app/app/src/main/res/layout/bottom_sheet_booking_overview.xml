@@ -99,7 +99,7 @@
                             android:background="@drawable/status_soft_active"
                             android:paddingHorizontal="14dp"
                             android:paddingVertical="8dp"
-                            android:text="Active"
+                            android:text="@string/active"
                             android:textColor="@color/booking_status_active_text"
                             android:textSize="13sp"
                             android:textStyle="bold"
@@ -135,9 +135,6 @@
 
                     </LinearLayout>
                     
-                    <!-- Stub views for removed badges to prevent binding crash (visibility gone) -->
-                     <TextView android:id="@+id/textLocationInitial" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
-                     <FrameLayout android:id="@+id/locationBadgeContainer" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone"/>
 
                     <!-- Hero Time Section -->
                     <LinearLayout
@@ -279,7 +276,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Booking Date"
+                                android:text="@string/booking_date"
                                 android:textSize="16sp"
                                 android:textColor="@color/booking_sheet_secondary_text"
                                 android:fontFamily="@font/inter_regular"/>
@@ -318,7 +315,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Amount Paid"
+                                android:text="@string/amount_paid"
                                 android:textSize="16sp"
                                 android:textColor="@color/booking_sheet_secondary_text"
                                 android:fontFamily="@font/inter_regular"/>
@@ -394,32 +391,5 @@
         </LinearLayout>
 
     </ScrollView>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnExtendBooking"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/extend_booking"
-        android:textAllCaps="false"
-        android:textStyle="bold"
-        android:visibility="gone"
-        app:cornerRadius="16dp"
-        style="@style/Widget.Material3.Button.TonalButton" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonScanQr"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:text="@string/scan_to_check_in"
-        android:textAllCaps="false"
-        android:textStyle="bold"
-        android:insetTop="12dp"
-        android:insetBottom="12dp"
-        app:cornerRadius="16dp" />
 
 </LinearLayout>

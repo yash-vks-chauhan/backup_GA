@@ -34,7 +34,10 @@ class EmailVerificationViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     response.body()?.let { auth ->
                         val user = handleAuthSuccess(context, auth)
-                        _state.value = EmailVerificationState.Success(user)
+                        _state.value = EmailVerificationState.Success(
+                            user = user,
+                            isNewUser = auth.isNewUser == true
+                        )
                     } ?: run {
                         _state.value = EmailVerificationState.Error("Something Went Wrong", "Please try again.", isRetryable = true)
                     }
@@ -117,7 +120,10 @@ class EmailVerificationViewModel : ViewModel() {
 
 sealed class EmailVerificationState {
     object Loading : EmailVerificationState()
-    data class Success(val user: User) : EmailVerificationState()
+    data class Success(
+        val user: User,
+        val isNewUser: Boolean = false
+    ) : EmailVerificationState()
     data class Error(
         val title: String,
         val message: String,

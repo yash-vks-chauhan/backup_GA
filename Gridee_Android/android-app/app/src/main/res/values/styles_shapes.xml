@@ -4,4 +4,10 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">28dp</item>
     </style>
+
+    <!-- 14 dp rounded app icon in the compact AdMob row. -->
+    <style name="ShapeAppearance.Gridee.AdIcon" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">14dp</item>
+    </style>
 </resources>

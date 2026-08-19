@@ -95,7 +95,7 @@
                 android:layout_marginEnd="24dp"
                 android:fontFamily="@font/inter_semibold"
                 android:gravity="center"
-                android:text="Daily Reward"
+                android:text="@string/daily_reward_2"
                 android:textColor="@color/text_primary"
                 android:textSize="24sp" />
 
@@ -145,7 +145,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Wallet Credit"
+                    android:text="@string/wallet_credit"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:fontFamily="@font/inter_regular" />
@@ -162,7 +162,7 @@
                 android:layout_marginEnd="32dp"
                 android:fontFamily="@font/inter_regular"
                 android:gravity="center"
-                android:text="Watch a short video to claim your daily reward"
+                android:text="@string/watch_a_short_video_to_claim"
                 android:textColor="@color/text_secondary"
                 android:textSize="15sp"
                 android:lineSpacingExtra="3dp"/>
@@ -177,7 +177,7 @@
                 android:paddingHorizontal="40dp"
                 android:backgroundTint="@color/brand_primary"
                 android:fontFamily="@font/inter_bold"
-                android:text="Claim Reward"
+                android:text="@string/claim_reward"
                 android:textColor="@color/btn_text_on_brand"
                 android:textSize="16sp"
                 android:textAllCaps="false"
@@ -194,7 +194,7 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp"
                 android:gravity="center"
-                android:text="Come back daily for more rewards"
+                android:text="@string/come_back_daily_for_more_rewards"
                 android:textColor="@color/reward_note_text"
                 android:textSize="13sp"
                 android:fontFamily="@font/inter_regular"
@@ -218,7 +218,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_semibold"
                     android:gravity="center"
-                    android:text="Review Gridee on Play Store"
+                    android:text="@string/review_gridee_on_play_store"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
@@ -256,7 +256,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:fontFamily="@font/inter_regular"
-                        android:text="Manual wallet credit"
+                        android:text="@string/manual_wallet_credit"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -268,7 +268,7 @@
                     android:fontFamily="@font/inter_regular"
                     android:gravity="center"
                     android:lineSpacingExtra="3dp"
-                    android:text="Write a review on Play Store to earn 30 Gridee Coins. Our team will review it and award 30 Gridee Coins."
+                    android:text="@string/write_a_review_on_play_store"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -281,7 +281,7 @@
                     android:fontFamily="@font/inter_bold"
                     android:minWidth="0dp"
                     android:paddingHorizontal="22dp"
-                    android:text="Open Play Store"
+                    android:text="@string/open_play_store"
                     android:textAllCaps="false"
                     android:textColor="@color/btn_text_on_brand"
                     android:textSize="14sp"

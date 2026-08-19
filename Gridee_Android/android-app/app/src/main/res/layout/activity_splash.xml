@@ -23,6 +23,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Ownership line. Sits quietly at the foot of the cinematic: legal attribution, not
+         a second piece of branding, so it is small, low-contrast and never competes with
+         the wordmark above it. -->
+    <TextView
+        android:id="@+id/tvOwnership"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="34dp"
+        android:alpha="0"
+        android:fontFamily="@font/inter_regular"
+        android:letterSpacing="0.04"
+        android:text="@string/splash_ownership"
+        android:textColor="#FFFFFF"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <!-- Branded loading state. Only fades in if routing has to wait on the network
          past a short threshold, so a slow connection lands on a clean, themed screen
          instead of a black frame. Invisible (and never seen) on fast connections.

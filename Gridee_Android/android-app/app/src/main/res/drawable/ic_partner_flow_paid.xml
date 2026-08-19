@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Beat 4: the session settles itself. A closed check rather than a wallet or a
+  rupee mark — this beat is about the transaction being *over*, and the label
+  underneath already says what changed hands. Set matches the other three flow
+  glyphs: 24dp, 1.6 stroke, round caps.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M3.4 12 a8.6 8.6 0 1 0 17.2 0 a8.6 8.6 0 1 0 -17.2 0"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.6" />
+
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M8.1 12.3 l2.7 2.7 l5.1 -5.6"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.6" />
+
+</vector>

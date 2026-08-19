@@ -71,7 +71,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_bold"
                     android:letterSpacing="0.14"
-                    android:text="BOOKING PASS"
+                    android:text="@string/booking_pass"
                     android:textAllCaps="true"
                     android:textColor="@color/status_text_pending"
                     android:textSize="10sp"

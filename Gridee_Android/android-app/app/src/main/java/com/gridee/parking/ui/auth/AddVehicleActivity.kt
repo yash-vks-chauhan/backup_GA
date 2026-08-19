@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.gridee.parking.databinding.ActivityAddVehicleBinding
 import com.gridee.parking.utils.NotificationHelper
+import com.gridee.parking.ui.lot.ChooseCategoryActivity
 import com.gridee.parking.ui.main.MainContainerActivity
 import com.gridee.parking.ui.operator.OperatorDashboardActivity
 import com.gridee.parking.utils.AuthSession
@@ -19,6 +20,7 @@ class AddVehicleActivity : AppCompatActivity() {
         const val EXTRA_USER_ID = "extra_user_id"
         const val EXTRA_USER_NAME = "extra_user_name"
         const val EXTRA_USER_ROLE = "extra_user_role"
+        const val EXTRA_REQUIRE_PARKING_SELECTION = "extra_require_parking_selection"
     }
 
     private lateinit var binding: ActivityAddVehicleBinding
@@ -26,6 +28,7 @@ class AddVehicleActivity : AppCompatActivity() {
     private var userId: String? = null
     private var userName: String? = null
     private var userRole: String? = null
+    private var requireParkingSelection: Boolean = false
     private var showSignupGift: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,6 +43,7 @@ class AddVehicleActivity : AppCompatActivity() {
         userId = intent.getStringExtra(EXTRA_USER_ID) ?: AuthSession.getUserId(this)
         userName = intent.getStringExtra(EXTRA_USER_NAME) ?: AuthSession.getUserName(this)
         userRole = intent.getStringExtra(EXTRA_USER_ROLE) ?: AuthSession.getUserRole(this)
+        requireParkingSelection = intent.getBooleanExtra(EXTRA_REQUIRE_PARKING_SELECTION, false)
         showSignupGift = intent.getBooleanExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, false)
 
         if (userId.isNullOrBlank()) {
@@ -63,7 +67,7 @@ class AddVehicleActivity : AppCompatActivity() {
 
         binding.btnSkip.setOnClickListener {
             it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
-            navigateToHome(userName, userRole)
+            navigateAfterProfileSetup(userName, userRole)
         }
 
         binding.etVehicleNumber.setOnFocusChangeListener { _, _ ->
@@ -77,7 +81,7 @@ class AddVehicleActivity : AppCompatActivity() {
                 is AddVehicleState.Loading -> showLoading(true)
                 is AddVehicleState.Success -> {
                     showLoading(false)
-                    navigateToHome(state.user.name, state.user.role)
+                    navigateAfterProfileSetup(state.user.name, state.user.role)
                 }
                 is AddVehicleState.Error -> {
                     showLoading(false)
@@ -115,7 +119,7 @@ class AddVehicleActivity : AppCompatActivity() {
         binding.btnSkip.isEnabled = !show
     }
 
-    private fun navigateToHome(name: String?, role: String?) {
+    private fun navigateAfterProfileSetup(name: String?, role: String?) {
         val resolvedName = name?.takeIf { it.isNotBlank() } ?: userName
         val normalizedRole = (role ?: userRole)?.uppercase(Locale.ROOT) ?: "USER"
         when (normalizedRole) {
@@ -125,11 +129,19 @@ class AddVehicleActivity : AppCompatActivity() {
                 startActivity(intent)
             }
             else -> {
-                val intent = Intent(this, MainContainerActivity::class.java)
-                resolvedName?.let { intent.putExtra("USER_NAME", it) }
-                intent.putExtra(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, showSignupGift)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
+                val homeExtras = Bundle().apply {
+                    resolvedName?.let { putString("USER_NAME", it) }
+                    putBoolean(MainContainerActivity.EXTRA_SHOW_SIGNUP_GIFT, showSignupGift)
+                }
+                val nextIntent = if (requireParkingSelection) {
+                    // Continue account setup through category (College/Public/etc.) and
+                    // then the lot picker. The lot picker enters Home only after saving.
+                    ChooseCategoryActivity.onboardingIntent(this, homeExtras)
+                } else {
+                    Intent(this, MainContainerActivity::class.java).apply { putExtras(homeExtras) }
+                }
+                nextIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(nextIntent)
             }
         }
         finish()

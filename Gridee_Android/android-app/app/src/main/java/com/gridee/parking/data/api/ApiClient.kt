@@ -26,6 +26,10 @@ object ApiClient {
     private val httpClient = OkHttpClient.Builder()
         // Attach JWT token before request logging so auth is present but never printed in release.
         .addInterceptor(JwtAuthInterceptor(GrideeApplication.instance.applicationContext))
+        // Catch dead sessions: a 401 on an authenticated request clears the session and
+        // routes to login. Must come right after JwtAuthInterceptor so the request it
+        // inspects already carries the Authorization header.
+        .addInterceptor(UnauthorizedInterceptor(GrideeApplication.instance.applicationContext))
         .addInterceptor { chain ->
             val requestBuilder = chain.request().newBuilder()
             

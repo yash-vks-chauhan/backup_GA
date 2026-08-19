@@ -12,6 +12,7 @@ import com.gridee.parking.data.repository.UserRepository
 import com.gridee.parking.data.repository.WalletRepository
 import com.gridee.parking.data.model.Booking
 import com.gridee.parking.data.model.Vehicle
+import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.ParkingSpotSchedulePolicy
 import com.gridee.parking.utils.VehicleNumberValidator
 import kotlinx.coroutines.launch
@@ -458,6 +459,9 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
                     val result = userRepository.updateUser(updatedUser)
                     
                     println("BookingViewModel: Update result: $result")
+                    if (result) {
+                        AuthSession.updateCachedUserProfile(getApplication(), updatedUser)
+                    }
                     onResult(result)
                 } else {
                     println("BookingViewModel: User not found")

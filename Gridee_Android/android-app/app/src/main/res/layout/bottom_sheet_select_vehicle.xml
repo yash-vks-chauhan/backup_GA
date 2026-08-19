@@ -79,7 +79,7 @@
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="64dp"
                 android:layout_marginTop="4dp"
-                android:text="Select Vehicle"
+                android:text="@string/select_vehicle"
                 android:textColor="@color/text_primary"
                 android:textSize="24sp"
                 android:fontFamily="@font/inter_bold" />
@@ -114,7 +114,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
                     android:fontFamily="@font/inter_bold"
-                    android:text="No vehicles yet"
+                    android:text="@string/profile_vehicle_empty_title"
                     android:textColor="@color/text_primary"
                     android:textSize="17sp" />
 
@@ -125,7 +125,7 @@
                     android:fontFamily="@font/inter_medium"
                     android:gravity="center"
                     android:paddingHorizontal="48dp"
-                    android:text="Add your vehicle to get started with booking a parking spot."
+                    android:text="@string/add_your_vehicle_to_get_started"
                     android:textColor="@color/text_tertiary"
                     android:textSize="14sp"
                     android:lineSpacingExtra="2dp" />
@@ -166,7 +166,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:fontFamily="@font/inter_medium"
-                    android:text="Add New Vehicle"
+                    android:text="@string/add_new_vehicle"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp" />
 
@@ -187,7 +187,7 @@
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="24dp"
                 android:layout_marginTop="36dp"
-                android:text="Add New Vehicle"
+                android:text="@string/add_new_vehicle"
                 android:textColor="@color/text_primary"
                 android:textSize="24sp"
                 android:fontFamily="@font/inter_bold" />
@@ -198,7 +198,7 @@
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="24dp"
                 android:layout_marginTop="8dp"
-                android:text="Enter an Indian registration number like MH12AB1234 or 22BH1234A"
+                android:text="@string/enter_an_indian_registration_number_like"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter_medium" />
@@ -211,7 +211,7 @@
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="24dp"
                 android:layout_marginTop="28dp"
-                android:hint="Vehicle registration number"
+                android:hint="@string/vehicle_sheet_manual_hint"
                 app:boxBackgroundColor="@color/background_secondary"
                 app:boxCornerRadiusBottomEnd="28dp"
                 app:boxCornerRadiusBottomStart="28dp"
@@ -243,7 +243,7 @@
                 android:fontFamily="@font/inter_semibold"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="Add Vehicle"
+                android:text="@string/add_vehicle"
                 android:textAllCaps="false"
                 android:textColor="@color/md3_on_primary"
                 android:textSize="16sp"

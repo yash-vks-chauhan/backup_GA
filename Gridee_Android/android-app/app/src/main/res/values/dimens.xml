@@ -17,7 +17,6 @@
     <dimen name="button_corner_radius">8dp</dimen>
 
     <!-- Segmented control sizing -->
-    <dimen name="segmented_control_height">56dp</dimen>
     <dimen name="segmented_control_padding">6dp</dimen>
     <dimen name="segmented_control_item_padding">16dp</dimen>
 
@@ -35,6 +34,31 @@
     <dimen name="close_button_top_margin">16dp</dimen>
     <dimen name="close_button_bottom_margin">16dp</dimen>
     <dimen name="close_icon_size">22dp</dimen>
+
+    <!-- ===================== CORNER RADIUS SCALE =====================
+         One ladder for the whole app, so radii stop being picked per-file. Today the
+         same visual tier is drawn at 14dp, 20dp, 21dp, 28dp and 30dp depending on
+         which screen you are on, which is what makes surfaces read as unrelated.
+
+         The rule is capsule-first: a shape's radius is half its height, clamped to
+         the tier below. Anything short — a single-line bubble, a one-row menu, a
+         status pill — comes out a true capsule; anything tall degrades to a generous
+         rounded rectangle. A flat radius that lands *near* half the height is the
+         worst of both, because it reads as a capsule that didn't quite close.
+
+         Adopted by the support chat first; the rest of the app still uses literals. -->
+    <dimen name="radius_xs">8dp</dimen>
+    <dimen name="radius_sm">12dp</dimen>
+    <dimen name="radius_md">16dp</dimen>
+    <dimen name="radius_lg">22dp</dimen>
+    <dimen name="radius_xl">28dp</dimen>
+    <!-- Capsule. Material clamps a corner radius to half the smaller side, so an
+         absurd value is the idiomatic way to say "always fully rounded". -->
+    <dimen name="radius_pill">999dp</dimen>
+
+    <!-- Message bubble. Capped rather than pinned: min(this, height/2) makes a
+         one-line bubble an exact capsule and a paragraph a generous rectangle. -->
+    <dimen name="chat_bubble_radius_max">24dp</dimen>
 
     <!-- iOS 26 inspired back button dimensions -->
     <dimen name="ios26_back_button_size">44dp</dimen>

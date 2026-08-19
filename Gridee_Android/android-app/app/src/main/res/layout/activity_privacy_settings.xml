@@ -37,7 +37,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:text="Privacy &amp; Security"
+                android:text="@string/privacy_security"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -87,7 +87,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="Data Privacy"
+                        android:text="@string/data_privacy"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -115,7 +115,7 @@
                                 <TextView
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="Data Collection"
+                                    android:text="@string/data_collection"
                                     android:textColor="@color/text_primary"
                                     android:textSize="16sp"
                                     android:textStyle="bold"
@@ -125,7 +125,7 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="4dp"
-                                    android:text="Allow us to collect usage data to improve app experience"
+                                    android:text="@string/allow_us_to_collect_usage_data"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="14sp"
                                     android:fontFamily="@font/inter_regular" />
@@ -165,7 +165,7 @@
                                 <TextView
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="Location Tracking"
+                                    android:text="@string/location_tracking"
                                     android:textColor="@color/text_primary"
                                     android:textSize="16sp"
                                     android:textStyle="bold"
@@ -175,7 +175,7 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="4dp"
-                                    android:text="Enable location services for finding nearby parking"
+                                    android:text="@string/enable_location_services_for_finding_nearby"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="14sp"
                                     android:fontFamily="@font/inter_regular" />
@@ -214,7 +214,7 @@
                                 <TextView
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="Analytics"
+                                    android:text="@string/analytics"
                                     android:textColor="@color/text_primary"
                                     android:textSize="16sp"
                                     android:textStyle="bold"
@@ -224,7 +224,7 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="4dp"
-                                    android:text="Help us understand app usage patterns"
+                                    android:text="@string/help_us_understand_app_usage_patterns"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="14sp"
                                     android:fontFamily="@font/inter_regular" />
@@ -265,7 +265,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="Communication Preferences"
+                        android:text="@string/communication_preferences"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -287,7 +287,7 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Marketing Emails"
+                                android:text="@string/marketing_emails"
                                 android:textColor="@color/text_primary"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
@@ -297,7 +297,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="Receive promotional offers and parking deals"
+                                android:text="@string/receive_promotional_offers_and_parking_deals"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="14sp"
                                 android:fontFamily="@font/inter_regular" />
@@ -312,6 +312,72 @@
                             android:checked="false" />
 
                     </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Google ad privacy choices; shown only when UMP requires an entry point. -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_ad_privacy_choices"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/background_secondary"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="20dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_privacy_policy"
+                        android:tint="#1976D2" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_regular"
+                            android:text="@string/ad_privacy_choices"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/inter_regular"
+                            android:text="@string/ad_privacy_choices_description"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_arrow_right"
+                        android:tint="#999999" />
 
                 </LinearLayout>
 
@@ -336,7 +402,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="Data Management"
+                        android:text="@string/data_management"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -371,7 +437,7 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Export My Data"
+                                android:text="@string/export_my_data"
                                 android:textColor="@color/text_primary"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
@@ -381,7 +447,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="Download a copy of your personal data"
+                                android:text="@string/download_a_copy_of_your_personal"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="14sp"
                                 android:fontFamily="@font/inter_regular" />
@@ -419,7 +485,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="Danger Zone"
+                        android:text="@string/danger_zone"
                         android:textColor="#F44336"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -430,7 +496,7 @@
                         android:id="@+id/btn_delete_account"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Delete Account"
+                        android:text="@string/delete_account"
                         android:textColor="#FFFFFF"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -442,7 +508,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Permanently delete your account and all associated data. This action cannot be undone."
+                        android:text="@string/permanently_delete_your_account_and_all"
                         android:textColor="@color/text_tertiary"
                         android:textSize="12sp"
                         android:fontFamily="@font/inter_regular"

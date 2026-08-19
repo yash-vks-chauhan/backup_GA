@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One lot row. Collapsed: a quiet identity line (live dial + name + place) with a
+     brand_primary check when chosen. The chosen row also opens like an accordion to
+     reveal its detail (address, live spots) right where the user tapped; the slim
+     dock below only confirms the name and holds the button. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/rowLot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_ios_row_press"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingVertical="16dp"
+        android:paddingHorizontal="20dp">
+
+        <com.gridee.parking.ui.views.SpotDialView
+            android:id="@+id/dial"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:importantForAccessibility="no" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvLotName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="SRM University Parking Lot"
+                    android:textSize="17sp"
+                    android:textColor="@color/text_primary"
+                    android:letterSpacing="-0.01"
+                    android:fontFamily="@font/inter_semibold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/chipCurrent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/current"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:fontFamily="@font/inter_medium"
+                    android:background="@drawable/bg_chip_outline"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:includeFontPadding="false"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvLotMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="SRM University · Kattankulathur"
+                android:textSize="13sp"
+                android:textColor="@color/text_tertiary"
+                android:fontFamily="@font/inter_medium"
+                android:layout_marginTop="3dp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <!-- Detail block — accordion-revealed only on the selected row. -->
+            <LinearLayout
+                android:id="@+id/detailBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginTop="14dp"
+                    android:background="@color/divider_hairline" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_marginTop="2dp"
+                        android:src="@drawable/ic_location"
+                        app:tint="@color/text_tertiary"
+                        android:importantForAccessibility="no" />
+
+                    <TextView
+                        android:id="@+id/tvAddress"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="10dp"
+                        tools:text="Kattankulathur, Chennai, Tamil Nadu 603203"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:fontFamily="@font/inter_regular"
+                        android:lineSpacingMultiplier="1.1" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowSpotsFree"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_marginTop="1dp"
+                        android:src="@drawable/ic_car_outlined"
+                        app:tint="@color/text_tertiary"
+                        android:importantForAccessibility="no" />
+
+                    <TextView
+                        android:id="@+id/tvSpotsFree"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="10dp"
+                        tools:text="5 of 8 spots free right now"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:fontFamily="@font/inter_regular" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/ivCheck"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="1dp"
+            android:src="@drawable/ic_check_circle"
+            app:tint="@color/brand_primary"
+            android:visibility="invisible"
+            android:contentDescription="Selected"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginStart="80dp"
+        android:layout_marginEnd="20dp"
+        android:background="@color/divider_hairline" />
+
+</LinearLayout>

@@ -41,6 +41,10 @@ class SplashActivity : AppCompatActivity() {
     private companion object {
         val SHINE_DARK = Color.parseColor("#3A3A3A")
 
+        // Resting opacity of the ownership footnote. Legible on black, but far enough
+        // below the wordmark's white that the eye reads one mark and one caption.
+        const val OWNERSHIP_ALPHA = 0.45f
+
         // Hard cap on how long routing waits for a fresh config once the splash is
         // done animating. Past this we route on the cached config so a slow or dead
         // network can never leave the user on a black screen. Sized so the branded
@@ -154,6 +158,15 @@ class SplashActivity : AppCompatActivity() {
             }
             .start()
 
+        // The ownership line arrives after the wordmark has taken the screen, so it reads as
+        // a footnote settling under a finished mark rather than as a second thing animating in.
+        binding.tvOwnership.animate()
+            .alpha(OWNERSHIP_ALPHA)
+            .setDuration(700L)
+            .setStartDelay(900L)
+            .setInterpolator(entryCurve)
+            .start()
+
         ValueAnimator.ofFloat(0.10f, -0.02f).apply {
             startDelay = 120L
             duration = 1300L
@@ -217,6 +230,14 @@ class SplashActivity : AppCompatActivity() {
         val tv = binding.tvGrideeLogo
         tv.pivotX = tv.width / 2f
         tv.pivotY = tv.height / 2f
+
+        // The footnote leaves ahead of the dive instead of being swallowed by it — the
+        // wordmark is what the camera flies through, and a caption riding along would
+        // read as a stray element rather than part of the mark.
+        binding.tvOwnership.animate()
+            .alpha(0f)
+            .setDuration(220L)
+            .start()
 
         // Clear the shine shader so the dive renders as flat white pixels
         // instead of a gradient stretched across the screen at 14x scale.

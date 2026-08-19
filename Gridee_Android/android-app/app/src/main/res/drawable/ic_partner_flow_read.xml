@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Beat 2: the camera reads the plate. A number plate inside a scan frame rather
+  than a camera body — the point of this step is the *plate being recognised*,
+  and a camera glyph would say "photo" instead. Set matches
+  ic_partner_flow_arrive: 24dp, 1.6 stroke, round caps.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Scan-frame corners. -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M3 7.4 V5.2 A1.2 1.2 0 0 1 4.2 4 H6.4 M17.6 4 h2.2 A1.2 1.2 0 0 1 21 5.2 V7.4 M3 17.6 v2.2 A1.2 1.2 0 0 0 4.2 21 H6.4 M17.6 21 h2.2 A1.2 1.2 0 0 0 21 19.8 V17.6"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.6" />
+
+    <!-- The plate. -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M6.5 9.5 h11 a1.5 1.5 0 0 1 1.5 1.5 v3 a1.5 1.5 0 0 1 -1.5 1.5 h-11 a1.5 1.5 0 0 1 -1.5 -1.5 v-3 a1.5 1.5 0 0 1 1.5 -1.5 z"
+        android:strokeColor="#FF000000"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.6" />
+
+    <!-- Characters, abstracted to two marks so the glyph stays readable at 22dp. -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M8.2 12.5 h2.4 M13.4 12.5 h2.4"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.6" />
+
+</vector>
