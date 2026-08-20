@@ -30,7 +30,14 @@
          page all use: the 44 dp IOS26 back disc at the start, a 20 dp brand-tinted arrow in
          it, and a centred 20 sp inter_bold title. The pass used to wear a pair of one-off
          34 dp circles on a bespoke drawable — the only screen in the app that looked like
-         that — with an ⓘ at the end.
+         that.
+
+         The ⓘ at the end survives that change, in the standard disc rather than the bespoke
+         circle. It is the only way to the booking's own details — the ID support asks for,
+         the times, the amount, the spot and the lot — none of which print on the pass itself
+         (see the note at the foot of the pass block). Dropping the disc with the drawable
+         stranded that sheet with nothing to open it, so it is a load-bearing button, not
+         decoration.
 
          Height is wrap_content, not a constant: the status-bar inset is added to paddingTop
          in code, and applyPlateSize measures whatever this comes out to rather than assuming. -->
@@ -56,6 +63,27 @@
                 android:layout_gravity="center"
                 android:contentDescription="@string/back"
                 android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_primary" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Hidden when the pass has no booking behind it: the sheet needs one to have
+             anything to show, and would dismiss itself on open. See bindPassContent. -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btn_qr_pass_details"
+            style="@style/Widget.Gridee.BackButton.IOS26"
+            android:layout_width="@dimen/ios26_back_button_size"
+            android:layout_height="@dimen/ios26_back_button_size"
+            android:contentDescription="@string/booking_pass_details"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="@dimen/ios26_back_icon_size"
+                android:layout_height="@dimen/ios26_back_icon_size"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_info"
                 app:tint="@color/brand_primary" />
         </com.google.android.material.card.MaterialCardView>
 

@@ -251,10 +251,14 @@ class BookingQrPassBottomSheet : DialogFragment() {
     private fun bindPassContent() {
         val current = booking
         binding.btnCloseQrPass.setOnClickListener { dismiss() }
+        binding.btnQrPassDetails.setOnClickListener { openPassDetails() }
 
         // A pass with no booking behind it can only happen if the argument failed to
         // deserialise. The code still scans, so show it rather than an empty status row.
         binding.qrPassStatusLine.isVisible = current != null
+        // The details sheet reads every one of its rows off the booking and dismisses itself
+        // without one, so the ⓘ goes with the status line rather than opening onto nothing.
+        binding.btnQrPassDetails.isVisible = current != null
         renderStatusLine()
 
         val instruction = if (current?.status == BookingStatus.ACTIVE) {
@@ -265,7 +269,9 @@ class BookingQrPassBottomSheet : DialogFragment() {
         binding.tvQrPassInstruction.setText(instruction)
 
         // The spot, the lot and the vehicle used to be printed under the code. They are the
-        // booking's details, not the scan's, and the details sheet already carries all three.
+        // booking's details, not the scan's, and the details sheet behind the ⓘ carries all
+        // three — along with the booking ID support asks for. That sheet is the only place
+        // any of it appears, so the ⓘ has to stay wired for the trade to hold.
 
         lifecycleScope.launch {
             val bitmap = withContext(Dispatchers.Default) {
@@ -273,6 +279,23 @@ class BookingQrPassBottomSheet : DialogFragment() {
             }
             _binding?.ivQrPassCode?.setImageBitmap(bitmap)
         }
+    }
+
+    /**
+     * The booking behind the code: the ID, the times, the amount, the spot and the lot.
+     *
+     * None of it prints on the pass — the pass is for the scan — so this sheet is the only
+     * way to any of it, and the ID is the one an operator or support will ask for out loud.
+     * Guarded the same way the spotlight is: nothing opens over a saved state, and a second
+     * tap while it is already up is the same sheet, not a second copy of it.
+     */
+    private fun openPassDetails() {
+        val current = booking ?: return
+        if (childFragmentManager.isStateSaved) return
+        if (childFragmentManager.findFragmentByTag(BookingPassDetailsDialog.TAG) != null) return
+        setPassBlurred(true)
+        BookingPassDetailsDialog.newInstance(current)
+            .show(childFragmentManager, BookingPassDetailsDialog.TAG)
     }
 
     /**
@@ -325,12 +348,20 @@ class BookingQrPassBottomSheet : DialogFragment() {
      * exactly what happened here. A [RenderEffect] on our own view hierarchy is a view-level
      * effect, so it renders the same everywhere from Android 12 up.
      */
-    /** The spotlight reports when it closes, so the blur always comes back off. */
+    /**
+     * Every dialog that sits over the pass reports when it closes, so the blur always comes
+     * back off. A dialog that blurs on the way in and has no listener here would leave the
+     * pass blurred behind it for the rest of the sheet's life.
+     */
     private fun observeOverlayDialogs() {
-        childFragmentManager.setFragmentResultListener(
+        listOf(
             EventSpotlightDialog.RESULT_KEY_CLOSED,
-            viewLifecycleOwner
-        ) { _, _ -> setPassBlurred(false) }
+            BookingPassDetailsDialog.RESULT_KEY_CLOSED
+        ).forEach { key ->
+            childFragmentManager.setFragmentResultListener(key, viewLifecycleOwner) { _, _ ->
+                setPassBlurred(false)
+            }
+        }
     }
 
     private fun setPassBlurred(blurred: Boolean) {
