@@ -84,9 +84,7 @@ class WelcomeActivity : AppCompatActivity() {
     }
 
     private fun configureSystemBars() {
-        // Set transparent status bar with dark icons for light background
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = androidx.core.content.ContextCompat.getColor(this, R.color.background_primary)
+        // Edge-to-edge content supplies the bar backgrounds; only icon contrast is configured.
         val isDark = com.gridee.parking.utils.ThemeManager.isDarkMode(this)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isDark
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = !isDark

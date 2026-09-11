@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="wallet_supporting_text">#A1A1A6</color>
+    <color name="wallet_amount_hint">#8E8E93</color>
+    <color name="wallet_button_disabled">#2C2C2E</color>
+    <color name="wallet_button_disabled_text">#A1A1A6</color>
+</resources>

@@ -28,8 +28,6 @@ class WelcomeGiftBottomSheet : BottomSheetDialogFragment() {
     private var _binding: BottomSheetWelcomeGiftBinding? = null
     private val binding get() = _binding!!
 
-    private var onDismissAction: (() -> Unit)? = null
-
     // ── Timing Constants (ms) ──────────────────────────────────────────
     // Every value below is hand-tuned so each element enters in a
     // natural cascade — fast enough to feel snappy, slow enough that
@@ -115,18 +113,13 @@ class WelcomeGiftBottomSheet : BottomSheetDialogFragment() {
 
             bottomSheetDialog.window?.let { window ->
                 WindowCompat.setDecorFitsSystemWindows(window, false)
-                window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                window.isNavigationBarContrastEnforced = false
 
                 val wic = WindowCompat.getInsetsController(window, window.decorView)
                 val isDarkMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
                 wic.isAppearanceLightNavigationBars = !isDarkMode
 
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                    window.navigationBarDividerColor = android.graphics.Color.TRANSPARENT
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                        window.isNavigationBarContrastEnforced = false
-                    }
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
                 }
 
                 // Glassmorphism blur (Android 12+)
@@ -203,13 +196,8 @@ class WelcomeGiftBottomSheet : BottomSheetDialogFragment() {
         binding.btnClose.setOnClickListener { dismiss() }
         binding.btnStartExploring.setOnClickListener {
             it.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-            onDismissAction?.invoke()
             dismiss()
         }
-    }
-
-    fun setOnDismissAction(action: () -> Unit) {
-        this.onDismissAction = action
     }
 
     // ── Initial State (everything hidden) ───────────────────────────────

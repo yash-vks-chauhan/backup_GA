@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="wallet_supporting_text">#666666</color>
+    <color name="wallet_amount_hint">#767676</color>
+    <color name="wallet_button_disabled">#DADADA</color>
+    <color name="wallet_button_disabled_text">#595959</color>
+    <string name="wallet_amount_zero" translatable="false">0</string>
+    <string name="wallet_minimum_amount">Minimum ₹%1$s</string>
+    <string name="wallet_maximum_amount">Maximum ₹%1$s</string>
+    <string name="wallet_whole_rupees">Enter whole rupees (no decimals)</string>
+    <string name="wallet_invalid_amount">Enter a valid whole-rupee amount</string>
+    <string name="wallet_amount_too_long">This amount is too long</string>
+    <string name="wallet_continue_amount">Continue · ₹%1$s</string>
+    <string name="wallet_opening_checkout">Opening checkout…</string>
+    <string name="wallet_amount_label">Amount in whole rupees</string>
+    <string name="wallet_balance_accessibility">Current balance: %1$s Gridee Coins</string>
+    <string name="wallet_cashfree_reassurance">Secured by Cashfree</string>
+    <string name="wallet_amount_range">Enter an amount between ₹%1$s and ₹%2$s.</string>
+</resources>

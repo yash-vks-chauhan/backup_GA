@@ -9,11 +9,11 @@ import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.util.TypedValue
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -36,6 +36,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
@@ -50,7 +51,6 @@ import com.gridee.parking.databinding.BottomSheetOperatorSpotSelectionBinding
 import com.gridee.parking.ui.auth.LoginActivity
 import com.gridee.parking.ui.bottomsheet.LogoutConfirmationBottomSheet
 import com.gridee.parking.utils.AppLocaleManager
-import com.gridee.parking.ui.booking.ParkingSpotSelectionAdapter
 import com.gridee.parking.ui.qr.QrScannerActivity
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.InAppUpdateController
@@ -75,6 +75,7 @@ class OperatorDashboardActivity : AppCompatActivity() {
     private var selectedSpotId: String? = null
     private var selectedParkingLotId: String? = null
     private var spotSelectionDialog: BottomSheetDialog? = null
+    private var lastSpotRetryElapsedMs = Long.MIN_VALUE
 
     // Animation properties
     private var typefaceBold: Typeface? = null
@@ -90,8 +91,11 @@ class OperatorDashboardActivity : AppCompatActivity() {
         private const val DEFAULT_OPERATOR_PLATE_PREFIX = "TN"
         private const val STATE_SELECTED_SPOT_ID = "state_selected_spot_id"
         private const val STATE_SELECTED_SPOT_NAME = "state_selected_spot_name"
+        private const val STATE_SELECTED_LOT_ID = "state_selected_lot_id"
         private const val PREF_LAST_SELECTED_SPOT_ID = "operator_last_selected_spot_id"
         private const val PREF_LAST_SELECTED_SPOT_NAME = "operator_last_selected_spot_name"
+        private const val PREF_LAST_SELECTED_LOT_ID = "operator_last_selected_lot_id"
+        private const val SPOT_RETRY_COOLDOWN_MS = 15_000L
     }
 
     enum class OperatorMode {
@@ -155,15 +159,21 @@ class OperatorDashboardActivity : AppCompatActivity() {
         binding = ActivityOperatorDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        supportFragmentManager.setFragmentResultListener(
+            LogoutConfirmationBottomSheet.RESULT_KEY,
+            this,
+        ) { _, result ->
+            if (result.getBoolean(LogoutConfirmationBottomSheet.RESULT_CONFIRMED)) logout()
+        }
+
         // In-app update prompt for operator users as well.
         inAppUpdateController = InAppUpdateController(
             activity = this,
             snackbarAnchorView = binding.root,
         ).also { it.checkForUpdates() }
 
-        // Set status bar to match background
-        window.statusBarColor = ContextCompat.getColor(this, android.R.color.transparent)
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        // Edge-to-edge content owns the background; keep dark icons on this light screen.
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
 
         restoreSelectedSpotState(savedInstanceState)
         loadFonts()
@@ -189,8 +199,7 @@ class OperatorDashboardActivity : AppCompatActivity() {
         try {
             typefaceBold = ResourcesCompat.getFont(this, R.font.inter_bold)
             typefaceMedium = ResourcesCompat.getFont(this, R.font.inter_semibold)
-        } catch (e: Exception) {
-            Log.e("OperatorDashboard", "Error loading fonts", e)
+        } catch (_: Exception) {
             // Fallback to system fonts if resources fail
             typefaceBold = Typeface.DEFAULT_BOLD
             typefaceMedium = Typeface.DEFAULT
@@ -230,7 +239,15 @@ class OperatorDashboardActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // The scanner owns a separate ViewModel. If it closed while an operator mutation was
+        // running, consume that application-retained result here instead of silently dropping it.
+        viewModel.setTerminalDeliveryActive(true)
         inAppUpdateController?.onResume()
+    }
+
+    override fun onPause() {
+        viewModel.setTerminalDeliveryActive(false)
+        super.onPause()
     }
 
     @Deprecated("Deprecated in Java")
@@ -245,6 +262,7 @@ class OperatorDashboardActivity : AppCompatActivity() {
         if (!spotId.isNullOrEmpty()) {
             outState.putString(STATE_SELECTED_SPOT_ID, spotId)
             outState.putString(STATE_SELECTED_SPOT_NAME, binding.etSpotId.text?.toString().orEmpty())
+            outState.putString(STATE_SELECTED_LOT_ID, currentOperatorParkingLotId())
         }
     }
 
@@ -257,6 +275,8 @@ class OperatorDashboardActivity : AppCompatActivity() {
     }
 
     private fun restoreSelectedSpotState(savedInstanceState: Bundle?) {
+        val assignedLotId = normalizeLotId(AuthSession.getParkingLotId(this))
+        selectedParkingLotId = assignedLotId
         val stateSpotId = savedInstanceState
             ?.getString(STATE_SELECTED_SPOT_ID)
             ?.trim()
@@ -265,7 +285,8 @@ class OperatorDashboardActivity : AppCompatActivity() {
             ?.getString(STATE_SELECTED_SPOT_NAME)
             ?.trim()
             .orEmpty()
-        if (stateSpotId.isNotEmpty()) {
+        val stateLotId = normalizeLotId(savedInstanceState?.getString(STATE_SELECTED_LOT_ID))
+        if (stateSpotId.isNotEmpty() && assignedLotId != null && stateLotId == assignedLotId) {
             selectedSpotId = stateSpotId
             updateSelectedSpotUi(if (stateSpotName.isNotEmpty()) stateSpotName else stateSpotId)
             return
@@ -273,7 +294,10 @@ class OperatorDashboardActivity : AppCompatActivity() {
 
         val prefs = getSharedPreferences("gridee_prefs", MODE_PRIVATE)
         val persistedSpotId = prefs.getString(PREF_LAST_SELECTED_SPOT_ID, null)?.trim().orEmpty()
-        if (persistedSpotId.isEmpty()) {
+        val persistedLotId = normalizeLotId(prefs.getString(PREF_LAST_SELECTED_LOT_ID, null))
+        if (persistedSpotId.isEmpty() || assignedLotId == null || persistedLotId != assignedLotId) {
+            selectedSpotId = null
+            selectedSpot = null
             updateSelectedSpotUi(null)
             return
         }
@@ -419,18 +443,17 @@ class OperatorDashboardActivity : AppCompatActivity() {
             dialog.dismiss()
         }
 
-        val adapter = ParkingSpotSelectionAdapter(
-            onItemClick = { spot ->
+        val adapter = OperatorGroupedSpotAdapter(
+            onSpotSelected = { spot ->
                 applySelectedSpot(spot)
                 dialog.dismiss()
             },
-            allowUnavailableSelection = true
         )
 
         sheetBinding.rvSpots.layoutManager = LinearLayoutManager(this)
         sheetBinding.rvSpots.adapter = adapter
         if (!selectedSpotId.isNullOrBlank()) {
-            adapter.setSelectedSpot(selectedSpotId)
+            adapter.setSelectedSpot(selectedSpotId, currentOperatorParkingLotId())
         }
 
         sheetBinding.progressBar.visibility = View.VISIBLE
@@ -444,7 +467,6 @@ class OperatorDashboardActivity : AppCompatActivity() {
             val result = loadAllParkingSpots()
             if (spotSelectionDialog !== dialog) return@launch
             val spots = result.spots
-            Log.d("OperatorDashboard", "Showing ${spots.size} operator parking spots")
             sheetBinding.progressBar.visibility = View.GONE
 
             if (spots.isEmpty()) {
@@ -456,6 +478,13 @@ class OperatorDashboardActivity : AppCompatActivity() {
                 sheetBinding.tvEmptyState.setOnClickListener(
                     if (result.retryable) {
                         View.OnClickListener {
+                            val now = SystemClock.elapsedRealtime()
+                            if (lastSpotRetryElapsedMs != Long.MIN_VALUE &&
+                                now - lastSpotRetryElapsedMs < SPOT_RETRY_COOLDOWN_MS
+                            ) {
+                                return@OnClickListener
+                            }
+                            lastSpotRetryElapsedMs = now
                             dialog.dismiss()
                             binding.root.post { showSpotSelectionSheet() }
                         }
@@ -466,26 +495,33 @@ class OperatorDashboardActivity : AppCompatActivity() {
             } else {
                 sheetBinding.tvEmptyState.visibility = View.GONE
                 sheetBinding.rvSpots.visibility = View.VISIBLE
-                adapter.submitList(spots) {
+                adapter.submitSpots(spots) {
                     sheetBinding.rvSpots.requestLayout()
                 }
                 if (!selectedSpotId.isNullOrBlank()) {
-                    adapter.setSelectedSpot(selectedSpotId)
+                    adapter.setSelectedSpot(selectedSpotId, currentOperatorParkingLotId())
                 }
             }
         }
     }
 
     private fun applySelectedSpot(spot: ParkingSpot) {
+        val assignedLotId = normalizeLotId(AuthSession.getParkingLotId(this))
+        val spotLotId = normalizeLotId(spot.lotId)
+        if (assignedLotId == null || spotLotId != assignedLotId) {
+            showToast(getString(R.string.scanner_spot_outside_assigned_lot))
+            return
+        }
         selectedSpot = spot
         selectedSpotId = spot.id
-        selectedParkingLotId = normalizeLotId(spot.lotId) ?: AuthSession.getParkingLotId(this)
+        selectedParkingLotId = assignedLotId
         val spotDisplayName = getSpotDisplayName(spot)
         updateSelectedSpotUi(spotDisplayName)
         getSharedPreferences("gridee_prefs", MODE_PRIVATE)
             .edit()
             .putString(PREF_LAST_SELECTED_SPOT_ID, spot.id)
             .putString(PREF_LAST_SELECTED_SPOT_NAME, spotDisplayName)
+            .putString(PREF_LAST_SELECTED_LOT_ID, assignedLotId)
             .apply()
     }
 
@@ -496,7 +532,9 @@ class OperatorDashboardActivity : AppCompatActivity() {
     ) {
         val normalizedSpotId = spotId?.trim().orEmpty()
         if (normalizedSpotId.isEmpty()) return
-        selectedParkingLotId = normalizeLotId(parkingLotId) ?: selectedParkingLotId
+        val assignedLotId = normalizeLotId(AuthSession.getParkingLotId(this)) ?: return
+        if (normalizeLotId(parkingLotId) != assignedLotId) return
+        selectedParkingLotId = assignedLotId
         if (selectedSpotId == normalizedSpotId && !spotDisplayName.isNullOrBlank()) {
             updateSelectedSpotUi(spotDisplayName)
             return
@@ -510,17 +548,16 @@ class OperatorDashboardActivity : AppCompatActivity() {
             .edit()
             .putString(PREF_LAST_SELECTED_SPOT_ID, normalizedSpotId)
             .putString(PREF_LAST_SELECTED_SPOT_NAME, resolvedDisplayName)
+            .putString(PREF_LAST_SELECTED_LOT_ID, assignedLotId)
             .apply()
     }
 
     private suspend fun loadAllParkingSpots(): OperatorParkingSpotLoader.LoadResult {
-        return OperatorParkingSpotLoader.load(this, parkingRepository, "OperatorDashboard")
+        return OperatorParkingSpotLoader.load(this, parkingRepository)
     }
 
     private fun currentOperatorParkingLotId(): String? {
-        return normalizeLotId(selectedParkingLotId)
-            ?: normalizeLotId(selectedSpot?.lotId)
-            ?: AuthSession.getParkingLotId(this)
+        return normalizeLotId(AuthSession.getParkingLotId(this))
     }
 
     private fun normalizeLotId(raw: String?): String? {
@@ -1046,8 +1083,10 @@ class OperatorDashboardActivity : AppCompatActivity() {
     }
     
     private fun showLogoutConfirmation() {
+        if (supportFragmentManager.isStateSaved ||
+            supportFragmentManager.findFragmentByTag(LogoutConfirmationBottomSheet.TAG) != null
+        ) return
         LogoutConfirmationBottomSheet.newInstance()
-            .setOnLogoutConfirmed { logout() }
             .show(supportFragmentManager, LogoutConfirmationBottomSheet.TAG)
     }
 
@@ -1090,6 +1129,17 @@ class OperatorDashboardActivity : AppCompatActivity() {
                 binding.progressLoading.visibility = View.VISIBLE
                 binding.btnScanCircular.isEnabled = false
                 binding.btnSubmitManual.isEnabled = false
+            }
+            is CheckInState.CoolingDown -> {
+                binding.progressLoading.visibility = View.GONE
+                binding.btnScanCircular.isEnabled = true
+                binding.btnSubmitManual.isEnabled = true
+                showNotification(
+                    title = getString(R.string.scanner_recent_scan_title),
+                    message = getCooldownMessage(state.remainingMs),
+                    NotificationType.INFO,
+                )
+                viewModel.resetCheckInState()
             }
             is CheckInState.Success -> {
                 binding.progressLoading.visibility = View.GONE
@@ -1137,6 +1187,17 @@ class OperatorDashboardActivity : AppCompatActivity() {
                 binding.btnScanCircular.isEnabled = false
                 binding.btnSubmitManual.isEnabled = false
             }
+            is CheckInState.CoolingDown -> {
+                binding.progressLoading.visibility = View.GONE
+                binding.btnScanCircular.isEnabled = true
+                binding.btnSubmitManual.isEnabled = true
+                showNotification(
+                    title = getString(R.string.scanner_recent_scan_title),
+                    message = getCooldownMessage(state.remainingMs),
+                    NotificationType.INFO,
+                )
+                viewModel.resetCheckOutState()
+            }
             is CheckInState.Success -> {
                 binding.progressLoading.visibility = View.GONE
                 binding.btnScanCircular.isEnabled = true
@@ -1171,6 +1232,18 @@ class OperatorDashboardActivity : AppCompatActivity() {
                 viewModel.resetCheckOutState()
             }
         }
+    }
+
+    private fun cooldownSeconds(remainingMs: Long): Long =
+        ((remainingMs.coerceAtLeast(0L) + 999L) / 1_000L).coerceAtLeast(1L)
+
+    private fun getCooldownMessage(remainingMs: Long): String {
+        val seconds = cooldownSeconds(remainingMs)
+        return resources.getQuantityString(
+            R.plurals.scanner_recent_scan_cooldown,
+            seconds.toInt(),
+            seconds,
+        )
     }
 
     enum class NotificationType {

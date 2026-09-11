@@ -450,4 +450,29 @@
     <color name="background_primary_a80">#CCF5F5F5</color>
     <color name="background_primary_a50">#80F5F5F5</color>
 
+
+    <!-- ============ Bookings stage rail (Option D) ============ -->
+    <!-- Rail marks. #8A8A8E clears WCAG 1.4.11's 3:1 on background_grouped;
+         the old muted greys measured 1.45:1 and were unusable. -->
+    <color name="stage_rail_ink">#8A8A8E</color>
+    <!-- Stage card heads. Flat tints, not the pill drawables. -->
+    <color name="stage_head_pending">#FFFBEB</color>
+    <color name="stage_head_pending_ink">#78350F</color>
+    <color name="stage_head_pending_sub">#9A6B3C</color>
+    <color name="stage_head_active">#ECFDF5</color>
+    <color name="stage_head_active_ink">#064E3B</color>
+    <color name="stage_head_active_sub">#3F7A66</color>
+    <color name="stage_head_ended">#FEF2F2</color>
+    <color name="stage_head_ended_ink">#7F1D1D</color>
+    <color name="stage_head_ended_sub">#9B5C5C</color>
+    <color name="stage_head_done">#F4F4F5</color>
+    <!-- Pass stub. The stub is the card surface; the code inks with the theme. -->
+    <color name="pass_stub_surface">#FFFFFF</color>
+    <color name="pass_code_ink">#09090B</color>
+    <color name="pass_stub_label">#71717A</color>
+    <color name="pass_badge_fill">#F4F4F5</color>
+    <color name="pass_badge_stroke">#E4E4E7</color>
+    <color name="pass_badge_ink">#52525B</color>
+    <color name="pass_stub_rule">#ECECEF</color>
+    <color name="hold_cancel_stroke">#59DC2626</color>
 </resources>

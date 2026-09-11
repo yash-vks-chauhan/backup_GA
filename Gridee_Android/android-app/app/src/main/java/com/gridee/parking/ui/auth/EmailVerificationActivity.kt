@@ -46,7 +46,6 @@ class EmailVerificationActivity : AppCompatActivity() {
         binding = ActivityEmailVerificationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        window.statusBarColor = androidx.core.content.ContextCompat.getColor(this, com.gridee.parking.R.color.background_primary)
         androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
             !com.gridee.parking.utils.ThemeManager.isDarkMode(this)
 

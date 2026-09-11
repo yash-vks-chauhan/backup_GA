@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The head band while the booking is still loading.
+
+  Neutral on purpose. The real head is amber for Booked and green for Live, and the skeleton
+  does not know which yet — painting one of them and then swapping to the other would be the
+  loading state asserting a status it has not read, and the flip would be visible. The band's
+  geometry is what sells the card, not its colour, so the colour waits.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/skeleton_base" />
+</shape>

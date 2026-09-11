@@ -1,0 +1,310 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; }
+    a { color: #059669; } a:hover { color: #047857; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+
+<div style="width: 900px; height: 1010px; background: {{t.canvas}}; padding: 32px 40px 40px 40px; display: flex; flex-direction: column; gap: 26px;">
+
+  <div style="display: flex; flex-direction: column; gap: 7px;">
+    <div style="display: flex; align-items: baseline; gap: 12px;">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">OPTION A</div>
+      <div style="font-size: 24px; font-weight: 700; letter-spacing: -0.03em; color: {{t.t1}};">Single Focus</div>
+    </div>
+    <div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: {{t.t2}}; max-width: 700px; text-wrap: pretty;">One booking, one card, one screen. The iOS grouped-inset idiom — everything the booking is lives in a single sheet, and the destructive action sits at the bottom of that group as plain red text, the way iOS puts Delete at the foot of a list. <span style="color: {{t.t3}};">Tradeoff: the tallest of the three, and a plain text row is the quietest cancel affordance.</span></div>
+  </div>
+
+  <div style="display: flex; gap: 40px;">
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">BOOKED</div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; background: {{t.bg}}; display: flex; flex-direction: column; box-shadow: 0 26px 64px {{t.shadow}};">
+
+        <div style="height: 58px; flex-shrink: 0;"></div>
+
+        <div style="padding: 0 20px 16px 20px; display: flex; align-items: flex-end; justify-content: space-between;">
+          <div style="font-size: 32px; font-weight: 700; letter-spacing: -0.035em; color: {{t.t1}}; line-height: 1.05;">Bookings</div>
+          <div style="width: 34px; height: 34px; border-radius: 100px; background: {{t.chip}}; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 17px; height: 17px;"><path d="M12 8v4l2.5 2.5" stroke="{{t.t2}}" stroke-width="1.8" stroke-linecap="round"></path><circle cx="12" cy="12" r="8.5" stroke="{{t.t2}}" stroke-width="1.8"></circle></svg>
+          </div>
+        </div>
+
+        <div style="margin: 0 16px; border-radius: 32px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 22px 24px 0 24px; display: flex; flex-direction: column;">
+
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.13em; color: {{t.t2}};">FRI, 03 APR</div>
+            <div style="padding: 5px 10px; border-radius: 100px; background: {{t.amberFill}};">
+              <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.02em; color: {{t.amber}};">Booked</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 12px; font-size: 26px; font-weight: 700; letter-spacing: -0.035em; color: {{t.t1}}; line-height: 1.15;">Java &mdash; Morning</div>
+          <div style="margin-top: 3px; font-size: 13px; font-weight: 500; color: {{t.t2}};">SRM University Parking Lot</div>
+
+          <div style="margin-top: 20px; display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">CHECK-IN</div>
+              <div style="font-size: 18px; font-weight: 700; letter-spacing: -0.025em; color: {{t.t1}};">07:30 AM</div>
+            </div>
+            <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px; padding-bottom: 2px;">
+              <div style="height: 1px; flex-grow: 1; background: {{t.hair}};"></div>
+              <div style="padding: 3px 9px; border-radius: 100px; background: {{t.amberFill}}; font-size: 11px; font-weight: 700; color: {{t.amber}};">5h</div>
+              <div style="height: 1px; flex-grow: 1; background: {{t.hair}};"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+              <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">CHECK-OUT</div>
+              <div style="font-size: 18px; font-weight: 700; letter-spacing: -0.025em; color: {{t.t1}};">12:30 PM</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; height: 1px; background: {{t.hair}};"></div>
+
+          <div style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 100px; border: 1px solid {{t.hair}};">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 13px; height: 13px;"><path d="M4 16v2.5M20 16v2.5M5 16h14a1 1 0 0 0 1-1v-3.2a2 2 0 0 0-.3-1L17.8 7a2 2 0 0 0-1.7-1H7.9a2 2 0 0 0-1.7 1L4.3 10.8a2 2 0 0 0-.3 1V15a1 1 0 0 0 1 1Z" stroke="{{t.t2}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="7.6" cy="12.6" r="1" fill="{{t.t2}}"></circle><circle cx="16.4" cy="12.6" r="1" fill="{{t.t2}}"></circle></svg>
+              <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.02em; color: {{t.t1}};">TN 09 AB 1234</span>
+            </div>
+            <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.02em; color: {{t.t1}};">&#8377;90.00</div>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; align-items: center;">
+            <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-left: -31px;"></div>
+            <div style="flex-grow: 1; height: 1px; background-image: linear-gradient(to right, {{t.hair}} 60%, transparent 40%); background-size: 7px 1px; background-repeat: repeat-x;"></div>
+            <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-right: -31px;"></div>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; align-items: center; gap: 16px;">
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: {{t.green}};">SHOW AT ENTRY</div>
+              <div style="font-size: 15px; font-weight: 600; letter-spacing: -0.015em; color: {{t.t1}};">Tap to enlarge</div>
+              <div style="font-size: 11px; font-weight: 500; color: {{t.t3}};">ID &middot; 68f2c41a</div>
+            </div>
+            <div style="width: 88px; height: 88px; border-radius: 16px; background: #FFFFFF; border: 1px solid {{t.hair}}; padding: 7px;">
+              <svg viewBox="0 0 25 25" style="width: 100%; height: 100%; display: block;"><path d="{{qr}}" fill="#0B0B0C"></path></svg>
+            </div>
+          </div>
+
+          <div style="margin: 18px -24px 0 -24px; height: 1px; background: {{t.hair}};"></div>
+          <div style="margin: 0 -24px; height: 54px; display: flex; align-items: center; justify-content: center; gap: 7px;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="8.5" stroke="{{t.red}}" stroke-width="1.8"></circle><path d="M9.4 9.4l5.2 5.2M14.6 9.4l-5.2 5.2" stroke="{{t.red}}" stroke-width="1.8" stroke-linecap="round"></path></svg>
+            <span style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: {{t.red}};">Cancel booking</span>
+          </div>
+        </div>
+
+        <div style="flex-grow: 1;"></div>
+
+        <div style="margin: 0 16px 0 16px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 13px 14px; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 13px; background: {{t.adIcon}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 21px; height: 21px;"><path d="M12 3.5l7 3v5.2c0 4.2-2.9 7.4-7 8.8-4.1-1.4-7-4.6-7-8.8V6.5l7-3Z" stroke="{{t.adIconInk}}" stroke-width="1.7" stroke-linejoin="round"></path><path d="M9.2 12.1l2 2 3.6-3.9" stroke="{{t.adIconInk}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: {{t.t3}}; border: 1px solid {{t.hair}}; border-radius: 4px; padding: 1px 4px;">AD</span>
+              <span style="font-size: 11px; font-weight: 500; color: {{t.t3}};">Meridian Insurance</span>
+            </div>
+            <div style="font-size: 14px; font-weight: 600; letter-spacing: -0.015em; color: {{t.t1}};">Car cover from &#8377;2,499/yr</div>
+          </div>
+          <div style="height: 34px; padding: 0 15px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; flex-shrink: 0;">
+            <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: {{t.onBrand}};">Get quote</span>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; padding: 16px 0 24px 0;">
+          <div style="display: flex; align-items: center; gap: 3px; padding: 6px; border-radius: 100px; background: {{t.navBg}}; border: 1px solid {{t.navStroke}};">
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-5.5H9V20H5a1 1 0 0 1-1-1v-8.5Z" stroke="{{t.t3}}" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+            </div>
+            <div style="height: 40px; padding: 0 15px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; gap: 7px;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 18px; height: 18px;"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v2a2 2 0 0 0 0 3.9v2A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.4v-2a2 2 0 0 0 0-3.9v-2Z" stroke="{{t.onBrand}}" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+              <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: {{t.onBrand}};">Bookings</span>
+            </div>
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><rect x="3.5" y="6.5" width="17" height="11" rx="2.5" stroke="{{t.t3}}" stroke-width="1.7"></rect><path d="M16 12h2" stroke="{{t.t3}}" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            </div>
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><circle cx="12" cy="9" r="3.3" stroke="{{t.t3}}" stroke-width="1.7"></circle><path d="M5.5 19.5c1.1-3 3.5-4.6 6.5-4.6s5.4 1.6 6.5 4.6" stroke="{{t.t3}}" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">ACTIVE</div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; background: {{t.bg}}; display: flex; flex-direction: column; box-shadow: 0 26px 64px {{t.shadow}};">
+
+        <div style="height: 58px; flex-shrink: 0;"></div>
+
+        <div style="padding: 0 20px 16px 20px; display: flex; align-items: flex-end; justify-content: space-between;">
+          <div style="font-size: 32px; font-weight: 700; letter-spacing: -0.035em; color: {{t.t1}}; line-height: 1.05;">Bookings</div>
+          <div style="width: 34px; height: 34px; border-radius: 100px; background: {{t.chip}}; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 17px; height: 17px;"><path d="M12 8v4l2.5 2.5" stroke="{{t.t2}}" stroke-width="1.8" stroke-linecap="round"></path><circle cx="12" cy="12" r="8.5" stroke="{{t.t2}}" stroke-width="1.8"></circle></svg>
+          </div>
+        </div>
+
+        <div style="margin: 0 16px; border-radius: 32px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 22px 24px; display: flex; flex-direction: column;">
+
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 100px; background: {{t.greenFill}};">
+              <div style="width: 7px; height: 7px; border-radius: 100px; background: {{t.green}};"></div>
+              <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.13em; color: {{t.green}};">LIVE</span>
+            </div>
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.13em; color: {{t.t3}};">FRI, 03 APR</div>
+          </div>
+
+          <div style="margin-top: 12px; font-size: 26px; font-weight: 700; letter-spacing: -0.035em; color: {{t.t1}}; line-height: 1.15;">Java &mdash; Morning</div>
+          <div style="margin-top: 3px; font-size: 13px; font-weight: 500; color: {{t.t2}};">SRM University Parking Lot</div>
+
+          <div style="margin-top: 22px; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">TIME REMAINING</div>
+          <div style="margin-top: 5px; display: flex; align-items: baseline; gap: 10px;">
+            <div style="font-size: 38px; font-weight: 700; letter-spacing: -0.045em; color: {{t.green}}; line-height: 1;">1h 20m</div>
+            <div style="font-size: 13px; font-weight: 500; color: {{t.t2}};">until 12:30 PM</div>
+          </div>
+
+          <div style="margin-top: 18px; position: relative; height: 12px; display: flex; align-items: center;">
+            <div style="position: absolute; left: 0; right: 0; height: 6px; border-radius: 100px; background: {{t.hair}};"></div>
+            <div style="position: absolute; left: 0; width: 33%; height: 6px; border-radius: 100px; background: {{t.green}};"></div>
+            <div style="position: absolute; left: 33%; width: 12px; height: 12px; margin-left: -6px; border-radius: 100px; background: {{t.card}}; border: 2.5px solid {{t.green}};"></div>
+          </div>
+
+          <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 12px; font-weight: 600; color: {{t.t2}};">07:30 AM</div>
+            <div style="font-size: 12px; font-weight: 600; color: {{t.t2}};">12:30 PM</div>
+          </div>
+
+          <div style="margin-top: 18px; height: 1px; background: {{t.hair}};"></div>
+
+          <div style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 100px; border: 1px solid {{t.hair}};">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 13px; height: 13px;"><path d="M4 16v2.5M20 16v2.5M5 16h14a1 1 0 0 0 1-1v-3.2a2 2 0 0 0-.3-1L17.8 7a2 2 0 0 0-1.7-1H7.9a2 2 0 0 0-1.7 1L4.3 10.8a2 2 0 0 0-.3 1V15a1 1 0 0 0 1 1Z" stroke="{{t.t2}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="7.6" cy="12.6" r="1" fill="{{t.t2}}"></circle><circle cx="16.4" cy="12.6" r="1" fill="{{t.t2}}"></circle></svg>
+              <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.02em; color: {{t.t1}};">TN 09 AB 1234</span>
+            </div>
+            <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.02em; color: {{t.t1}};">&#8377;90.00</div>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; align-items: center;">
+            <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-left: -31px;"></div>
+            <div style="flex-grow: 1; height: 1px; background-image: linear-gradient(to right, {{t.hair}} 60%, transparent 40%); background-size: 7px 1px; background-repeat: repeat-x;"></div>
+            <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-right: -31px;"></div>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; align-items: center; gap: 16px;">
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: {{t.green}};">SHOW AT EXIT</div>
+              <div style="font-size: 15px; font-weight: 600; letter-spacing: -0.015em; color: {{t.t1}};">Tap to enlarge</div>
+              <div style="font-size: 11px; font-weight: 500; color: {{t.t3}};">ID &middot; 68f2c41a</div>
+            </div>
+            <div style="width: 88px; height: 88px; border-radius: 16px; background: #FFFFFF; border: 1px solid {{t.hair}}; padding: 7px;">
+              <svg viewBox="0 0 25 25" style="width: 100%; height: 100%; display: block;"><path d="{{qr}}" fill="#0B0B0C"></path></svg>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex-grow: 1;"></div>
+
+        <div style="margin: 0 16px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 13px 14px; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 13px; background: {{t.adIcon}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 21px; height: 21px;"><path d="M12 3.5l7 3v5.2c0 4.2-2.9 7.4-7 8.8-4.1-1.4-7-4.6-7-8.8V6.5l7-3Z" stroke="{{t.adIconInk}}" stroke-width="1.7" stroke-linejoin="round"></path><path d="M9.2 12.1l2 2 3.6-3.9" stroke="{{t.adIconInk}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: {{t.t3}}; border: 1px solid {{t.hair}}; border-radius: 4px; padding: 1px 4px;">AD</span>
+              <span style="font-size: 11px; font-weight: 500; color: {{t.t3}};">Meridian Insurance</span>
+            </div>
+            <div style="font-size: 14px; font-weight: 600; letter-spacing: -0.015em; color: {{t.t1}};">Car cover from &#8377;2,499/yr</div>
+          </div>
+          <div style="height: 34px; padding: 0 15px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; flex-shrink: 0;">
+            <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: {{t.onBrand}};">Get quote</span>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; padding: 16px 0 24px 0;">
+          <div style="display: flex; align-items: center; gap: 3px; padding: 6px; border-radius: 100px; background: {{t.navBg}}; border: 1px solid {{t.navStroke}};">
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-5.5H9V20H5a1 1 0 0 1-1-1v-8.5Z" stroke="{{t.t3}}" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+            </div>
+            <div style="height: 40px; padding: 0 15px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; gap: 7px;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 18px; height: 18px;"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v2a2 2 0 0 0 0 3.9v2A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.4v-2a2 2 0 0 0 0-3.9v-2Z" stroke="{{t.onBrand}}" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+              <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: {{t.onBrand}};">Bookings</span>
+            </div>
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><rect x="3.5" y="6.5" width="17" height="11" rx="2.5" stroke="{{t.t3}}" stroke-width="1.7"></rect><path d="M16 12h2" stroke="{{t.t3}}" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            </div>
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><circle cx="12" cy="9" r="3.3" stroke="{{t.t3}}" stroke-width="1.7"></circle><path d="M5.5 19.5c1.1-3 3.5-4.6 6.5-4.6s5.4 1.6 6.5 4.6" stroke="{{t.t3}}" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Theme"}}'>
+class Component extends DCLogic {
+  qrPath() {
+    const N = 25, out = [];
+    let s = 20260403;
+    const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+    const on = (x, y) => out.push('M' + x + ' ' + y + 'h1v1h-1z');
+    const near = (x, y, cx, cy) => x >= cx - 1 && x < cx + 8 && y >= cy - 1 && y < cy + 8;
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        if (near(x, y, 0, 0) || near(x, y, N - 7, 0) || near(x, y, 0, N - 7)) continue;
+        if (rnd() > 0.5) on(x, y);
+      }
+    }
+    const finder = (cx, cy) => {
+      for (let y = 0; y < 7; y++) {
+        for (let x = 0; x < 7; x++) {
+          if (x === 0 || x === 6 || y === 0 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4)) on(cx + x, cy + y);
+        }
+      }
+    };
+    finder(0, 0); finder(N - 7, 0); finder(0, N - 7);
+    return out.join('');
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const light = {
+      canvas: '#E4E4EA', bg: '#F2F2F7', card: '#FFFFFF', chip: '#E9E9ED',
+      border: '#DCDCDC', hair: '#ECECEF',
+      t1: '#191C19', t2: '#666666', t3: '#9CA3AF',
+      brand: '#000000', onBrand: '#FFFFFF',
+      green: '#059669', greenFill: '#ECFDF5',
+      amber: '#D97706', amberFill: '#FFFBEB',
+      red: '#DC2626', redFill: '#FEF2F2',
+      shadow: 'rgba(15, 23, 42, 0.12)',
+      navBg: '#EDEDED', navStroke: 'rgba(0, 0, 0, 0.06)',
+      adIcon: '#EEF2F6', adIconInk: '#475569'
+    };
+    const night = {
+      canvas: '#141416', bg: '#000000', card: '#1C1C1E', chip: '#2C2C2E',
+      border: '#38383A', hair: '#2C2C2E',
+      t1: '#FFFFFF', t2: '#8E8E93', t3: '#636366',
+      brand: '#FFFFFF', onBrand: '#000000',
+      green: '#30D158', greenFill: 'rgba(48, 209, 88, 0.15)',
+      amber: '#FF9F0A', amberFill: 'rgba(255, 159, 10, 0.15)',
+      red: '#FF453A', redFill: 'rgba(255, 69, 58, 0.15)',
+      shadow: 'rgba(0, 0, 0, 0.6)',
+      navBg: '#1C1C1E', navStroke: 'rgba(255, 255, 255, 0.1)',
+      adIcon: '#2C2C2E', adIconInk: '#A1A1AA'
+    };
+    return { t: dark ? night : light, qr: this.qrPath() };
+  }
+}
+</script>
+</body>
+</html>

@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.PathInterpolator
 import android.view.inputmethod.InputMethodManager
+import androidx.lifecycle.Lifecycle
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -17,22 +18,33 @@ import com.gridee.parking.R
 import com.gridee.parking.databinding.BottomSheetVehicleOptionsBinding
 import com.gridee.parking.utils.VehicleNumberValidator
 
-class VehicleOptionsBottomSheet(
-    private val vehicleNumber: String,
-    private val existingVehicleNumbers: List<String>,
-    private val isDefault: Boolean,
-    private val onEditSave: (newVehicleNumber: String) -> Unit,
-    private val onMakeDefault: (String) -> Unit,
-    private val onDeleteConfirm: (String) -> Unit
-) : BottomSheetDialogFragment() {
+class VehicleOptionsBottomSheet : BottomSheetDialogFragment() {
 
     private var _binding: BottomSheetVehicleOptionsBinding? = null
     private val binding get() = _binding!!
 
+    private val vehicleNumber: String
+        get() = requireArguments().getString(ARG_VEHICLE_NUMBER).orEmpty()
+    private val existingVehicleNumbers: List<String>
+        get() = arguments?.getStringArrayList(ARG_EXISTING_VEHICLES).orEmpty()
+    private val isDefault: Boolean
+        get() = arguments?.getBoolean(ARG_IS_DEFAULT) ?: false
+
     private var isAnimating = false
 
     // Tracks which page is currently visible: "options", "edit", "delete"
-    private var currentPage = "options"
+    private var currentPage = PAGE_OPTIONS
+    private var actionDelivered = false
+    private var pendingAction: String? = null
+    private var pendingNewVehicleNumber: String? = null
+    private var pageAnimator: AnimatorSet? = null
+    private val resumeDeliveryRunnable = Runnable {
+        if (actionDelivered) {
+            dismissIfStateCanBeSaved()
+        } else {
+            deliverPendingActionIfPossible()
+        }
+    }
 
     // Apple-style spring interpolator
     private val pushInterpolator = PathInterpolator(0.32f, 0.72f, 0f, 1f)
@@ -40,6 +52,14 @@ class VehicleOptionsBottomSheet(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        currentPage = savedInstanceState?.getString(STATE_CURRENT_PAGE)
+            ?.takeIf { it in VALID_PAGES }
+            ?: PAGE_OPTIONS
+        actionDelivered = savedInstanceState?.getBoolean(STATE_ACTION_DELIVERED) ?: false
+        pendingAction = savedInstanceState?.getString(STATE_PENDING_ACTION)
+            ?.takeIf { it in VALID_ACTIONS }
+        pendingNewVehicleNumber = savedInstanceState?.getString(STATE_PENDING_NEW_VEHICLE_NUMBER)
+            ?.takeIf { it.isNotBlank() }
         setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
     }
 
@@ -54,7 +74,7 @@ class VehicleOptionsBottomSheet(
                 val behavior = BottomSheetBehavior.from(sheet)
                 behavior.state = BottomSheetBehavior.STATE_EXPANDED
                 behavior.skipCollapsed = true
-                behavior.isDraggable = true
+                behavior.isDraggable = currentPage == PAGE_OPTIONS
                 behavior.isHideable = true
 
                 // Allow child views to render outside bounds during slide animation
@@ -83,6 +103,7 @@ class VehicleOptionsBottomSheet(
         setupOptionsListeners()
         setupEditListeners()
         setupDeleteListeners()
+        renderCurrentPage()
     }
 
     private fun setupUI() {
@@ -108,25 +129,24 @@ class VehicleOptionsBottomSheet(
     // ─────────────────────────────────────────────────────────
     private fun setupOptionsListeners() {
         binding.btnClose.setOnClickListener {
-            dismiss()
+            dismissIfStateCanBeSaved()
         }
 
         binding.btnEdit.setOnClickListener {
             if (!isAnimating) {
                 navigateToPage(binding.layoutOptionsPage, binding.layoutEditPage)
-                currentPage = "edit"
+                currentPage = PAGE_EDIT
             }
         }
 
         binding.btnMakeDefault.setOnClickListener {
-            dismiss()
-            onMakeDefault(vehicleNumber)
+            publishAction(ACTION_MAKE_DEFAULT)
         }
 
         binding.btnDelete.setOnClickListener {
             if (!isAnimating) {
                 navigateToPage(binding.layoutOptionsPage, binding.layoutDeletePage)
-                currentPage = "delete"
+                currentPage = PAGE_DELETE
             }
         }
     }
@@ -139,7 +159,7 @@ class VehicleOptionsBottomSheet(
             if (!isAnimating) {
                 hideKeyboard()
                 navigateBackToPage(binding.layoutEditPage, binding.layoutOptionsPage)
-                currentPage = "options"
+                currentPage = PAGE_OPTIONS
             }
         }
 
@@ -168,13 +188,12 @@ class VehicleOptionsBottomSheet(
 
             if (newVehicleNumber == currentVehicleNumber) {
                 hideKeyboard()
-                dismiss()
+                dismissIfStateCanBeSaved()
                 return@setOnClickListener
             }
 
             hideKeyboard()
-            onEditSave(newVehicleNumber)
-            dismiss()
+            publishAction(ACTION_EDIT, newVehicleNumber)
         }
 
         // Clear error when user types
@@ -192,21 +211,84 @@ class VehicleOptionsBottomSheet(
         binding.btnDeleteBack.setOnClickListener {
             if (!isAnimating) {
                 navigateBackToPage(binding.layoutDeletePage, binding.layoutOptionsPage)
-                currentPage = "options"
+                currentPage = PAGE_OPTIONS
             }
         }
 
         binding.btnDeleteCancel.setOnClickListener {
             if (!isAnimating) {
                 navigateBackToPage(binding.layoutDeletePage, binding.layoutOptionsPage)
-                currentPage = "options"
+                currentPage = PAGE_OPTIONS
             }
         }
 
         binding.btnDeleteConfirm.setOnClickListener {
-            onDeleteConfirm(vehicleNumber)
-            dismiss()
+            publishAction(ACTION_DELETE)
         }
+    }
+
+    private fun renderCurrentPage() {
+        binding.layoutOptionsPage.visibility = if (currentPage == PAGE_OPTIONS) View.VISIBLE else View.GONE
+        binding.layoutEditPage.visibility = if (currentPage == PAGE_EDIT) View.VISIBLE else View.GONE
+        binding.layoutDeletePage.visibility = if (currentPage == PAGE_DELETE) View.VISIBLE else View.GONE
+        binding.layoutOptionsPage.translationX = 0f
+        binding.layoutEditPage.translationX = 0f
+        binding.layoutDeletePage.translationX = 0f
+        binding.layoutOptionsPage.alpha = 1f
+        binding.layoutEditPage.alpha = 1f
+        binding.layoutDeletePage.alpha = 1f
+        (dialog as? BottomSheetDialog)?.behavior?.isDraggable = currentPage == PAGE_OPTIONS
+    }
+
+    private fun publishAction(action: String, newVehicleNumber: String? = null) {
+        if (actionDelivered || pendingAction != null || action !in VALID_ACTIONS) return
+        pendingAction = action
+        pendingNewVehicleNumber = newVehicleNumber
+        deliverPendingActionIfPossible()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        _binding?.root?.removeCallbacks(resumeDeliveryRunnable)
+        _binding?.root?.post(resumeDeliveryRunnable)
+    }
+
+    private fun deliverPendingActionIfPossible() {
+        val action = pendingAction ?: return
+        val newVehicleNumber = pendingNewVehicleNumber
+        val fragmentManager = runCatching { parentFragmentManager }.getOrNull() ?: return
+        if (!isAdded || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            fragmentManager.isDestroyed || fragmentManager.isStateSaved
+        ) return
+
+        actionDelivered = true
+        pendingAction = null
+        pendingNewVehicleNumber = null
+        val published = runCatching {
+            fragmentManager.setFragmentResult(
+                RESULT_KEY,
+                Bundle().apply {
+                    putString(RESULT_ACTION, action)
+                    putString(RESULT_ORIGINAL_VEHICLE_NUMBER, vehicleNumber)
+                    newVehicleNumber?.let { putString(RESULT_NEW_VEHICLE_NUMBER, it) }
+                },
+            )
+        }.isSuccess
+        if (!published) {
+            actionDelivered = false
+            pendingAction = action
+            pendingNewVehicleNumber = newVehicleNumber
+            return
+        }
+        dismissIfStateCanBeSaved()
+    }
+
+    private fun dismissIfStateCanBeSaved() {
+        val fragmentManager = runCatching { parentFragmentManager }.getOrNull() ?: return
+        if (!isAdded || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            fragmentManager.isDestroyed || fragmentManager.isStateSaved
+        ) return
+        dismiss()
     }
 
     // ─────────────────────────────────────────────────────────
@@ -272,6 +354,8 @@ class VehicleOptionsBottomSheet(
 
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: android.animation.Animator) {
+                    if (pageAnimator !== animation || _binding == null) return
+                    pageAnimator = null
                     fromPage.visibility = View.GONE
                     fromPage.translationX = 0f
                     fromPage.alpha = 1f
@@ -282,7 +366,7 @@ class VehicleOptionsBottomSheet(
                     isAnimating = false
                 }
             })
-
+            pageAnimator = this
             start()
         }
     }
@@ -346,6 +430,8 @@ class VehicleOptionsBottomSheet(
 
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: android.animation.Animator) {
+                    if (pageAnimator !== animation || _binding == null) return
+                    pageAnimator = null
                     fromPage.visibility = View.GONE
                     fromPage.translationX = 0f
                     fromPage.setLayerType(View.LAYER_TYPE_NONE, null)
@@ -355,7 +441,7 @@ class VehicleOptionsBottomSheet(
                     isAnimating = false
                 }
             })
-
+            pageAnimator = this
             start()
         }
     }
@@ -372,11 +458,72 @@ class VehicleOptionsBottomSheet(
     }
 
     override fun onDestroyView() {
+        pageAnimator?.removeAllListeners()
+        pageAnimator?.cancel()
+        pageAnimator = null
+        isAnimating = false
+        _binding?.root?.removeCallbacks(resumeDeliveryRunnable)
+        _binding?.let { currentBinding ->
+            listOf(
+                currentBinding.layoutOptionsPage,
+                currentBinding.layoutEditPage,
+                currentBinding.layoutDeletePage,
+            ).forEach { page ->
+                page.animate()
+                    .setListener(null)
+                    .withStartAction(null)
+                    .withEndAction(null)
+                    .cancel()
+                page.setLayerType(View.LAYER_TYPE_NONE, null)
+            }
+        }
         super.onDestroyView()
         _binding = null
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(STATE_CURRENT_PAGE, currentPage)
+        outState.putBoolean(STATE_ACTION_DELIVERED, actionDelivered)
+        pendingAction?.let { outState.putString(STATE_PENDING_ACTION, it) }
+        pendingNewVehicleNumber?.let {
+            outState.putString(STATE_PENDING_NEW_VEHICLE_NUMBER, it)
+        }
+        super.onSaveInstanceState(outState)
+    }
+
     companion object {
         const val TAG = "VehicleOptionsBottomSheet"
+        const val RESULT_KEY = "vehicle_options_action"
+        const val RESULT_ACTION = "action"
+        const val RESULT_ORIGINAL_VEHICLE_NUMBER = "original_vehicle_number"
+        const val RESULT_NEW_VEHICLE_NUMBER = "new_vehicle_number"
+        const val ACTION_EDIT = "edit"
+        const val ACTION_MAKE_DEFAULT = "make_default"
+        const val ACTION_DELETE = "delete"
+
+        private const val ARG_VEHICLE_NUMBER = "vehicle_number"
+        private const val ARG_EXISTING_VEHICLES = "existing_vehicle_numbers"
+        private const val ARG_IS_DEFAULT = "is_default"
+        private const val STATE_CURRENT_PAGE = "current_page"
+        private const val STATE_ACTION_DELIVERED = "action_delivered"
+        private const val STATE_PENDING_ACTION = "pending_action"
+        private const val STATE_PENDING_NEW_VEHICLE_NUMBER = "pending_new_vehicle_number"
+        private const val PAGE_OPTIONS = "options"
+        private const val PAGE_EDIT = "edit"
+        private const val PAGE_DELETE = "delete"
+        private val VALID_PAGES = setOf(PAGE_OPTIONS, PAGE_EDIT, PAGE_DELETE)
+        private val VALID_ACTIONS = setOf(ACTION_EDIT, ACTION_MAKE_DEFAULT, ACTION_DELETE)
+
+        fun newInstance(
+            vehicleNumber: String,
+            existingVehicleNumbers: List<String>,
+            isDefault: Boolean,
+        ): VehicleOptionsBottomSheet = VehicleOptionsBottomSheet().apply {
+            arguments = Bundle().apply {
+                putString(ARG_VEHICLE_NUMBER, vehicleNumber)
+                putStringArrayList(ARG_EXISTING_VEHICLES, ArrayList(existingVehicleNumbers))
+                putBoolean(ARG_IS_DEFAULT, isDefault)
+            }
+        }
     }
 }

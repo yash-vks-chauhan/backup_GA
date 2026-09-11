@@ -44,6 +44,12 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="gridee_updates" />
 
+        <!-- Request the dynamically delivered OCR and barcode models during app install so the
+             first operator scan does not wait for a model download. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr,barcode" />
+
         <service
             android:name=".notifications.GrideeFirebaseMessagingService"
             android:exported="false">
@@ -84,11 +90,6 @@
             android:theme="@style/Theme.Gridee.NoActionBar" />
 
         <activity
-            android:name=".ui.auth.JwtTestActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Gridee.NoActionBar" />
-        
-        <activity
             android:name=".ui.auth.RegistrationActivity"
             android:exported="false"
             android:theme="@style/Theme.Gridee.NoActionBar" />
@@ -112,37 +113,6 @@
             android:name=".ui.auth.AddPhoneActivity"
             android:exported="false"
             android:theme="@style/Theme.Gridee.NoActionBar" />
-        
-        <activity
-            android:name=".ui.MainComposeActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Gridee.NoActionBar">
-            <!-- Uncomment these lines to make this the main activity -->
-            <!--
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            -->
-        </activity>
-        
-        <activity
-            android:name=".ui.compose.EdgeToEdgeComposeActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Gridee.NoActionBar" />
-        
-        <activity
-            android:name=".ui.demo.EdgeToEdgeDemoActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Gridee.NoActionBar">
-            <!-- Test activity - can be made launcher for testing -->
-            <!--
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            -->
-        </activity>
         
         <activity
             android:name=".ui.main.MainContainerActivity"
@@ -169,6 +139,7 @@
         <activity
             android:name=".ui.wallet.WalletAddMoneyActivity"
             android:exported="false"
+            android:enableOnBackInvokedCallback="true"
             android:theme="@style/Theme.Gridee.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
             
@@ -283,7 +254,7 @@
         <activity
             android:name=".ui.qr.QrScannerActivity"
             android:exported="false"
-            android:theme="@style/Theme.Gridee.NoActionBar" />
+            android:theme="@style/Theme.Gridee.Scanner" />
 
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"

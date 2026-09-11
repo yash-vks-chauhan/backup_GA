@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Light theme: nothing at all.
+
+  The pass has no plate any more. The state wash (#ECFDF5 / #FFFBEB) and the page colour it
+  dissolves into (#F5F5F5) are both within a hair of white, so the page itself is the code's
+  quiet zone and drawing a white square on top of a near-white page only announced a
+  container the design does not have.
+
+  See drawable-night for the reason the dark theme still gets one.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+</shape>

@@ -33,7 +33,6 @@ class NewSupportRequestActivity : BaseActivity<ActivityNewSupportRequestBinding>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
             !ThemeManager.isDarkMode(this)
 

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Confirmation for cancelling a booking.
+
+  The card's cancel is a plain row, so the guard lives here rather than in the gesture. One
+  destructive button, one way out, and the way out is the wider of the two — a sheet that opens
+  by accident should be trivially dismissable.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_universal"
+    android:orientation="vertical"
+    android:paddingBottom="28dp">
+
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bottom_sheet_handle" />
+
+    <TextView
+        android:id="@+id/text_cancel_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:fontFamily="@font/inter_bold"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:letterSpacing="-0.02"
+        android:paddingHorizontal="28dp"
+        android:text="@string/cancel_sheet_title"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/text_cancel_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/inter_medium"
+        android:gravity="center"
+        android:lineSpacingMultiplier="1.35"
+        android:paddingHorizontal="32dp"
+        android:text="@string/cancel_sheet_body"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <!-- Reads back what is being cancelled. A confirmation that names nothing is a
+         confirmation people learn to tap through. -->
+    <LinearLayout
+        android:id="@+id/layout_cancel_summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_cancel_summary"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/text_cancel_spot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="@font/inter_semibold"
+                android:letterSpacing="-0.015"
+                android:singleLine="true"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                tools:text="B-07" />
+
+            <TextView
+                android:id="@+id/text_cancel_when"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/inter_medium"
+                android:singleLine="true"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                tools:text="04:29 AM – 07:29 AM" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/coin_cancel_amount"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="5dp"
+                android:background="@drawable/bg_gridee_coin_dark"
+                android:fontFamily="@font/inter_bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingTop="1dp"
+                android:text="@string/gridee_coin_glyph"
+                android:textColor="@color/btn_text_on_brand"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/text_cancel_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_bold"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                tools:text="90.00" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_confirm_cancel"
+        style="@style/Widget.Material3.Button.UnelevatedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="22dp"
+        android:fontFamily="@font/inter_bold"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:minHeight="54dp"
+        android:text="@string/cancel_sheet_confirm"
+        android:textAllCaps="false"
+        android:textColor="@color/status_text_cancelled"
+        android:textSize="14sp"
+        app:backgroundTint="@color/cancel_button_bg"
+        app:cornerRadius="28dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_keep_booking"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="6dp"
+        android:fontFamily="@font/inter_semibold"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:minHeight="50dp"
+        android:text="@string/cancel_sheet_keep"
+        android:textAllCaps="false"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp" />
+
+</LinearLayout>

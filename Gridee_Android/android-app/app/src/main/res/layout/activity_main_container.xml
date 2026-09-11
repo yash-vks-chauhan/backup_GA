@@ -24,6 +24,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Android 15+ ignores Window status-bar colors. This app-owned surface is the
+         modern equivalent: it sits behind status-bar icons and can still cross-fade
+         between Home's transparent hero and the other tabs' page background. -->
+    <View
+        android:id="@+id/status_bar_scrim"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@android:color/transparent"
+        android:clickable="false"
+        android:focusable="false"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Bottom fade — a soft vertical gradient that dissolves content into the
          page background as it approaches the floating capsule. Mirrors the
          iOS Music / Maps / Spotify pattern: content gracefully fades to the
@@ -77,12 +91,17 @@
          shrinks to 20dp as the pill grows — at 22dp against the smaller label it read
          icon-heavy, and the smaller mark balances the taller pill.
          The gold sits on the glyph alone — the one warm element below the fold —
-         while the label stays in the page's own text color. -->
+         while the label stays in the page's own text color.
+
+         Anchored to the TOP of the ad, not to the tab bar. The dock reads bottom-up as
+         tab bar → ad → referral: the ad joins the bar as one bottom slab, and the pill
+         floats clear above it rather than being sandwiched between the two. -->
     <LinearLayout
         android:id="@+id/btn_partner_referral"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="22dp"
+        android:layout_marginBottom="20dp"
+        app:layout_goneMarginBottom="22dp"
         android:background="@drawable/bg_partner_pill"
         android:clickable="true"
         android:clipChildren="false"
@@ -98,7 +117,7 @@
         android:paddingTop="10dp"
         android:paddingEnd="16dp"
         android:paddingBottom="10dp"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintBottom_toTopOf="@id/home_native_ad_dock"
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
@@ -120,37 +139,65 @@
 
     </LinearLayout>
 
-    <!-- Home-only portrait video ad. It shares the referral pill's bottom baseline so the
-         lower controls read as one dock: ad on the left, referral action on the right.
+    <!-- Home-only native ad. Full-width media card, stacked ABOVE the referral pill rather
+         than beside it: at 120dp the card had 31% of the screen width to work with, which is
+         what capped its eCPM. It now spans the content width and the pill keeps its own row.
+
+         Height is wrap_content — the card's media frame is a 1.91:1 ratio on whatever width
+         the device gives it, so a fixed height would either crop the creative or leave a gap.
 
          No elevation here. This FrameLayout has no background, so it has no outline to cast a
          shadow from — the elevation it used to carry bought z-order it already gets from being
          declared last, while the card inside stayed visibly flat next to the referral pill's
-         shadow. The shadow now lives on the MaterialCardView in view_admob_native_card, at the
+         shadow. The shadow lives on the MaterialCardView in view_admob_native_card, at the
          same 6dp the pill and the tab capsule use. clipChildren stays off so that shadow can
          draw outside these bounds.
 
-         20dp start margin, not 16dp: the in-app banner insets 20dp from each edge and, when it
-         appears, this dock lifts to sit directly above it — matching the inset keeps their left
-         edges on one line instead of 4dp adrift. -->
+         16dp side margins match the Home spot cards in item_parking_spot_home, so the ad's
+         edges line up with the content it sits over instead of floating 4dp proud of it.
+
+         Sits directly above the tab bar, with the referral pill anchored to ITS top. Height is
+         wrap_content because the card is a 1.91:1 ratio on whatever width the device gives it —
+         a fixed height would letterbox the creative or leave a gap under it.
+
+         constraintWidth_max caps that width at 400dp, which never binds in portrait (the card
+         is 358dp there) but is what keeps landscape sane: unbounded, an 819dp-wide card at
+         1.91:1 works out 429dp tall on a screen only 393dp high, clipping itself and pushing
+         the referral pill off the display entirely. -->
     <FrameLayout
         android:id="@+id/home_native_ad_dock"
-        android:layout_width="120dp"
-        android:layout_height="213dp"
-        android:layout_marginStart="20dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="22dp"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:visibility="invisible"
+        android:visibility="gone"
+        app:layout_constraintWidth_max="400dp"
         app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!--
+          First-party campaign fallback, sharing the dock with the network card. It used to sit
+          at the bottom of Home's ScrollView, which meant that every time AdMob failed to fill,
+          the one always-visible slot went empty and the campaign rendered below the fold where
+          nobody scrolls to. The two are mutually exclusive — HomeFragment shows this only when
+          the network card has no ad — so they can occupy the same frame.
+        -->
+        <com.gridee.parking.ui.ads.CustomAdBannerView
+            android:id="@+id/home_campaign_slot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
 
         <!-- clipChildren off the whole way down to the card, or this container's bounds
              (identical to the card's) would clip the card's shadow back off. -->
         <com.gridee.parking.ui.ads.AdMobNativeAdCardView
             android:id="@+id/native_ad_home"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:clipChildren="false"
             android:clipToPadding="false" />
 

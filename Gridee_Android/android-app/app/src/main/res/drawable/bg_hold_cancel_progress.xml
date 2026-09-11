@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The fill that sweeps left to right while the cancel control is held. Clipped by the
+     pill's own outline, so it needs no corner radius of its own beyond matching it. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#1FDC2626" />
+    <corners android:radius="100dp" />
+</shape>

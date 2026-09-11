@@ -55,7 +55,23 @@ data class Booking(
     val bookingDate: String,
     val checkInTimestamp: Long = 0,
     val checkOutTimestamp: Long = 0,
-    val statusLabelOverride: String? = null
+    val statusLabelOverride: String? = null,
+    /**
+     * The two things [startTime] was standing in for at once.
+     *
+     * [startTime] resolves to the actual scan when there is one and the scheduled slot when
+     * there is not, which is right for a single "when did this start" line but wrong the moment
+     * two rows show both — the stage rail's Booked stop wants the scan, the card's CHECK-IN
+     * wants the slot, and with one field they printed the same minute twice.
+     */
+    val scheduledStartTime: String = "",
+    val scannedAtTime: String? = null,
+    /**
+     * When a finished booking finished — the cancellation, the scan-out, or the moment the
+     * window closed on a no-show. The bookings tab shows a receipt only for a booking that
+     * ended recently; without this it would have to show the user's whole history.
+     */
+    val endedAtTimestamp: Long = 0L,
 ) : Serializable
 
 enum class BookingStatus : Serializable {

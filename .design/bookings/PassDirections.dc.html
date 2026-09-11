@@ -1,0 +1,453 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; }
+    a { color: #059669; } a:hover { color: #047857; }
+    * { box-sizing: border-box; }
+    .cap { font-size: 11px; font-weight: 700; letter-spacing: 0.13em; }
+    .sub { font-size: 12.5px; font-weight: 500; line-height: 1.45; }
+  </style>
+</helmet>
+
+<div style="width: 1370px; height: 2010px; background: {{t.canvas}}; padding: 32px 40px 40px 40px; display: flex; flex-direction: column; gap: 24px;">
+
+  <div style="display: flex; flex-direction: column; gap: 7px;">
+    <div style="display: flex; align-items: baseline; gap: 12px;">
+      <div class="cap" style="color: {{t.t3}};">THE PASS &mdash; SIX DIRECTIONS</div>
+      <div style="font-size: 24px; font-weight: 700; letter-spacing: -0.03em; color: {{t.t1}};">Colour on top, code in the middle, ad on white</div>
+    </div>
+    <div class="sub" style="font-size: 14px; color: {{t.t2}}; max-width: 900px; text-wrap: pretty;">No card, no plate, no container. The state is the top of the page &mdash; amber for Booked, green for Live &mdash; the header carries only the lot name, and the code sits straight on the colour. From the middle down it is one white surface with the ad running the full width of it, the way the live build already runs its rail. The six differ in one thing each: where the colour stops and how it meets the white. Alternating amber and green so both palettes read; either substitutes into any of them.</div>
+  </div>
+
+  <div style="display: flex; gap: 55px;">
+
+    <!-- ═══════════ 1 ═══════════ -->
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div class="cap" style="color: {{t.t2}};">1 &middot; HALF AND HALF</div>
+        <div class="sub" style="color: {{t.t3}};">The sheet lifts off the colour on a 28 px radius.</div>
+      </div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; background: {{t.greenWash}}; box-shadow: 0 24px 60px {{t.shadow}};">
+        <div style="height: 58px; flex-shrink: 0;"></div>
+        <div style="height: 52px; flex-shrink: 0; padding: 0 16px; display: flex; align-items: center; gap: 0;">
+          <div style="width: 34px; height: 34px; border-radius: 100px; background: {{t.greenDisc}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 17px; height: 17px;"><path d="M14.5 5.5L8 12l6.5 6.5" stroke="{{t.green}}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <div style="flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700; letter-spacing: -0.025em; color: {{t.greenInk}};">SRM University Parking</div>
+          <div style="width: 34px; flex-shrink: 0;"></div>
+        </div>
+        <div style="height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 7px;">
+          <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.green}};"></div>
+          <span style="font-size: 12.5px; font-weight: 600; letter-spacing: -0.005em; color: {{t.green}};">Live</span>
+          <span style="font-size: 12.5px; font-weight: 500; color: {{t.greenSub}};">&middot;</span>
+          <span style="font-size: 12.5px; font-weight: 500; color: {{t.greenSub}};">1h 20m left &middot; A&#8209;14</span>
+        </div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 4px;">
+          <svg viewBox="0 0 25 25" style="width: 212px; height: 212px; display: block;"><path d="{{qr}}" fill="{{t.qrInk}}"></path></svg>
+          <div style="margin-top: 16px; font-size: 15px; font-weight: 600; letter-spacing: -0.015em; color: {{t.greenInk}};">Hold up to the exit scanner</div>
+          <div style="margin-top: 3px; font-size: 12.5px; font-weight: 500; color: {{t.greenSub}};">Brightness turned up automatically</div>
+        </div>
+        <div style="height: 404px; flex-shrink: 0; border-radius: 28px 28px 0 0; background: {{t.sheet}}; padding: 22px 20px 24px 20px; display: flex; flex-direction: column;">
+          <div style="height: 209px; flex-shrink: 0; border-radius: 20px; overflow: hidden; background: {{t.creative}}; position: relative; display: flex; flex-direction: column; justify-content: space-between; padding: 14px 16px 16px 16px;">
+            <div style="display: flex;">
+              <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.32); border-radius: 4px; padding: 2px 5px;">AD</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.7);">Meridian Insurance</div>
+              <div style="font-size: 21px; font-weight: 700; letter-spacing: -0.03em; color: #FFFFFF; line-height: 1.15;">Cover your car in<br>under two minutes</div>
+              <div style="height: 34px; padding: 0 16px; border-radius: 11px; background: #FFFFFF; align-self: flex-start; display: flex; align-items: center;">
+                <span style="font-size: 13px; font-weight: 600; color: #101828;">Get a quote</span>
+              </div>
+            </div>
+          </div>
+          <div style="height: 20px; flex-shrink: 0; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <div style="width: 16px; height: 5px; border-radius: 100px; background: {{t.t2}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+          </div>
+          <div style="flex-grow: 1;"></div>
+          <div style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: {{t.brand}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 20px; font-weight: 700; color: {{t.onBrand}};">G</span>
+            </div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <div style="font-size: 13.5px; font-weight: 600; letter-spacing: -0.012em; color: {{t.t1}};">Refer a friend, earn 50 coins</div>
+              <div style="font-size: 10.5px; font-weight: 500; color: {{t.t3}};">From Gridee</div>
+            </div>
+            <div style="height: 30px; padding: 0 14px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; flex-shrink: 0;">
+              <span style="font-size: 11px; font-weight: 600; color: {{t.onBrand}};">Invite</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 2 ═══════════ -->
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div class="cap" style="color: {{t.t2}};">2 &middot; FLAT SEAM, BLED AD</div>
+        <div class="sub" style="color: {{t.t3}};">One straight line; the creative touches both edges.</div>
+      </div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; background: {{t.amberWash}}; box-shadow: 0 24px 60px {{t.shadow}};">
+        <div style="height: 58px; flex-shrink: 0;"></div>
+        <div style="height: 52px; flex-shrink: 0; padding: 0 16px; display: flex; align-items: center;">
+          <div style="width: 34px; height: 34px; border-radius: 100px; background: {{t.amberDisc}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 17px; height: 17px;"><path d="M14.5 5.5L8 12l6.5 6.5" stroke="{{t.amber}}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <div style="flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700; letter-spacing: -0.025em; color: {{t.amberInk}};">SRM University Parking</div>
+          <div style="width: 34px; flex-shrink: 0;"></div>
+        </div>
+        <div style="height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 12.5px; font-weight: 500; color: {{t.amberSub}};">Booked &middot; starts in 44 min &middot; B&#8209;07</span>
+        </div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 10px;">
+          <svg viewBox="0 0 25 25" style="width: 212px; height: 212px; display: block;"><path d="{{qr}}" fill="{{t.qrInk}}"></path></svg>
+          <div style="margin-top: 16px; font-size: 15px; font-weight: 600; letter-spacing: -0.015em; color: {{t.amberInk}};">Hold up to the entry scanner</div>
+        </div>
+        <div style="height: 430px; flex-shrink: 0; background: {{t.sheet}}; display: flex; flex-direction: column;">
+          <div style="height: 168px; flex-shrink: 0; background: {{t.creativeAlt}}; padding: 14px 20px; display: flex; align-items: flex-start;">
+            <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.32); border-radius: 4px; padding: 2px 5px;">AD</span>
+          </div>
+          <div style="padding: 16px 20px 0 20px; display: flex; flex-direction: column; gap: 5px;">
+            <div style="font-size: 11.5px; font-weight: 500; color: {{t.t3}};">Northgate Storage</div>
+            <div style="font-size: 19px; font-weight: 700; letter-spacing: -0.03em; color: {{t.t1}}; line-height: 1.2;">A locker near the lot you park in</div>
+            <div style="margin-top: 9px; height: 36px; padding: 0 16px; border-radius: 11px; background: {{t.brand}}; align-self: flex-start; display: flex; align-items: center;">
+              <span style="font-size: 13px; font-weight: 600; color: {{t.onBrand}};">See sizes</span>
+            </div>
+          </div>
+          <div style="height: 20px; flex-shrink: 0; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+            <div style="width: 16px; height: 5px; border-radius: 100px; background: {{t.t2}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+          </div>
+          <div style="flex-grow: 1;"></div>
+          <div style="height: 64px; flex-shrink: 0; margin: 0 20px 20px 20px; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: {{t.brand}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 20px; font-weight: 700; color: {{t.onBrand}};">G</span>
+            </div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <div style="font-size: 13.5px; font-weight: 600; letter-spacing: -0.012em; color: {{t.t1}};">Refer a friend, earn 50 coins</div>
+              <div style="font-size: 10.5px; font-weight: 500; color: {{t.t3}};">From Gridee</div>
+            </div>
+            <div style="height: 30px; padding: 0 14px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; flex-shrink: 0;">
+              <span style="font-size: 11px; font-weight: 600; color: {{t.onBrand}};">Invite</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 3 ═══════════ -->
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div class="cap" style="color: {{t.t2}};">3 &middot; SOLID CAP</div>
+        <div class="sub" style="color: {{t.t3}};">Full-strength colour, white type, code on white.</div>
+      </div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; background: {{t.sheet}}; box-shadow: 0 24px 60px {{t.shadow}};">
+        <div style="height: 160px; flex-shrink: 0; background: {{t.greenSolid}}; display: flex; flex-direction: column;">
+          <div style="height: 58px; flex-shrink: 0;"></div>
+          <div style="height: 52px; flex-shrink: 0; padding: 0 16px; display: flex; align-items: center;">
+            <div style="width: 34px; height: 34px; border-radius: 100px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 17px; height: 17px;"><path d="M14.5 5.5L8 12l6.5 6.5" stroke="#FFFFFF" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <div style="flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700; letter-spacing: -0.025em; color: #FFFFFF;">SRM University Parking</div>
+            <div style="width: 34px; flex-shrink: 0;"></div>
+          </div>
+          <div style="height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 7px;">
+            <div style="width: 6px; height: 6px; border-radius: 100px; background: rgba(255,255,255,0.9);"></div>
+            <span style="font-size: 12.5px; font-weight: 600; color: #FFFFFF;">Live</span>
+            <span style="font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,0.72);">&middot; 1h 20m left &middot; A&#8209;14</span>
+          </div>
+        </div>
+        <div style="flex-grow: 1; padding: 30px 20px 0 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 25 25" style="width: 212px; height: 212px; display: block;"><path d="{{qr}}" fill="{{t.qrInk}}"></path></svg>
+          <div style="margin-top: 16px; font-size: 15px; font-weight: 600; letter-spacing: -0.015em; color: {{t.t1}};">Hold up to the exit scanner</div>
+          <div style="margin-top: 3px; font-size: 12.5px; font-weight: 500; color: {{t.t3}};">Brightness turned up automatically</div>
+        </div>
+        <div style="flex-shrink: 0; padding: 0 20px 24px 20px; display: flex; flex-direction: column;">
+          <div style="height: 209px; flex-shrink: 0; border-radius: 20px; overflow: hidden; background: {{t.creative}}; display: flex; flex-direction: column; justify-content: space-between; padding: 14px 16px 16px 16px;">
+            <div style="display: flex;">
+              <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.32); border-radius: 4px; padding: 2px 5px;">AD</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.7);">Meridian Insurance</div>
+              <div style="font-size: 21px; font-weight: 700; letter-spacing: -0.03em; color: #FFFFFF; line-height: 1.15;">Cover your car in<br>under two minutes</div>
+              <div style="height: 34px; padding: 0 16px; border-radius: 11px; background: #FFFFFF; align-self: flex-start; display: flex; align-items: center;">
+                <span style="font-size: 13px; font-weight: 600; color: #101828;">Get a quote</span>
+              </div>
+            </div>
+          </div>
+          <div style="height: 20px; flex-shrink: 0; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <div style="width: 16px; height: 5px; border-radius: 100px; background: {{t.t2}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display: flex; gap: 55px;">
+
+    <!-- ═══════════ 4 ═══════════ -->
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div class="cap" style="color: {{t.t2}};">4 &middot; DISSOLVE</div>
+        <div class="sub" style="color: {{t.t3}};">Colour fades out by the middle. No seam at all.</div>
+      </div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; background: linear-gradient(to bottom, {{t.amberWash}} 0px, {{t.amberWash}} 120px, {{t.sheet}} 452px, {{t.sheet}} 844px); box-shadow: 0 24px 60px {{t.shadow}};">
+        <div style="height: 58px; flex-shrink: 0;"></div>
+        <div style="height: 52px; flex-shrink: 0; padding: 0 16px; display: flex; align-items: center;">
+          <div style="width: 34px; height: 34px; border-radius: 100px; background: {{t.amberDisc}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 17px; height: 17px;"><path d="M14.5 5.5L8 12l6.5 6.5" stroke="{{t.amber}}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <div style="flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700; letter-spacing: -0.025em; color: {{t.amberInk}};">SRM University Parking</div>
+          <div style="width: 34px; flex-shrink: 0;"></div>
+        </div>
+        <div style="height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 7px;">
+          <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.amber}};"></div>
+          <span style="font-size: 12.5px; font-weight: 600; color: {{t.amber}};">Booked</span>
+          <span style="font-size: 12.5px; font-weight: 500; color: {{t.amberSub}};">&middot; starts in 44 min &middot; B&#8209;07</span>
+        </div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 14px;">
+          <svg viewBox="0 0 25 25" style="width: 212px; height: 212px; display: block;"><path d="{{qr}}" fill="{{t.qrInk}}"></path></svg>
+          <div style="margin-top: 16px; font-size: 15px; font-weight: 600; letter-spacing: -0.015em; color: {{t.t1}};">Hold up to the entry scanner</div>
+          <div style="margin-top: 3px; font-size: 12.5px; font-weight: 500; color: {{t.t3}};">Brightness turned up automatically</div>
+        </div>
+        <div style="height: 392px; flex-shrink: 0; padding: 0 20px 24px 20px; display: flex; flex-direction: column;">
+          <div style="height: 209px; flex-shrink: 0; border-radius: 20px; overflow: hidden; background: {{t.creativeAlt}}; display: flex; flex-direction: column; justify-content: space-between; padding: 14px 16px 16px 16px;">
+            <div style="display: flex;">
+              <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.32); border-radius: 4px; padding: 2px 5px;">AD</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.7);">Northgate Storage</div>
+              <div style="font-size: 21px; font-weight: 700; letter-spacing: -0.03em; color: #FFFFFF; line-height: 1.15;">A locker near the lot<br>you park in</div>
+              <div style="height: 34px; padding: 0 16px; border-radius: 11px; background: #FFFFFF; align-self: flex-start; display: flex; align-items: center;">
+                <span style="font-size: 13px; font-weight: 600; color: #101828;">See sizes</span>
+              </div>
+            </div>
+          </div>
+          <div style="height: 20px; flex-shrink: 0; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <div style="width: 16px; height: 5px; border-radius: 100px; background: {{t.t2}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+          </div>
+          <div style="flex-grow: 1;"></div>
+          <div style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: {{t.brand}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 20px; font-weight: 700; color: {{t.onBrand}};">G</span>
+            </div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <div style="font-size: 13.5px; font-weight: 600; letter-spacing: -0.012em; color: {{t.t1}};">Refer a friend, earn 50 coins</div>
+              <div style="font-size: 10.5px; font-weight: 500; color: {{t.t3}};">From Gridee</div>
+            </div>
+            <div style="height: 30px; padding: 0 14px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; flex-shrink: 0;">
+              <span style="font-size: 11px; font-weight: 600; color: {{t.onBrand}};">Invite</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 5 ═══════════ -->
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div class="cap" style="color: {{t.t2}};">5 &middot; TEAR LINE</div>
+        <div class="sub" style="color: {{t.t3}};">The ticket notch, kept without the card.</div>
+      </div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; background: {{t.greenWash}}; box-shadow: 0 24px 60px {{t.shadow}};">
+        <div style="height: 58px; flex-shrink: 0;"></div>
+        <div style="height: 52px; flex-shrink: 0; padding: 0 16px; display: flex; align-items: center;">
+          <div style="width: 34px; height: 34px; border-radius: 100px; background: {{t.greenDisc}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 17px; height: 17px;"><path d="M14.5 5.5L8 12l6.5 6.5" stroke="{{t.green}}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <div style="flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700; letter-spacing: -0.025em; color: {{t.greenInk}};">SRM University Parking</div>
+          <div style="width: 34px; flex-shrink: 0;"></div>
+        </div>
+        <div style="height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 7px;">
+          <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.green}};"></div>
+          <span style="font-size: 12.5px; font-weight: 600; color: {{t.green}};">Live</span>
+          <span style="font-size: 12.5px; font-weight: 500; color: {{t.greenSub}};">&middot; 1h 20m left &middot; A&#8209;14</span>
+        </div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 8px;">
+          <svg viewBox="0 0 25 25" style="width: 212px; height: 212px; display: block;"><path d="{{qr}}" fill="{{t.qrInk}}"></path></svg>
+          <div style="margin-top: 16px; font-size: 15px; font-weight: 600; letter-spacing: -0.015em; color: {{t.greenInk}};">Hold up to the exit scanner</div>
+          <div style="margin-top: 3px; font-size: 12.5px; font-weight: 500; color: {{t.greenSub}};">Brightness turned up automatically</div>
+        </div>
+        <div style="height: 18px; flex-shrink: 0; display: flex; align-items: center; background: {{t.sheet}};">
+          <div style="width: 18px; height: 18px; border-radius: 100px; background: {{t.greenWash}}; margin: -9px 0 0 -9px;"></div>
+          <div style="flex-grow: 1; height: 1px; background-image: linear-gradient(to right, {{t.tear}} 60%, transparent 40%); background-size: 8px 1px; background-repeat: repeat-x;"></div>
+          <div style="width: 18px; height: 18px; border-radius: 100px; background: {{t.greenWash}}; margin: -9px -9px 0 0;"></div>
+        </div>
+        <div style="height: 386px; flex-shrink: 0; background: {{t.sheet}}; padding: 18px 20px 24px 20px; display: flex; flex-direction: column;">
+          <div style="height: 200px; flex-shrink: 0; border-radius: 20px; overflow: hidden; background: {{t.creative}}; display: flex; flex-direction: column; justify-content: space-between; padding: 14px 16px 16px 16px;">
+            <div style="display: flex;">
+              <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.32); border-radius: 4px; padding: 2px 5px;">AD</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <div style="font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.7);">Meridian Insurance</div>
+              <div style="font-size: 20px; font-weight: 700; letter-spacing: -0.03em; color: #FFFFFF; line-height: 1.15;">Cover your car in<br>under two minutes</div>
+              <div style="height: 34px; padding: 0 16px; border-radius: 11px; background: #FFFFFF; align-self: flex-start; display: flex; align-items: center;">
+                <span style="font-size: 13px; font-weight: 600; color: #101828;">Get a quote</span>
+              </div>
+            </div>
+          </div>
+          <div style="height: 20px; flex-shrink: 0; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+            <div style="width: 16px; height: 5px; border-radius: 100px; background: {{t.t2}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+          </div>
+          <div style="flex-grow: 1;"></div>
+          <div style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: {{t.brand}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 20px; font-weight: 700; color: {{t.onBrand}};">G</span>
+            </div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <div style="font-size: 13.5px; font-weight: 600; letter-spacing: -0.012em; color: {{t.t1}};">Refer a friend, earn 50 coins</div>
+              <div style="font-size: 10.5px; font-weight: 500; color: {{t.t3}};">From Gridee</div>
+            </div>
+            <div style="height: 30px; padding: 0 14px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; flex-shrink: 0;">
+              <span style="font-size: 11px; font-weight: 600; color: {{t.onBrand}};">Invite</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 6 ═══════════ -->
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div class="cap" style="color: {{t.t2}};">6 &middot; TALL TRAY</div>
+        <div class="sub" style="color: {{t.t3}};">Colour stops higher and buys a second full slot.</div>
+      </div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; background: {{t.amberWash}}; box-shadow: 0 24px 60px {{t.shadow}};">
+        <div style="height: 58px; flex-shrink: 0;"></div>
+        <div style="height: 52px; flex-shrink: 0; padding: 0 16px; display: flex; align-items: center;">
+          <div style="width: 34px; height: 34px; border-radius: 100px; background: {{t.amberDisc}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 17px; height: 17px;"><path d="M14.5 5.5L8 12l6.5 6.5" stroke="{{t.amber}}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <div style="flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700; letter-spacing: -0.025em; color: {{t.amberInk}};">SRM University Parking</div>
+          <div style="width: 34px; flex-shrink: 0;"></div>
+        </div>
+        <div style="height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 7px;">
+          <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.amber}};"></div>
+          <span style="font-size: 12.5px; font-weight: 600; color: {{t.amber}};">Booked</span>
+          <span style="font-size: 12.5px; font-weight: 500; color: {{t.amberSub}};">&middot; starts in 44 min &middot; B&#8209;07</span>
+        </div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 6px;">
+          <svg viewBox="0 0 25 25" style="width: 192px; height: 192px; display: block;"><path d="{{qr}}" fill="{{t.qrInk}}"></path></svg>
+          <div style="margin-top: 13px; font-size: 14.5px; font-weight: 600; letter-spacing: -0.015em; color: {{t.amberInk}};">Hold up to the entry scanner</div>
+        </div>
+        <div style="height: 468px; flex-shrink: 0; border-radius: 28px 28px 0 0; background: {{t.sheet}}; padding: 20px 20px 24px 20px; display: flex; flex-direction: column;">
+          <div style="height: 190px; flex-shrink: 0; border-radius: 20px; overflow: hidden; background: {{t.creative}}; display: flex; flex-direction: column; justify-content: space-between; padding: 13px 16px 15px 16px;">
+            <div style="display: flex;">
+              <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.32); border-radius: 4px; padding: 2px 5px;">AD</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.7);">Meridian Insurance</div>
+              <div style="font-size: 19px; font-weight: 700; letter-spacing: -0.03em; color: #FFFFFF; line-height: 1.15;">Cover your car in<br>under two minutes</div>
+              <div style="height: 32px; padding: 0 15px; border-radius: 10px; background: #FFFFFF; align-self: flex-start; display: flex; align-items: center;">
+                <span style="font-size: 12.5px; font-weight: 600; color: #101828;">Get a quote</span>
+              </div>
+            </div>
+          </div>
+          <div style="height: 20px; flex-shrink: 0; margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <div style="width: 16px; height: 5px; border-radius: 100px; background: {{t.t2}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+            <div style="width: 5px; height: 5px; border-radius: 100px; background: {{t.t4}};"></div>
+          </div>
+          <div style="height: 116px; flex-shrink: 0; margin-top: 14px; border-radius: 18px; overflow: hidden; background: {{t.adIcon}}; display: flex; align-items: center; padding: 0 14px; gap: 13px;">
+            <div style="width: 76px; height: 76px; border-radius: 14px; background: {{t.creativeAlt}}; flex-shrink: 0;"></div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: {{t.t3}}; border: 1px solid {{t.hair}}; border-radius: 4px; padding: 1px 4px;">AD</span>
+                <span style="font-size: 11px; font-weight: 500; color: {{t.t3}};">Northgate Storage</span>
+              </div>
+              <div style="font-size: 14.5px; font-weight: 600; letter-spacing: -0.015em; color: {{t.t1}}; line-height: 1.25;">A locker near the lot you park in</div>
+              <div style="font-size: 12px; font-weight: 500; color: {{t.t2}};">From &#8377;399 a month</div>
+            </div>
+          </div>
+          <div style="flex-grow: 1;"></div>
+          <div style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 13px; background: {{t.brand}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 18px; font-weight: 700; color: {{t.onBrand}};">G</span>
+            </div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <div style="font-size: 13px; font-weight: 600; letter-spacing: -0.012em; color: {{t.t1}};">Refer a friend, earn 50 coins</div>
+              <div style="font-size: 10.5px; font-weight: 500; color: {{t.t3}};">From Gridee</div>
+            </div>
+            <div style="height: 28px; padding: 0 13px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; flex-shrink: 0;">
+              <span style="font-size: 11px; font-weight: 600; color: {{t.onBrand}};">Invite</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Theme"},"$preview":{"width":1370,"height":2010}}'>
+class Component extends DCLogic {
+  qrPath() {
+    const N = 25, out = [];
+    let s = 20260403;
+    const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+    const on = (x, y) => out.push('M' + x + ' ' + y + 'h1v1h-1z');
+    const near = (x, y, cx, cy) => x >= cx - 1 && x < cx + 8 && y >= cy - 1 && y < cy + 8;
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        if (near(x, y, 0, 0) || near(x, y, N - 7, 0) || near(x, y, 0, N - 7)) continue;
+        if (rnd() > 0.5) on(x, y);
+      }
+    }
+    const finder = (cx, cy) => {
+      for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++)
+        if (x === 0 || x === 6 || y === 0 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4)) on(cx + x, cy + y);
+    };
+    finder(0, 0); finder(N - 7, 0); finder(0, N - 7);
+    return out.join('');
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const light = {
+      canvas: '#E4E4EA', sheet: '#FFFFFF',
+      hair: '#ECECEF', tear: '#D8DDE3',
+      t1: '#191C19', t2: '#666666', t3: '#8A8A8E', t4: '#C8CCD2',
+      brand: '#000000', onBrand: '#FFFFFF', qrInk: '#09090B',
+      green: '#059669', greenWash: '#E6F5EE', greenInk: '#064E3B', greenSub: '#3F7A66',
+      greenDisc: 'rgba(5, 150, 105, 0.11)', greenSolid: '#059669',
+      amber: '#B45309', amberWash: '#FBF1DF', amberInk: '#78350F', amberSub: '#8A6234',
+      amberDisc: 'rgba(180, 83, 9, 0.10)',
+      shadow: 'rgba(15, 23, 42, 0.13)',
+      adIcon: '#F4F5F7',
+      creative: '#134E4A', creativeAlt: '#1E3A5F'
+    };
+    const night = {
+      canvas: '#141416', sheet: '#1C1C1E',
+      hair: '#2C2C2E', tear: '#3A3A3C',
+      t1: '#FFFFFF', t2: '#98989D', t3: '#8A8A8E', t4: '#48484A',
+      brand: '#FFFFFF', onBrand: '#000000', qrInk: '#E9E9EC',
+      green: '#30D158', greenWash: '#0A2413', greenInk: '#FFFFFF', greenSub: '#8FC5A2',
+      greenDisc: 'rgba(48, 209, 88, 0.16)', greenSolid: '#0E5537',
+      amber: '#FF9F0A', amberWash: '#241703', amberInk: '#FFFFFF', amberSub: '#C9A473',
+      amberDisc: 'rgba(255, 159, 10, 0.16)',
+      shadow: 'rgba(0, 0, 0, 0.62)',
+      adIcon: '#2C2C2E',
+      creative: '#0F3D3A', creativeAlt: '#16273D'
+    };
+    return { t: dark ? night : light, qr: this.qrPath() };
+  }
+}
+</script>
+</body>
+</html>

@@ -17,7 +17,6 @@
     <string name="vehicle_scan_success_toast">വാഹനം %1$s കണ്ടെത്തി</string>
     <string name="vehicle_scan_success_title">വാഹനം കണ്ടെത്തി</string>
     <string name="vehicle_scan_success_message">വാഹനം %1$s കണ്ടെത്തി, ചെക്ക്-ഇന്നിന് തയ്യാറാണ്.</string>
-    <string name="scanner_corner">സ്കാനർ ഫ്രെയിം കോൺ</string>
     <string name="vehicle_scan_best_guess">സാധ്യമായ പൊരുത്തം: %1$s</string>
     <string name="vehicle_scan_flash_on">ഫ്ലാഷ് ഓൺ</string>
     <string name="vehicle_scan_flash_off">ഫ്ലാഷ് ഓഫ്</string>
@@ -53,11 +52,31 @@
     <string name="scanner_enter_number">നമ്പർ നൽകുക</string>
     <string name="scanner_manual_sheet_hint">പ്ലേറ്റിൽ കാണുന്ന വാഹന നമ്പർ ടൈപ്പ് ചെയ്യുക.</string>
     <string name="scanner_qr_scan_hint">ബുക്കിംഗ് QR ഫ്രെയിമിനുള്ളിൽ വയ്ക്കുക</string>
+    <string name="scanner_one_qr_at_a_time_warning">ഒരു സമയം ഒരു ബുക്കിംഗ് QR മാത്രം ഫ്രെയിമിനുള്ളിൽ വയ്ക്കുക.</string>
+    <string name="scanner_low_light_hint">വെളിച്ചം കുറവാണ് — ടോർച്ച് ഓണാക്കുക അല്ലെങ്കിൽ കൂടുതൽ വെളിച്ചമുള്ള സ്ഥലത്തേക്ക് മാറുക</string>
+    <string name="scanner_refocusing_hint">മധ്യ ഫ്രെയിമിൽ വീണ്ടും ഫോക്കസ് ചെയ്യുന്നു…</string>
+    <string name="scanner_tap_to_focus">ക്യാമറ ഫോക്കസ് ചെയ്യാൻ സ്കാനിംഗ് ഫ്രെയിമിൽ ടാപ്പ് ചെയ്യുക</string>
+    <string name="scanner_viewport_too_small_title">കൂടുതൽ സ്ക്രീൻ സ്ഥലം ആവശ്യമാണ്</string>
+    <string name="scanner_viewport_too_small_message">സ്കാനിംഗ് തുടരാൻ ഉപകരണം തിരിക്കുകയോ ആപ്പിന്റെ വലുപ്പം വർധിപ്പിക്കുകയോ ചെയ്യുക.</string>
+    <string name="scanner_automatic_recognition_disabled_title">ഓട്ടോമാറ്റിക് സ്കാനിംഗ് താൽക്കാലികമായി നിർത്തി</string>
+    <string name="scanner_automatic_recognition_disabled_message">വാഹന നമ്പർ നേരിട്ട് നൽകുക. നമ്പർ പ്ലേറ്റും QR-ഉം സ്വയം തിരിച്ചറിയുന്ന സംവിധാനം താൽക്കാലികമായി പ്രവർത്തനരഹിതമാക്കിയിരിക്കുന്നു.</string>
+    <string name="scanner_camera_access_needed_title">ക്യാമറ ആക്സസ് ആവശ്യമാണ്</string>
+    <string name="scanner_camera_unavailable_title">ക്യാമറ ലഭ്യമല്ല</string>
+    <string name="scanner_camera_permission_manual_message">ക്രമീകരണങ്ങളിൽ ക്യാമറ ആക്സസ് അനുവദിക്കുക, അല്ലെങ്കിൽ വാഹന നമ്പർ നേരിട്ട് നൽകുക.</string>
+    <string name="scanner_camera_unavailable_manual_message">ക്യാമറ ലഭ്യമല്ല. വാഹന നമ്പർ നേരിട്ട് നൽകുക അല്ലെങ്കിൽ വീണ്ടും ശ്രമിക്കുക.</string>
+    <string name="scanner_retry_camera">ക്യാമറ വീണ്ടും ശ്രമിക്കുക</string>
     <string name="scanner_qr_required">ബുക്കിംഗ് QR ആവശ്യമാണ്</string>
     <string name="scanner_processing_qr_checkin">ബുക്കിംഗ് QR വഴി ചെക്ക്-ഇൻ ചെയ്യുന്നു…</string>
     <string name="scanner_processing_qr_checkout">ബുക്കിംഗ് QR വഴി ചെക്ക്-ഔട്ട് ചെയ്യുന്നു…</string>
     <string name="scanner_checked_in_at">%1$s ന് ചെക്ക്-ഇൻ ചെയ്തു</string>
     <string name="scanner_checked_out_at">%1$s ന് ചെക്ക്-ഔട്ട് ചെയ്തു</string>
+    <string name="scanner_operator_request_still_processing">ഓപ്പറേറ്റർ അഭ്യർത്ഥന ഇപ്പോഴും പ്രോസസ് ചെയ്യുകയാണ്. സ്ഥിരീകരണത്തിനായി കാത്തിരിക്കുക.</string>
+    <string name="scanner_recent_scan_title">അടുത്തിടെ പ്രോസസ് ചെയ്തത്</string>
+    <plurals name="scanner_recent_scan_cooldown">
+        <item quantity="one">ഈ സ്കാൻ ഇപ്പോൾ പ്രോസസ് ചെയ്തു. %1$d സെക്കൻഡിന് ശേഷം വീണ്ടും ശ്രമിക്കുക.</item>
+        <item quantity="other">ഈ സ്കാൻ ഇപ്പോൾ പ്രോസസ് ചെയ്തു. %1$d സെക്കൻഡിന് ശേഷം വീണ്ടും ശ്രമിക്കുക.</item>
+    </plurals>
+    <string name="scanner_spot_outside_assigned_lot">ഈ പാർക്കിംഗ് സ്ഥലം നിങ്ങൾക്ക് നിയോഗിച്ച പാർക്കിംഗ് ലോട്ടിൽ ഉൾപ്പെടുന്നതല്ല.</string>
     <string name="scanner_open">സ്കാനർ തുറക്കുക</string>
     <string name="vehicle_sheet_status_fetching">സജീവ ബുക്കിംഗ് ലഭ്യമാക്കുന്നു…</string>
     <string name="vehicle_sheet_status_not_found">%1$s മായി ഒരു ബുക്കിംഗും ബന്ധിപ്പിച്ചിട്ടില്ല.</string>
@@ -374,7 +393,6 @@
     <string name="no_transactions_yet">ഇതുവരെ ഇടപാടുകളില്ല</string>
     <string name="your_transaction_history_will_appear_here">നിങ്ങളുടെ ഇടപാട് ചരിത്രം ഇവിടെ കാണാം</string>
     <string name="vehicles">വാഹനങ്ങൾ</string>
-    <string name="add_money_is_temporarily_unavailable_were">പണം ചേർക്കൽ താൽക്കാലികമായി ലഭ്യമല്ല.\nഞങ്ങളുടെ പേയ്‌മെന്റ് അഗ്രിഗേറ്ററുമായി സംയോജിപ്പിക്കുന്നു.</string>
     <string name="current_balance">നിലവിലെ ബാലൻസ്</string>
     <string name="minimum_amount">കുറഞ്ഞ തുക</string>
     <string name="secured_by">സുരക്ഷിതം</string>
@@ -541,7 +559,6 @@
     <string name="no_transactions_found">ഇടപാടുകളൊന്നും കണ്ടെത്തിയില്ല</string>
     <string name="please_enter_a_valid_amount">സാധുവായ തുക നൽകുക</string>
     <string name="please_login_to_add_money">പണം ചേർക്കാൻ ലോഗിൻ ചെയ്യുക</string>
-    <string name="add_money_temporarily_unavailable_during_payment">പേയ്‌മെന്റ് സംയോജന സമയത്ത് പണം ചേർക്കൽ താൽക്കാലികമായി ലഭ്യമല്ല.</string>
     <string name="session_expired_please_log_in_again">സെഷൻ കാലഹരണപ്പെട്ടു. വീണ്ടും ലോഗിൻ ചെയ്യുക.</string>
     <string name="wallet_is_temporarily_unavailable">വാലറ്റ് താൽക്കാലികമായി ലഭ്യമല്ല.</string>
     <string name="no_real_wallet_data_available">വാലറ്റ് ഡാറ്റ ലഭ്യമല്ല</string>
@@ -685,5 +702,18 @@
     <string name="payment_pending_confirmation">പണമടയ്ക്കൽ ഇപ്പോഴും സ്ഥിരീകരിക്കുന്നു. പൂർത്തിയാകുമ്പോൾ വാലറ്റ് അപ്ഡേറ്റ് ആകും.</string>
     <string name="payment_failed_or_cancelled">പണമടയ്ക്കൽ പരാജയപ്പെട്ടു അല്ലെങ്കിൽ റദ്ദാക്കി. നിങ്ങളിൽ നിന്ന് പണം ഈടാക്കിയിട്ടില്ല.</string>
     <string name="payment_could_not_be_confirmed">ഈ പണമടയ്ക്കൽ സ്ഥിരീകരിക്കാനായില്ല. അൽപ സമയത്തിനുള്ളിൽ വാലറ്റ് പരിശോധിക്കുക.</string>
+    <string name="scanner_preparing_title">സ്കാനർ തയ്യാറാക്കുന്നു</string>
+    <string name="scanner_preparing_message">സുരക്ഷിത OCR, QR ഘടകങ്ങൾ പരിശോധിക്കുന്നു…</string>
+    <string name="scanner_unavailable_title">സ്കാനർ സജ്ജീകരണം ആവശ്യമാണ്</string>
+    <string name="scanner_unavailable_message">സ്കാനർ ഘടകങ്ങൾ തയ്യാറായിട്ടില്ല. ഇന്റർനെറ്റിലേക്ക് കണക്റ്റ് ചെയ്ത് വീണ്ടും ശ്രമിക്കുക, അല്ലെങ്കിൽ വാഹന നമ്പർ നേരിട്ട് നൽകുക.</string>
+    <string name="scanner_retry_setup">സജ്ജീകരണം വീണ്ടും ശ്രമിക്കുക</string>
+    <string name="scanner_plate_confirmation_needed">കണ്ടെത്തിയ നമ്പർ പ്ലേറ്റ് സ്ഥിരീകരിക്കുക: %1$s</string>
+    <string name="scanner_plate_confirm_title">വാഹന നമ്പർ പ്ലേറ്റ് സ്ഥിരീകരിക്കുക</string>
+    <string name="scanner_plate_confirm_message">തുടരുന്നതിന് മുമ്പ് %1$s സ്ഥിരീകരിക്കുക.</string>
+    <string name="scanner_plate_confirm_corrected_message">ഒരുപോലെ തോന്നുന്ന ചില അക്ഷരങ്ങളോ അക്കങ്ങളോ തിരുത്തിയിട്ടുണ്ട്. തുടരുന്നതിന് മുമ്പ് %1$s സ്ഥിരീകരിക്കുക.</string>
+    <string name="scanner_confirm_plate">നമ്പർ പ്ലേറ്റ് സ്ഥിരീകരിക്കുക</string>
     <string name="wallet_top_up_title">വാലറ്റ് ടോപ്പ്-അപ്പ്</string>
+    <string name="scanner_operator_offline">സ്ഥിരീകരിച്ച ഇന്റർനെറ്റ് കണക്ഷൻ ലഭ്യമല്ല. വീണ്ടും കണക്റ്റ് ചെയ്ത ശേഷം വീണ്ടും സ്കാൻ ചെയ്യുക എന്നതിൽ ടാപ്പ് ചെയ്യുക. ചെക്ക്-ഇൻ അല്ലെങ്കിൽ ചെക്ക്-ഔട്ട് അയച്ചിട്ടില്ല.</string>
+    <string name="scanner_operator_slow_network">%1$s നെറ്റ്‌വർക്ക് മന്ദഗതിയിലാണ്; ഈ സ്ക്രീൻ തുറന്നുവയ്ക്കുക, വീണ്ടും സ്കാൻ ചെയ്യരുത്.</string>
+    <string name="op_scanner_tab">സ്കാനർ</string>
 </resources>

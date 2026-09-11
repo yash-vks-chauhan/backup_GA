@@ -17,10 +17,11 @@ class LogoutConfirmationBottomSheet : BottomSheetDialogFragment() {
     private var _binding: BottomSheetLogoutConfirmationBinding? = null
     private val binding get() = _binding!!
 
-    private var onLogoutConfirmed: (() -> Unit)? = null
+    private var resultDelivered = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        resultDelivered = savedInstanceState?.getBoolean(STATE_RESULT_DELIVERED) ?: false
         setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
     }
 
@@ -61,18 +62,19 @@ class LogoutConfirmationBottomSheet : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnCancel.setOnClickListener {
-            dismissAllowingStateLoss()
+            dismiss()
         }
 
         binding.btnLogout.setOnClickListener {
-            onLogoutConfirmed?.invoke()
-            dismissAllowingStateLoss()
+            if (resultDelivered) return@setOnClickListener
+            resultDelivered = true
+            binding.btnLogout.isEnabled = false
+            parentFragmentManager.setFragmentResult(
+                RESULT_KEY,
+                Bundle().apply { putBoolean(RESULT_CONFIRMED, true) },
+            )
+            dismiss()
         }
-    }
-
-    fun setOnLogoutConfirmed(listener: () -> Unit): LogoutConfirmationBottomSheet {
-        onLogoutConfirmed = listener
-        return this
     }
 
     override fun onDestroyView() {
@@ -80,8 +82,16 @@ class LogoutConfirmationBottomSheet : BottomSheetDialogFragment() {
         _binding = null
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(STATE_RESULT_DELIVERED, resultDelivered)
+        super.onSaveInstanceState(outState)
+    }
+
     companion object {
         const val TAG = "LogoutConfirmationBottomSheet"
+        const val RESULT_KEY = "logout_confirmation_result"
+        const val RESULT_CONFIRMED = "confirmed"
+        private const val STATE_RESULT_DELIVERED = "result_delivered"
 
         fun newInstance(): LogoutConfirmationBottomSheet = LogoutConfirmationBottomSheet()
     }

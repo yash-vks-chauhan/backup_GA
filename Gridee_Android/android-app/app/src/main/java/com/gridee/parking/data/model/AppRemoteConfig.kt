@@ -46,6 +46,33 @@ data class RemoteFeatureFlags(
     var rateLimitingEnabled: Boolean = true,
     var adMobEnabled: Boolean = false,
     var rewardsEnabled: Boolean = true,
+    /**
+     * Kill switch for the booking-transition interstitial on its own, so the placement can be
+     * pulled without taking the native placements down with it. Gates on top of [adMobEnabled],
+     * never instead of it.
+     *
+     * Defaults to true: the switch exists to turn something off in an emergency, and a default of
+     * false would silently disable the placement for every install whose config fetch failed.
+     */
+    var bookingTransitionInterstitialEnabled: Boolean = true,
+    /**
+     * Kill switch for the warm preload buffer alone. Turning this off does not disable the
+     * placement — it falls back to the just-in-time load that predated the buffer, which is the
+     * proven path. This is the surgical control for the buffer being a new SDK surface
+     * (`InterstitialAdPreloader`) in a live app: it drops back to old behaviour without giving
+     * up the placement's revenue.
+     */
+    var bookingTransitionPreloadBufferEnabled: Boolean = true,
+    /**
+     * Kill switch for the per-user daily cap on completed rewards.
+     *
+     * Defaults to true, unlike the placement switches above, because here `true` is the
+     * restrictive state: turning this off does not disable a placement, it removes the limit and
+     * returns the reward to the uncapped behaviour it had before. It exists so the cap can be
+     * lifted without a release if it turns out to cost more in engagement than it earns in
+     * price — not as an emergency stop.
+     */
+    var rewardedDailyCapEnabled: Boolean = true,
     var featureToggleMap: Map<String, Boolean> = emptyMap()
 )
 
@@ -69,7 +96,7 @@ data class RemoteAppVersions(
 
 data class RemoteFinancialSettings(
     var welcomeBonusAmount: Double = 50.0,
-    var minWalletTopUpAmount: Double = 1.0,
+    var minWalletTopUpAmount: Double = 100.0,
     var maxWalletTopUpAmount: Double = 50000.0,
     var lateCheckoutPenaltyPerMin: Double = 2.0,
     var lateCheckoutGracePeriodMinutes: Double = 10.0,

@@ -1,6 +1,8 @@
 package com.gridee.parking.ui.operator
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OperatorParkingSpotLoaderTest {
@@ -61,5 +63,69 @@ class OperatorParkingSpotLoaderTest {
         )
 
         assertEquals(OperatorParkingSpotLoader.EmptyReason.LOAD_FAILED, reason)
+    }
+
+    @Test
+    fun alternateRouteIsUsedOnlyWhenCurrentRouteIsUnsupported() {
+        listOf(404, 405, 501).forEach { code ->
+            assertTrue(
+                OperatorParkingSpotLoader.canTryAlternateRoute(
+                    OperatorParkingSpotLoader.AttemptSummary(successful = false, code = code)
+                )
+            )
+        }
+    }
+
+    @Test
+    fun overloadAndServerErrorsDoNotFanOutToAlternateRoutes() {
+        listOf(429, 500, 502, 503, 504).forEach { code ->
+            assertFalse(
+                OperatorParkingSpotLoader.canTryAlternateRoute(
+                    OperatorParkingSpotLoader.AttemptSummary(successful = false, code = code)
+                )
+            )
+        }
+        assertFalse(
+            OperatorParkingSpotLoader.canTryAlternateRoute(
+                OperatorParkingSpotLoader.AttemptSummary(
+                    successful = false,
+                    failedWithException = true
+                )
+            )
+        )
+    }
+
+    @Test
+    fun staleDataIsAllowedForTransientFailuresButNeverAccessDenial() {
+        assertTrue(
+            OperatorParkingSpotLoader.canUseStaleFallback(
+                listOf(
+                    OperatorParkingSpotLoader.AttemptSummary(
+                        successful = false,
+                        code = 503
+                    )
+                )
+            )
+        )
+        assertTrue(
+            OperatorParkingSpotLoader.canUseStaleFallback(
+                listOf(
+                    OperatorParkingSpotLoader.AttemptSummary(
+                        successful = false,
+                        failedWithException = true
+                    )
+                )
+            )
+        )
+        assertFalse(
+            OperatorParkingSpotLoader.canUseStaleFallback(
+                listOf(
+                    OperatorParkingSpotLoader.AttemptSummary(
+                        successful = false,
+                        code = 403
+                    )
+                )
+            )
+        )
     }
 }

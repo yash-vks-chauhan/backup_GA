@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; }
+    a { color: #059669; } a:hover { color: #047857; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+
+<div style="width: 900px; height: 726px; background: {{t.canvas}}; padding: 32px 40px 36px 40px; display: flex; flex-direction: column; gap: 24px;">
+
+  <div style="display: flex; flex-direction: column; gap: 7px;">
+    <div style="display: flex; align-items: baseline; gap: 12px;">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">SHARED DECISION</div>
+      <div style="font-size: 24px; font-weight: 700; letter-spacing: -0.03em; color: {{t.t1}};">Cancelling without misfiring</div>
+    </div>
+    <div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: {{t.t2}}; max-width: 720px; text-wrap: pretty;">Cancel has to be visible on the card and hard to hit by accident &mdash; those pull in opposite directions, so each option resolves them differently. Pick the mechanism separately from the layout; any of the three works in any of the three.</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 22px;">
+
+    <div style="display: flex; gap: 24px; align-items: center;">
+      <div style="width: 140px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.13em; color: {{t.t3}};">OPTION A</div>
+        <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: {{t.t1}};">Tap &rarr; sheet</div>
+        <div style="font-size: 12px; font-weight: 500; line-height: 1.45; color: {{t.t3}};">The platform-native answer. One extra tap.</div>
+      </div>
+
+      <div style="display: flex; gap: 24px;">
+        <div style="width: 200px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 84px; border-radius: 16px; background: {{t.card}}; border: 1px solid {{t.border}}; display: flex; align-items: center; justify-content: center;">
+            <div style="display: flex; align-items: center; gap: 7px;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 15px; height: 15px;"><circle cx="12" cy="12" r="8.5" stroke="{{t.red}}" stroke-width="1.8"></circle><path d="M9.4 9.4l5.2 5.2M14.6 9.4l-5.2 5.2" stroke="{{t.red}}" stroke-width="1.8" stroke-linecap="round"></path></svg>
+              <span style="font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: {{t.red}};">Cancel booking</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 500; color: {{t.t3}}; text-align: center;">Resting, foot of the card</div>
+        </div>
+
+        <div style="width: 200px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 84px; border-radius: 16px; background: {{t.pressed}}; border: 1px solid {{t.border}}; display: flex; align-items: center; justify-content: center;">
+            <div style="display: flex; align-items: center; gap: 7px; opacity: 0.55;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 15px; height: 15px;"><circle cx="12" cy="12" r="8.5" stroke="{{t.red}}" stroke-width="1.8"></circle><path d="M9.4 9.4l5.2 5.2M14.6 9.4l-5.2 5.2" stroke="{{t.red}}" stroke-width="1.8" stroke-linecap="round"></path></svg>
+              <span style="font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: {{t.red}};">Cancel booking</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 500; color: {{t.t3}}; text-align: center;">Pressed &middot; row tint + haptic</div>
+        </div>
+
+        <div style="width: 200px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 84px; border-radius: 16px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 9px; display: flex; flex-direction: column; gap: 5px; justify-content: center;">
+            <div style="font-size: 10px; font-weight: 600; color: {{t.t3}}; text-align: center; line-height: 1.3;">Cancel this booking?<br>&#8377;90.00 returns to your wallet.</div>
+            <div style="height: 26px; border-radius: 8px; background: {{t.red}}; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 11px; font-weight: 600; color: #FFFFFF;">Yes, cancel</span>
+            </div>
+            <div style="height: 22px; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 11px; font-weight: 600; color: {{t.t2}};">Keep booking</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 500; color: {{t.t3}}; text-align: center;">Confirm sheet</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 1px; background: {{t.hair}};"></div>
+
+    <div style="display: flex; gap: 24px; align-items: center;">
+      <div style="width: 140px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.13em; color: {{t.t3}};">OPTION B</div>
+        <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: {{t.t1}};">Hold 900ms</div>
+        <div style="font-size: 12px; font-weight: 500; line-height: 1.45; color: {{t.t3}};">No second screen. Release early and nothing happens.</div>
+      </div>
+
+      <div style="display: flex; gap: 24px;">
+        <div style="width: 200px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 84px; border-radius: 16px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 0 14px; display: flex; align-items: center;">
+            <div style="width: 100%; height: 42px; border-radius: 100px; border: 1px solid {{t.redEdge}}; display: flex; align-items: center; justify-content: center; gap: 7px;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="8.5" stroke="{{t.red}}" stroke-width="1.7" stroke-dasharray="3.2 3.2"></circle><path d="M12 8.6v4.2" stroke="{{t.red}}" stroke-width="1.9" stroke-linecap="round"></path><circle cx="12" cy="15.6" r="0.95" fill="{{t.red}}"></circle></svg>
+              <span style="font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: {{t.red}};">Hold to cancel</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 500; color: {{t.t3}}; text-align: center;">Resting outline</div>
+        </div>
+
+        <div style="width: 200px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 84px; border-radius: 16px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 0 14px; display: flex; align-items: center;">
+            <div style="width: 100%; height: 42px; border-radius: 100px; border: 1px solid {{t.redEdge}}; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 62%; background: {{t.redFillStrong}};"></div>
+              <span style="font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: {{t.red}}; position: relative;">Keep holding&hellip;</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 500; color: {{t.t3}}; text-align: center;">Fill sweeps left &rarr; right</div>
+        </div>
+
+        <div style="width: 200px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 84px; border-radius: 16px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 0 14px; display: flex; align-items: center;">
+            <div style="width: 100%; height: 42px; border-radius: 100px; background: {{t.red}}; display: flex; align-items: center; justify-content: center; gap: 7px;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 15px; height: 15px;"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#FFFFFF" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <span style="font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: #FFFFFF;">Cancelled</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 500; color: {{t.t3}}; text-align: center;">Commits at 100% + haptic</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 1px; background: {{t.hair}};"></div>
+
+    <div style="display: flex; gap: 24px; align-items: center;">
+      <div style="width: 140px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.13em; color: {{t.t3}};">OPTION C</div>
+        <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: {{t.t1}};">Inline swap</div>
+        <div style="font-size: 12px; font-weight: 500; line-height: 1.45; color: {{t.t3}};">Confirmation stays on the card. Nothing covers the screen.</div>
+      </div>
+
+      <div style="display: flex; gap: 24px;">
+        <div style="width: 200px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 84px; border-radius: 16px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 0 14px; display: flex; align-items: center;">
+            <div style="width: 100%; height: 40px; border-radius: 12px; border: 1px solid {{t.redEdge}}; background: {{t.redFill}}; display: flex; align-items: center; justify-content: center; gap: 7px;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="8.5" stroke="{{t.red}}" stroke-width="1.8"></circle><path d="M9.4 9.4l5.2 5.2M14.6 9.4l-5.2 5.2" stroke="{{t.red}}" stroke-width="1.8" stroke-linecap="round"></path></svg>
+              <span style="font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: {{t.red}};">Cancel booking</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 500; color: {{t.t3}}; text-align: center;">Resting</div>
+        </div>
+
+        <div style="width: 200px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 84px; border-radius: 16px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 10px 14px; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+            <div style="font-size: 11px; font-weight: 600; color: {{t.t2}};">Cancel and refund &#8377;90.00?</div>
+            <div style="display: flex; gap: 8px;">
+              <div style="flex-grow: 1; height: 34px; border-radius: 10px; border: 1px solid {{t.border}}; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 11px; font-weight: 600; color: {{t.t1}};">Keep</span>
+              </div>
+              <div style="flex-grow: 1; height: 34px; border-radius: 10px; background: {{t.red}}; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 11px; font-weight: 600; color: #FFFFFF;">Cancel</span>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 500; color: {{t.t3}}; text-align: center;">Row swaps in place</div>
+        </div>
+
+        <div style="width: 200px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 84px; border-radius: 16px; background: {{t.card}}; border: 1px solid {{t.border}}; padding: 0 14px; display: flex; align-items: center; gap: 9px;">
+            <div style="width: 26px; height: 26px; border-radius: 100px; background: {{t.redFillStrong}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 14px; height: 14px;"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="{{t.red}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <span style="font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: {{t.t1}};">Booking cancelled</span>
+              <span style="font-size: 11px; font-weight: 500; color: {{t.t3}};">&#8377;90.00 back in your wallet</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 500; color: {{t.t3}}; text-align: center;">Card collapses to a receipt</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Theme"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const light = {
+      canvas: '#E4E4EA', card: '#FFFFFF', pressed: '#FAFAFA',
+      border: '#DCDCDC', hair: '#D3D3DA',
+      t1: '#191C19', t2: '#666666', t3: '#9CA3AF',
+      red: '#DC2626', redFill: '#FEF2F2', redFillStrong: 'rgba(220, 38, 38, 0.14)',
+      redEdge: 'rgba(220, 38, 38, 0.32)'
+    };
+    const night = {
+      canvas: '#141416', card: '#1C1C1E', pressed: '#2C2C2E',
+      border: '#38383A', hair: '#2C2C2E',
+      t1: '#FFFFFF', t2: '#8E8E93', t3: '#636366',
+      red: '#FF453A', redFill: 'rgba(255, 69, 58, 0.12)', redFillStrong: 'rgba(255, 69, 58, 0.22)',
+      redEdge: 'rgba(255, 69, 58, 0.38)'
+    };
+    return { t: dark ? night : light };
+  }
+}
+</script>
+</body>
+</html>

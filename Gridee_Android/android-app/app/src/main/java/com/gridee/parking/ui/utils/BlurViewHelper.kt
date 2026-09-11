@@ -57,7 +57,6 @@ object BlurViewHelper {
             view.setRenderEffect(effect)
         } catch (e: Exception) {
             // Fallback silently if blur fails
-            e.printStackTrace()
         }
     }
 
@@ -76,7 +75,6 @@ object BlurViewHelper {
             // We'll set a semi-transparent overlay instead
             view.alpha = 0.95f
         } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 
@@ -88,7 +86,6 @@ object BlurViewHelper {
         try {
             view.setRenderEffect(null)
         } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 
@@ -152,7 +149,6 @@ object BlurViewHelper {
             renderScript.destroy()
             return bitmap
         } catch (e: Exception) {
-            e.printStackTrace()
             return null
         }
     }

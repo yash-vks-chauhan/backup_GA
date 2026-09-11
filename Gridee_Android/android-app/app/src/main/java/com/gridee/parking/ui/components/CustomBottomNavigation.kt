@@ -29,7 +29,7 @@ import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
 import androidx.core.content.res.ResourcesCompat
 import android.graphics.Typeface
-import android.util.Log
+import com.gridee.parking.utils.AppLog
 import android.util.TypedValue
 import com.gridee.parking.R
 import com.gridee.parking.ui.motion.MotionTokens
@@ -476,7 +476,9 @@ class CustomBottomNavigation @JvmOverloads constructor(
             typefaceBold = ResourcesCompat.getFont(context, R.font.inter_bold)
             typefaceMedium = ResourcesCompat.getFont(context, R.font.inter_medium)
         } catch (e: Exception) {
-            Log.e("CustomBottomNav", "Error loading fonts", e)
+            AppLog.e("CustomBottomNav") {
+                "Error loading fonts (${e.javaClass.simpleName})"
+            }
             // Fallback to system fonts if resources fail
             typefaceBold = Typeface.DEFAULT_BOLD
             typefaceMedium = Typeface.DEFAULT

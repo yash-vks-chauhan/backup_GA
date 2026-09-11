@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bottom_sheet_vehicle_scan_success_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bottom_sheet_background">
@@ -34,13 +36,13 @@
             android:id="@+id/tv_sheet_plate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="MH12AB1234"
             android:textSize="22sp"
             android:textColor="@color/scanner_text_primary"
             android:fontFamily="@font/inter_medium"
             android:gravity="center"
             android:layout_marginTop="4dp"
-            android:letterSpacing="0.08" />
+            android:letterSpacing="0.08"
+            tools:text="MH12AB1234" />
 
         <TextView
             android:id="@+id/tv_sheet_status"

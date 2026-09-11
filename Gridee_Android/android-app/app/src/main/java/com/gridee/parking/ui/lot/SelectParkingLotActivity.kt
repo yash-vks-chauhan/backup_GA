@@ -18,7 +18,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.gridee.parking.data.model.ParkingLot
 import com.gridee.parking.databinding.ActivitySelectParkingLotBinding
 import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 import com.gridee.parking.ui.views.SkeletonShimmer
+import com.gridee.parking.utils.AppForegroundTracker
 import com.gridee.parking.utils.AuthSession
 
 /**
@@ -38,6 +40,10 @@ class SelectParkingLotActivity : AppCompatActivity() {
         const val MODE_ONBOARDING = "onboarding"
         const val MODE_CHANGE = "change"
         const val EXTRA_ORG_TYPE = "extra_org_type"
+        const val EXTRA_ORGANIZATION_ID = "extra_organization_id"
+        const val EXTRA_ORGANIZATION_NAME = "extra_organization_name"
+        const val EXTRA_LOCATION_ID = "extra_location_id"
+        const val EXTRA_LOCATION_NAME = "extra_location_name"
         const val EXTRA_ALLOW_BACK = "extra_allow_back"
         private const val EXTRA_CATEGORY_LABEL = "extra_category_label"
         private const val EXTRA_CATEGORY_TOTAL = "extra_category_total"
@@ -73,6 +79,28 @@ class SelectParkingLotActivity : AppCompatActivity() {
             putExtra(EXTRA_CATEGORY_COUNT, category.count)
             forwardExtras?.let { putExtra(EXTRA_FORWARD_EXTRAS, it) }
         }
+
+        fun intentForTenant(
+            context: Context,
+            mode: String,
+            organizationId: String,
+            organizationName: String,
+            organizationType: String?,
+            locationId: String,
+            locationName: String,
+            allowBack: Boolean,
+            forwardExtras: Bundle? = null,
+        ): Intent = Intent(context, SelectParkingLotActivity::class.java).apply {
+            putExtra(EXTRA_MODE, mode)
+            putExtra(EXTRA_ORGANIZATION_ID, organizationId)
+            putExtra(EXTRA_ORGANIZATION_NAME, organizationName)
+            putExtra(EXTRA_ORG_TYPE, organizationType)
+            putExtra(EXTRA_LOCATION_ID, locationId)
+            putExtra(EXTRA_LOCATION_NAME, locationName)
+            putExtra(EXTRA_ALLOW_BACK, allowBack)
+            putExtra(EXTRA_CATEGORY_LABEL, locationName)
+            forwardExtras?.let { putExtra(EXTRA_FORWARD_EXTRAS, it) }
+        }
     }
 
     private lateinit var binding: ActivitySelectParkingLotBinding
@@ -81,11 +109,15 @@ class SelectParkingLotActivity : AppCompatActivity() {
 
     private var mode: String = MODE_ONBOARDING
     private var organizationType: String? = null
+    private var organizationId: String? = null
+    private var locationId: String? = null
+    private var locationName: String? = null
     private var allowBack: Boolean = false
     private var selectedLot: ParkingLot? = null
     private var currentLotId: String? = null
     private var pendingSelectId: String? = null
     private var skeletonBreath: ValueAnimator? = null
+    private var handledForegroundGeneration = Long.MIN_VALUE
 
     // easeOutCubic — the app's content-reveal curve.
     private val smoothDecelerate = PathInterpolator(0.33f, 1f, 0.68f, 1f)
@@ -97,13 +129,27 @@ class SelectParkingLotActivity : AppCompatActivity() {
 
         mode = intent.getStringExtra(EXTRA_MODE) ?: MODE_ONBOARDING
         organizationType = intent.getStringExtra(EXTRA_ORG_TYPE)
+        organizationId = intent.getStringExtra(EXTRA_ORGANIZATION_ID)?.trim()?.takeIf(String::isNotEmpty)
+        locationId = intent.getStringExtra(EXTRA_LOCATION_ID)?.trim()?.takeIf(String::isNotEmpty)
+        locationName = intent.getStringExtra(EXTRA_LOCATION_NAME)?.trim()?.takeIf(String::isNotEmpty)
         allowBack = intent.getBooleanExtra(EXTRA_ALLOW_BACK, false)
         pendingSelectId = savedInstanceState?.getString(KEY_SELECTED_LOT_ID)
         viewModel = ViewModelProvider(this)[SelectParkingLotViewModel::class.java]
 
         setupUi()
         setupObservers()
-        viewModel.loadLots(organizationType)
+        handledForegroundGeneration = AppForegroundTracker.currentGeneration()
+        loadScopedLots()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val generation = AppForegroundTracker.currentGeneration()
+        if (generation == handledForegroundGeneration) return
+        handledForegroundGeneration = generation
+        // This is non-forced: the repository serves the current list immediately and only goes
+        // to the network when its five-minute parking-lot TTL has actually expired.
+        loadScopedLots()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -120,7 +166,7 @@ class SelectParkingLotActivity : AppCompatActivity() {
         // The category's own name titles this page, and the subtitle is seeded with
         // the same live numbers the index row showed, so the page is truthful before
         // the filtered lots arrive.
-        binding.tvTitle.text = intent.getStringExtra(EXTRA_CATEGORY_LABEL)
+        binding.tvTitle.text = locationName ?: intent.getStringExtra(EXTRA_CATEGORY_LABEL)
             ?: if (isChange) "Change your parking lot" else "Select your parking lot"
         binding.tvSubtitle.text = subtitleFor(
             available = intent.getIntExtra(EXTRA_CATEGORY_AVAILABLE, 0),
@@ -146,10 +192,21 @@ class SelectParkingLotActivity : AppCompatActivity() {
         }
 
         binding.btnBack.setOnClickListener { finish() }
-        binding.btnRetry.setOnClickListener { viewModel.loadLots(organizationType) }
+        binding.btnRetry.setOnClickListener {
+            loadScopedLots(manualRefresh = true)
+        }
         binding.btnConfirm.setOnClickListener {
             selectedLot?.let { viewModel.assignLot(this, it) }
         }
+    }
+
+    private fun loadScopedLots(manualRefresh: Boolean = false) {
+        viewModel.loadLots(
+            organizationType = organizationType,
+            organizationId = organizationId,
+            locationId = locationId,
+            manualRefresh = manualRefresh,
+        )
     }
 
     private fun subtitleFor(available: Int, total: Int, locations: Int): String {
@@ -180,7 +237,7 @@ class SelectParkingLotActivity : AppCompatActivity() {
      * detail; the dock only confirms what the button below will commit.
      */
     private fun showDockFor(lot: ParkingLot, fromTap: Boolean) {
-        val motion = ValueAnimator.areAnimatorsEnabled() && fromTap
+        val motion = fromTap && AnimatorSettingsCompat.areEnabled(this)
         setDockName(lot.name, animate = motion)
         binding.dockChipCurrent.visibility =
             if (!currentLotId.isNullOrBlank() && lot.id == currentLotId) View.VISIBLE else View.GONE

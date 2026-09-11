@@ -1,0 +1,469 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; }
+    a { color: #059669; } a:hover { color: #047857; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+
+<div style="width: 1330px; height: 1590px; background: {{t.canvas}}; padding: 32px 40px 40px 40px; display: flex; flex-direction: column; gap: 26px;">
+
+  <div style="display: flex; flex-direction: column; gap: 7px;">
+    <div style="display: flex; align-items: baseline; gap: 12px;">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">OPTION D</div>
+      <div style="font-size: 24px; font-weight: 700; letter-spacing: -0.03em; color: {{t.t1}};">Rail &amp; Ticket</div>
+      <div style="padding: 3px 9px; border-radius: 100px; background: {{t.chip}}; font-size: 11px; font-weight: 600; letter-spacing: -0.005em; color: {{t.t2}};">B + C</div>
+    </div>
+    <div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: {{t.t2}}; max-width: 880px; text-wrap: pretty;">C&rsquo;s stage rail carries the page &mdash; every stop now one line, label left, when-or-where right, dashed ahead and solid behind &mdash; and B&rsquo;s ticket carries the card &mdash; tinted status head, perforated stub, hold-to-cancel pill. The code sits on the stub at 76&nbsp;dp under a shadcn secondary badge, drawn straight onto the card &mdash; no plate, no well, no border. It inks dark on white in light mode and light on dark at night, because at 12&nbsp;mm this is a preview, not a scanner target; the scannable code lives on the pass, on white, at full brightness. Times use A&rsquo;s rail-and-capsule. Ad removed from the tab; it stays on the pass.</div>
+  </div>
+
+  <div style="display: flex; gap: 40px;">
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">BOOKED</div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; background: {{t.bg}}; display: flex; flex-direction: column; box-shadow: 0 26px 64px {{t.shadow}};">
+
+        <div style="height: 58px; flex-shrink: 0;"></div>
+
+        <div style="padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 3px;">
+          <div style="font-size: 26px; font-weight: 700; letter-spacing: -0.035em; color: {{t.t1}}; line-height: 1.1;">Bookings</div>
+          <div style="display: flex; align-items: center; gap: 7px;">
+            <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.amber}};"></div>
+            <span style="font-size: 13px; font-weight: 500; color: {{t.t2}};">Waiting for check-in</span>
+          </div>
+        </div>
+
+        <div style="padding: 0 20px; display: flex; flex-direction: column;">
+
+          <div style="display: flex; gap: 13px;">
+            <div style="width: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 5px;">
+              <div style="width: 11px; height: 11px; border-radius: 100px; background: {{t.amber}}; box-shadow: 0 0 0 4px {{t.amberHalo}};"></div>
+              <div style="flex-grow: 1; width: 1.5px; background-image: linear-gradient(to bottom, {{t.rail}} 50%, transparent 50%); background-size: 1.5px 5px; background-repeat: repeat-y; margin-top: 7px;"></div>
+            </div>
+
+            <div style="flex-grow: 1; border-radius: 24px; overflow: hidden; background: {{t.card}}; border: 1px solid {{t.border}}; display: flex; flex-direction: column;">
+
+              <div style="background: {{t.amberFill}}; padding: 14px 16px 13px 16px; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.amber}};"></div>
+                    <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: {{t.amber}};">BOOKED</span>
+                  </div>
+                  <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.13em; color: {{t.amberSub}};">FRI, 03 APR</span>
+                </div>
+                <div style="margin-top: 8px; font-size: 20px; font-weight: 700; letter-spacing: -0.035em; color: {{t.amberInk}}; line-height: 1.2;">Java &mdash; Morning</div>
+                <div style="margin-top: 2px; font-size: 12px; font-weight: 500; color: {{t.amberSub}};">SRM University Parking Lot</div>
+              </div>
+
+              <div style="padding: 14px 16px 15px 16px; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">CHECK-IN</div>
+                    <div style="font-size: 17px; font-weight: 700; letter-spacing: -0.025em; color: {{t.t1}};">07:30 AM</div>
+                  </div>
+                  <div style="flex-grow: 1; display: flex; align-items: center; gap: 7px; padding-bottom: 2px;">
+                    <div style="height: 1px; flex-grow: 1; background: {{t.hair}};"></div>
+                    <div style="padding: 3px 9px; border-radius: 100px; background: {{t.amberFill}}; font-size: 10px; font-weight: 700; color: {{t.amber}};">5h</div>
+                    <div style="height: 1px; flex-grow: 1; background: {{t.hair}};"></div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+                    <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">CHECK-OUT</div>
+                    <div style="font-size: 17px; font-weight: 700; letter-spacing: -0.025em; color: {{t.t1}};">12:30 PM</div>
+                  </div>
+                </div>
+
+                <div style="margin: 15px -16px; height: 1px; background: {{t.hair}};"></div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 3px;">
+                    <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">VEHICLE</div>
+                    <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.01em; color: {{t.t1}};">TN 09 AB 1234</div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 3px; align-items: flex-end;">
+                    <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">PAID</div>
+                    <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: {{t.t1}};">&#8377;90.00</div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div style="display: flex; align-items: center;">
+                <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-left: -7px;"></div>
+                <div style="flex-grow: 1; height: 1px; background-image: linear-gradient(to right, {{t.hair}} 60%, transparent 40%); background-size: 7px 1px; background-repeat: repeat-x;"></div>
+                <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-right: -7px;"></div>
+              </div>
+
+              <div style="background: {{t.paper}}; padding: 17px 16px 12px 16px; display: flex; flex-direction: column; align-items: center;">
+                <div style="display: flex; flex-direction: column; align-items: center;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: {{t.pLabel}};">SHOW AT ENTRY</div><svg viewBox="0 0 25 25" style="width: 76px; height: 76px; display: block; margin-top: 12px;"><path d="{{qr}}" fill="{{t.qrInk}}"></path></svg><div style="margin-top: 13px; height: 23px; padding: 0 11px; border-radius: 100px; background: {{t.pBadge}}; border: 1px solid {{t.pBadgeEdge}}; display: flex; align-items: center;"><span style="font-size: 10.5px; font-weight: 600; letter-spacing: 0.005em; color: {{t.pBadgeInk}};">Tap to scan</span></div></div>
+                <div style="margin: 14px -16px 0 -16px; align-self: stretch; height: 1px; background: {{t.pRule}};"></div>
+                <div style="margin-top: 13px; align-self: stretch; height: 44px; border-radius: 100px; border: 1px solid {{t.pRed}}; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" fill="none" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="8.5" stroke="#DC2626" stroke-width="1.7" stroke-dasharray="3.2 3.2"></circle><path d="M12 8.6v4.2" stroke="#DC2626" stroke-width="1.9" stroke-linecap="round"></path><circle cx="12" cy="15.6" r="0.95" fill="#DC2626"></circle></svg>
+                  <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: #DC2626;">Hold to cancel booking</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 13px;">
+            <div style="width: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 1.5px; height: 15px; background-image: linear-gradient(to bottom, {{t.rail}} 50%, transparent 50%); background-size: 1.5px 5px; background-repeat: repeat-y;"></div>
+              <div style="width: 8px; height: 8px; border-radius: 100px; border: 1.25px solid {{t.rail}}; background: {{t.bg}};"></div>
+              <div style="flex-grow: 1; width: 1.5px; background-image: linear-gradient(to bottom, {{t.rail}} 50%, transparent 50%); background-size: 1.5px 5px; background-repeat: repeat-y;"></div>
+            </div>
+            <div style="flex-grow: 1; padding: 12px 2px 0px 2px; display: flex; align-items: baseline; justify-content: space-between;">
+              <div style="font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: {{t.t2}};">Checked in</div>
+              <div style="font-size: 12px; font-weight: 500; color: {{t.t2}};">On arrival</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 13px;">
+            <div style="width: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 1.5px; height: 15px; background-image: linear-gradient(to bottom, {{t.rail}} 50%, transparent 50%); background-size: 1.5px 5px; background-repeat: repeat-y;"></div>
+              <div style="width: 8px; height: 8px; border-radius: 100px; border: 1.25px solid {{t.rail}}; background: {{t.bg}};"></div>
+            </div>
+            <div style="flex-grow: 1; padding: 12px 2px 0px 2px; display: flex; align-items: baseline; justify-content: space-between;">
+              <div style="font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: {{t.t2}};">Checked out</div>
+              <div style="font-size: 12px; font-weight: 500; color: {{t.t2}};">12:30 PM</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex-grow: 1;"></div>
+
+        <div style="display: flex; justify-content: center; padding: 14px 0 22px 0;">
+          <div style="display: flex; align-items: center; gap: 3px; padding: 6px; border-radius: 100px; background: {{t.navBg}}; border: 1px solid {{t.navStroke}};">
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-5.5H9V20H5a1 1 0 0 1-1-1v-8.5Z" stroke="{{t.t3}}" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+            </div>
+            <div style="height: 40px; padding: 0 15px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; gap: 7px;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 18px; height: 18px;"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v2a2 2 0 0 0 0 3.9v2A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.4v-2a2 2 0 0 0 0-3.9v-2Z" stroke="{{t.onBrand}}" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+              <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: {{t.onBrand}};">Bookings</span>
+            </div>
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><rect x="3.5" y="6.5" width="17" height="11" rx="2.5" stroke="{{t.t3}}" stroke-width="1.7"></rect><path d="M16 12h2" stroke="{{t.t3}}" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            </div>
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><circle cx="12" cy="9" r="3.3" stroke="{{t.t3}}" stroke-width="1.7"></circle><path d="M5.5 19.5c1.1-3 3.5-4.6 6.5-4.6s5.4 1.6 6.5 4.6" stroke="{{t.t3}}" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">ACTIVE</div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; background: {{t.bg}}; display: flex; flex-direction: column; box-shadow: 0 26px 64px {{t.shadow}};">
+
+        <div style="height: 58px; flex-shrink: 0;"></div>
+
+        <div style="padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 3px;">
+          <div style="font-size: 26px; font-weight: 700; letter-spacing: -0.035em; color: {{t.t1}}; line-height: 1.1;">Bookings</div>
+          <div style="display: flex; align-items: center; gap: 7px;">
+            <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.green}};"></div>
+            <span style="font-size: 13px; font-weight: 500; color: {{t.t2}};">Parked &middot; 1h 20m left</span>
+          </div>
+        </div>
+
+        <div style="padding: 0 20px; display: flex; flex-direction: column;">
+
+          <div style="display: flex; gap: 13px;">
+            <div style="width: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 3px;">
+              <div style="width: 9px; height: 9px; border-radius: 100px; background: {{t.rail}};"></div>
+              <div style="flex-grow: 1; width: 1.5px; background: {{t.rail}}; margin-top: 6px;"></div>
+            </div>
+            <div style="flex-grow: 1; padding: 0 2px 16px 2px; display: flex; align-items: baseline; justify-content: space-between;">
+              <div style="font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: {{t.t2}};">Booked</div>
+              <div style="font-size: 12px; font-weight: 500; color: {{t.t2}};">07:31 AM</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 13px;">
+            <div style="width: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 5px;">
+              <div style="width: 11px; height: 11px; border-radius: 100px; background: {{t.green}}; box-shadow: 0 0 0 4px {{t.greenHalo}};"></div>
+              <div style="flex-grow: 1; width: 1.5px; background-image: linear-gradient(to bottom, {{t.rail}} 50%, transparent 50%); background-size: 1.5px 5px; background-repeat: repeat-y; margin-top: 7px;"></div>
+            </div>
+
+            <div style="flex-grow: 1; border-radius: 24px; overflow: hidden; background: {{t.card}}; border: 1px solid {{t.border}}; display: flex; flex-direction: column;">
+
+              <div style="background: {{t.greenFill}}; padding: 14px 16px 13px 16px; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.green}};"></div>
+                    <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: {{t.green}};">LIVE</span>
+                  </div>
+                  <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.13em; color: {{t.greenSub}};">FRI, 03 APR</span>
+                </div>
+                <div style="margin-top: 8px; font-size: 20px; font-weight: 700; letter-spacing: -0.035em; color: {{t.greenInk}}; line-height: 1.2;">Java &mdash; Morning</div>
+                <div style="margin-top: 2px; font-size: 12px; font-weight: 500; color: {{t.greenSub}};">SRM University Parking Lot</div>
+              </div>
+
+              <div style="padding: 15px 16px 16px 16px; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: flex-end; justify-content: space-between;">
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">TIME REMAINING</div>
+                    <div style="font-size: 32px; font-weight: 700; letter-spacing: -0.045em; color: {{t.green}}; line-height: 1;">1h 20m</div>
+                  </div>
+                  <div style="font-size: 12px; font-weight: 500; color: {{t.t2}}; padding-bottom: 3px;">until 12:30 PM</div>
+                </div>
+
+                <div style="margin-top: 14px; position: relative; height: 12px; display: flex; align-items: center;">
+                  <div style="position: absolute; left: 0; right: 0; height: 6px; border-radius: 100px; background: {{t.hair}};"></div>
+                  <div style="position: absolute; left: 0; width: 33%; height: 6px; border-radius: 100px; background: {{t.green}};"></div>
+                  <div style="position: absolute; left: 33%; width: 12px; height: 12px; margin-left: -6px; border-radius: 100px; background: {{t.card}}; border: 2.5px solid {{t.green}};"></div>
+                </div>
+
+                <div style="margin-top: 11px; display: flex; align-items: flex-start; justify-content: space-between;">
+                  <div style="display: flex; flex-direction: column; gap: 3px;">
+                    <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">CHECK-IN</div>
+                    <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.025em; color: {{t.t2}};">07:30 AM</div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 3px; align-items: flex-end;">
+                    <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">CHECK-OUT</div>
+                    <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.025em; color: {{t.t2}};">12:30 PM</div>
+                  </div>
+                </div>
+
+                <div style="margin: 15px -16px; height: 1px; background: {{t.hair}};"></div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 3px;">
+                    <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">VEHICLE</div>
+                    <div style="font-size: 15px; font-weight: 600; letter-spacing: 0.01em; color: {{t.t1}};">TN 09 AB 1234</div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 3px; align-items: flex-end;">
+                    <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: {{t.t3}};">PAID</div>
+                    <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: {{t.t1}};">&#8377;90.00</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center;">
+                <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-left: -7px;"></div>
+                <div style="flex-grow: 1; height: 1px; background-image: linear-gradient(to right, {{t.hair}} 60%, transparent 40%); background-size: 7px 1px; background-repeat: repeat-x;"></div>
+                <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-right: -7px;"></div>
+              </div>
+
+              <div style="background: {{t.paper}}; padding: 17px 16px 17px 16px; display: flex; flex-direction: column; align-items: center;">
+                <div style="display: flex; flex-direction: column; align-items: center;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: {{t.pLabel}};">SHOW AT EXIT</div><svg viewBox="0 0 25 25" style="width: 76px; height: 76px; display: block; margin-top: 12px;"><path d="{{qr}}" fill="{{t.qrInk}}"></path></svg><div style="margin-top: 13px; height: 23px; padding: 0 11px; border-radius: 100px; background: {{t.pBadge}}; border: 1px solid {{t.pBadgeEdge}}; display: flex; align-items: center;"><span style="font-size: 10.5px; font-weight: 600; letter-spacing: 0.005em; color: {{t.pBadgeInk}};">Tap to scan</span></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 13px;">
+            <div style="width: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 1.5px; height: 15px; background-image: linear-gradient(to bottom, {{t.rail}} 50%, transparent 50%); background-size: 1.5px 5px; background-repeat: repeat-y;"></div>
+              <div style="width: 8px; height: 8px; border-radius: 100px; border: 1.25px solid {{t.rail}}; background: {{t.bg}};"></div>
+            </div>
+            <div style="flex-grow: 1; padding: 12px 2px 0px 2px; display: flex; align-items: baseline; justify-content: space-between;">
+              <div style="font-size: 13px; font-weight: 500; letter-spacing: -0.005em; color: {{t.t2}};">Checked out</div>
+              <div style="font-size: 12px; font-weight: 500; color: {{t.t2}};">12:30 PM</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex-grow: 1;"></div>
+
+        <div style="display: flex; justify-content: center; padding: 14px 0 22px 0;">
+          <div style="display: flex; align-items: center; gap: 3px; padding: 6px; border-radius: 100px; background: {{t.navBg}}; border: 1px solid {{t.navStroke}};">
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-5.5H9V20H5a1 1 0 0 1-1-1v-8.5Z" stroke="{{t.t3}}" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+            </div>
+            <div style="height: 40px; padding: 0 15px; border-radius: 100px; background: {{t.brand}}; display: flex; align-items: center; gap: 7px;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 18px; height: 18px;"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v2a2 2 0 0 0 0 3.9v2A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.4v-2a2 2 0 0 0 0-3.9v-2Z" stroke="{{t.onBrand}}" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+              <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: {{t.onBrand}};">Bookings</span>
+            </div>
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><rect x="3.5" y="6.5" width="17" height="11" rx="2.5" stroke="{{t.t3}}" stroke-width="1.7"></rect><path d="M16 12h2" stroke="{{t.t3}}" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            </div>
+            <div style="width: 46px; height: 40px; border-radius: 100px; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" style="width: 19px; height: 19px;"><circle cx="12" cy="9" r="3.3" stroke="{{t.t3}}" stroke-width="1.7"></circle><path d="M5.5 19.5c1.1-3 3.5-4.6 6.5-4.6s5.4 1.6 6.5 4.6" stroke="{{t.t3}}" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 9px;">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">PASS &mdash; WHERE THE QR ROW GOES</div>
+      </div>
+      <div style="width: 390px; height: 844px; border-radius: 44px; overflow: hidden; background: {{t.passBg}}; display: flex; flex-direction: column; box-shadow: 0 26px 64px {{t.shadow}};">
+
+        <div style="height: 58px; flex-shrink: 0;"></div>
+
+        <div style="padding: 0 18px; display: flex; align-items: center; justify-content: flex-end;">
+          <div style="width: 34px; height: 34px; border-radius: 100px; background: {{t.passChip}}; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 15px; height: 15px;"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="{{t.passT2}}" stroke-width="2" stroke-linecap="round"></path></svg>
+          </div>
+        </div>
+
+        <div style="padding: 14px 20px 0 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <div style="width: 7px; height: 7px; border-radius: 100px; background: {{t.amber}};"></div>
+          <span style="font-size: 13px; font-weight: 700; letter-spacing: -0.01em; color: {{t.amber}};">Booked</span>
+          <span style="font-size: 13px; font-weight: 500; color: {{t.passT2}};">&middot; Starts in 44 min</span>
+        </div>
+
+        <div style="padding: 20px 20px 0 20px; display: flex; justify-content: center;">
+          <div style="width: 224px; height: 224px; border-radius: 24px; background: #FFFFFF; padding: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);">
+            <svg viewBox="0 0 25 25" style="width: 100%; height: 100%; display: block;"><path d="{{qr}}" fill="#0B0B0C"></path></svg>
+          </div>
+        </div>
+
+        <div style="padding: 18px 28px 0 28px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <div style="font-size: 16px; font-weight: 600; letter-spacing: -0.02em; color: {{t.passT1}};">Hold up to the entry scanner</div>
+          <div style="font-size: 12px; font-weight: 500; color: {{t.passT3}};">Screen brightness is turned up automatically</div>
+        </div>
+
+        <div style="flex-grow: 1;"></div>
+
+        <div style="padding: 0 16px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+          <div style="width: 100%; border-radius: 22px; overflow: hidden; background: {{t.card}}; border: 1px solid {{t.passBorder}};">
+            <div style="height: 152px; background: {{t.creative}}; padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div style="width: 34px; height: 34px; border-radius: 10px; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" fill="none" style="width: 18px; height: 18px;"><path d="M12 3.5l7 3v5.2c0 4.2-2.9 7.4-7 8.8-4.1-1.4-7-4.6-7-8.8V6.5l7-3Z" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"></path><path d="M9.2 12.1l2 2 3.6-3.9" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="font-size: 21px; font-weight: 700; letter-spacing: -0.035em; color: #FFFFFF; line-height: 1.15;">Cover your car<br>in two minutes</div>
+                <div style="font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, 0.72);">No paperwork. Instant policy.</div>
+              </div>
+            </div>
+            <div style="padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+              <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: {{t.t3}}; border: 1px solid {{t.hair}}; border-radius: 4px; padding: 1px 4px;">AD</span>
+                  <span style="font-size: 11px; font-weight: 500; color: {{t.t3}};">Meridian Insurance</span>
+                </div>
+                <div style="font-size: 14px; font-weight: 600; letter-spacing: -0.015em; color: {{t.t1}};">Car cover from &#8377;2,499/yr</div>
+              </div>
+              <div style="height: 34px; padding: 0 15px; border-radius: 10px; background: {{t.brand}}; display: flex; align-items: center; flex-shrink: 0;">
+                <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: {{t.onBrand}};">Get quote</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <div style="width: 16px; height: 6px; border-radius: 100px; background: {{t.passT2}};"></div>
+            <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.passT3}}; opacity: 0.45;"></div>
+            <div style="width: 6px; height: 6px; border-radius: 100px; background: {{t.passT3}}; opacity: 0.45;"></div>
+          </div>
+        </div>
+
+        <div style="height: 26px; flex-shrink: 0;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 15px;">
+    <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: {{t.t3}};">THE PASS BLOCK &mdash; ANATOMY</div>
+    <div style="display: flex; gap: 40px; align-items: flex-start;">
+      <div style="border-radius: 30px; background: {{t.bg}}; padding: 20px;">
+        <div style="width: 539px; height: 431px; position: relative;">
+          <div style="position: absolute; top: 0; left: 0; transform: scale(1.7); transform-origin: top left;">
+            <div style="width: 317px; border-radius: 24px 24px 24px 24px; overflow: hidden; background: {{t.card}}; border: 1px solid {{t.border}};">
+              <div style="height: 14px;"></div>
+              <div style="display: flex; align-items: center;">
+                <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-left: -7px;"></div>
+                <div style="flex-grow: 1; height: 1px; background-image: linear-gradient(to right, {{t.hair}} 60%, transparent 40%); background-size: 7px 1px; background-repeat: repeat-x;"></div>
+                <div style="width: 14px; height: 14px; border-radius: 100px; background: {{t.bg}}; margin-right: -7px;"></div>
+              </div>
+              <div style="background: {{t.paper}}; padding: 15px 16px 16px 16px; display: flex; flex-direction: column;">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                  <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: {{t.pLabel}};">SHOW AT ENTRY</div>
+                  <svg viewBox="0 0 25 25" style="width: 76px; height: 76px; display: block; margin-top: 12px;"><path d="{{qr}}" fill="{{t.qrInk}}"></path></svg>
+                  <div style="margin-top: 13px; height: 23px; padding: 0 11px; border-radius: 100px; background: {{t.pBadge}}; border: 1px solid {{t.pBadgeEdge}}; display: flex; align-items: center;">
+                    <span style="font-size: 10.5px; font-weight: 600; letter-spacing: 0.005em; color: {{t.pBadgeInk}};">Tap to scan</span>
+                  </div>
+                </div>
+                <div style="margin: 15px -16px 0 -16px; height: 1px; background: {{t.pRule}};"></div>
+                <div style="margin-top: 13px; height: 44px; border-radius: 100px; border: 1px solid {{t.pRed}}; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" fill="none" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="8.5" stroke="#DC2626" stroke-width="1.7" stroke-dasharray="3.2 3.2"></circle><path d="M12 8.6v4.2" stroke="#DC2626" stroke-width="1.9" stroke-linecap="round"></path><circle cx="12" cy="15.6" r="0.95" fill="#DC2626"></circle></svg>
+                  <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: #DC2626;">Hold to cancel booking</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="width: 420px; display: flex; flex-direction: column; gap: 16px; padding-top: 4px;">
+        <div style="font-size: 14px; font-weight: 500; line-height: 1.55; color: {{t.t2}}; text-wrap: pretty;">Three things, centred, nothing framed and nothing overlapping: what the code is for, the code, and what to do with it. The badge is shadcn&rsquo;s secondary variant in both themes &mdash; a quiet chip that reads as a control without competing with the destructive pill under the rule.</div>
+        <div style="font-size: 14px; font-weight: 500; line-height: 1.55; color: {{t.t1}}; text-wrap: pretty;">It sits below the code rather than on it. A chip laid over a QR obscures the one thing the code is shown for, and a frame around it was decoration the composition did not need.</div>
+        <div style="display: flex; flex-direction: column; margin-top: 2px; border-top: 1px solid {{t.hair}};"><div style="display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid {{t.hair}};"><div style="width: 96px; flex-shrink: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.005em; color: {{t.t1}};">Micro-label</div><div style="flex-grow: 1; font-size: 12px; font-weight: 500; color: {{t.t2}};">10sp &middot; 700 &middot; +0.16em &middot; #71717A</div></div><div style="display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid {{t.hair}};"><div style="width: 96px; flex-shrink: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.005em; color: {{t.t1}};">Code</div><div style="flex-grow: 1; font-size: 12px; font-weight: 500; color: {{t.t2}};">76dp &middot; #09090B / #E9E9EC</div></div><div style="display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid {{t.hair}};"><div style="width: 96px; flex-shrink: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.005em; color: {{t.t1}};">Badge</div><div style="flex-grow: 1; font-size: 12px; font-weight: 500; color: {{t.t2}};">23dp tall &middot; 11dp inset &middot; full radius</div></div><div style="display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid {{t.hair}};"><div style="width: 96px; flex-shrink: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.005em; color: {{t.t1}};">&nbsp;</div><div style="flex-grow: 1; font-size: 12px; font-weight: 500; color: {{t.t2}};">#F4F4F5 fill &middot; #E4E4E7 border</div></div><div style="display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid {{t.hair}};"><div style="width: 96px; flex-shrink: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.005em; color: {{t.t1}};">&nbsp;</div><div style="flex-grow: 1; font-size: 12px; font-weight: 500; color: {{t.t2}};">10.5sp &middot; 600 &middot; #52525B</div></div><div style="display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid {{t.hair}};"><div style="width: 96px; flex-shrink: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.005em; color: {{t.t1}};">Rule</div><div style="flex-grow: 1; font-size: 12px; font-weight: 500; color: {{t.t2}};">#E4E4E7 &middot; full-bleed to card edge</div></div><div style="display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid {{t.hair}};"><div style="width: 96px; flex-shrink: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.005em; color: {{t.t1}};">Cancel</div><div style="flex-grow: 1; font-size: 12px; font-weight: 500; color: {{t.t2}};">44dp &middot; full radius &middot; #DC2626 @ 35%</div></div><div style="display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid {{t.hair}};"><div style="width: 96px; flex-shrink: 0; font-size: 12px; font-weight: 600; letter-spacing: -0.005em; color: {{t.t1}};">Stub</div><div style="flex-grow: 1; font-size: 12px; font-weight: 500; color: {{t.t2}};">card surface &middot; code inverts</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Theme"}}'>
+class Component extends DCLogic {
+  qrPath() {
+    const N = 25, out = [];
+    let s = 20260403;
+    const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+    const on = (x, y) => out.push('M' + x + ' ' + y + 'h1v1h-1z');
+    const near = (x, y, cx, cy) => x >= cx - 1 && x < cx + 8 && y >= cy - 1 && y < cy + 8;
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        if (near(x, y, 0, 0) || near(x, y, N - 7, 0) || near(x, y, 0, N - 7)) continue;
+        if (rnd() > 0.5) on(x, y);
+      }
+    }
+    const finder = (cx, cy) => {
+      for (let y = 0; y < 7; y++) {
+        for (let x = 0; x < 7; x++) {
+          if (x === 0 || x === 6 || y === 0 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4)) on(cx + x, cy + y);
+        }
+      }
+    };
+    finder(0, 0); finder(N - 7, 0); finder(0, N - 7);
+    return out.join('');
+  }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const light = {
+      canvas: '#E4E4EA', bg: '#F2F2F7', card: '#FFFFFF', chip: '#E9E9ED',
+      border: '#DCDCDC', hair: '#ECECEF',
+      t1: '#191C19', t2: '#666666', t3: '#9CA3AF', t4: '#C8CCD2', rail: '#8A8A8E',
+      brand: '#000000', onBrand: '#FFFFFF',
+      paper: '#FFFFFF', qrInk: '#09090B', pLabel: '#71717A', pBadge: '#F4F4F5', pBadgeEdge: '#E4E4E7',
+      pBadgeInk: '#52525B', pRule: '#ECECEF', pRed: 'rgba(220, 38, 38, 0.35)',
+      green: '#059669', greenFill: '#ECFDF5', greenHalo: '#D6F5E7', greenInk: '#064E3B', greenSub: '#3F7A66',
+      amber: '#D97706', amberFill: '#FFFBEB', amberHalo: '#FBEBCE', amberInk: '#78350F', amberSub: '#9A6B3C',
+      red: '#DC2626', redEdge: 'rgba(220, 38, 38, 0.35)',
+      shadow: 'rgba(15, 23, 42, 0.12)',
+      navBg: '#EDEDED', navStroke: 'rgba(0, 0, 0, 0.06)',
+      passBg: '#E9E9EE', passChip: '#FFFFFF', passBorder: '#D8D8DE',
+      passT1: '#191C19', passT2: '#666666', passT3: '#9CA3AF',
+      creative: '#134E4A'
+    };
+    const night = {
+      canvas: '#141416', bg: '#000000', card: '#1C1C1E', chip: '#2C2C2E',
+      border: '#38383A', hair: '#2C2C2E',
+      t1: '#FFFFFF', t2: '#8E8E93', t3: '#636366', t4: '#48484A', rail: '#6E6E73',
+      brand: '#FFFFFF', onBrand: '#000000',
+      paper: '#1C1C1E', qrInk: '#E9E9EC', pLabel: '#8E8E93', pBadge: '#2C2C2E', pBadgeEdge: '#3A3A3C',
+      pBadgeInk: '#A1A1AA', pRule: '#2C2C2E', pRed: 'rgba(255, 69, 58, 0.4)',
+      green: '#30D158', greenFill: 'rgba(48, 209, 88, 0.13)', greenHalo: 'rgba(48, 209, 88, 0.18)', greenInk: '#FFFFFF', greenSub: '#8FC5A2',
+      amber: '#FF9F0A', amberFill: 'rgba(255, 159, 10, 0.13)', amberHalo: 'rgba(255, 159, 10, 0.18)', amberInk: '#FFFFFF', amberSub: '#C9A473',
+      red: '#FF453A', redEdge: 'rgba(255, 69, 58, 0.4)',
+      shadow: 'rgba(0, 0, 0, 0.6)',
+      navBg: '#1C1C1E', navStroke: 'rgba(255, 255, 255, 0.1)',
+      passBg: '#0A0A0C', passChip: '#1C1C1E', passBorder: '#38383A',
+      passT1: '#FFFFFF', passT2: '#8E8E93', passT3: '#636366',
+      creative: '#0F3D3A'
+    };
+    return { t: dark ? night : light, qr: this.qrPath() };
+  }
+}
+</script>
+</body>
+</html>

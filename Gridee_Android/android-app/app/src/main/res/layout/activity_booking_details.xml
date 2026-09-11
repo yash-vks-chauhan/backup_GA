@@ -76,7 +76,7 @@
                     android:letterSpacing="0"
                     android:lineSpacingMultiplier="1.08"
                     android:maxLines="2"
-                    android:text="Spot 12 · Block A"
+                    android:text=""
                     android:textColor="@color/text_primary"
                     android:textSize="27sp"
                     tools:text="Spot 12 · Block A" />
@@ -88,10 +88,10 @@
                     android:layout_marginTop="10dp"
                     android:fontFamily="@font/inter_medium"
                     android:letterSpacing="0"
-                    android:text="SRM University Parking Lot"
+                    android:text=""
                     android:textColor="@color/booking_details_support_text"
                     android:textSize="14sp"
-                    tools:text="SRM University Parking Lot" />
+                    tools:text="Corporate South Parking" />
 
                 <View
                     android:id="@+id/hero_rule"
@@ -258,7 +258,7 @@
                             android:fontFamily="@font/inter_semibold"
                             android:fontFeatureSettings="tnum"
                             android:letterSpacing="0"
-                            android:text="8:00 PM"
+                            android:text=""
                             android:textColor="@color/text_primary"
                             android:textSize="22sp"
                             tools:text="8:00 PM" />

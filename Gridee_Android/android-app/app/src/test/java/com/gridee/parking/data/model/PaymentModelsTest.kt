@@ -34,6 +34,21 @@ class PaymentModelsTest {
     }
 
     @Test
+    fun initiateRequestCanLetBackendResolveMissingParkingContext() {
+        val json = gson.toJson(
+            PaymentInitiateRequest(
+                userId = "user_1",
+                amount = 250.0,
+            )
+        )
+
+        assertTrue(json.contains("\"userId\":\"user_1\""))
+        assertFalse(json.contains("parkingLotId"))
+        assertFalse(json.contains("organizationId"))
+        assertFalse(json.contains("locationId"))
+    }
+
+    @Test
     fun initiateResponseParsesStrictCashfreeContract() {
         val response = gson.fromJson(
             """

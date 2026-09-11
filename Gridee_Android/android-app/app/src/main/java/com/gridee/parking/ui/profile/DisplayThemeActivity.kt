@@ -69,18 +69,14 @@ class DisplayThemeActivity : BaseActivity<ActivityDisplayThemeBinding>() {
                 window.setBackgroundDrawable(BitmapDrawable(resources, bitmap))
             }
 
-            // Hold the outgoing theme's system bars in place so the snapshot below
-            // them stays edge-to-edge until the reveal animates the chrome over.
-            ThemeManager.transitionOldStatusBarColor?.let { window.statusBarColor = it }
-            ThemeManager.transitionOldNavigationBarColor?.let { window.navigationBarColor = it }
+            // System bars are transparent in edge-to-edge mode, so the outgoing window
+            // snapshot/background behind them supplies the transition color.
             ThemeManager.transitionOldIsDark?.let { wasDark ->
                 WindowInsetsControllerCompat(window, window.decorView)
                     .isAppearanceLightStatusBars = !wasDark
             }
             performThemeTransition()
         } else {
-            val bgColor = ContextCompat.getColor(this, R.color.background_primary)
-            window.statusBarColor = bgColor
             WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
                 !ThemeManager.isDarkMode(this)
         }
@@ -463,8 +459,9 @@ class DisplayThemeActivity : BaseActivity<ActivityDisplayThemeBinding>() {
                     loc[1] + originView.height / 2
                 )
 
-                ThemeManager.transitionOldStatusBarColor = window.statusBarColor
-                ThemeManager.transitionOldNavigationBarColor = window.navigationBarColor
+                val oldChromeColor = ContextCompat.getColor(this, R.color.background_primary)
+                ThemeManager.transitionOldStatusBarColor = oldChromeColor
+                ThemeManager.transitionOldNavigationBarColor = oldChromeColor
                 ThemeManager.transitionOldIsDark = ThemeManager.isDarkMode(this)
 
                 ThemeManager.transitionThemeLabel = when (newTheme) {
@@ -505,9 +502,6 @@ class DisplayThemeActivity : BaseActivity<ActivityDisplayThemeBinding>() {
         val oldBitmap = ThemeManager.transitionBitmap
         val themeLabel = ThemeManager.transitionThemeLabel ?: ""
         val origin = ThemeManager.transitionCenter
-        val oldStatusBarColor = ThemeManager.transitionOldStatusBarColor
-        val oldNavigationBarColor = ThemeManager.transitionOldNavigationBarColor
-
         ThemeManager.transitionBitmap = null
         ThemeManager.transitionCenter = null
         ThemeManager.transitionThemeLabel = null
@@ -773,27 +767,9 @@ class DisplayThemeActivity : BaseActivity<ActivityDisplayThemeBinding>() {
                 .setInterpolator(emphasized)
                 .start()
 
-            // System chrome tween: keep status + nav bars synced with the
-            // reveal so the screen never has mixed-theme edges.
+            // The transparent system bars reveal the window background. Keep that
+            // background on the outgoing snapshot until cleanup swaps it atomically.
             val newChromeColor = ContextCompat.getColor(this, R.color.background_primary)
-            if (oldStatusBarColor != null && oldStatusBarColor != newChromeColor) {
-                ValueAnimator.ofArgb(oldStatusBarColor, newChromeColor).apply {
-                    duration = revealDuration
-                    interpolator = emphasized
-                    addUpdateListener { window.statusBarColor = it.animatedValue as Int }
-                    start()
-                }
-            } else {
-                window.statusBarColor = newChromeColor
-            }
-            if (oldNavigationBarColor != null && oldNavigationBarColor != newChromeColor) {
-                ValueAnimator.ofArgb(oldNavigationBarColor, newChromeColor).apply {
-                    duration = revealDuration
-                    interpolator = emphasized
-                    addUpdateListener { window.navigationBarColor = it.animatedValue as Int }
-                    start()
-                }
-            }
 
             // Flip status-bar icon polarity slightly past the midpoint, when the
             // reveal has covered enough of the top edge that the new polarity

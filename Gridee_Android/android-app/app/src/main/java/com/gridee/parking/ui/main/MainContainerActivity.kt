@@ -1,19 +1,27 @@
 package com.gridee.parking.ui.main
 
+import android.os.Build
 import android.os.Bundle
+import android.os.Trace
 import android.Manifest
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import com.gridee.parking.R
 import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.databinding.ActivityMainContainerBinding
 import com.gridee.parking.ui.base.BaseActivityWithBottomNav
+import com.gridee.parking.ui.base.BaseTabFragment
 import com.gridee.parking.ui.base.BottomOverlayHost
+import com.gridee.parking.ui.base.LifecycleBoundScrollListener
 import com.gridee.parking.ui.bottomsheet.PartnerReferralBottomSheet
 import com.gridee.parking.ui.bottomsheet.WelcomeGiftBottomSheet
 import com.gridee.parking.ui.components.CustomBottomNavigation
@@ -29,9 +37,19 @@ import com.gridee.parking.utils.ThemeManager
 import android.util.TypedValue
 import android.widget.Toast
 
+internal fun normalizeMainTabId(tabId: Int): Int = when (tabId) {
+    CustomBottomNavigation.TAB_HOME,
+    CustomBottomNavigation.TAB_BOOKINGS,
+    CustomBottomNavigation.TAB_WALLET,
+    CustomBottomNavigation.TAB_PROFILE -> tabId
+    else -> CustomBottomNavigation.TAB_HOME
+}
+
 class MainContainerActivity :
     BaseActivityWithBottomNav<ActivityMainContainerBinding>(),
     BottomOverlayHost {
+
+    private data class TabSwitchTrace(val name: String, val cookie: Int)
 
     companion object {
         const val EXTRA_TARGET_TAB = "extra_target_tab"
@@ -46,6 +64,17 @@ class MainContainerActivity :
         const val EXTRA_SHOW_SIGNUP_GIFT = "extra_show_signup_gift"
         const val EXTRA_SHOW_LOGIN_WELCOME = "extra_show_login_welcome"
         private const val NOTIFICATION_PERMISSION_REQUEST = 1001
+        private const val STATE_CURRENT_TAB = "current_tab"
+        private const val STATE_SIGNUP_GIFT_PENDING = "signup_gift_pending"
+        private const val SIGNUP_GIFT_DELAY_MS = 600L
+        private const val BOOKINGS_SWITCH_TRACE = "perf024_first_bookings_switch"
+        private const val WALLET_SWITCH_TRACE = "perf024_first_wallet_switch"
+        private const val PROFILE_SWITCH_TRACE = "perf024_first_profile_switch"
+
+        internal const val TAB_TAG_HOME = "gridee.main.tab.home"
+        internal const val TAB_TAG_BOOKINGS = "gridee.main.tab.bookings"
+        internal const val TAB_TAG_WALLET = "gridee.main.tab.wallet"
+        internal const val TAB_TAG_PROFILE = "gridee.main.tab.profile"
 
         /** Resting gap between the floating dock controls and the tab bar, per the layout. */
         private const val DOCK_REST_GAP_DP = 22f
@@ -56,16 +85,25 @@ class MainContainerActivity :
 
     private var currentFragment: Fragment? = null
     private var currentTabId = CustomBottomNavigation.TAB_HOME
+    private var activeTabSwitchTrace: TabSwitchTrace? = null
+    private var tabSwitchTraceSequence = 0
     private var statusBarInsetTop = 0
     private var renderedThemeMode: String? = null
     private var renderedDarkMode: Boolean? = null
     private var activityResumedForAds = false
+    private var signupGiftPending = false
+    private var signupGiftLaunchScheduled = false
+    private val signupGiftLaunchRunnable = Runnable {
+        signupGiftLaunchScheduled = false
+        launchPendingSignupGiftIfSafe()
+    }
 
     private val tabAnimDurationMs: Long = 360L
     private val tabAnimInterpolator by lazy {
         androidx.core.view.animation.PathInterpolatorCompat.create(0.2f, 0f, 0f, 1f)
     }
     private var statusBarColorAnimator: android.animation.ValueAnimator? = null
+    private var currentStatusBarColor: Int = android.graphics.Color.TRANSPARENT
 
     private val transitionController by lazy { FragmentTransitionController(binding.fragmentContainer) }
 
@@ -81,11 +119,32 @@ class MainContainerActivity :
     // by a new swipe so we don't have a stale fragment lingering at -0.3x parallax.
     private var staleOutgoingView: android.view.View? = null
 
-    // Fragment instances (create once, reuse for better performance)
-    private val homeFragment by lazy { HomeFragment() }
-    private val bookingsFragment by lazy { BookingsFragmentNew() }
-    private val walletFragment by lazy { WalletFragmentNew() }
-    private val profileFragment by lazy { ProfileFragment() }
+    // Android restores fragments during super.onCreate(). Keep factories lazy, but first rebind
+    // this registry to every restored tab so no second instance can be created after process death.
+    private val tabFragments = RestorableTabFragmentRegistry(
+        listOf(
+            RestorableTabSpec(
+                CustomBottomNavigation.TAB_HOME,
+                TAB_TAG_HOME,
+                HomeFragment::class.java,
+            ) { HomeFragment() },
+            RestorableTabSpec(
+                CustomBottomNavigation.TAB_BOOKINGS,
+                TAB_TAG_BOOKINGS,
+                BookingsFragmentNew::class.java,
+            ) { BookingsFragmentNew() },
+            RestorableTabSpec(
+                CustomBottomNavigation.TAB_WALLET,
+                TAB_TAG_WALLET,
+                WalletFragmentNew::class.java,
+            ) { WalletFragmentNew() },
+            RestorableTabSpec(
+                CustomBottomNavigation.TAB_PROFILE,
+                TAB_TAG_PROFILE,
+                ProfileFragment::class.java,
+            ) { ProfileFragment() },
+        )
+    )
 
     override fun getViewBinding(): ActivityMainContainerBinding {
         return ActivityMainContainerBinding.inflate(layoutInflater)
@@ -100,15 +159,22 @@ class MainContainerActivity :
         // Base bailed out (no auth session) and already redirected to login + finished.
         // _binding was never inflated, so stop before any binding access crashes.
         if (!isViewReady) return
+        signupGiftPending = savedInstanceState?.getBoolean(STATE_SIGNUP_GIFT_PENDING) == true
+        captureSignupGiftRequest(intent)
         rememberRenderedTheme()
 
-                // Handle system window insets for proper edge-to-edge
+        // Handle system window insets for proper edge-to-edge
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             statusBarInsetTop = systemBarsInsets.top
+            if (binding.statusBarScrim.layoutParams.height != statusBarInsetTop) {
+                binding.statusBarScrim.updateLayoutParams {
+                    height = statusBarInsetTop
+                }
+            }
 
-            // Re-apply the inset to every added fragment so pre-warmed ones get the
-            // correct top padding even if they were added before the first insets dispatch.
+            // Re-apply the inset to every added fragment. This covers restored tabs and a tab
+            // selected before the first insets dispatch without creating any hidden tab views.
             supportFragmentManager.fragments.forEach { applyTopInsetToFragmentView(it) }
 
             insets
@@ -123,19 +189,27 @@ class MainContainerActivity :
             intent?.getIntExtra(EXTRA_TARGET_TAB, CustomBottomNavigation.TAB_HOME)
                 ?: CustomBottomNavigation.TAB_HOME
         } else {
-            savedInstanceState.getInt("current_tab", CustomBottomNavigation.TAB_HOME)
+            savedInstanceState.getInt(STATE_CURRENT_TAB, CustomBottomNavigation.TAB_HOME)
         }
         val initialTab = resolveAllowedTab(requestedInitialTab, showMessage = false)
+        currentTabId = initialTab
 
-        if (savedInstanceState == null) {
-            bottomNavigation.setActiveTab(initialTab)
-            switchToFragment(getFragmentForTab(initialTab), initialTab)
-        } else {
-            currentTabId = initialTab
-            bottomNavigation.setActiveTab(currentTabId)
-            currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
-            updatePartnerReferralForTab(currentTabId)
+        // FragmentManager has already restored its instances at this point. Reconcile all root
+        // tabs synchronously before intent routing can request a fragment. On a fresh launch this
+        // creates only the selected tab; inactive tabs stay uncreated until the user taps or
+        // swipes to them. The saved tab is authoritative; container insertion order is not.
+        currentFragment = tabFragments.reconcileRestoredState(
+            fragmentManager = supportFragmentManager,
+            containerId = R.id.fragment_container,
+            selectedTabId = initialTab,
+        ).selectedFragment
+        bottomNavigation.setActiveTab(initialTab)
+        currentFragment?.let {
+            applyTopInsetToFragmentView(it)
+            updateStatusBarForFragment(it, animate = false)
         }
+        updatePartnerReferralForTab(initialTab)
+        binding.fragmentContainer.post { setupScrollBehaviorForCurrentFragment() }
 
         handleNavigationIntent(intent, currentTabId)
         handleWalletGlobalIntents(intent)
@@ -148,24 +222,30 @@ class MainContainerActivity :
             showSignupGiftIfNeeded()
         }
 
-        // Pre-warm the inactive tabs after the home screen has settled. Each fragment's view
-        // inflates on its own frame so a single tab switch later doesn't pay the inflation cost
-        // mid-animation. setMaxLifecycle keeps them at STARTED so onResume work (network,
-        // timers) only fires when the user actually visits the tab.
-        binding.root.postDelayed({ prewarmInactiveFragment(bookingsFragment) }, 450)
-        binding.root.postDelayed({ prewarmInactiveFragment(walletFragment) }, 750)
-        binding.root.postDelayed({ prewarmInactiveFragment(profileFragment) }, 1050)
     }
 
     override fun onResume() {
         super.onResume()
         if (!isViewReady) return // redirected to login; nothing was set up
         activityResumedForAds = true
+        // Cheap safety net: if a slide-out was interrupted before this activity was last
+        // backgrounded, the chip can come back stranded on a tab that should not show it.
+        updatePartnerReferralForTab(currentTabId)
         updateHomeNativeAdPresentation()
         refreshAfterDeferredThemeChangeIfNeeded()
     }
 
+    override fun onPostResume() {
+        super.onPostResume()
+        if (!isViewReady) return
+        scheduleSignupGiftIfPossible()
+    }
+
     override fun onPause() {
+        if (isViewReady) {
+            binding.root.removeCallbacks(signupGiftLaunchRunnable)
+            signupGiftLaunchScheduled = false
+        }
         activityResumedForAds = false
         setHomeNativeAdVisible(false)
         super.onPause()
@@ -188,22 +268,6 @@ class MainContainerActivity :
             @Suppress("DEPRECATION")
             overridePendingTransition(0, 0)
         }
-    }
-
-    private fun prewarmInactiveFragment(fragment: Fragment) {
-        if (isFinishing || isDestroyed) return
-        if (fragment === currentFragment || fragment.isAdded) return
-
-        // hide() so FragmentManager knows the fragment is hidden — this is what fires
-        // onHiddenChanged on the fragment (HomeFragment / BookingsFragmentNew use it to
-        // start/stop auto-refresh timers; skipping it caused stale UI updates and crashes).
-        supportFragmentManager.beginTransaction()
-            .add(R.id.fragment_container, fragment)
-            .hide(fragment)
-            .setMaxLifecycle(fragment, androidx.lifecycle.Lifecycle.State.STARTED)
-            .commitNowAllowingStateLoss()
-
-        applyTopInsetToFragmentView(fragment)
     }
 
     private fun showLoginWelcomeIfNeeded() {
@@ -231,21 +295,65 @@ class MainContainerActivity :
     }
 
     private fun showSignupGiftIfNeeded() {
-        val showGift = intent?.getBooleanExtra(EXTRA_SHOW_SIGNUP_GIFT, false) ?: false
-        if (!showGift) return
+        captureSignupGiftRequest(intent)
+        scheduleSignupGiftIfPossible()
+    }
 
-        // Clear the extra so it doesn't trigger again on rotation
-        intent?.removeExtra(EXTRA_SHOW_SIGNUP_GIFT)
+    /**
+     * Moves the one-shot intent flag into saved Activity state before clearing the Intent.
+     * A rotation during the settle delay therefore postpones the gift instead of losing it.
+     */
+    private fun captureSignupGiftRequest(source: android.content.Intent?) {
+        if (source?.getBooleanExtra(EXTRA_SHOW_SIGNUP_GIFT, false) != true) return
+        signupGiftPending = true
+        source.removeExtra(EXTRA_SHOW_SIGNUP_GIFT)
+    }
 
-        // Small delay to let the home screen settle before showing the gift
-        binding.root.postDelayed({
-            // Display the actual welcome bonus from remote config so the sheet
-            // never drifts from what's credited to the wallet.
-            val bonusAmount = com.gridee.parking.config.RemoteConfigManager
-                .currentConfig.financial.welcomeBonusAmount.toInt()
-            val giftSheet = WelcomeGiftBottomSheet.newInstance(coinAmount = bonusAmount)
-            giftSheet.show(supportFragmentManager, WelcomeGiftBottomSheet.TAG)
-        }, 600)
+    private fun scheduleSignupGiftIfPossible() {
+        if (!signupGiftPending || signupGiftLaunchScheduled || !isViewReady) return
+
+        // A restored instance means FragmentManager already owns this request. Treat it as
+        // consumed even if its view has not been recreated yet, so no duplicate is enqueued.
+        if (supportFragmentManager.findFragmentByTag(WelcomeGiftBottomSheet.TAG) != null) {
+            signupGiftPending = false
+            return
+        }
+        if (isFinishing || isDestroyed ||
+            !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            supportFragmentManager.isDestroyed || supportFragmentManager.isStateSaved
+        ) {
+            return
+        }
+
+        signupGiftLaunchScheduled = true
+        binding.root.postDelayed(signupGiftLaunchRunnable, SIGNUP_GIFT_DELAY_MS)
+    }
+
+    private fun launchPendingSignupGiftIfSafe() {
+        if (!signupGiftPending || !isViewReady) return
+        val fragmentManager = supportFragmentManager
+        if (fragmentManager.findFragmentByTag(WelcomeGiftBottomSheet.TAG) != null) {
+            signupGiftPending = false
+            return
+        }
+        if (isFinishing || isDestroyed ||
+            !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            fragmentManager.isDestroyed || fragmentManager.isStateSaved
+        ) {
+            // Keep the saved pending bit. onPostResume() will schedule it again when transactions
+            // are legal instead of committing after state save or silently dropping the gift.
+            return
+        }
+
+        // Display the actual welcome bonus from remote config so the sheet never drifts from
+        // what was credited to the wallet. showNow records the stable tag before another launch
+        // can be admitted on the same main-loop turn.
+        val bonusAmount = RemoteConfigManager.currentConfig.financial.welcomeBonusAmount.toInt()
+        val shown = runCatching {
+            WelcomeGiftBottomSheet.newInstance(coinAmount = bonusAmount)
+                .showNow(fragmentManager, WelcomeGiftBottomSheet.TAG)
+        }.isSuccess
+        if (shown) signupGiftPending = false
     }
 
     private fun requestNotificationPermissionIfNeeded() {
@@ -261,7 +369,8 @@ class MainContainerActivity :
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putInt("current_tab", currentTabId)
+        outState.putInt(STATE_CURRENT_TAB, currentTabId)
+        outState.putBoolean(STATE_SIGNUP_GIFT_PENDING, signupGiftPending)
     }
 
     override fun setupUI() {
@@ -280,11 +389,23 @@ class MainContainerActivity :
             return
         }
 
+        val tabSwitchTrace = beginTabSwitchTrace(tabId)
         val targetFragment = getFragmentForTab(tabId)
-        switchToFragment(targetFragment, tabId)
+        switchToFragment(targetFragment, tabId, tabSwitchTrace)
     }
 
-    private fun switchToFragment(fragment: Fragment, tabId: Int) {
+    private fun switchToFragment(
+        fragment: Fragment,
+        tabId: Int,
+        tabSwitchTrace: TabSwitchTrace?,
+    ) {
+        if (supportFragmentManager.isStateSaved) {
+            // A late UI callback must not create state that the next process cannot restore.
+            bottomNavigation.setActiveTab(currentTabId)
+            endTabSwitchTrace(tabSwitchTrace)
+            return
+        }
+
         // Cancel any in-flight spring so a rapid second tap picks up from current position.
         transitionController.cancelAll()
 
@@ -296,14 +417,15 @@ class MainContainerActivity :
         if (fragment.isAdded) {
             transaction.show(fragment)
         } else {
-            transaction.add(R.id.fragment_container, fragment)
+            tabFragments.addTo(transaction, R.id.fragment_container, fragment)
         }
         transaction.setMaxLifecycle(fragment, androidx.lifecycle.Lifecycle.State.RESUMED)
+        transaction.setPrimaryNavigationFragment(fragment)
         outgoingFragment?.let {
             transaction.hide(it)
             transaction.setMaxLifecycle(it, androidx.lifecycle.Lifecycle.State.STARTED)
         }
-        transaction.commitNowAllowingStateLoss()
+        transaction.commitNow()
 
         applyTopInsetToFragmentView(fragment)
         // FragmentManager's hide() just set the outgoing view to GONE; override so the
@@ -321,10 +443,14 @@ class MainContainerActivity :
             outgoingFragment?.view?.let { transitionController.resetOutgoingTransform(it) }
             outgoingFragment?.view?.visibility = android.view.View.GONE
             binding.fragmentContainer.post { setupScrollBehaviorForCurrentFragment() }
+            endTabSwitchTrace(tabSwitchTrace)
             return
         }
 
-        val incomingView = fragment.view ?: return
+        val incomingView = fragment.view ?: run {
+            endTabSwitchTrace(tabSwitchTrace)
+            return
+        }
         val outgoingView = outgoingFragment?.view
 
         transitionController.runSwitch(
@@ -338,7 +464,35 @@ class MainContainerActivity :
                 it.visibility = android.view.View.GONE
             }
             setupScrollBehaviorForCurrentFragment()
+            endTabSwitchTrace(tabSwitchTrace)
         }
+    }
+
+    private fun beginTabSwitchTrace(tabId: Int): TabSwitchTrace? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        endTabSwitchTrace()
+        val traceName = when (tabId) {
+            CustomBottomNavigation.TAB_BOOKINGS -> BOOKINGS_SWITCH_TRACE
+            CustomBottomNavigation.TAB_WALLET -> WALLET_SWITCH_TRACE
+            CustomBottomNavigation.TAB_PROFILE -> PROFILE_SWITCH_TRACE
+            else -> return null
+        }
+        tabSwitchTraceSequence++
+        val trace = TabSwitchTrace(
+            name = traceName,
+            cookie = System.identityHashCode(this) xor tabSwitchTraceSequence,
+        )
+        activeTabSwitchTrace = trace
+        Trace.beginAsyncSection(trace.name, trace.cookie)
+        return trace
+    }
+
+    private fun endTabSwitchTrace(expected: TabSwitchTrace? = null) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        val activeTrace = activeTabSwitchTrace ?: return
+        if (expected != null && activeTrace != expected) return
+        Trace.endAsyncSection(activeTrace.name, activeTrace.cookie)
+        activeTabSwitchTrace = null
     }
 
     // ── Partner referral chip ───────────────────────────────────────
@@ -347,9 +501,17 @@ class MainContainerActivity :
     // page — it returns the moment they scroll back up or reach the top.
 
     private var referralChipShown = true
-    private var referralScrollHookedView: android.view.View? = null
+
+    /**
+     * Owns the chip's ALPHA and TRANSLATION_X. Kept off the view's ViewPropertyAnimator on
+     * purpose — the ad dock cancels that to manage TRANSLATION_Y, and the two were killing
+     * each other's animations.
+     */
+    private var referralChipAnimator: android.animation.AnimatorSet? = null
+    private val referralScrollListener = LifecycleBoundScrollListener()
     private var referralLastScrollY = 0
     private var homeNativeAdAvailable = false
+    private var homeCampaignAvailable = false
     private var homeNativeAdShown = false
 
     private fun updatePartnerReferralForTab(tabId: Int) {
@@ -360,30 +522,93 @@ class MainContainerActivity :
     private fun setPartnerReferralVisible(visible: Boolean) {
         if (!isViewReady) return
         val chip = binding.btnPartnerReferral
-        if (referralChipShown == visible) return
+
+        if (referralChipShown == visible) {
+            // The flag and the view can disagree. The slide-out is what sets INVISIBLE, in
+            // withEndAction — so a cancelled animation (any tab switch during those 180ms,
+            // or a width of 0 before the chip has measured) leaves the chip stranded
+            // part-way off screen and still VISIBLE, with the flag already reading hidden.
+            // That is how it came to sit on Bookings, Wallet and Profile. Re-assert instead
+            // of trusting the flag.
+            if (!visible && chip.visibility == android.view.View.VISIBLE) {
+                settleReferralChip(chip, false)
+            }
+            return
+        }
         referralChipShown = visible
 
-        chip.animate().cancel()
+        // Deliberately NOT chip.animate(): a View has one ViewPropertyAnimator, and
+        // setHomeNativeAdVisible cancels it to stop its own TRANSLATION_Y lift. Since
+        // updatePartnerReferralForTab calls that immediately after this, the fade-in was
+        // being cancelled the same frame it started — leaving the chip at alpha 0 every
+        // time you came back to Home with an ad loaded. First open looked fine only
+        // because the flag already read shown, so no animation ran to be cancelled.
+        //
+        // Owning ALPHA and TRANSLATION_X on a separate animator splits the properties
+        // cleanly: show/hide is ours, the dock's lift keeps TRANSLATION_Y.
+        referralChipAnimator?.cancel()
         if (visible) chip.visibility = android.view.View.VISIBLE
         // Slides out the way it came in — off its own edge — rather than fading in
         // place, so it reads as tucking away instead of blinking out.
-        chip.animate()
-            .alpha(if (visible) 1f else 0f)
-            .translationX(if (visible) 0f else chip.width.toFloat())
-            .setDuration(if (visible) 240 else 180)
-            .setInterpolator(tabAnimInterpolator)
-            .withEndAction {
-                if (!visible) chip.visibility = android.view.View.INVISIBLE
-            }
-            .start()
+        val animator = android.animation.AnimatorSet().apply {
+            playTogether(
+                android.animation.ObjectAnimator.ofFloat(
+                    chip, android.view.View.ALPHA, chip.alpha, if (visible) 1f else 0f
+                ),
+                android.animation.ObjectAnimator.ofFloat(
+                    chip,
+                    android.view.View.TRANSLATION_X,
+                    chip.translationX,
+                    if (visible) 0f else referralSlideDistance(chip)
+                )
+            )
+            duration = if (visible) 240 else 180
+            interpolator = tabAnimInterpolator
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    // Only settle if nothing has asked for the opposite in the meantime.
+                    if (referralChipShown == visible) settleReferralChip(chip, visible)
+                }
+            })
+        }
+        referralChipAnimator = animator
+        animator.start()
     }
 
-    /** Called by Home after the portrait native creative becomes available or is cleared. */
+    /** The chip's resting state, applied outright. Safe to call at any time. */
+    private fun settleReferralChip(chip: android.view.View, visible: Boolean) {
+        referralChipAnimator?.cancel()
+        referralChipAnimator = null
+        chip.alpha = if (visible) 1f else 0f
+        chip.translationX = if (visible) 0f else referralSlideDistance(chip)
+        chip.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE
+    }
+
+    /**
+     * How far off its own edge the chip tucks. Falls back to a generous fixed distance
+     * because width is 0 until the chip has been laid out, and animating to 0 there would
+     * hide it by alpha alone — leaving it fading in place on the next show.
+     */
+    private fun referralSlideDistance(chip: android.view.View): Float =
+        if (chip.width > 0) chip.width.toFloat() else 240f * resources.displayMetrics.density
+
+    /** Called by Home after the network creative becomes available or is cleared. */
     fun setHomeNativeAdAvailable(available: Boolean) {
         if (!isViewReady) return
         homeNativeAdAvailable = available
         updateHomeNativeAdPresentation()
     }
+
+    /** Called by Home when a first-party campaign takes the dock, or gives it back. */
+    fun setHomeCampaignAvailable(available: Boolean) {
+        if (!isViewReady) return
+        homeCampaignAvailable = available
+        updateHomeNativeAdPresentation()
+    }
+
+    /** The dock's campaign slot, for Home to bind. Null until the view is ready. */
+    val homeCampaignSlot: com.gridee.parking.ui.ads.CustomAdBannerView?
+        get() = if (isViewReady) binding.homeCampaignSlot else null
 
     // Unlike the referral chip, the ad does NOT tuck away on scroll. The chip is a promo that
     // would become furniture if it followed the user down the page; the ad is the placement
@@ -393,16 +618,14 @@ class MainContainerActivity :
     private fun updateHomeNativeAdPresentation() {
         setHomeNativeAdVisible(
             activityResumedForAds &&
-                homeNativeAdAvailable &&
+                (homeNativeAdAvailable || homeCampaignAvailable) &&
                 currentTabId == CustomBottomNavigation.TAB_HOME
         )
     }
 
     /** Applies the newest UMP result without starting a request on a hidden Home tab. */
     fun onAdsConsentResult(canRequestAds: Boolean) {
-        val home = supportFragmentManager.fragments
-            .filterIsInstance<HomeFragment>()
-            .firstOrNull()
+        val home = tabFragments.existing(CustomBottomNavigation.TAB_HOME) as? HomeFragment
             ?: return
         if (!canRequestAds) {
             home.onAdsConsentUnavailable()
@@ -411,29 +634,72 @@ class MainContainerActivity :
         }
     }
 
+    /**
+     * The ad dock, for Home to measure when reserving scroll clearance beneath it. Null before
+     * the view is ready — callers must treat that as "no clearance needed" rather than waiting.
+     */
+    val homeNativeAdDockView: android.view.View?
+        get() = if (isViewReady) binding.homeNativeAdDock else null
+
     private fun setHomeNativeAdVisible(visible: Boolean) {
         if (!isViewReady) return
-        supportFragmentManager.fragments
-            .filterIsInstance<HomeFragment>()
-            .firstOrNull()
+        (tabFragments.existing(CustomBottomNavigation.TAB_HOME) as? HomeFragment)
             ?.onHomeNativeAdDockVisibilityChanged(visible)
         if (homeNativeAdShown == visible) return
         homeNativeAdShown = visible
 
+        // The dock fades; it does not travel. TRANSLATION_Y on this view belongs to the lift
+        // spring in springDockTranslationY, and an entry animator sharing that property fought
+        // it whenever the in-app banner arrived mid-reveal. The motion instead comes from the
+        // card's own reveal() — a different view inside the dock — so nothing is contended.
         val dock = binding.homeNativeAdDock
+        val pill = binding.btnPartnerReferral
+        val restY = bottomOverlayLiftPx.unaryMinus()
         dock.animate().cancel()
+        pill.animate().cancel()
+
         if (visible) {
             dock.visibility = android.view.View.VISIBLE
             dock.alpha = 0f
-            dock.translationX = -12f * resources.displayMetrics.density
+            dock.translationY = restY
+            // The pill hangs off the dock's top edge, so revealing the dock displaces it by the
+            // ad's entire height in a single frame. Start it where it already was and let it
+            // ride up with the ad rather than teleporting out from under the user's thumb.
+            dock.doOnLayout { laid ->
+                if (!homeNativeAdShown) return@doOnLayout
+                pill.translationY = restY + (laid.height + dockPillGapPx).toFloat()
+                pill.animate()
+                    .translationY(restY)
+                    .setDuration(240)
+                    .setInterpolator(tabAnimInterpolator)
+                    .start()
+            }
+        } else {
+            // Walk the pill down to where the collapse will leave it, then collapse — otherwise
+            // it drops the ad's full height the instant visibility flips.
+            pill.translationY = restY
+            pill.animate()
+                .translationY(restY + (dock.height + dockPillGapPx).toFloat())
+                .setDuration(180)
+                .setInterpolator(tabAnimInterpolator)
+                .start()
         }
+
         dock.animate()
             .alpha(if (visible) 1f else 0f)
-            .translationX(if (visible) 0f else -dock.width.toFloat())
             .setDuration(if (visible) 240 else 180)
             .setInterpolator(tabAnimInterpolator)
             .withEndAction {
-                if (!homeNativeAdShown) dock.visibility = android.view.View.INVISIBLE
+                // GONE, not INVISIBLE: the referral pill is constrained to this dock's top, so
+                // leaving it INVISIBLE would reserve the ad's full height and strand the pill
+                // above an empty gap. Collapsing lets the pill fall back to its goneMargin
+                // resting place directly above the tab bar.
+                if (!homeNativeAdShown) {
+                    dock.visibility = android.view.View.GONE
+                    // Layout has now moved the pill down for real; drop the compensation.
+                    pill.animate().cancel()
+                    pill.translationY = restY
+                }
             }
             .start()
     }
@@ -446,6 +712,15 @@ class MainContainerActivity :
     // out of the way, so the banner lands in genuinely empty space and the ad stays whole.
 
     private var bottomOverlayLiftPx = 0f
+
+    /**
+     * Gap between the ad and the referral pill sitting on top of it — must match the pill's
+     * layout_marginBottom. 20dp rather than a tighter number because the whole ad surface is
+     * click-registered: a thumb that undershoots the pill would otherwise land on the creative
+     * and bill an advertiser for a tap the user never intended.
+     */
+    private val dockPillGapPx: Int
+        get() = (20f * resources.displayMetrics.density).toInt()
     private val dockLiftSprings = mutableListOf<androidx.dynamicanimation.animation.SpringAnimation>()
 
     override fun onBottomOverlayHeightChanged(overlayHeightAboveNavPx: Int) {
@@ -478,6 +753,10 @@ class MainContainerActivity :
         dockLiftSprings.clear()
 
         for (view in listOf(binding.homeNativeAdDock, binding.btnPartnerReferral)) {
+            // The reveal/collapse animators above also drive translationY on these two views.
+            // Cancel them here so the banner lift and the ad transition never pull the same
+            // property in opposite directions.
+            view.animate().cancel()
             val anim = androidx.dynamicanimation.animation.SpringAnimation(
                 view,
                 androidx.dynamicanimation.animation.DynamicAnimation.TRANSLATION_Y
@@ -493,39 +772,30 @@ class MainContainerActivity :
         }
     }
 
-    private fun hookPartnerReferralToScroll(scrollable: android.view.View) {
-        if (referralScrollHookedView === scrollable) return
-        referralScrollHookedView = scrollable
-
-        val readScrollY: () -> Int = when (scrollable) {
-            is androidx.core.widget.NestedScrollView -> { { scrollable.scrollY } }
-            is android.widget.ScrollView -> { { scrollable.scrollY } }
-            is androidx.recyclerview.widget.RecyclerView -> {
-                { scrollable.computeVerticalScrollOffset() }
-            }
-            else -> return
-        }
-
+    private fun hookPartnerReferralToScroll(scrollable: android.view.View, owner: LifecycleOwner) {
         val density = resources.displayMetrics.density
         // Ignore sub-pixel jitter and the rubber-band at the top; only a deliberate
         // drag should move the chip.
         val deltaThresholdPx = 8f * density
         val topZonePx = 24f * density
 
-        referralLastScrollY = readScrollY()
-        scrollable.viewTreeObserver.addOnScrollChangedListener {
-            if (currentTabId != CustomBottomNavigation.TAB_HOME) return@addOnScrollChangedListener
-            val y = readScrollY()
-            val delta = y - referralLastScrollY
-            if (y <= topZonePx) {
-                referralLastScrollY = y
-                setPartnerReferralVisible(true)
-                return@addOnScrollChangedListener
-            }
-            if (kotlin.math.abs(delta) < deltaThresholdPx) return@addOnScrollChangedListener
-            referralLastScrollY = y
-            setPartnerReferralVisible(delta < 0)
-        }
+        referralScrollListener.bind(
+            view = scrollable,
+            owner = owner,
+            onActivated = { y -> referralLastScrollY = y },
+            onScroll = { y ->
+                if (currentTabId == CustomBottomNavigation.TAB_HOME) {
+                    val delta = y - referralLastScrollY
+                    if (y <= topZonePx) {
+                        referralLastScrollY = y
+                        setPartnerReferralVisible(true)
+                    } else if (kotlin.math.abs(delta) >= deltaThresholdPx) {
+                        referralLastScrollY = y
+                        setPartnerReferralVisible(delta < 0)
+                    }
+                }
+            },
+        )
     }
 
     private fun setupPartnerReferralButton() {
@@ -549,9 +819,19 @@ class MainContainerActivity :
                 }
                 .start()
 
-            if (supportFragmentManager.findFragmentByTag(PartnerReferralBottomSheet.TAG) == null) {
-                PartnerReferralBottomSheet().show(
-                    supportFragmentManager,
+            val fragmentManager = supportFragmentManager
+            if (isFinishing || isDestroyed ||
+                !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+                fragmentManager.isDestroyed || fragmentManager.isStateSaved ||
+                fragmentManager.findFragmentByTag(PartnerReferralBottomSheet.TAG) != null
+            ) {
+                return@setOnClickListener
+            }
+            // Record the stable tag synchronously so a rapid second tap cannot enqueue another
+            // instance before an asynchronous FragmentTransaction has executed.
+            runCatching {
+                PartnerReferralBottomSheet().showNow(
+                    fragmentManager,
                     PartnerReferralBottomSheet.TAG
                 )
             }
@@ -571,11 +851,17 @@ class MainContainerActivity :
                 val target = if (forward) currentTabId + 1 else currentTabId - 1
                 return target in CustomBottomNavigation.TAB_HOME..CustomBottomNavigation.TAB_PROFILE
                     && isTabEnabled(target)
+                    && !supportFragmentManager.isStateSaved
                 // Allow a new swipe even if a prior commit/cancel spring is still settling;
                 // we cancel the in-flight transition and clean up any stale view in onSwipeBegin.
             }
 
             override fun onSwipeBegin(forward: Boolean) {
+                if (supportFragmentManager.isStateSaved) {
+                    bottomNavigation.springPillToCurrent()
+                    cancelSwipeState()
+                    return
+                }
                 val targetTabId = if (forward) currentTabId + 1 else currentTabId - 1
                 val incoming = getFragmentForTab(targetTabId)
                 swipeForward = forward
@@ -596,11 +882,11 @@ class MainContainerActivity :
                 }
 
                 if (!incoming.isAdded) {
-                    supportFragmentManager.beginTransaction()
-                        .add(R.id.fragment_container, incoming)
+                    val transaction = supportFragmentManager.beginTransaction()
+                    tabFragments.addTo(transaction, R.id.fragment_container, incoming)
                         .hide(incoming)
                         .setMaxLifecycle(incoming, androidx.lifecycle.Lifecycle.State.STARTED)
-                        .commitNowAllowingStateLoss()
+                        .commitNow()
                     applyTopInsetToFragmentView(incoming)
                 }
                 val incView = incoming.view ?: run {
@@ -628,6 +914,12 @@ class MainContainerActivity :
             override fun onSwipeRelease(forward: Boolean, progress: Float, velocityPxPerSec: Float) {
                 val incoming = swipeIncomingFragment ?: return cancelSwipeState()
                 val incView = incoming.view ?: return cancelSwipeState()
+                if (supportFragmentManager.isStateSaved) {
+                    incView.visibility = android.view.View.GONE
+                    bottomNavigation.springPillToCurrent()
+                    currentFragment?.let { updateStatusBarForFragment(it, animate = false) }
+                    return cancelSwipeState()
+                }
                 val outgoing = currentFragment
                 val outView = outgoing?.view
                 val myGen = swipeGeneration
@@ -648,11 +940,12 @@ class MainContainerActivity :
                     val transaction = supportFragmentManager.beginTransaction()
                         .show(incoming)
                         .setMaxLifecycle(incoming, androidx.lifecycle.Lifecycle.State.RESUMED)
+                        .setPrimaryNavigationFragment(incoming)
                     previousFragment?.let {
                         transaction.hide(it)
                         transaction.setMaxLifecycle(it, androidx.lifecycle.Lifecycle.State.STARTED)
                     }
-                    transaction.commitNowAllowingStateLoss()
+                    transaction.commitNow()
 
                     // FragmentManager's hide() just set the outgoing view to GONE; override
                     // so the parallax spring can still render it. End callback re-hides it.
@@ -719,10 +1012,6 @@ class MainContainerActivity :
         // ENABLE HIGH REFRESH RATE (90Hz / 120Hz)
         // This ensures the OS doesn't throttle the app to 60Hz to save battery,
         // allowing our physics animations to run at maximum smoothness.
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-        }
-
         try {
             val display = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
                 display
@@ -774,12 +1063,12 @@ class MainContainerActivity :
      * Icon tint flips at progress >= 0.5 (mid-transition) to avoid a mid-drag flash.
      */
     private fun blendStatusBarForSwipe(targetFragment: Fragment?, progress: Float) {
-        val window = window ?: return
         val from = statusBarColorFor(currentFragment)
         val to = statusBarColorFor(targetFragment)
         statusBarColorAnimator?.cancel()
         val blended = android.animation.ArgbEvaluator().evaluate(progress.coerceIn(0f, 1f), from, to) as Int
-        window.statusBarColor = blended
+        currentStatusBarColor = blended
+        binding.statusBarScrim.setBackgroundColor(blended)
 
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.isAppearanceLightStatusBars = if (progress < 0.5f) {
@@ -790,23 +1079,24 @@ class MainContainerActivity :
     }
 
     private fun updateStatusBarForFragment(fragment: Fragment, animate: Boolean = false) {
-        val window = window ?: return
         val controller = WindowInsetsControllerCompat(window, window.decorView)
 
         val targetColor = statusBarColorFor(fragment)
         val lightIcons = statusBarLightIconsFor(fragment)
 
         statusBarColorAnimator?.cancel()
-        val currentColor = window.statusBarColor
+        val currentColor = currentStatusBarColor
         if (!animate || currentColor == targetColor) {
-            window.statusBarColor = targetColor
+            currentStatusBarColor = targetColor
+            binding.statusBarScrim.setBackgroundColor(targetColor)
         } else {
             statusBarColorAnimator = android.animation.ValueAnimator
                 .ofObject(android.animation.ArgbEvaluator(), currentColor, targetColor).apply {
                     duration = tabAnimDurationMs
                     interpolator = tabAnimInterpolator
                     addUpdateListener {
-                        window.statusBarColor = it.animatedValue as Int
+                        currentStatusBarColor = it.animatedValue as Int
+                        binding.statusBarScrim.setBackgroundColor(currentStatusBarColor)
                     }
                     start()
                 }
@@ -827,19 +1117,21 @@ class MainContainerActivity :
     }
 
     private fun setupScrollBehaviorForCurrentFragment() {
-        currentFragment?.let { fragment ->
-            when (fragment) {
-                is HomeFragment -> fragment.getScrollableView()?.let {
-                    setupScrollBehaviorForView(it)
-                    hookPartnerReferralToScroll(it)
-                }
-                is BookingsFragmentNew -> fragment.getScrollableView()?.let { setupScrollBehaviorForView(it) }
-                is WalletFragmentNew -> fragment.getScrollableView()?.let { setupScrollBehaviorForView(it) }
-                is ProfileFragment -> fragment.getScrollableView()?.let { setupScrollBehaviorForView(it) }
-                else -> {
-                    // Handle unknown fragment types
-                }
-            }
+        if (!isViewReady || isFinishing || isDestroyed) return
+        val fragment = currentFragment as? BaseTabFragment<*>
+        val scrollable = fragment?.getScrollableView()
+        val owner = fragment?.viewLifecycleOwnerLiveData?.value
+        if (scrollable == null || owner == null || owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
+            clearScrollBehavior()
+            referralScrollListener.clear()
+            return
+        }
+
+        setupScrollBehaviorForView(scrollable, owner)
+        if (fragment is HomeFragment) {
+            hookPartnerReferralToScroll(scrollable, owner)
+        } else {
+            referralScrollListener.clear()
         }
     }
 
@@ -857,6 +1149,7 @@ class MainContainerActivity :
 
         handleNavigationIntent(intent, allowedTargetTab)
         handleWalletGlobalIntents(intent)
+        showSignupGiftIfNeeded()
     }
 
     private fun handleWalletGlobalIntents(intent: android.content.Intent?) {
@@ -895,18 +1188,14 @@ class MainContainerActivity :
     }
 
     private fun getFragmentForTab(tabId: Int): Fragment {
-        return when (tabId) {
-            CustomBottomNavigation.TAB_HOME -> homeFragment
-            CustomBottomNavigation.TAB_BOOKINGS -> bookingsFragment
-            CustomBottomNavigation.TAB_WALLET -> walletFragment
-            CustomBottomNavigation.TAB_PROFILE -> profileFragment
-            else -> homeFragment
-        }
+        val normalizedTabId = normalizeMainTabId(tabId)
+        return tabFragments.getOrCreate(normalizedTabId)
     }
 
     private fun resolveAllowedTab(tabId: Int, showMessage: Boolean = true): Int {
-        if (isTabEnabled(tabId)) return tabId
-        if (showMessage) showFeatureDisabled(tabId)
+        val normalizedTabId = normalizeMainTabId(tabId)
+        if (isTabEnabled(normalizedTabId)) return normalizedTabId
+        if (showMessage) showFeatureDisabled(normalizedTabId)
         return CustomBottomNavigation.TAB_HOME
     }
 
@@ -933,7 +1222,8 @@ class MainContainerActivity :
         val showPending = intent?.getBooleanExtra(EXTRA_SHOW_PENDING, false) ?: false
         val highlightBookingId = intent?.getStringExtra(EXTRA_HIGHLIGHT_BOOKING_ID)
         val openBookingId = intent?.getStringExtra(EXTRA_OPEN_BOOKING_ID)
-        bookingsFragment.handleExternalNavigation(showPending, highlightBookingId, openBookingId)
+        (getFragmentForTab(CustomBottomNavigation.TAB_BOOKINGS) as BookingsFragmentNew)
+            .handleExternalNavigation(showPending, highlightBookingId, openBookingId)
     }
 
     // Handle back button to navigate to home or exit
@@ -952,6 +1242,7 @@ class MainContainerActivity :
     }
 
     override fun onDestroy() {
+        referralScrollListener.clear()
         // On the redirect path nothing was initialized; touching transitionController here
         // would lazily build it from the null binding. Just hand off to super.
         if (!isViewReady) {
@@ -960,9 +1251,12 @@ class MainContainerActivity :
         }
         statusBarColorAnimator?.cancel()
         statusBarColorAnimator = null
+        binding.root.removeCallbacks(signupGiftLaunchRunnable)
+        signupGiftLaunchScheduled = false
         activityResumedForAds = false
         setHomeNativeAdVisible(false)
         transitionController.cancelAll()
+        endTabSwitchTrace()
         super.onDestroy()
     }
 }

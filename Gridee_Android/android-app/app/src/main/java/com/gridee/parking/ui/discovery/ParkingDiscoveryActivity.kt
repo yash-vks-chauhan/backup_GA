@@ -12,6 +12,12 @@ import com.gridee.parking.ui.components.CustomBottomNavigation
 
 class ParkingDiscoveryActivity : BaseActivityWithBottomNav<ActivityParkingDiscoveryBinding>() {
 
+    private companion object {
+        const val STATE_IS_MAP_VIEW = "parking_discovery.is_map_view"
+        const val MAP_FRAGMENT_TAG = "gridee.discovery.map"
+        const val LIST_FRAGMENT_TAG = "gridee.discovery.list"
+    }
+
     private lateinit var viewModel: ParkingDiscoveryViewModel
     private var isMapView = true
 
@@ -27,11 +33,13 @@ class ParkingDiscoveryActivity : BaseActivityWithBottomNav<ActivityParkingDiscov
         super.onCreate(savedInstanceState)
         // Base redirected to login (no auth session) and finished; binding is null.
         if (!isViewReady) return
+        isMapView = savedInstanceState?.getBoolean(STATE_IS_MAP_VIEW, true) ?: true
         viewModel = ViewModelProvider(this)[ParkingDiscoveryViewModel::class.java]
         
         setupClickListeners()
         setupObservers()
-        loadMapFragment()
+        updateViewToggle()
+        showSelectedFragment()
     }
 
     override fun setupUI() {
@@ -131,17 +139,60 @@ class ParkingDiscoveryActivity : BaseActivityWithBottomNav<ActivityParkingDiscov
     }
 
     private fun loadMapFragment() {
-        val fragment = ParkingMapFragment()
-        supportFragmentManager.beginTransaction()
-            .replace(com.gridee.parking.R.id.fragment_container, fragment)
-            .commit()
+        showFragment(
+            stableTag = MAP_FRAGMENT_TAG,
+            fragmentClass = ParkingMapFragment::class.java,
+            factory = ::ParkingMapFragment,
+        )
     }
 
     private fun loadListFragment() {
-        val fragment = ParkingListFragment()
+        showFragment(
+            stableTag = LIST_FRAGMENT_TAG,
+            fragmentClass = ParkingListFragment::class.java,
+            factory = ::ParkingListFragment,
+        )
+    }
+
+    private fun showSelectedFragment() {
+        if (isMapView) loadMapFragment() else loadListFragment()
+    }
+
+    private fun showFragment(
+        stableTag: String,
+        fragmentClass: Class<out Fragment>,
+        factory: () -> Fragment,
+    ) {
+        val current = supportFragmentManager.findFragmentById(R.id.fragment_container)
+        if (current?.javaClass == fragmentClass) return
+        if (supportFragmentManager.isStateSaved) return
+
+        // FragmentManager restores the screen during super.onCreate(). Prefer its stable tag;
+        // exact-class fallback preserves state saved by app versions that predate these tags.
+        val fragment = supportFragmentManager.findFragmentByTag(stableTag)
+            ?.takeIf {
+                it.isAdded &&
+                    !it.isRemoving &&
+                    it.id == R.id.fragment_container &&
+                    it.javaClass == fragmentClass
+            }
+            ?: supportFragmentManager.fragments.lastOrNull {
+                it.isAdded &&
+                    !it.isRemoving &&
+                    it.id == R.id.fragment_container &&
+                    it.javaClass == fragmentClass
+            }
+            ?: factory()
+
         supportFragmentManager.beginTransaction()
-            .replace(com.gridee.parking.R.id.fragment_container, fragment)
+            .setReorderingAllowed(true)
+            .replace(R.id.fragment_container, fragment, stableTag)
             .commit()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(STATE_IS_MAP_VIEW, isMapView)
+        super.onSaveInstanceState(outState)
     }
 
     private fun showFilterDialog() {

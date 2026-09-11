@@ -4,13 +4,17 @@ import android.content.Context
 import com.gridee.parking.GrideeApplication
 import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.data.api.ApiClient
+import com.gridee.parking.data.api.ApiService
+import com.gridee.parking.data.api.ScannerNetworkTraceTag
 import com.gridee.parking.data.model.Booking
 import com.gridee.parking.data.model.CheckInRequest
 import com.gridee.parking.data.model.CreateBookingRequest
 import com.gridee.parking.data.model.ErrorResponse
 import com.gridee.parking.data.model.BookingPayloadParser
+import com.gridee.parking.data.repository.cache.TtlSingleFlightCache
 import com.google.gson.GsonBuilder
 import com.gridee.parking.utils.AuthSession
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -18,102 +22,121 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class BookingRepository(
-    private val context: Context = GrideeApplication.instance.applicationContext
+    context: Context = GrideeApplication.instance.applicationContext,
+    private val apiService: ApiService = ApiClient.apiService,
 ) {
 
-    private val apiService = ApiClient.apiService
+    private val context = context.applicationContext
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
 
-    private suspend fun createBookingWithFallback(
+    private suspend fun createBookingOnce(
         userId: String,
         lotId: String?,
         request: CreateBookingRequest
     ): Response<Booking> {
         val scopedLotId = normalizeId(lotId)
-        if (scopedLotId != null) {
-            val scopedResponse = runCatching {
-                apiService.createBookingForLot(scopedLotId, userId, request)
-            }.getOrNull()
-            if (scopedResponse?.isSuccessful == true) {
-                return scopedResponse
-            }
-            println("BookingRepository: Lot-scoped create failed, falling back to legacy create")
+        return if (scopedLotId != null) {
+            apiService.createBookingForLot(scopedLotId, userId, request)
+        } else {
+            apiService.createBooking(userId, request)
         }
-        return apiService.createBooking(userId, request)
     }
 
-    suspend fun getUserBookings(): Result<List<Booking>> = withContext(Dispatchers.IO) {
-        try {
+    suspend fun getUserBookings(forceRefresh: Boolean = false): Result<List<Booking>> =
+        withContext(Dispatchers.IO) {
             val userId = getUserId()
-            println("BookingRepository: Loading bookings for userId: '$userId'")
             if (userId.isNullOrEmpty()) {
-                println("BookingRepository: User not logged in")
                 return@withContext Result.failure(Exception("User not logged in"))
             }
+            val lotId = getParkingLotId()
+            val key = bookingCacheKey(userId, lotId)
+            activeBookingsCache.getOrLoad(
+                key = key,
+                ttlMillis = ACTIVE_BOOKINGS_TTL_MILLIS,
+                forceRefresh = forceRefresh,
+                isCacheable = { it.isSuccess },
+            ) {
+                loadBookings(userId, lotId, history = false)
+            }
+        }
 
-            val parkingLotId = getParkingLotId()
-            val response = if (!parkingLotId.isNullOrBlank()) {
-                val scopedResponse = runCatching {
-                    apiService.getUserBookingsForLot(parkingLotId, userId)
-                }.getOrNull()
-                when {
-                    scopedResponse?.isSuccessful == true || scopedResponse?.code() == 404 -> scopedResponse
-                    else -> apiService.getUserBookings(userId)
+    suspend fun getUserBookingHistory(forceRefresh: Boolean = false): Result<List<Booking>> =
+        withContext(Dispatchers.IO) {
+            val userId = getUserId()
+            if (userId.isNullOrEmpty()) {
+                return@withContext Result.failure(Exception("User not logged in"))
+            }
+            val lotId = getParkingLotId()
+            val key = bookingCacheKey(userId, lotId)
+            bookingHistoryCache.getOrLoad(
+                key = key,
+                ttlMillis = BOOKING_HISTORY_TTL_MILLIS,
+                forceRefresh = forceRefresh,
+                isCacheable = { it.isSuccess },
+            ) {
+                loadBookings(userId, lotId, history = true)
+            }
+        }
+
+    /**
+     * Global history is used only when resolving a booking that is no longer in the currently
+     * selected lot. It has its own cached `lot=all` key, so details screens do not bypass the
+     * repository or repeatedly fetch the user history endpoint.
+     */
+    suspend fun getGlobalUserBookingHistory(
+        forceRefresh: Boolean = false,
+    ): Result<List<Booking>> = withContext(Dispatchers.IO) {
+        val userId = getUserId()
+        if (userId.isNullOrEmpty()) {
+            return@withContext Result.failure(Exception("User not logged in"))
+        }
+        val key = bookingCacheKey(userId, lotId = null)
+        bookingHistoryCache.getOrLoad(
+            key = key,
+            ttlMillis = BOOKING_HISTORY_TTL_MILLIS,
+            forceRefresh = forceRefresh,
+            isCacheable = { it.isSuccess },
+        ) {
+            loadBookings(userId, lotId = null, history = true)
+        }
+    }
+
+    private suspend fun loadBookings(
+        userId: String,
+        lotId: String?,
+        history: Boolean,
+    ): Result<List<Booking>> {
+        return try {
+            val response = if (lotId != null) {
+                val scoped = if (history) {
+                    apiService.getUserBookingHistoryForLot(lotId, userId)
+                } else {
+                    apiService.getUserBookingsForLot(lotId, userId)
                 }
+                if (scoped.isSuccessful || !LegacyGetFallbackPolicy.shouldFallback(scoped.code())) {
+                    scoped
+                } else if (history) {
+                    apiService.getUserBookingHistory(userId)
+                } else {
+                    apiService.getUserBookings(userId)
+                }
+            } else if (history) {
+                apiService.getUserBookingHistory(userId)
             } else {
                 apiService.getUserBookings(userId)
             }
-            println("BookingRepository: Get bookings response code: ${response.code()}")
-            if (response.isSuccessful) {
-                val bookings = BookingPayloadParser.parseBookings(response.body())
-                println("BookingRepository: Found ${bookings.size} bookings")
-                bookings.forEach { booking ->
-                    println("BookingRepository: Booking ID: ${booking.id}, Status: ${booking.status}, Spot: ${booking.spotId}")
-                }
-                Result.success(bookings)
-            } else if (response.code() == 404) {
-                println("BookingRepository: No bookings found (404), returning empty list")
-                Result.success(emptyList())
-            } else {
-                val errorBody = response.errorBody()?.string()
-                println("BookingRepository: Get bookings error: $errorBody")
-                Result.failure(Exception("Failed to load bookings: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            println("BookingRepository: Exception loading bookings: ${e.message}")
-            Result.failure(e)
-        }
-    }
 
-    suspend fun getUserBookingHistory(): Result<List<Booking>> = withContext(Dispatchers.IO) {
-        try {
-            val userId = getUserId()
-            if (userId.isNullOrEmpty()) {
-                return@withContext Result.failure(Exception("User not logged in"))
+            when {
+                response.isSuccessful -> Result.success(BookingPayloadParser.parseBookings(response.body()))
+                response.code() == 404 -> Result.success(emptyList())
+                else -> Result.failure(
+                    Exception("Failed to load ${if (history) "booking history" else "bookings"} (HTTP ${response.code()})")
+                )
             }
-
-            val parkingLotId = getParkingLotId()
-            val response = if (!parkingLotId.isNullOrBlank()) {
-                val scopedResponse = runCatching {
-                    apiService.getUserBookingHistoryForLot(parkingLotId, userId)
-                }.getOrNull()
-                when {
-                    scopedResponse?.isSuccessful == true || scopedResponse?.code() == 404 -> scopedResponse
-                    else -> apiService.getUserBookingHistory(userId)
-                }
-            } else {
-                apiService.getUserBookingHistory(userId)
-            }
-            if (response.isSuccessful) {
-                Result.success(BookingPayloadParser.parseBookings(response.body()))
-            } else if (response.code() == 404) {
-                println("BookingRepository: No booking history found (404), returning empty list")
-                Result.success(emptyList())
-            } else {
-                Result.failure(Exception("Failed to load booking history: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            Result.failure(failure)
         }
     }
 
@@ -122,7 +145,7 @@ class BookingRepository(
         lotId: String,
         checkInTime: Date,
         checkOutTime: Date,
-        vehicleNumber: String
+        vehicleNumber: String?
     ): Result<Booking> = withContext(Dispatchers.IO) {
         try {
             RemoteConfigManager.loadCached(context)
@@ -148,14 +171,10 @@ class BookingRepository(
                 )
             }
 
-            val checkInTimeStr = dateFormatter.format(checkInTime)
-            val checkOutTimeStr = dateFormatter.format(checkOutTime)
+            val (checkInTimeStr, checkOutTimeStr) = synchronized(dateFormatter) {
+                dateFormatter.format(checkInTime) to dateFormatter.format(checkOutTime)
+            }
 
-            println("BookingRepository: Creating booking with userId: $userId")
-            println("BookingRepository: spotId: $spotId, lotId: $lotId")
-            println("BookingRepository: checkInTime: $checkInTimeStr")
-            println("BookingRepository: checkOutTime: $checkOutTimeStr")
-            println("BookingRepository: vehicleNumber: $vehicleNumber")
 
             val body = CreateBookingRequest(
                 spotId = spotId,
@@ -165,50 +184,27 @@ class BookingRepository(
                 vehicleNumber = vehicleNumber
             )
 
-            val response = createBookingWithFallback(
+            val response = createBookingOnce(
                 userId = userId,
                 lotId = lotId,
                 request = body
             )
 
-            println("BookingRepository: API response code: ${response.code()}")
-            println("BookingRepository: API response message: ${response.message()}")
 
             if (response.isSuccessful) {
                 val booking = response.body()
                 if (booking != null) {
-                    println("BookingRepository: Booking created successfully: ${booking.id}")
+                    invalidateAfterBookingMutation(
+                        userId = userId,
+                        lotId = booking.lotId.ifBlank { lotId },
+                        includeHistory = false,
+                    )
                     Result.success(booking)
                 } else {
-                    println("BookingRepository: Empty response from server")
                     Result.failure(Exception("Empty response from server"))
                 }
             } else {
                 val errorBody = response.errorBody()?.string()
-                println("BookingRepository: API error body: $errorBody")
-
-                // Check if it's a wallet error and try to create wallet
-                if (errorBody?.contains("Wallet not found") == true && RemoteConfigManager.isWalletEnabled()) {
-                    println("BookingRepository: Wallet not found, attempting to create wallet...")
-                    try {
-                        // Try to create wallet by topping up with initial amount
-                        val walletResponse = apiService.topUpWallet(userId, com.gridee.parking.data.model.TopUpRequest(100.0))
-                        if (walletResponse.isSuccessful) {
-                            println("BookingRepository: Wallet created successfully, retrying booking...")
-                            // Retry the booking
-                            val retryResponse = createBookingWithFallback(userId, lotId, body)
-                            if (retryResponse.isSuccessful) {
-                                val booking = retryResponse.body()
-                                if (booking != null) {
-                                    println("BookingRepository: Booking created successfully after wallet creation: ${booking.id}")
-                                    return@withContext Result.success(booking)
-                                }
-                            }
-                        }
-                    } catch (e: Exception) {
-                        println("BookingRepository: Failed to create wallet: ${e.message}")
-                    }
-                }
 
                 val errorCode = extractBackendErrorCode(errorBody)
                 val friendlyMessage = when {
@@ -228,9 +224,9 @@ class BookingRepository(
                 }
                 Result.failure(Exception(friendlyMessage))
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
-            println("BookingRepository: Exception occurred: ${e.message}")
-            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -252,12 +248,25 @@ class BookingRepository(
                 return@withContext Result.failure(Exception("User not logged in"))
             }
 
+            val cacheKey = bookingCacheKey(userId, getParkingLotId())
+            val cachedLotId = activeBookingsCache.peek(cacheKey)
+                ?.getOrNull()
+                ?.firstOrNull { it.id == bookingId }
+                ?.lotId
+                ?.takeIf(String::isNotBlank)
             val response = apiService.cancelBooking(userId, bookingId)
             if (response.isSuccessful) {
+                invalidateAfterBookingMutation(
+                    userId = userId,
+                    lotId = cachedLotId ?: getParkingLotId(),
+                    includeHistory = true,
+                )
                 Result.success(true)
             } else {
                 Result.failure(Exception("Failed to cancel booking: ${response.message()}"))
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -288,7 +297,8 @@ class BookingRepository(
      */
     suspend fun operatorCheckIn(
         request: CheckInRequest,
-        parkingLotId: String? = request.parkingLotId
+        parkingLotId: String? = request.parkingLotId,
+        networkTraceId: String? = null,
     ): Response<Booking> {
         val scopedLotId = normalizeId(parkingLotId) ?: normalizeId(request.parkingLotId)
         val scopedRequest = if (scopedLotId != null && request.parkingLotId != scopedLotId) {
@@ -297,16 +307,14 @@ class BookingRepository(
             request
         }
 
-        var scopedResponse: Response<Booking>? = null
-        if (scopedLotId != null) {
-            scopedResponse = runCatching {
-                apiService.operatorCheckInForLot(scopedLotId, scopedRequest)
-            }.getOrNull()
-            if (scopedResponse?.isSuccessful == true) return scopedResponse
+        val traceTag = ScannerNetworkTraceTag.create(networkTraceId)
+        val response = if (scopedLotId != null) {
+            apiService.operatorCheckInForLot(scopedLotId, scopedRequest, traceTag)
+        } else {
+            apiService.operatorCheckIn(scopedRequest, traceTag)
         }
-
-        val fallbackResponse = runCatching { apiService.operatorCheckIn(scopedRequest) }.getOrNull()
-        return fallbackResponse ?: scopedResponse ?: apiService.operatorCheckIn(scopedRequest)
+        response.body()?.takeIf { response.isSuccessful }?.let(::invalidateAfterOperatorMutation)
+        return response
     }
 
     /**
@@ -314,7 +322,8 @@ class BookingRepository(
      */
     suspend fun operatorCheckOut(
         request: CheckInRequest,
-        parkingLotId: String? = request.parkingLotId
+        parkingLotId: String? = request.parkingLotId,
+        networkTraceId: String? = null,
     ): Response<Booking> {
         val scopedLotId = normalizeId(parkingLotId) ?: normalizeId(request.parkingLotId)
         val scopedRequest = if (scopedLotId != null && request.parkingLotId != scopedLotId) {
@@ -323,37 +332,99 @@ class BookingRepository(
             request
         }
 
-        var scopedResponse: Response<Booking>? = null
-        if (scopedLotId != null) {
-            scopedResponse = runCatching {
-                apiService.operatorCheckOutForLot(scopedLotId, scopedRequest)
-            }.getOrNull()
-            if (scopedResponse?.isSuccessful == true) return scopedResponse
+        val traceTag = ScannerNetworkTraceTag.create(networkTraceId)
+        val response = if (scopedLotId != null) {
+            apiService.operatorCheckOutForLot(scopedLotId, scopedRequest, traceTag)
+        } else {
+            apiService.operatorCheckOut(scopedRequest, traceTag)
         }
+        response.body()?.takeIf { response.isSuccessful }?.let(::invalidateAfterOperatorMutation)
+        return response
+    }
 
-        val fallbackResponse = runCatching { apiService.operatorCheckOut(scopedRequest) }.getOrNull()
-        return fallbackResponse ?: scopedResponse ?: apiService.operatorCheckOut(scopedRequest)
+    private fun invalidateAfterOperatorMutation(booking: Booking) {
+        invalidateAfterBookingMutation(
+            userId = booking.userId,
+            lotId = booking.lotId,
+            includeHistory = true,
+        )
+    }
+
+    private fun invalidateAfterBookingMutation(
+        userId: String,
+        lotId: String?,
+        includeHistory: Boolean,
+    ) {
+        invalidateUserBookings(userId, lotId, includeHistory)
+        WalletRepository.invalidateWallet(userId)
+        normalizeId(lotId)?.let(ParkingRepository::invalidateLotSpots)
     }
 
     private fun getUserId(): String? {
-        // Legacy storage
-        val sharedPref = context.getSharedPreferences("gridee_prefs", Context.MODE_PRIVATE)
-        val legacyId = sharedPref.getString("user_id", null)
-        if (!legacyId.isNullOrBlank()) return legacyId
-
-        // JWT-based storage fallback
-        return try {
-            com.gridee.parking.utils.JwtTokenManager(context).getUserId()
-        } catch (_: Exception) {
-            null
-        }
+        return normalizeId(AuthSession.getUserId(context))
     }
 
     private fun getParkingLotId(): String? {
         return normalizeId(AuthSession.getParkingLotId(context))
     }
 
+    private fun bookingCacheKey(userId: String, lotId: String?): String {
+        val role = AuthSession.getUserRole(context)?.trim()?.uppercase() ?: "USER"
+        return "user=${normalizeKey(userId)}|role=$role|lot=${normalizeKey(lotId) ?: "all"}"
+    }
+
     private fun normalizeId(raw: String?): String? {
         return raw?.trim()?.takeIf { it.isNotEmpty() }
+    }
+
+    companion object {
+        const val ACTIVE_BOOKINGS_TTL_MILLIS = 20 * 1000L
+        const val BOOKING_HISTORY_TTL_MILLIS = 5 * 60 * 1000L
+
+        private val activeBookingsCache =
+            TtlSingleFlightCache<String, Result<List<Booking>>>(128)
+        private val bookingHistoryCache =
+            TtlSingleFlightCache<String, Result<List<Booking>>>(128)
+
+        @JvmStatic
+        fun invalidateUserBookings(
+            userId: String,
+            lotId: String? = null,
+            includeHistory: Boolean = true,
+        ) {
+            val userMarker = "user=${normalizeKey(userId)}|"
+            val normalizedLotId = normalizeKey(lotId)
+            val matches: (String) -> Boolean = { key ->
+                key.startsWith(userMarker) && (
+                    normalizedLotId == null ||
+                        key.endsWith("|lot=$normalizedLotId") ||
+                        key.endsWith("|lot=all")
+                    )
+            }
+            activeBookingsCache.invalidateWhere(matches)
+            if (includeHistory) bookingHistoryCache.invalidateWhere(matches)
+        }
+
+        @JvmStatic
+        fun invalidateUserBookingHistory(userId: String, lotId: String? = null) {
+            val userMarker = "user=${normalizeKey(userId)}|"
+            val normalizedLotId = normalizeKey(lotId)
+            bookingHistoryCache.invalidateWhere { key ->
+                key.startsWith(userMarker) && (
+                    normalizedLotId == null ||
+                        key.endsWith("|lot=$normalizedLotId") ||
+                        key.endsWith("|lot=all")
+                    )
+            }
+        }
+
+        @JvmStatic
+        fun clearReadCache() {
+            activeBookingsCache.clear()
+            bookingHistoryCache.clear()
+        }
+
+        private fun normalizeKey(value: String?): String? =
+            value?.trim()?.lowercase()?.takeIf(String::isNotEmpty)
     }
 }

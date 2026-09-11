@@ -17,7 +17,6 @@
     <string name="vehicle_scan_success_toast">Vehicle %1$s detected</string>
     <string name="vehicle_scan_success_title">Vehicle detected</string>
     <string name="vehicle_scan_success_message">Vehicle %1$s found and ready for check-in.</string>
-    <string name="scanner_corner">Scanner frame corner</string>
     <string name="vehicle_scan_best_guess">Possible match: %1$s</string>
     <string name="vehicle_scan_flash_on">Flash on</string>
     <string name="vehicle_scan_flash_off">Flash off</string>
@@ -53,11 +52,41 @@
     <string name="scanner_enter_number">Enter Number</string>
     <string name="scanner_manual_sheet_hint">Type the vehicle number shown on the plate.</string>
     <string name="scanner_qr_scan_hint">Align booking QR inside the frame</string>
+    <string name="scanner_one_qr_at_a_time_warning">Keep only one booking QR inside the frame.</string>
+    <string name="scanner_low_light_hint">Low light — turn on the torch or move to better lighting</string>
+    <string name="scanner_refocusing_hint">Refocusing on the centre frame…</string>
+    <string name="scanner_tap_to_focus">Tap scanning frame to focus camera</string>
+    <string name="scanner_preparing_title">Preparing scanner</string>
+    <string name="scanner_preparing_message">Checking the secure OCR and QR components…</string>
+    <string name="scanner_viewport_too_small_title">More screen space needed</string>
+    <string name="scanner_viewport_too_small_message">Rotate the device or expand the app to continue scanning.</string>
+    <string name="scanner_automatic_recognition_disabled_title">Automatic scanning paused</string>
+    <string name="scanner_automatic_recognition_disabled_message">Enter the vehicle number manually. Automatic Plate and QR recognition is temporarily disabled.</string>
+    <string name="scanner_camera_access_needed_title">Camera access needed</string>
+    <string name="scanner_camera_unavailable_title">Camera unavailable</string>
+    <string name="scanner_camera_permission_manual_message">Allow camera access in Settings, or enter the vehicle number manually.</string>
+    <string name="scanner_camera_unavailable_manual_message">The camera is unavailable. Enter the vehicle number manually or try again.</string>
+    <string name="scanner_retry_camera">Retry camera</string>
+    <string name="scanner_unavailable_title">Scanner setup needed</string>
+    <string name="scanner_unavailable_message">The scanner components are not ready. Connect to the internet and retry, or enter the vehicle number manually.</string>
+    <string name="scanner_retry_setup">Retry setup</string>
+    <string name="scanner_plate_confirmation_needed">Confirm the detected plate: %1$s</string>
+    <string name="scanner_plate_confirm_title">Confirm vehicle plate</string>
+    <string name="scanner_plate_confirm_message">Confirm %1$s before continuing.</string>
+    <string name="scanner_plate_confirm_corrected_message">Some similar-looking letters or numbers were corrected. Confirm %1$s before continuing.</string>
+    <string name="scanner_confirm_plate">Confirm plate</string>
     <string name="scanner_qr_required">Booking QR is required</string>
     <string name="scanner_processing_qr_checkin">Checking in booking QR…</string>
     <string name="scanner_processing_qr_checkout">Checking out booking QR…</string>
     <string name="scanner_checked_in_at">Checked in at %1$s</string>
     <string name="scanner_checked_out_at">Checked out at %1$s</string>
+    <string name="scanner_operator_request_still_processing">Operator request is still processing. Please wait for confirmation.</string>
+    <string name="scanner_recent_scan_title">Recently processed</string>
+    <plurals name="scanner_recent_scan_cooldown">
+        <item quantity="one">This scan was just processed. Try again in %1$d second.</item>
+        <item quantity="other">This scan was just processed. Try again in %1$d seconds.</item>
+    </plurals>
+    <string name="scanner_spot_outside_assigned_lot">This parking spot does not belong to your assigned parking lot.</string>
     <string name="scanner_spot_meta" translatable="false">%1$s</string>
     <string name="scanner_open">Open Scanner</string>
     <string name="vehicle_sheet_status_fetching">Fetching active booking…</string>
@@ -498,7 +527,6 @@
     <string name="no_transactions_yet">No Transactions Yet</string>
     <string name="your_transaction_history_will_appear_here">Your transaction history will appear here</string>
     <string name="vehicles">Vehicles</string>
-    <string name="add_money_is_temporarily_unavailable_were">Add Money is temporarily unavailable.\nWe\'re integrating with our payment aggregator.</string>
     <string name="current_balance">Current Balance</string>
     <string name="minimum_amount">Minimum amount</string>
     <string name="secured_by">Secured by</string>
@@ -552,6 +580,10 @@
     <string name="top_up">Top Up</string>
     <string name="refund_penalty_policy">REFUND &amp; PENALTY POLICY</string>
     <string name="your_booking_amount_is_fully_refunded">Your booking amount is fully refunded to your wallet upon successfully checking out on time.</string>
+    <string name="booking_requires_no_payment">No payment is collected from you for this booking.</string>
+    <string name="booking_policy_no_refund">This parking lot’s bookings are non-refundable.</string>
+    <string name="booking_policy_standard_refund">Standard refund and deduction rules apply to this parking lot.</string>
+    <string name="booking_policy_no_payment">No payment is required for this parking lot. Standard booking rules still apply.</string>
     <string name="late_checkouts_incur_a_penalty_starting">Late checkouts incur a penalty starting at 20 G-Coins per 10 mins (after a 10 min grace period).</string>
     <string name="cancellations_are_100_refunded_if_made" formatted="false">Cancellations are 100% refunded if made 2+ hours prior, 50% up to 30 mins prior, and non-refundable otherwise.</string>
     <string name="confirm_booking">Confirm Booking</string>
@@ -575,6 +607,9 @@
     <string name="watch_a_short_video_to_claim">Watch a short video to claim your daily reward</string>
     <string name="claim_reward">Claim Reward</string>
     <string name="come_back_daily_for_more_rewards">Come back daily for more rewards</string>
+    <string name="reward_cap_reached_cta">Come back tomorrow</string>
+    <string name="reward_rewards_left_today">%1$d of %2$d rewards left today</string>
+    <string name="reward_cap_reached_note">You have claimed all %1$d of today\'s rewards</string>
     <string name="review_gridee_on_play_store">Review Gridee on Play Store</string>
     <string name="manual_wallet_credit">Manual wallet credit</string>
     <string name="write_a_review_on_play_store">Write a review on Play Store to earn 30 Gridee Coins. Our team will review it and award 30 Gridee Coins.</string>
@@ -670,7 +705,6 @@
     <string name="no_transactions_found">No transactions found</string>
     <string name="please_enter_a_valid_amount">Please enter a valid amount</string>
     <string name="please_login_to_add_money">Please login to add money</string>
-    <string name="add_money_temporarily_unavailable_during_payment">Add money temporarily unavailable during payment integration.</string>
     <string name="session_expired_please_log_in_again">Session expired. Please log in again.</string>
     <string name="wallet_is_temporarily_unavailable">Wallet is temporarily unavailable.</string>
     <string name="no_real_wallet_data_available">No real wallet data available</string>
@@ -784,6 +818,16 @@
     <string name="payment_configuration_missing">Payment configuration missing</string>
     <string name="payment_success_update_failed">Payment success, update failed</string>
     <string name="payment_could_not_be_started">Could not open checkout. Please try again.</string>
+    <string name="payment_cashfree_debug_install_blocked">Cashfree blocks live payments from Android Studio installs. Use a sandbox backend for this build, or install Gridee through Google Play.</string>
+    <string name="payment_cashfree_play_install_required">Cashfree could not verify this Google Play installation. Please contact support.</string>
+    <string name="payment_cashfree_session_invalid">Cashfree rejected this payment session. Please try again with a new payment.</string>
+    <string name="payment_cashfree_calling_context_invalid">Cashfree could not start checkout from this screen. Please try again.</string>
+    <string name="payment_cashfree_order_inactive">This payment session is no longer active. Please try again with a new payment.</string>
+    <string name="payment_cashfree_gateway_unavailable">Cashfree checkout is temporarily unavailable. Please try again.</string>
+    <string name="payment_cashfree_checkout_incomplete">Cashfree checkout did not complete. If your bank shows a debit, check your wallet before retrying.</string>
+    <string name="payment_cashfree_error_with_support_code">%1$s\n\nSupport code: %2$s</string>
+    <string name="payment_cashfree_dialog_title">Cashfree checkout</string>
+    <string name="payment_request_already_in_progress">Payment setup is already in progress.</string>
     <string name="payment_pending_confirmation">Payment is still being confirmed. Your wallet will update once it clears.</string>
     <string name="payment_failed_or_cancelled">Payment failed or was cancelled. You have not been charged.</string>
     <string name="payment_could_not_be_confirmed">We could not confirm this payment. Check your wallet in a moment.</string>
@@ -802,7 +846,7 @@
     <string name="payment_outcome_not_charged">No money left your account.</string>
 
     <string name="payment_outcome_pending_title">Payment pending</string>
-    <string name="payment_outcome_pending_message">Payment is being verified. Please wait.</string>
+    <string name="payment_outcome_pending_message">Payment processing, wallet will update shortly.</string>
     <string name="payment_outcome_pending_reassurance">Your wallet updates automatically once it clears.</string>
     <string name="payment_outcome_still_pending">Still processing. Your bank has not confirmed it yet — this is normal for UPI.</string>
 
@@ -954,17 +998,12 @@
     <string name="deck_header_near">%1$d near %2$s</string>
     <string name="deck_header_nearby">%1$d nearby</string>
     <string name="gridee_coin_glyph" translatable="false">G</string>
-    <string name="pass_state_live">Live</string>
-    <string name="pass_state_booked">Booked</string>
     <string name="pass_hold_up_exit">Hold up to the exit scanner</string>
     <string name="pass_hold_up_entry">Hold up to the entry scanner</string>
     <string name="pass_time_left">%1$s left</string>
     <string name="pass_time_left_until">%1$s left · until %2$s</string>
     <string name="pass_ends_at">Ends %1$s</string>
     <string name="pass_where_format">%1$s · %2$s</string>
-    <string name="house_promo_referral_title">Invite a driver, you both park free once</string>
-    <string name="house_promo_referral_source">Gridee rewards</string>
-    <string name="house_promo_referral_cta">Invite</string>
     <string name="event_poster_content_description">Sponsored event</string>
     <string name="spotlight_default_cta">Learn more</string>
     <string name="spotlight_attribution">Ad · %1$s</string>
@@ -972,4 +1011,51 @@
     <string name="booking_details_sheet_id">Booking ID</string>
     <string name="booking_details_sheet_copy">Copy</string>
     <string name="booking_details_sheet_copied">Booking ID copied</string>
+
+    <!-- ============ Bookings stage rail (Option D) ============ -->
+    <string name="stage_booked_caps">BOOKED</string>
+    <string name="stage_live_caps">LIVE</string>
+    <string name="label_check_in">Check-in</string>
+    <string name="label_check_out">Check-out</string>
+    <string name="label_vehicle">Vehicle</string>
+    <string name="label_paid">Paid</string>
+    <string name="label_time_remaining">Time remaining</string>
+    <string name="pass_show_at_entry">Show at entry</string>
+    <string name="pass_show_at_exit">Show at exit</string>
+    <string name="pass_tap_to_scan">Tap to scan</string>
+    <string name="hold_to_cancel_booking">Hold to cancel booking</string>
+    <string name="stage_booked">Booked</string>
+    <string name="stage_checked_in">Checked in</string>
+    <string name="stage_checked_out">Checked out</string>
+    <string name="stage_on_arrival">On arrival</string>
+    <!-- Spoken per stop; the dot style alone cannot say "done" or "upcoming". -->
+    <string name="stage_cd_done">%1$s, completed %2$s</string>
+    <string name="stage_cd_current">%1$s, current stage</string>
+    <string name="stage_cd_future">%1$s, upcoming, %2$s</string>
+    <string name="pass_time_left_until_short">until %1$s</string>
+    <string name="cancel_sheet_title">Cancel this booking?</string>
+    <string name="cancel_sheet_body">Your spot will be released and the pass stops working. Any refund goes back to your Gridee wallet.</string>
+    <string name="cancel_sheet_body_policy_loading">Your spot will be released and the pass stops working. Checking this parking lot’s cancellation policy…</string>
+    <string name="cancel_sheet_body_policy_unavailable">Your spot will be released and the pass stops working. Refund eligibility will be decided by this parking lot’s policy.</string>
+    <string name="cancel_sheet_body_no_refund">Your spot will be released and the pass stops working. This parking lot’s policy makes the booking non-refundable.</string>
+    <string name="cancel_sheet_body_free_booking">Your spot will be released and the pass stops working. This booking did not require payment, so no wallet refund is due.</string>
+    <string name="cancel_sheet_confirm">Yes, cancel booking</string>
+    <string name="cancel_sheet_keep">Keep booking</string>
+    <string name="cancel_booking_action">Cancel booking</string>
+    <string name="stage_overdue_caps">OVERDUE</string>
+    <string name="label_time_over">Time over</string>
+    <string name="stage_since">since %1$s</string>
+    <string name="stage_overdue">Overdue</string>
+    <string name="empty_bookings_title">No active booking</string>
+    <string name="empty_bookings_body">Book a spot and your pass shows up here. Past bookings live in your booking history.</string>
+    <string name="empty_bookings_cta">Find parking</string>
+    <string name="terminal_view_history">View history</string>
+    <string name="terminal_book_again">Book again</string>
+    <string name="stage_completed_caps">COMPLETED</string>
+    <string name="stage_cancelled_caps">CANCELLED</string>
+    <string name="stage_no_show_caps">NO SHOW</string>
+    <string name="label_cancelled_at">Cancelled</string>
+    <string name="terminal_never_started">Never started.</string>
+    <string name="scanner_operator_offline">No verified internet connection. Reconnect, then tap Scan again. No check-in or check-out was sent.</string>
+    <string name="scanner_operator_slow_network">%1$s Slow network detected; keep this screen open and do not scan again.</string>
 </resources>

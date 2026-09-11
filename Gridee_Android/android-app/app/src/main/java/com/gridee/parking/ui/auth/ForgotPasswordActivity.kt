@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.gridee.parking.R
 import com.gridee.parking.databinding.ActivityForgotPasswordBinding
@@ -21,7 +20,6 @@ class ForgotPasswordActivity : AppCompatActivity() {
         binding = ActivityForgotPasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !ThemeManager.isDarkMode(this)
 
         binding.btnSendReset.setOnClickListener {

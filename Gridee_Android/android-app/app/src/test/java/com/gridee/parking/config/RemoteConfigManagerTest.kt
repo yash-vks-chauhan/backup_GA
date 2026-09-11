@@ -82,7 +82,7 @@ class RemoteConfigManagerTest {
 
         val sanitized = RemoteConfigManager.sanitize(config)
 
-        assertEquals(1.0, sanitized.financial.minWalletTopUpAmount, 0.0)
+        assertEquals(10.0, sanitized.financial.minWalletTopUpAmount, 0.0)
         assertTrue(
             "max must be a usable range above min",
             sanitized.financial.maxWalletTopUpAmount > sanitized.financial.minWalletTopUpAmount
@@ -177,7 +177,7 @@ class RemoteConfigManagerTest {
         val financial = RemoteFinancialSettings()
         val booking = RemoteBookingSettings()
 
-        assertEquals(1.0, financial.minWalletTopUpAmount, 0.0)
+        assertEquals(100.0, financial.minWalletTopUpAmount, 0.0)
         assertEquals(0.0, financial.maxLateCheckoutPenaltyPerMin, 0.0)
         assertEquals(10.0, financial.overdueCheckoutPenaltyPercentage, 0.0)
         assertEquals(180, booking.noShowGraceMinutes)

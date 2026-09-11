@@ -54,7 +54,8 @@
                 android:fontFamily="@font/inter_bold"
                 android:letterSpacing="-0.02"
                 android:singleLine="true"
-                android:text="Java - Morning"
+                android:text=""
+                tools:text="Spot B-12"
                 android:textColor="@color/text_primary"
                 android:textSize="22sp"
                 android:textStyle="bold" />

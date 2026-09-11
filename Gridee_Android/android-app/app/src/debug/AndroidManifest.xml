@@ -14,11 +14,23 @@
             android:exported="true"
             android:theme="@style/Theme.Gridee.NoActionBar" />
 
+        <activity
+            android:name=".debug.OperatorScannerPreviewActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gridee.NoActionBar" />
+
+        <!-- Internal authentication diagnostics; never merged into release builds. -->
+        <activity
+            android:name=".ui.auth.JwtTestActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gridee.NoActionBar" />
+
         <receiver
             android:name=".debug.AdMobDebugReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.gridee.parking.DEBUG_SHOW_INTERSTITIAL" />
+                <action android:name="com.gridee.parking.DEBUG_WARM_UP_INTERSTITIAL" />
             </intent-filter>
         </receiver>
         <receiver

@@ -66,7 +66,6 @@ class UserRepository {
         return try {
             val userId = user.id?.trim().orEmpty()
             if (userId.isEmpty()) {
-                println("UserRepository: Update failed - missing user id")
                 return false
             }
 
@@ -82,8 +81,6 @@ class UserRepository {
 
             updateUser(userId, request)
         } catch (e: Exception) {
-            println("UserRepository: Update exception: ${e.message}")
-            e.printStackTrace()
             false
         }
     }
@@ -91,15 +88,8 @@ class UserRepository {
     suspend fun updateUser(userId: String, request: UpdateUserRequest): Boolean {
         return try {
             val response = apiService.updateUser(userId, request)
-            println("UserRepository: Update response - success: ${response.isSuccessful}, code: ${response.code()}")
-            if (!response.isSuccessful) {
-                val errorBody = response.errorBody()?.string()
-                println("UserRepository: Update failed - error body: $errorBody")
-            }
             response.isSuccessful
-        } catch (e: Exception) {
-            println("UserRepository: Update exception: ${e.message}")
-            e.printStackTrace()
+        } catch (_: Exception) {
             false
         }
     }

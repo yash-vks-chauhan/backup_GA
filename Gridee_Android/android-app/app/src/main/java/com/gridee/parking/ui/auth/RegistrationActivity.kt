@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.gridee.parking.R
 import com.gridee.parking.config.RemoteConfigManager
 import com.gridee.parking.databinding.ActivityRegistrationBinding
@@ -23,8 +22,7 @@ class RegistrationActivity : AppCompatActivity() {
         binding = ActivityRegistrationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Theme-aware status bar
-        window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
+        // Theme-aware status-bar icons; the edge-to-edge content owns the background.
         androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
             !com.gridee.parking.utils.ThemeManager.isDarkMode(this)
 

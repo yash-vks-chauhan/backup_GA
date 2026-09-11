@@ -1,0 +1,94 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 900,
+      "h": 1010
+    },
+    {
+      "file": "OptionB.dc.html",
+      "x": 980,
+      "y": 0,
+      "w": 900,
+      "h": 1010
+    },
+    {
+      "file": "OptionC.dc.html",
+      "x": 1960,
+      "y": 0,
+      "w": 900,
+      "h": 1010
+    },
+    {
+      "file": "OptionD.dc.html",
+      "x": 0,
+      "y": 1160,
+      "w": 1330,
+      "h": 1590
+    },
+    {
+      "file": "CancelGuard.dc.html",
+      "x": 1410,
+      "y": 1160,
+      "w": 900,
+      "h": 726
+    },
+    {
+      "file": "Transitions.dc.html",
+      "x": 0,
+      "y": 2870,
+      "w": 1560,
+      "h": 1620
+    },
+    {
+      "file": "EdgeStates.dc.html",
+      "x": 0,
+      "y": 4610,
+      "w": 1800,
+      "h": 1220
+    }
+  ],
+  "annotations": [
+    {
+      "id": "brief",
+      "x": 0,
+      "y": -268,
+      "w": 1000,
+      "text": "Bookings tab, redesigned.\n\nThe segmented control is gone — one booking exists at a time, and Booked becomes Active the moment an operator scans it, so there was never a second list to switch to. All of these say the same thing instead: what state you're in, and what happens next.\n\nShared throughout: real app tokens (Inter, 32dp card radii, #059669 / #D97706 status pair, #F2F2F7 / #1C1C1E surfaces), cancel visible on the card itself, and a native-ad slot that sits above the fold in the space the single card leaves behind.\n\nA, B and C are the original three directions. Option D, on the row below, is the one to look at — it combines B and C.\n\nEvery artboard has a Dark tweak above it."
+    },
+    {
+      "id": "d-note",
+      "x": 2390,
+      "y": 1160,
+      "w": 440,
+      "text": "OPTION D — the direction\n\nFrom C: the stage rail, the header's stage line, the flatter density.\nFrom B: the ticket card — tinted status head, perforated stub, hold-to-cancel pill.\nFrom A: check-in ── 5h ── check-out. On the Active card the progress bar IS that rail, so its endpoints are labelled rather than duplicated.\n\nTHE TAIL\nOne row grammar — label left, when-or-where right — and the rail carries the state instead of the copy: 9 px filled and a solid line for travelled, 8 px ring and a dashed line for ahead, 11 px and a halo for where you are. The sentences are gone; \"Scheduled for 12:30 PM\" is just \"12:30 PM\".\n\nIts greys were too light to ship. Muted future steps had drifted to #9CA3AF and #C8CCD2, which measure 2.28:1 and 1.45:1 on the tab background — WCAG AA wants 4.5:1 for text and 3:1 for the dots. Text is now t2 (5.15:1 light, 6.44:1 dark) and the rail marks have their own token, #8A8A8E / #6E6E73, at 3.08:1 and 4.14:1. The tail sits a shade heavier than it did; that is the floor, not a preference.\n\nSTILL UNDESIGNED\nCancelled, no-show and overstay all exist in mapBackendStatus and none of them have a rail. Worth doing before this is built.\n\nTHE CODE, UNBOXED\nIt is drawn straight onto the card below the perforation — no plate, no well, no border — and it inks dark on white in light mode, light on dark at night. The stub themes like everything else; nothing goes bright.\n\nInverting is free here because this code was never a scanner target: at 76 dp it is 12 mm, and the floor is ~33 mm. It exists to be recognised. The code that has to survive a scanner lives on the pass, on white, at forced brightness — that one stays as it is.\n\nSIZE: 76 dp\nBookingQrPassBottomSheet puts the scannable floor at ~33 mm. 96 dp is 15 mm — under half — and the bookings tab has neither the brightness override nor the keep-awake flag that make scanning work on the pass. The card's code cannot be the scanning surface at any size that fits, so 96 dp was the bad middle: enough to invite a scan, not enough to complete one.\n\nTAP AFFORDANCE: A BADGE, NOTHING ELSE\nshadcn's secondary badge — zinc-100 fill, zinc-200 border, zinc-600 type — centred under the code. Blur was rejected because it deletes the recognition the code exists for and reads as a skeleton placeholder in an app full of them; the bracket reticle was tried and cut for being decoration. What is left is three centred things: what the code is for, the code, what to do with it. Values are specified at the foot of the artboard."
+    },
+    {
+      "id": "guard-note",
+      "x": 1410,
+      "y": 1950,
+      "w": 900,
+      "text": "The cancel mechanism is a separate choice from the layout.\n\nYou asked for cancel to be on the card rather than buried in the bottom sheet, but visible and destructive is a dangerous pair — so each option guards it differently. Any of these three mechanisms drops into any of the layouts; D currently uses B's hold-to-cancel.\n\nOne thing that stays true regardless: cancel only exists while the booking is still Booked. Once an operator has checked the car in, the backend already refuses cancellation, so the control is simply absent from the Active card rather than present-but-disabled."
+    },
+    {
+      "id": "transitions-note",
+      "x": 1660,
+      "y": 2870,
+      "w": 440,
+      "text": "HOW THE RAIL ADVANCES\n\nOne idea for both steps: the state travels. Card folds shut → green sweep runs down the rail → next dot takes → its card opens. Leave, travel, arrive.\n\n900 ms end to end, with the beats overlapping so it never reads as a queue. The timing panel gives every track.\n\nTwo things it is easy to get wrong:\n\n1. Nobody is usually watching. The operator scans while the phone is pocketed — which is exactly why the ad-transition baseline in BookingsFragmentNew is persisted rather than in-memory. On a cold open, render the new state immediately and draw only the rail segment. Never fake the old state to animate away from it.\n\n2. The interstitial fires first. AdMobManager gets the transition before the tab re-renders, so if an ad shows, the choreography is gone. Treat them as exclusive.\n\nThe checkout receipt in the last frame is proposed behaviour, not a restyle — today the booking just vanishes."
+    },
+    {
+      "id": "edge-note",
+      "x": 1900,
+      "y": 4610,
+      "w": 440,
+      "text": "EVERY STATUS, GIVEN A RAIL\n\nOne pattern throughout: a stop that happened is filled and solid, a stop that was skipped is struck, and a rail with no future simply stops. No greyed-out steps standing in for things that will never occur.\n\nOVERSTAY is the only live one. BookingsAdapter already flips the card to \"Session Ended\" and red urgency past the end time, so the rail follows: timer counts up, bar full and red, last stop reads Overdue instead of a clock time it has already passed.\n\nCANCELLED ends at two stops. NO-SHOW keeps check-in on the rail with a struck marker, because the step was missed rather than declined — and stays neutral, since BookingDetailsActivity already tints no-show with text_secondary while cancelled gets error.\n\nCopy is lifted from the app's own vocabulary rather than invented: \"Never started\", \"Slot was never used\".\n\nTWO THINGS TO CONFIRM\nThe cancelled card shows a full ₹90.00 back to the wallet — the cancel path does refresh the wallet with BOOKING_CANCEL, but partial-refund rules were not found in the client. The no-show card deliberately claims no refund at all, because nothing in the code says either way.\n\nREVIEW NOTE\nThe four artboard captions were running at 1.27:1 on the canvas backdrop — the same miss the tail had — and are now t2 (4.53:1 / 5.64:1).\n\nTwo things left open. The Booked row reads 06:12 AM here (when the booking was made) but 07:31 AM on the live rail (when it was scanned in) — one column, two meanings; pick one.\n\nAnd no-show has three different tints in the app: applyStatusPill uses text_secondary, the sibling status-colour function uses brand_primary, and BookingsAdapter uses status_text_noshow, which is #1E40AF blue. Neutral is a fair choice, but the codebase does not agree with itself."
+    }
+  ],
+  "launch": {
+    "view": "focused",
+    "file": "EdgeStates.dc.html"
+  }
+}

@@ -5,18 +5,19 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.gridee.parking.R
-import com.gridee.parking.data.model.PaymentStatusResponse
 import com.gridee.parking.databinding.BottomSheetPaymentOutcomeBinding
 import com.gridee.parking.ui.views.PaymentStatusGlyphView
 import com.gridee.parking.ui.views.PaymentTrailView
@@ -49,7 +50,7 @@ class PaymentOutcomeBottomSheet : BottomSheetDialogFragment() {
     private var orderId: String = ""
 
     /** Re-queries the order. Supplied by the host so this sheet owns no networking. */
-    var statusChecker: (suspend (String) -> PaymentStatusResponse?)? = null
+    var statusChecker: (suspend (String) -> PaymentStatusCoordinator.Verification)? = null
 
     /** User wants to start a fresh checkout for the same amount. */
     var onRetry: ((Double) -> Unit)? = null
@@ -59,11 +60,22 @@ class PaymentOutcomeBottomSheet : BottomSheetDialogFragment() {
 
     private var settled = false
     private var checking = false
-    private var autoPollJob: Job? = null
+    private var retryRequested = false
+    private var finishDelivered = false
+    private var manualCooldownJob: Job? = null
+    private var lastManualCheckAtElapsedMs = NO_MANUAL_CHECK
+    private val resetCopyHintRunnable = Runnable {
+        _binding?.let { currentBinding ->
+            currentBinding.tvCopyHint.text = currentBinding.root.context.getString(
+                R.string.payment_copy_reference,
+            )
+        }
+    }
 
     /** Allows the host to restore the latest backend outcome after activity recreation. */
     fun renderOutcome(newOutcome: Outcome) {
         outcome = newOutcome
+        if (newOutcome == Outcome.PAID) settled = true
         if (_binding != null) applyOutcome(newOutcome, animateIn = false)
     }
 
@@ -72,12 +84,36 @@ class PaymentOutcomeBottomSheet : BottomSheetDialogFragment() {
         setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
 
         arguments?.let { args ->
-            outcome = runCatching { Outcome.valueOf(args.getString(ARG_OUTCOME).orEmpty()) }
-                .getOrDefault(Outcome.CANCELLED)
+            outcome = parseOutcome(args.getString(ARG_OUTCOME))
             amount = args.getDouble(ARG_AMOUNT, 0.0)
             orderId = args.getString(ARG_ORDER_ID).orEmpty()
         }
+        savedInstanceState?.let { state ->
+            outcome = parseOutcome(state.getString(STATE_OUTCOME), fallback = outcome)
+            settled = state.getBoolean(STATE_SETTLED, outcome == Outcome.PAID)
+            retryRequested = state.getBoolean(STATE_RETRY_REQUESTED, false)
+            finishDelivered = state.getBoolean(STATE_FINISH_DELIVERED, false)
+            lastManualCheckAtElapsedMs = state.getLong(
+                STATE_LAST_MANUAL_CHECK_AT,
+                NO_MANUAL_CHECK,
+            )
+        } ?: run {
+            settled = outcome == Outcome.PAID
+            lastManualCheckAtElapsedMs = NO_MANUAL_CHECK
+        }
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(STATE_OUTCOME, outcome.name)
+        outState.putBoolean(STATE_SETTLED, settled)
+        outState.putBoolean(STATE_RETRY_REQUESTED, retryRequested)
+        outState.putBoolean(STATE_FINISH_DELIVERED, finishDelivered)
+        outState.putLong(STATE_LAST_MANUAL_CHECK_AT, lastManualCheckAtElapsedMs)
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun parseOutcome(value: String?, fallback: Outcome = Outcome.CANCELLED): Outcome =
+        runCatching { Outcome.valueOf(value.orEmpty()) }.getOrDefault(fallback)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
@@ -115,19 +151,34 @@ class PaymentOutcomeBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // An in-flight checker belongs to the old viewLifecycleOwner and is cancelled with it.
+        // Restore the timestamp-backed cooldown instead of leaving the new button enabled early.
+        checking = false
         applyOutcome(outcome, animateIn = true)
 
         binding.rowReference.setOnClickListener { copyReference() }
 
         binding.btnCheckStatus.setOnClickListener { recheckStatus() }
 
-        binding.btnSecondary.setOnClickListener { dismissAllowingStateLoss() }
+        binding.btnSecondary.setOnClickListener { dismissIfStateCanBeSaved() }
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        // View hierarchy restoration happens after onViewCreated and can restore the old enabled
+        // state/spinner. Reassert the Fragment's authoritative saved outcome and cooldown last.
+        checking = false
+        applyOutcome(outcome, animateIn = false)
+        binding.pbChecking.isVisible = false
+        if (binding.btnCheckStatus.isVisible) {
+            binding.btnCheckStatus.text = getString(R.string.payment_check_again)
+        }
+        startManualCooldown(manualCooldownRemainingMs())
     }
 
     /** Rewrites every part of the sheet for [outcome]. Called again when a re-check changes it. */
     private fun applyOutcome(outcome: Outcome, animateIn: Boolean) {
         this.outcome = outcome
-        if (outcome != Outcome.PENDING) autoPollJob?.cancel()
         val context = requireContext()
 
         when (outcome) {
@@ -194,16 +245,21 @@ class PaymentOutcomeBottomSheet : BottomSheetDialogFragment() {
             when (outcome) {
                 // "Try again" restarts checkout for the same amount — the host owns that.
                 Outcome.CANCELLED, Outcome.UNCONFIRMED -> {
-                    onRetry?.invoke(amount)
-                    dismissAllowingStateLoss()
+                    if (retryRequested) return@setOnClickListener
+                    val retry = onRetry ?: return@setOnClickListener
+                    // Dismissing normally tells the host to finish. A retry must keep that host
+                    // alive long enough for its lifecycle coroutine to create and open the next
+                    // Cashfree order.
+                    retryRequested = true
+                    retry(amount)
+                    dismissIfStateCanBeSaved()
                 }
 
-                Outcome.PENDING, Outcome.PAID -> dismissAllowingStateLoss()
+                Outcome.PENDING, Outcome.PAID -> dismissIfStateCanBeSaved()
             }
         }
 
         if (animateIn) playEntrance()
-        if (outcome == Outcome.PENDING) startAutomaticPendingPolling()
     }
 
     /**
@@ -241,70 +297,78 @@ class PaymentOutcomeBottomSheet : BottomSheetDialogFragment() {
         val checker = statusChecker ?: return
         if (checking || orderId.isBlank()) return
 
+        val cooldownRemainingMs = manualCooldownRemainingMs()
+        if (cooldownRemainingMs > 0L) {
+            startManualCooldown(cooldownRemainingMs)
+            nudge(binding.btnCheckStatus)
+            return
+        }
+
         checking = true
+        lastManualCheckAtElapsedMs = SystemClock.elapsedRealtime()
         binding.btnCheckStatus.text = ""
         binding.btnCheckStatus.isEnabled = false
         binding.pbChecking.isVisible = true
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val status = runCatching { checker(orderId) }.getOrNull()
+            // This awaits the exact same per-order coordinator used by the SDK callback and
+            // activity resume. It never starts an independent polling loop.
+            val verification = runCatching { checker(orderId) }.getOrNull()
 
             if (_binding == null) return@launch
 
             checking = false
             binding.pbChecking.isVisible = false
-            binding.btnCheckStatus.isEnabled = true
             binding.btnCheckStatus.text = getString(R.string.payment_check_again)
 
-            when {
-                status?.isPaid == true -> applyOutcome(Outcome.PAID, animateIn = true)
+            when (verification?.outcome) {
+                PaymentStatusCoordinator.Outcome.PAID ->
+                    applyOutcome(Outcome.PAID, animateIn = true)
 
-                status?.isPending == true -> {
-                    // Keep the contract copy visible while the bounded background poll continues.
+                PaymentStatusCoordinator.Outcome.PENDING_OR_UNKNOWN -> {
+                    // The coordinator has exhausted its four-check budget. Keep the final
+                    // processing copy visible and never start another automatic poll.
                     binding.tvMessage.text = getString(R.string.payment_outcome_pending_message)
                     nudge(binding.cardTrail)
                 }
 
-                status != null -> applyOutcome(Outcome.UNCONFIRMED, animateIn = true)
+                PaymentStatusCoordinator.Outcome.TERMINAL_UNPAID ->
+                    applyOutcome(Outcome.UNCONFIRMED, animateIn = true)
 
-                else -> {
+                null -> {
                     binding.tvMessage.text = getString(R.string.payment_check_failed)
                     nudge(binding.cardTrail)
                 }
             }
+
+            if (verification?.outcome != PaymentStatusCoordinator.Outcome.PAID) {
+                startManualCooldown(manualCooldownRemainingMs())
+            }
         }
     }
 
-    /**
-     * A backend PENDING response is rechecked automatically after a few seconds. Polling is
-     * lifecycle-bound and bounded, so leaving the sheet stops all requests and a long-running
-     * payment does not spin forever. The manual Check status action remains available afterward.
-     */
-    private fun startAutomaticPendingPolling() {
-        val checker = statusChecker ?: return
-        if (autoPollJob?.isActive == true) return
+    private fun manualCooldownRemainingMs(): Long {
+        if (lastManualCheckAtElapsedMs == NO_MANUAL_CHECK) return 0L
+        val elapsedMs = (SystemClock.elapsedRealtime() - lastManualCheckAtElapsedMs)
+            .coerceAtLeast(0L)
+        return (MANUAL_CHECK_COOLDOWN_MS - elapsedMs)
+            .coerceIn(0L, MANUAL_CHECK_COOLDOWN_MS)
+    }
 
-        autoPollJob = viewLifecycleOwner.lifecycleScope.launch {
-            repeat(AUTO_POLL_ATTEMPTS) {
-                delay(AUTO_POLL_DELAY_MS)
-                if (_binding == null || outcome != Outcome.PENDING || settled) return@launch
+    private fun startManualCooldown(remainingMs: Long) {
+        manualCooldownJob?.cancel()
+        if (_binding == null || !binding.btnCheckStatus.isVisible || remainingMs <= 0L) {
+            if (_binding != null && binding.btnCheckStatus.isVisible) {
+                binding.btnCheckStatus.isEnabled = true
+            }
+            return
+        }
 
-                val status = runCatching { checker(orderId) }.getOrNull()
-                if (_binding == null || outcome != Outcome.PENDING || settled) return@launch
-
-                when {
-                    status?.isPaid == true -> {
-                        applyOutcome(Outcome.PAID, animateIn = true)
-                        return@launch
-                    }
-
-                    status?.isPending == true || status == null -> Unit
-
-                    else -> {
-                        applyOutcome(Outcome.UNCONFIRMED, animateIn = true)
-                        return@launch
-                    }
-                }
+        binding.btnCheckStatus.isEnabled = false
+        manualCooldownJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(remainingMs)
+            if (_binding != null && binding.btnCheckStatus.isVisible && !checking) {
+                binding.btnCheckStatus.isEnabled = true
             }
         }
     }
@@ -328,25 +392,64 @@ class PaymentOutcomeBottomSheet : BottomSheetDialogFragment() {
         clipboard.setPrimaryClip(ClipData.newPlainText("Gridee payment reference", orderId))
 
         binding.tvCopyHint.text = getString(R.string.payment_reference_copied)
-        binding.tvCopyHint.postDelayed({
-            _binding?.tvCopyHint?.text = getString(R.string.payment_copy_reference)
-        }, 1_800L)
+        binding.tvCopyHint.removeCallbacks(resetCopyHintRunnable)
+        binding.tvCopyHint.postDelayed(resetCopyHintRunnable, 1_800L)
     }
 
     /** Last 10 characters — enough for support to find the order, short enough to read out. */
     private fun shortReference(): String =
         if (orderId.length <= REFERENCE_LENGTH) orderId else orderId.takeLast(REFERENCE_LENGTH)
 
+    private fun dismissIfStateCanBeSaved() {
+        val fragmentManager = runCatching { parentFragmentManager }.getOrNull() ?: return
+        if (!isAdded || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            fragmentManager.isDestroyed || fragmentManager.isStateSaved
+        ) return
+        dismiss()
+    }
+
     override fun onDismiss(dialog: android.content.DialogInterface) {
         super.onDismiss(dialog)
-        onFinished?.invoke(settled)
+        if (retryRequested || finishDelivered) return
+
+        // DialogFragment tears down its Dialog during Activity recreation too. That is not a
+        // user dismissal: invoking the transient callback would finish or navigate from the old
+        // Activity just as Android is restoring the same sheet into the replacement instance.
+        val host = activity ?: return
+        val managerStateSaved = runCatching { parentFragmentManager.isStateSaved }
+            .getOrDefault(true)
+        if (host.isChangingConfigurations || host.isFinishing || host.isDestroyed ||
+            managerStateSaved
+        ) return
+
+        val finish = onFinished ?: return
+        finishDelivered = true
+        finish(settled)
     }
 
     override fun onDestroyView() {
-        autoPollJob?.cancel()
-        autoPollJob = null
+        manualCooldownJob?.cancel()
+        manualCooldownJob = null
+        checking = false
+        _binding?.let { currentBinding ->
+            currentBinding.tvCopyHint.removeCallbacks(resetCopyHintRunnable)
+            cancelViewPropertyAnimations(currentBinding.root)
+        }
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun cancelViewPropertyAnimations(view: View) {
+        view.animate()
+            .setListener(null)
+            .withStartAction(null)
+            .withEndAction(null)
+            .cancel()
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) {
+                cancelViewPropertyAnimations(view.getChildAt(index))
+            }
+        }
     }
 
     companion object {
@@ -354,9 +457,14 @@ class PaymentOutcomeBottomSheet : BottomSheetDialogFragment() {
         private const val ARG_OUTCOME = "arg_outcome"
         private const val ARG_AMOUNT = "arg_amount"
         private const val ARG_ORDER_ID = "arg_order_id"
+        private const val STATE_OUTCOME = "current_outcome"
+        private const val STATE_SETTLED = "settled"
+        private const val STATE_RETRY_REQUESTED = "retry_requested"
+        private const val STATE_FINISH_DELIVERED = "finish_delivered"
+        private const val STATE_LAST_MANUAL_CHECK_AT = "last_manual_check_at"
         private const val REFERENCE_LENGTH = 10
-        private const val AUTO_POLL_ATTEMPTS = 5
-        private const val AUTO_POLL_DELAY_MS = 3_000L
+        private const val MANUAL_CHECK_COOLDOWN_MS = 20_000L
+        private const val NO_MANUAL_CHECK = Long.MIN_VALUE
 
         private val amountFormatter = DecimalFormat("#,##0")
 

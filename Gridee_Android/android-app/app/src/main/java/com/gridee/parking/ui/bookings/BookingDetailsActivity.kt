@@ -18,9 +18,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.gridee.parking.R
+import com.gridee.parking.GrideeApplication
 import com.gridee.parking.data.api.ApiClient
 import com.gridee.parking.data.model.Booking
-import com.gridee.parking.data.model.BookingPayloadParser
+import com.gridee.parking.data.repository.BookingRepository
 import com.gridee.parking.data.repository.ParkingRepository
 import com.gridee.parking.databinding.ActivityBookingDetailsBinding
 import com.gridee.parking.ui.base.BaseActivity
@@ -43,8 +44,12 @@ class BookingDetailsActivity : BaseActivity<ActivityBookingDetailsBinding>() {
     private val titleRangePx by lazy { 80f * resources.displayMetrics.density }
     private val parkingLotCache = mutableMapOf<String, String>()
     private val parkingSpotCache = mutableMapOf<String, String>()
-    private val parkingRepository = ParkingRepository()
-    private var isCacheLoaded = false
+    private val bookingRepository by lazy {
+        GrideeApplication.instance.repositories.bookingRepository
+    }
+    private val parkingRepository by lazy {
+        GrideeApplication.instance.repositories.parkingRepository
+    }
     private var bookingId: String? = null
     private var entryAnimated = false
     private var pendingFillRatio: Float = 0f
@@ -66,7 +71,6 @@ class BookingDetailsActivity : BaseActivity<ActivityBookingDetailsBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
         val isNightMode = resources.configuration.uiMode and
             android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
             android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -236,7 +240,7 @@ class BookingDetailsActivity : BaseActivity<ActivityBookingDetailsBinding>() {
                 if (response.isSuccessful) {
                     val booking = response.body()
                     if (booking != null) {
-                        if (!isCacheLoaded) loadParkingDataCache()
+                        loadParkingDataCache(booking)
                         renderBooking(booking)
                         showLoading(false)
                         showContent(true)
@@ -245,23 +249,24 @@ class BookingDetailsActivity : BaseActivity<ActivityBookingDetailsBinding>() {
                         showError(true, "Booking not found")
                     }
                 } else if (response.code() == 404) {
-                    val historyResponse = ApiClient.apiService.getUserBookingHistory(userId)
-                    if (historyResponse.isSuccessful) {
-                        val history = BookingPayloadParser.parseBookings(historyResponse.body())
-                        val booking = history.firstOrNull { it.id == id }
-                        if (booking != null) {
-                            if (!isCacheLoaded) loadParkingDataCache()
-                            renderBooking(booking)
+                    bookingRepository.getGlobalUserBookingHistory().fold(
+                        onSuccess = { history ->
+                            val booking = history.firstOrNull { it.id == id }
+                            if (booking != null) {
+                                loadParkingDataCache(booking)
+                                renderBooking(booking)
+                                showLoading(false)
+                                showContent(true)
+                            } else {
+                                showLoading(false)
+                                showError(true, "Booking not found in history")
+                            }
+                        },
+                        onFailure = { error ->
                             showLoading(false)
-                            showContent(true)
-                        } else {
-                            showLoading(false)
-                            showError(true, "Booking not found in history")
+                            showError(true, error.message ?: "Failed to load booking history")
                         }
-                    } else {
-                        showLoading(false)
-                        showError(true, "Failed to load booking history (" + historyResponse.code() + ")")
-                    }
+                    )
                 } else {
                     showLoading(false)
                     showError(true, "Failed to load booking (" + response.code() + ")")
@@ -638,6 +643,7 @@ class BookingDetailsActivity : BaseActivity<ActivityBookingDetailsBinding>() {
 
     private fun resolveLotName(booking: Booking): String {
         if (!booking.lotName.isNullOrBlank()) return booking.lotName
+        if (!booking.locationName.isNullOrBlank()) return booking.locationName
         if (booking.lotId.isBlank()) return "Parking Lot"
         return parkingLotCache[booking.lotId] ?: booking.lotId
     }
@@ -716,42 +722,24 @@ class BookingDetailsActivity : BaseActivity<ActivityBookingDetailsBinding>() {
         }
     }
 
-    private suspend fun loadParkingDataCache() {
-        try {
-            try {
-                val allSpotsResponse = ApiClient.apiService.getParkingSpots()
-                if (allSpotsResponse.isSuccessful) {
-                    allSpotsResponse.body()?.forEach { spot ->
-                        val spotName = spot.name ?: spot.zoneName ?: "Spot ${spot.id}"
-                        parkingSpotCache[spot.id] = spotName
-                    }
-                }
-            } catch (_: Exception) {
+    private suspend fun loadParkingDataCache(booking: Booking) {
+        booking.lotName
+            ?.takeIf { it.isNotBlank() }
+            ?.let { parkingLotCache[booking.lotId] = it }
+
+        val lotId = booking.lotId.trim()
+        if (lotId.isEmpty()) return
+        runCatching { parkingRepository.getParkingSpotsByLot(lotId) }
+            .getOrNull()
+            ?.takeIf { it.isSuccessful }
+            ?.body()
+            .orEmpty()
+            .forEach { spot ->
+                parkingSpotCache[spot.id] = spot.name
+                    ?: spot.zoneName
+                    ?: spot.spotCode
+                    ?: "Spot ${spot.id}"
             }
-
-            val lotsResponse = ApiClient.apiService.getParkingLots()
-            if (lotsResponse.isSuccessful) {
-                lotsResponse.body()?.forEach { lot ->
-                    parkingLotCache[lot.id] = lot.name
-
-                    try {
-                        val spotsForLot = parkingRepository.getParkingSpotsByLot(lot.id)
-                        if (spotsForLot.isSuccessful) {
-                            spotsForLot.body()?.forEach { spot ->
-                                if (!parkingSpotCache.containsKey(spot.id)) {
-                                    val spotName = spot.name ?: spot.zoneName ?: "Spot ${spot.id}"
-                                    parkingSpotCache[spot.id] = spotName
-                                }
-                            }
-                        }
-                    } catch (_: Exception) {
-                    }
-                }
-            }
-
-            isCacheLoaded = true
-        } catch (_: Exception) {
-        }
     }
 
     private fun showLoading(show: Boolean) {

@@ -7,6 +7,8 @@ import com.gridee.parking.data.model.Booking
 import com.gridee.parking.data.model.FirebaseTokenExchangeRequest
 import com.gridee.parking.data.model.ParkingLot
 import com.gridee.parking.data.model.ParkingLotBookingPolicy
+import com.gridee.parking.data.model.ParkingLocation
+import com.gridee.parking.data.model.ParkingOrganization
 import com.gridee.parking.data.model.ParkingSpot
 import com.gridee.parking.data.model.User
 import com.gridee.parking.data.model.UserRegistration
@@ -37,6 +39,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Tag
 
 interface ApiService {
 
@@ -132,6 +135,15 @@ interface ApiService {
     @PUT("api/users/{id}")
     suspend fun updateUser(@Path("id") userId: String, @Body user: UpdateUserRequest): Response<Void>
     
+    // Multi-tenant parking discovery. Keep this sequence explicit: organization -> location -> lot.
+    @GET("api/v1/organizations")
+    suspend fun getOrganizations(): Response<List<ParkingOrganization>>
+
+    @GET("api/v1/locations")
+    suspend fun getLocations(
+        @Query("organizationId") organizationId: String
+    ): Response<List<ParkingLocation>>
+
     // Parking lots and spots endpoints
     @GET("api/parking-lots")
     suspend fun getParkingLots(): Response<List<ParkingLot>>
@@ -140,7 +152,9 @@ interface ApiService {
     // Retrofit, so this returns all lots (equivalent to getParkingLots()).
     @GET("api/parking-lots")
     suspend fun getParkingLotsByType(
-        @Query("organizationType") organizationType: String?
+        @Query("organizationType") organizationType: String?,
+        @Query("organizationId") organizationId: String? = null,
+        @Query("locationId") locationId: String? = null,
     ): Response<List<ParkingLot>>
 
     @GET("api/parking-lots")
@@ -170,13 +184,7 @@ interface ApiService {
         @Path("lotId") lotId: String
     ): Response<JsonElement>
 
-    /**
-     * Per-lot booking rules. Requires auth (it is not in the backend's public onboarding list).
-     *
-     * Not yet wired into the booking flow: the backend records `paymentModel` on a booking but
-     * still deducts from the user's wallet regardless of it, so acting on this policy client-side
-     * would tell users a lot is free while they are still being charged.
-     */
+    /** Per-lot rules fetched before inventory or booking UI is exposed. */
     @GET("api/parking-lots/{lotId}/booking-policy")
     suspend fun getLotBookingPolicy(
         @Path("lotId") lotId: String
@@ -314,13 +322,15 @@ interface ApiService {
      */
     @POST("api/operator/bookings/checkin")
     suspend fun operatorCheckIn(
-        @Body request: CheckInRequest
+        @Body request: CheckInRequest,
+        @Tag traceTag: ScannerNetworkTraceTag,
     ): Response<Booking>
 
     @POST("api/operator/parking-lots/{parkingLotId}/bookings/checkin")
     suspend fun operatorCheckInForLot(
         @Path("parkingLotId") parkingLotId: String,
-        @Body request: CheckInRequest
+        @Body request: CheckInRequest,
+        @Tag traceTag: ScannerNetworkTraceTag,
     ): Response<Booking>
 
     /**
@@ -329,13 +339,15 @@ interface ApiService {
      */
     @POST("api/operator/bookings/checkout")
     suspend fun operatorCheckOut(
-        @Body request: CheckInRequest
+        @Body request: CheckInRequest,
+        @Tag traceTag: ScannerNetworkTraceTag,
     ): Response<Booking>
 
     @POST("api/operator/parking-lots/{parkingLotId}/bookings/checkout")
     suspend fun operatorCheckOutForLot(
         @Path("parkingLotId") parkingLotId: String,
-        @Body request: CheckInRequest
+        @Body request: CheckInRequest,
+        @Tag traceTag: ScannerNetworkTraceTag,
     ): Response<Booking>
     
     // Get booking by ID (for refreshing data)

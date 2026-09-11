@@ -7,6 +7,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.gridee.parking.data.model.ParkingSpot
+import com.gridee.parking.data.model.BookingPolicyResolver
+import com.gridee.parking.data.model.ResolvedBookingPolicy
+import com.gridee.parking.data.repository.BookingMutationRefreshCoordinator
 import com.gridee.parking.data.repository.BookingRepository
 import com.gridee.parking.data.repository.UserRepository
 import com.gridee.parking.data.repository.WalletRepository
@@ -15,6 +18,7 @@ import com.gridee.parking.data.model.Vehicle
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.ParkingSpotSchedulePolicy
 import com.gridee.parking.utils.VehicleNumberValidator
+import com.gridee.parking.ui.wallet.WalletRefreshSource
 import kotlinx.coroutines.launch
 import java.util.*
 import java.text.SimpleDateFormat
@@ -87,6 +91,7 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
     
     private val _userVehicles = MutableLiveData<List<Vehicle>>()
     val userVehicles: LiveData<List<Vehicle>> = _userVehicles
+    private var userVehicleLoadGeneration = 0L
     
     private val _bookings = MutableLiveData<List<BookingDetails>>()
     val bookings: LiveData<List<BookingDetails>> = _bookings
@@ -99,6 +104,16 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
     
     private val _walletBalance = MutableLiveData<Double>()
     val walletBalance: LiveData<Double> = _walletBalance
+
+    private val _bookingPolicy = MutableLiveData<ResolvedBookingPolicy?>()
+    val bookingPolicy: LiveData<ResolvedBookingPolicy?> = _bookingPolicy
+
+    private val _policyLoading = MutableLiveData(false)
+    val policyLoading: LiveData<Boolean> = _policyLoading
+
+    private val _policyError = MutableLiveData<String?>()
+    val policyError: LiveData<String?> = _policyError
+    private var bookingPolicyLotId: String? = null
     
     init {
         // No dummy data; bookings will be populated from backend when needed
@@ -120,6 +135,44 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
     fun setParkingSpot(spot: ParkingSpot) {
         _parkingSpot.value = spot
     }
+
+    fun loadBookingPolicy(
+        lotId: String,
+        forceRefresh: Boolean = false,
+        onComplete: ((Boolean) -> Unit)? = null,
+    ) {
+        val safeLotId = lotId.trim()
+        if (safeLotId.isEmpty()) {
+            _bookingPolicy.value = null
+            _policyError.value = "A parking lot must be selected before booking."
+            onComplete?.invoke(false)
+            return
+        }
+        _policyLoading.value = true
+        _policyError.value = null
+        viewModelScope.launch {
+            val loaded = try {
+                val response = parkingRepository.getBookingPolicy(safeLotId, forceRefresh)
+                if (response.isSuccessful && response.body() != null) {
+                    _bookingPolicy.value = BookingPolicyResolver.resolve(requireNotNull(response.body()))
+                    bookingPolicyLotId = safeLotId
+                    true
+                } else {
+                    _bookingPolicy.value = null
+                    bookingPolicyLotId = null
+                    _policyError.value = "Couldn't load this parking lot's booking rules (${response.code()})."
+                    false
+                }
+            } catch (_: Exception) {
+                _bookingPolicy.value = null
+                bookingPolicyLotId = null
+                _policyError.value = "Couldn't load this parking lot's booking rules. Check your connection and try again."
+                false
+            }
+            _policyLoading.value = false
+            onComplete?.invoke(loaded)
+        }
+    }
     
     fun loadParkingSpotById(spotId: String, onResult: (ParkingSpot?) -> Unit) {
         viewModelScope.launch {
@@ -137,48 +190,32 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
             try {
                 val safeLotId = lotId.trim()
                 if (safeLotId.isEmpty()) {
-                    println("DEBUG BookingViewModel.loadParkingSpotsForLot: Missing lotId for lotName='$lotName'")
+                    onResult(emptyList())
+                    return@launch
+                }
+                val policy = _bookingPolicy.value
+                if (bookingPolicyLotId != safeLotId || policy == null) {
                     onResult(emptyList())
                     return@launch
                 }
 
                 val spotsResponse = parkingRepository.getParkingSpotsByLot(safeLotId)
                 if (spotsResponse.isSuccessful) {
-                    val spots = spotsResponse.body() ?: emptyList()
-                    val visibleSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(spots)
-                    println("DEBUG BookingViewModel.loadParkingSpotsForLot: Fetched spots for lotId='$safeLotId', size=${spots.size}, visible=${visibleSpots.size}")
+                    val spots = spotsResponse.body().orEmpty().mapNotNull { spot ->
+                        when (spot.lotId.trim()) {
+                            "" -> spot.copy(lotId = safeLotId)
+                            safeLotId -> spot
+                            else -> null
+                        }
+                    }
+                    val visibleSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(
+                        spots,
+                        policy = policy,
+                    )
                     onResult(visibleSpots)
                 } else {
-                    println("DEBUG BookingViewModel.loadParkingSpotsForLot: Failed for lotId='$safeLotId', status=${spotsResponse.code()}")
                     onResult(emptyList())
                 }
-            } catch (e: Exception) {
-                println("DEBUG BookingViewModel.loadParkingSpotsForLot: Exception - ${e.message}")
-                onResult(emptyList())
-            }
-        }
-    }
-    
-    fun loadAllParkingSpots(onResult: (List<ParkingSpot>) -> Unit) {
-        viewModelScope.launch {
-            try {
-                // Aggregate by-lot to avoid ADMIN-only all-spots endpoint
-                val lotsResponse = parkingRepository.getParkingLots()
-                if (!lotsResponse.isSuccessful) return@launch onResult(emptyList())
-                val lots = lotsResponse.body() ?: emptyList()
-                val combined = mutableListOf<ParkingSpot>()
-                for (lot in lots) {
-                    val lotId = lot.id
-                    if (lotId.isBlank()) continue
-                    try {
-                        val resp = parkingRepository.getParkingSpotsByLot(lotId)
-                        if (resp.isSuccessful) {
-                            val spots = resp.body() ?: emptyList()
-                            combined.addAll(spots)
-                        }
-                    } catch (_: Exception) { /* ignore */ }
-                }
-                onResult(ParkingSpotSchedulePolicy.filterVisibleSpots(combined))
             } catch (e: Exception) {
                 onResult(emptyList())
             }
@@ -193,31 +230,46 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
         _selectedVehicle.value = vehicle
         _vehicleNumber.value = vehicle.number
     }
+
+    /**
+     * Clears a selection that can no longer be verified against the refreshed profile.
+     *
+     * A restored booking draft must never silently fall through to a different vehicle: the
+     * caller will ask the user to choose again when the saved plate no longer exists.
+     */
+    fun clearSelectedVehicle() {
+        _selectedVehicle.value = null
+        _vehicleNumber.value = ""
+    }
     
-    fun loadUserVehicles() {
+    fun loadUserVehicles(autoSelectFirst: Boolean = true) {
+        val loadGeneration = ++userVehicleLoadGeneration
         // Get user ID from SharedPreferences
         val sharedPref = getApplication<Application>().getSharedPreferences("gridee_prefs", Context.MODE_PRIVATE)
         val userId = sharedPref.getString("user_id", null)
         
         if (userId != null) {
-            println("BookingViewModel: Loading vehicles for user $userId")
-            loadUserVehiclesFromProfile(userId)
+            loadUserVehiclesFromProfile(userId, autoSelectFirst, loadGeneration)
         } else {
-            println("BookingViewModel: No user ID found")
             // No user logged in, show empty list
-            _userVehicles.value = emptyList()
+            if (loadGeneration == userVehicleLoadGeneration) {
+                _userVehicles.value = emptyList()
+            }
         }
     }
     
-    private fun loadUserVehiclesFromProfile(userId: String) {
+    private fun loadUserVehiclesFromProfile(
+        userId: String,
+        autoSelectFirst: Boolean,
+        loadGeneration: Long,
+    ) {
         viewModelScope.launch {
             try {
-                println("BookingViewModel: Fetching user profile from API")
                 val userRepository = UserRepository()
                 val user = userRepository.getUserById(userId)
+                if (loadGeneration != userVehicleLoadGeneration) return@launch
                 
                 if (user != null) {
-                    println("BookingViewModel: User found with ${user.vehicleNumbers.size} vehicles: ${user.vehicleNumbers}")
                     
                     if (user.vehicleNumbers.isNotEmpty()) {
                         val vehicles = user.vehicleNumbers.mapIndexed { index, vehicleNumber ->
@@ -231,28 +283,27 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
                             )
                         }
                         _userVehicles.value = vehicles
-                        println("BookingViewModel: Set ${vehicles.size} vehicles in LiveData")
                         
-                        // Auto-select first vehicle if available and none selected
-                        if (vehicles.isNotEmpty() && _selectedVehicle.value == null) {
+                        // Fresh booking sheets retain the convenient default. Restored drafts pass
+                        // false until their saved vehicle identity has been checked against this
+                        // exact refreshed list, preventing an invalid saved plate from becoming the
+                        // first/default plate without the user noticing.
+                        if (autoSelectFirst && vehicles.isNotEmpty() && _selectedVehicle.value == null) {
                             setSelectedVehicle(vehicles.first())
-                            println("BookingViewModel: Auto-selected first vehicle: ${vehicles.first().number}")
                         }
                     } else {
-                        println("BookingViewModel: User has no vehicles")
                         // User has no vehicles, show empty list
                         _userVehicles.value = emptyList()
                     }
                 } else {
-                    println("BookingViewModel: User not found in API response")
                     // User not found, show empty list
                     _userVehicles.value = emptyList()
                 }
             } catch (e: Exception) {
-                println("BookingViewModel: Exception loading vehicles: ${e.message}")
-                e.printStackTrace()
                 // On error, show empty list
-                _userVehicles.value = emptyList()
+                if (loadGeneration == userVehicleLoadGeneration) {
+                    _userVehicles.value = emptyList()
+                }
             }
         }
     }
@@ -269,22 +320,63 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
         val end = _endTime.value
         val spot = _parkingSpot.value
         val vehicle = _vehicleNumber.value
+        val policy = _bookingPolicy.value
         
-        if (start == null || end == null || spot == null || vehicle.isNullOrEmpty()) {
+        if (policy == null) {
+            _errorMessage.value = "Parking rules are still loading. Please try again."
+            return
+        }
+
+        if (start == null || end == null || spot == null ||
+            (policy.requiresVehicleRegistration && vehicle.isNullOrEmpty())
+        ) {
             _errorMessage.value = "Please fill all required fields"
             return
+        }
+        if (spot.lotId.trim() != bookingPolicyLotId) {
+            _errorMessage.value = "The selected spot does not belong to the policy's parking lot."
+            return
+        }
+        if (!end.after(start)) {
+            _errorMessage.value = "Checkout must be after check-in."
+            return
+        }
+        if (policy.usesDynamicTimeSelection) {
+            val now = Calendar.getInstance()
+            val startCalendar = Calendar.getInstance().apply { time = start }
+            val endCalendar = Calendar.getInstance().apply { time = end }
+            val sameDay = startCalendar.get(Calendar.YEAR) == endCalendar.get(Calendar.YEAR) &&
+                startCalendar.get(Calendar.DAY_OF_YEAR) == endCalendar.get(Calendar.DAY_OF_YEAR)
+            val error = when {
+                start.before(now.time) -> "Start time cannot be in the past."
+                !policy.isDateWithinAdvanceWindow(startCalendar, now) ->
+                    "The selected date is outside this lot's advance-booking window."
+                !policy.isFutureDateOpen(startCalendar, now) ->
+                    "Future-date booking is not open yet for this lot."
+                !policy.isDateWithinAdvanceWindow(endCalendar, now) ->
+                    "The checkout date is outside this lot's advance-booking window."
+                !policy.allowOvernightBookings && !sameDay ->
+                    "This parking lot does not allow overnight bookings."
+                endCalendar.after(policy.endOfBookingDay(endCalendar)) ->
+                    "Checkout is later than this lot's daily booking end time."
+                else -> null
+            }
+            if (error != null) {
+                _errorMessage.value = error
+                return
+            }
         }
 
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                if (!ParkingSpotSchedulePolicy.canBookNow(spot)) {
-                    _errorMessage.value = ParkingSpotSchedulePolicy.bookingRestrictionMessage(spot)
+                if (policy.usesFixedDailySlots && !ParkingSpotSchedulePolicy.canBookNow(spot, policy = policy)) {
+                    _errorMessage.value = ParkingSpotSchedulePolicy.bookingRestrictionMessage(spot, policy = policy)
                         ?: "This parking spot cannot be booked right now."
                     _bookingCreated.value = null
                     return@launch
                 }
-                if (!ParkingSpotSchedulePolicy.isStartTimeAllowed(spot, start)) {
+                if (policy.usesFixedDailySlots && !ParkingSpotSchedulePolicy.isStartTimeAllowed(spot, start, policy)) {
                     _errorMessage.value = ParkingSpotSchedulePolicy.startTimeRestrictionMessage(spot)
                         ?: "Selected start time is not allowed for this parking spot."
                     _bookingCreated.value = null
@@ -296,9 +388,17 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
                     lotId = spot.lotId, // Use the correct lot ID from the spot
                     checkInTime = start,
                     checkOutTime = end,
-                    vehicleNumber = vehicle
+                    vehicleNumber = vehicle?.takeIf(String::isNotBlank)
                 ).fold(
                     onSuccess = { booking ->
+                        BookingMutationRefreshCoordinator.refreshAfterSuccess(
+                            context = getApplication<Application>(),
+                            parkingLotId = booking.lotId,
+                            bookingId = booking.id,
+                            statusHint = booking.status,
+                            walletSource = WalletRefreshSource.BOOKING_CREATE,
+                            cachesAlreadyInvalidated = true,
+                        )
                         _bookingCreated.value = booking
                         _errorMessage.value = null
                     },
@@ -403,20 +503,16 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
     fun loadWalletBalance() {
         viewModelScope.launch {
             try {
-                println("BookingViewModel: Loading wallet balance")
                 walletRepository.getWalletDetails().fold(
                     onSuccess = { details ->
                         val balance = details.balance ?: 0.0
-                        println("BookingViewModel: Wallet balance loaded: $balance")
                         _walletBalance.value = balance
                     },
                     onFailure = { exception ->
-                        println("BookingViewModel: Failed to load wallet balance: ${exception.message}")
                         _walletBalance.value = 0.0
                     }
                 )
             } catch (e: Exception) {
-                println("BookingViewModel: Exception loading wallet balance: ${e.message}")
                 _walletBalance.value = 0.0
             }
         }
@@ -427,26 +523,21 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
         val userId = sharedPref.getString("user_id", null)
         val normalizedVehicleNumber = VehicleNumberValidator.normalize(vehicleNumber)
         
-        println("BookingViewModel: addVehicleToProfile called with vehicle: $normalizedVehicleNumber, userId: $userId")
         
         if (userId == null) {
-            println("BookingViewModel: No user ID found")
             onResult(false)
             return
         }
         
         viewModelScope.launch {
             try {
-                println("BookingViewModel: Fetching user profile for vehicle addition")
                 val userRepository = UserRepository()
                 val user = userRepository.getUserById(userId)
                 
                 if (user != null) {
-                    println("BookingViewModel: User found, current vehicles: ${user.vehicleNumbers}")
                     
                     // Check if vehicle already exists
                     if (VehicleNumberValidator.containsEquivalent(user.vehicleNumbers, normalizedVehicleNumber)) {
-                        println("BookingViewModel: Vehicle already exists")
                         onResult(false)
                         return@launch
                     }
@@ -454,22 +545,17 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
                     val updatedVehicles = user.vehicleNumbers.toMutableList()
                     updatedVehicles.add(normalizedVehicleNumber)
                     
-                    println("BookingViewModel: Updating user with vehicles: $updatedVehicles")
                     val updatedUser = user.copy(vehicleNumbers = updatedVehicles)
                     val result = userRepository.updateUser(updatedUser)
                     
-                    println("BookingViewModel: Update result: $result")
                     if (result) {
                         AuthSession.updateCachedUserProfile(getApplication(), updatedUser)
                     }
                     onResult(result)
                 } else {
-                    println("BookingViewModel: User not found")
                     onResult(false)
                 }
             } catch (e: Exception) {
-                println("BookingViewModel: Exception in addVehicleToProfile: ${e.message}")
-                e.printStackTrace()
                 onResult(false)
             }
         }

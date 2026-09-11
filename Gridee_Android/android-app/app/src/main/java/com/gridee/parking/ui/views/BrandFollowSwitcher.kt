@@ -11,12 +11,12 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Shader
 import android.graphics.Typeface
-import android.provider.Settings
 import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.ResourcesCompat
 import com.gridee.parking.R
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
@@ -167,9 +167,7 @@ class BrandFollowSwitcher @JvmOverloads constructor(
         postOnAnimation(ticker)
     }
 
-    private fun reducedMotion(): Boolean = runCatching {
-        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-    }.getOrDefault(false)
+    private fun reducedMotion(): Boolean = !AnimatorSettingsCompat.areEnabled(context)
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)

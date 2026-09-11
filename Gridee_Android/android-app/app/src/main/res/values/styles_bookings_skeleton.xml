@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Placeholder geometry for the bookings rail skeleton (view_bookings_skeleton).
+
+  Every pill height here is derived from the text it stands in for, using the ratio the
+  wallet skeleton already established (a 13 sp line is a 10 dp pill). Getting this wrong is
+  what makes a skeleton read as "grey boxes" rather than as the card arriving: if the pills
+  are the wrong height the block breathes at a different rhythm from the content that
+  replaces it, and the swap is visible as a jolt.
+
+  All of them carry tag="skeleton_pill" so SkeletonShimmer.start finds them and breathes the
+  whole card in unison.
+-->
+<resources>
+
+    <style name="BookingSkeletonPill">
+        <item name="android:background">@drawable/bg_skeleton_pill</item>
+        <item name="android:alpha">0.55</item>
+        <item name="android:tag">skeleton_pill</item>
+    </style>
+
+    <!-- 11 sp all-caps status run. -->
+    <style name="BookingSkeletonPill.Caps">
+        <item name="android:layout_height">9dp</item>
+    </style>
+
+    <!-- 13 sp supporting line: date, lot, field labels, rail stops. -->
+    <style name="BookingSkeletonPill.Label">
+        <item name="android:layout_height">10dp</item>
+    </style>
+
+    <!-- 16 sp bold value: times, vehicle, amount. -->
+    <style name="BookingSkeletonPill.Value">
+        <item name="android:layout_height">12dp</item>
+    </style>
+
+    <!-- 18 sp bold spot name. -->
+    <style name="BookingSkeletonPill.Title">
+        <item name="android:layout_height">14dp</item>
+    </style>
+
+</resources>

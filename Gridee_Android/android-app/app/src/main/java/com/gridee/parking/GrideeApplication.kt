@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import com.cashfree.pg.api.CFPaymentGatewayService
 import com.gridee.parking.config.RemoteConfigManager
+import com.gridee.parking.data.repository.RepositoryContainer
 import com.gridee.parking.notifications.NotificationChannels
 import com.gridee.parking.ui.main.MainContainerActivity
 import com.gridee.parking.ui.utils.configureEdgeToEdge
@@ -14,6 +15,7 @@ import com.gridee.parking.utils.AdConsentManager
 import com.gridee.parking.utils.AdMobManager
 import com.gridee.parking.utils.AdRevenueAnalytics
 import com.gridee.parking.utils.AppLocaleManager
+import com.gridee.parking.utils.AppForegroundTracker
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.NotificationTokenManager
 import com.gridee.parking.utils.ThemeManager
@@ -42,6 +44,11 @@ class GrideeApplication : Application() {
     }
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Shared repository entry point; repository caches are process-scoped as an additional guard. */
+    val repositories: RepositoryContainer by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        RepositoryContainer(applicationContext)
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -79,6 +86,7 @@ class GrideeApplication : Application() {
 
         override fun onActivityStarted(activity: Activity) {
             if (startedActivities++ == 0) {
+                AppForegroundTracker.markForeground()
                 applicationScope.launch {
                     RemoteConfigManager.refreshIfStale(application)
                     if (AuthSession.isAuthenticated(application) && RemoteConfigManager.areNotificationsEnabled()) {
@@ -97,9 +105,11 @@ class GrideeApplication : Application() {
                     }
                     activity.onAdsConsentResult(canRequestAds)
                     if (!canRequestAds) return@gatherConsent
-                    // Meta and Unity require the foreground Activity when collecting bidding
-                    // signals and loading interstitial demand.
-                    AdMobManager.preloadInterstitial(activity)
+                    // Only services a transition that was queued while this activity was away.
+                    // It deliberately does not request an ad: the booking interstitial is warmed
+                    // from the bookings screen, against a booking that can actually move, rather
+                    // than once per resume for every session whether or not one ever will.
+                    AdMobManager.notifyHostResumed(activity)
                 }
             }
         }

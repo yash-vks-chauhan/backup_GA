@@ -20,6 +20,13 @@ class OperatorMenuActivity : AppCompatActivity() {
         AppLocaleManager.applySavedLocale(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_operator_menu)
+
+        supportFragmentManager.setFragmentResultListener(
+            LogoutConfirmationBottomSheet.RESULT_KEY,
+            this,
+        ) { _, result ->
+            if (result.getBoolean(LogoutConfirmationBottomSheet.RESULT_CONFIRMED)) logout()
+        }
         
         // --- UI SETUP ---
         setupUserProfile()
@@ -143,8 +150,10 @@ class OperatorMenuActivity : AppCompatActivity() {
     }
 
     private fun showLogoutConfirmation() {
+        if (supportFragmentManager.isStateSaved ||
+            supportFragmentManager.findFragmentByTag(LogoutConfirmationBottomSheet.TAG) != null
+        ) return
         LogoutConfirmationBottomSheet.newInstance()
-            .setOnLogoutConfirmed { logout() }
             .show(supportFragmentManager, LogoutConfirmationBottomSheet.TAG)
     }
 

@@ -21,19 +21,15 @@ class ParkingSpotSelectionAdapter(
         val oldSelectedId = selectedSpotId
         selectedSpotId = spotId
         
-        println("ParkingSpotAdapter: Setting selected spot from '$oldSelectedId' to '$spotId'")
         
         if (oldSelectedId != null) {
             val oldIndex = currentList.indexOfFirst { it.id == oldSelectedId }
-            println("ParkingSpotAdapter: Old selection index: $oldIndex")
             if (oldIndex >= 0) notifyItemChanged(oldIndex)
         }
         if (spotId != null) {
             val newIndex = currentList.indexOfFirst { it.id == spotId }
-            println("ParkingSpotAdapter: New selection index: $newIndex")
             if (newIndex >= 0) notifyItemChanged(newIndex)
         } else {
-            println("ParkingSpotAdapter: Clearing selection")
         }
     }
 

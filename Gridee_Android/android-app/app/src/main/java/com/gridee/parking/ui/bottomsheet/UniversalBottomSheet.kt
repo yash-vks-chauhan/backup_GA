@@ -6,7 +6,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
+import com.gridee.parking.utils.AppLog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +16,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -28,14 +30,55 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
 import com.google.android.material.progressindicator.IndeterminateDrawable
 import com.gridee.parking.R
-import com.gridee.parking.data.repository.WalletRepository
 import com.gridee.parking.databinding.BottomSheetUniversalBinding
 import com.gridee.parking.ui.components.CustomBottomNavigation
 import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.ui.wallet.OneShotGate
+import com.gridee.parking.ui.wallet.RewardCreditCoordinator
 import com.gridee.parking.utils.AdMobManager
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+
+private const val ARG_UNIVERSAL_LOTTIE = "universal.lottie"
+private const val ARG_UNIVERSAL_TITLE = "universal.title"
+private const val ARG_UNIVERSAL_MESSAGE = "universal.message"
+private const val ARG_UNIVERSAL_BUTTON_TEXT = "universal.button_text"
+private const val ARG_UNIVERSAL_REWARD_MODE = "universal.reward_mode"
+private const val ARG_UNIVERSAL_PRIMARY_RESULT_KEY = "universal.primary_result_key"
+
+internal data class UniversalBottomSheetLaunchConfig(
+    val lottieFileName: String? = null,
+    val title: String? = null,
+    val message: String? = null,
+    val buttonText: String? = null,
+    val isRewardMode: Boolean = false,
+    val primaryResultRequestKey: String? = null,
+) {
+    fun toBundle(): Bundle = Bundle().apply {
+        putString(ARG_UNIVERSAL_LOTTIE, lottieFileName)
+        putString(ARG_UNIVERSAL_TITLE, title)
+        putString(ARG_UNIVERSAL_MESSAGE, message)
+        putString(ARG_UNIVERSAL_BUTTON_TEXT, buttonText)
+        putBoolean(ARG_UNIVERSAL_REWARD_MODE, isRewardMode)
+        putString(ARG_UNIVERSAL_PRIMARY_RESULT_KEY, primaryResultRequestKey)
+    }
+
+    companion object {
+        fun from(bundle: Bundle): UniversalBottomSheetLaunchConfig =
+            UniversalBottomSheetLaunchConfig(
+                lottieFileName = bundle.getString(ARG_UNIVERSAL_LOTTIE)
+                    ?.takeIf(String::isNotBlank),
+                title = bundle.getString(ARG_UNIVERSAL_TITLE),
+                message = bundle.getString(ARG_UNIVERSAL_MESSAGE),
+                buttonText = bundle.getString(ARG_UNIVERSAL_BUTTON_TEXT),
+                isRewardMode = bundle.getBoolean(ARG_UNIVERSAL_REWARD_MODE, false),
+                primaryResultRequestKey = bundle.getString(ARG_UNIVERSAL_PRIMARY_RESULT_KEY)
+                    ?.takeIf(String::isNotBlank),
+            )
+    }
+}
 
 class UniversalBottomSheet : BottomSheetDialogFragment() {
 
@@ -50,11 +93,30 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     private var isViewDestroyed: Boolean = false
     private var isRewardEarned: Boolean = false
     private val rewardAmount = 10.0
+    private val rewardAdShowing = AtomicBoolean(false)
+    private val rewardCreditStarted = AtomicBoolean(false)
+    private var rewardEventId = newRewardEventId()
+    private var primaryActionSent = false
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
+        val restoredLaunchConfig = savedInstanceState?.getBundle(STATE_LAUNCH_CONFIG)
+            ?: arguments
+        restoredLaunchConfig?.let { applyLaunchConfig(UniversalBottomSheetLaunchConfig.from(it)) }
+        rewardEventId = savedInstanceState?.getString(STATE_REWARD_EVENT_ID)
+            ?.takeIf { it.isNotBlank() }
+            ?: rewardEventId
+        primaryActionSent = savedInstanceState?.getBoolean(STATE_PRIMARY_ACTION_SENT, false)
+            ?: false
         if (isRewardMode) preloadRewardedAd()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_REWARD_EVENT_ID, rewardEventId)
+        outState.putBoolean(STATE_PRIMARY_ACTION_SENT, primaryActionSent)
+        outState.putBundle(STATE_LAUNCH_CONFIG, currentLaunchConfig().toBundle())
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -82,20 +144,14 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             
             bottomSheetDialog.window?.let { window ->
                 WindowCompat.setDecorFitsSystemWindows(window, false)
-                window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                window.isNavigationBarContrastEnforced = false
                 
                 // Adapt nav bar icons to current theme
                 val wic = WindowCompat.getInsetsController(window, window.decorView)
                 val isDarkMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
                 wic.isAppearanceLightNavigationBars = !isDarkMode
                 
-                // Remove the black divider line above the nav bar (Android 9+)
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                    window.navigationBarDividerColor = android.graphics.Color.TRANSPARENT
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                        window.isNavigationBarContrastEnforced = false
-                    }
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
                 }
 
                 // Glassmorphism: Blur the screen behind the sheet (Android 12+)
@@ -123,7 +179,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     private var title: String? = null
     private var message: String? = null
     private var primaryButtonText: String? = null
-    private var onPrimaryClickListener: (() -> Unit)? = null
+    private var primaryResultRequestKey: String? = null
     private var isRewardMode: Boolean = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -240,7 +296,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             binding.btnPrimary.text = primaryButtonText
             binding.btnPrimary.isVisible = true
             binding.btnPrimary.setOnClickListener {
-                onPrimaryClickListener?.invoke()
+                dispatchPrimaryResultIfConfigured()
                 dismiss()
             }
         } else {
@@ -338,9 +394,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
         binding.tvRewardAmount.text = String.format("%.0f", rewardAmount)
 
         binding.btnPrimary.setOnClickListener {
-            if (onPrimaryClickListener != null) {
-                onPrimaryClickListener?.invoke()
-            } else {
+            if (!dispatchPrimaryResultIfConfigured()) {
                 showRewardVideo()
             }
         }
@@ -374,23 +428,31 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     
     fun setTitle(text: String) {
         this.title = text
+        persistLaunchConfigForRestoration()
         if (_binding != null) binding.tvTitle.text = text
     }
 
     fun setMessage(text: String) {
         this.message = text
+        persistLaunchConfigForRestoration()
         if (_binding != null) binding.tvSubtitle.text = text
     }
 
-    fun setPrimaryButton(text: String, onClick: () -> Unit) {
+    /**
+     * Configures a restoration-safe primary action. The host must register a FragmentResult
+     * listener for [resultRequestKey]; unlike a lambda, that contract is rebound after recreation.
+     */
+    fun setPrimaryButton(text: String, resultRequestKey: String) {
         this.primaryButtonText = text
-        this.onPrimaryClickListener = onClick
+        this.primaryResultRequestKey = resultRequestKey.takeIf(String::isNotBlank)
+        primaryActionSent = false
+        persistLaunchConfigForRestoration()
         if (_binding != null) {
             binding.btnPrimary.text = text
             primaryButtonIdleLabel = text
             binding.btnPrimary.isVisible = true
             binding.btnPrimary.setOnClickListener {
-                onClick()
+                dispatchPrimaryResultIfConfigured()
                 if (!isRewardMode) dismiss()
             }
         }
@@ -398,6 +460,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
 
     fun setLottieFile(fileName: String) {
         this.lottieFileName = fileName
+        persistLaunchConfigForRestoration()
         if (_binding != null) {
             binding.lottieIcon.setAnimation(fileName)
             binding.lottieIcon.playAnimation()
@@ -420,23 +483,86 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
         super.onDismiss(dialog)
     }
 
+    private fun currentLaunchConfig() = UniversalBottomSheetLaunchConfig(
+        lottieFileName = lottieFileName,
+        title = title,
+        message = message,
+        buttonText = primaryButtonText,
+        isRewardMode = isRewardMode,
+        primaryResultRequestKey = primaryResultRequestKey,
+    )
+
+    private fun applyLaunchConfig(config: UniversalBottomSheetLaunchConfig) {
+        lottieFileName = config.lottieFileName
+        title = config.title
+        message = config.message
+        primaryButtonText = config.buttonText
+        isRewardMode = config.isRewardMode
+        primaryResultRequestKey = config.primaryResultRequestKey
+    }
+
+    /**
+     * Keep the legacy imperative setters restoration-safe too. Factory-created sheets already
+     * have an argument Bundle, which can be updated without replacing Fragment arguments. A
+     * never-added default instance can safely receive its first arguments here; active instances
+     * are covered by [onSaveInstanceState].
+     */
+    private fun persistLaunchConfigForRestoration() {
+        val snapshot = currentLaunchConfig().toBundle()
+        val currentArguments = arguments
+        if (currentArguments != null) {
+            currentArguments.putAll(snapshot)
+        } else if (!isAdded) {
+            arguments = snapshot
+        }
+    }
+
+    /** Returns true when the click belongs to a FragmentResult contract. */
+    private fun dispatchPrimaryResultIfConfigured(): Boolean {
+        val requestKey = primaryResultRequestKey ?: return false
+        if (primaryActionSent) return true
+        primaryActionSent = true
+        setFragmentResult(
+            requestKey,
+            Bundle().apply { putString(RESULT_ACTION, ACTION_PRIMARY) },
+        )
+        return true
+    }
+
+    /** Shows at most one sheet for [tag], and never commits after state has been saved. */
+    fun showIfPossible(fragmentManager: FragmentManager, tag: String = TAG): Boolean {
+        if (fragmentManager.isDestroyed || fragmentManager.isStateSaved) return false
+        if (fragmentManager.findFragmentByTag(tag) != null) return false
+        showNow(fragmentManager, tag)
+        return true
+    }
+
     companion object {
         const val TAG = "UniversalBottomSheet"
+        const val RESULT_ACTION = "universal.result.action"
+        const val ACTION_PRIMARY = "primary"
+        private const val STATE_REWARD_EVENT_ID = "reward_event_id"
+        private const val STATE_PRIMARY_ACTION_SENT = "primary_action_sent"
+        private const val STATE_LAUNCH_CONFIG = "universal_launch_config"
+
+        private fun newRewardEventId(): String = "rewarded-ad:${UUID.randomUUID()}"
 
         fun newInstance(
             lottieFileName: String? = null,
             title: String? = null,
             message: String? = null,
             buttonText: String? = null,
-            isRewardMode: Boolean = false
-        ): UniversalBottomSheet {
-            val fragment = UniversalBottomSheet()
-            fragment.lottieFileName = lottieFileName
-            fragment.title = title
-            fragment.message = message
-            fragment.primaryButtonText = buttonText
-            fragment.isRewardMode = isRewardMode
-            return fragment
+            isRewardMode: Boolean = false,
+            primaryResultRequestKey: String? = null,
+        ): UniversalBottomSheet = UniversalBottomSheet().apply {
+            arguments = UniversalBottomSheetLaunchConfig(
+                lottieFileName = lottieFileName,
+                title = title,
+                message = message,
+                buttonText = buttonText,
+                isRewardMode = isRewardMode,
+                primaryResultRequestKey = primaryResultRequestKey,
+            ).toBundle()
         }
     }
     
@@ -553,13 +679,16 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
 
     private fun showRewardedAd(ad: RewardedAd) {
         if (!isAdded) return
+        if (!rewardAdShowing.compareAndSet(false, true)) return
         if (_binding != null) {
             binding.btnPrimary.isEnabled = false
             binding.btnPrimary.alpha = 0.6f
         }
+        val callbackGate = OneShotGate()
 
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
+                rewardAdShowing.set(false)
                 rewardedAd = null
                 // If they didn't earn the reward (e.g., closed early), dismiss the sheet immediately.
                 // Otherwise, wait for the backend wallet top-up logic to finish processing.
@@ -569,11 +698,8 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                Log.w(
-                    TAG,
-                    "Rewarded ad failed to show: code=${adError.code}, " +
-                        "domain=${adError.domain}, message=${adError.message}"
-                )
+                rewardAdShowing.set(false)
+                AppLog.w(TAG) { "Rewarded ad failed to show (code=${adError.code})" }
                 rewardedAd = null
                 preloadRewardedAd()
                 setRewardedAdLoading(false)
@@ -589,7 +715,8 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
             }
         }
 
-        ad.show(requireActivity()) { rewardItem ->
+        ad.show(requireActivity()) rewardCallback@{
+            if (!callbackGate.tryAcquire()) return@rewardCallback
             isRewardEarned = true
             creditRewardToWallet(rewardAmount)
             Toast.makeText(
@@ -610,12 +737,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun logRewardedAdLoadFailure(adError: LoadAdError) {
-        Log.w(
-            TAG,
-            "Rewarded ad failed to load: code=${adError.code}, " +
-                "domain=${adError.domain}, message=${adError.message}, " +
-                "responseInfo=${adError.responseInfo}"
-        )
+        AppLog.w(TAG) { "Rewarded ad failed to load (code=${adError.code})" }
     }
 
     private fun rewardedAdLoadFailureMessage(adError: LoadAdError): String {
@@ -635,18 +757,16 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
 
     private fun creditRewardToWallet(amount: Double) {
         if (!isAdded) return
+        if (!rewardCreditStarted.compareAndSet(false, true)) return
         val ctx = requireContext()
 
         viewLifecycleOwner.lifecycleScope.launch {
             setRewardLoading(true)
             try {
-                val result = withContext(Dispatchers.IO) {
-                    WalletRepository(ctx).topUpWallet(amount)
-                }
+                val result = RewardCreditCoordinator.credit(ctx, rewardEventId, amount)
                 result.fold(
-                    onSuccess = { payload ->
-                        val newBalance = (payload["balance"] as? Double)
-                        showRewardDialog(amount, newBalance)
+                    onSuccess = {
+                        showRewardDialog(amount)
                     },
                     onFailure = { error ->
                         Toast.makeText(
@@ -654,8 +774,11 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
                             "Reward earned but could not be added: ${error.message ?: "Unknown error"}",
                             Toast.LENGTH_LONG
                         ).show()
+                        dismissAllowingStateLoss()
                     }
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 Toast.makeText(
                     ctx,
@@ -675,7 +798,7 @@ class UniversalBottomSheet : BottomSheetDialogFragment() {
         binding.btnPrimary.alpha = if (isLoading) 0.6f else 1f
     }
 
-    private fun showRewardDialog(amount: Double, newBalance: Double?) {
+    private fun showRewardDialog(amount: Double) {
         val activityContext = activity ?: return
         
         // Broadcast the reward completion directly into the MainContainerActivity global notification receiver

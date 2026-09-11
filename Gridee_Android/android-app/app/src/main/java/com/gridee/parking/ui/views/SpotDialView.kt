@@ -12,6 +12,7 @@ import android.view.animation.PathInterpolator
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.gridee.parking.R
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 
 /**
  * The app's 44dp circular row tile, made live: a ring showing how much of a lot is
@@ -90,7 +91,7 @@ class SpotDialView @JvmOverloads constructor(
         this.available = a
 
         sweepAnimator?.cancel()
-        if (!animate || !ValueAnimator.areAnimatorsEnabled()) {
+        if (!animate || !AnimatorSettingsCompat.areEnabled(context)) {
             sweep = 1f
             invalidate()
             return

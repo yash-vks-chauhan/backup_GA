@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The "you are here" bead once the session has run past its checkout time. Same white
+     core as shape_now_marker_core so the eye still finds it; the ring carries the warning. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@android:color/white" />
+    <stroke android:width="2dp" android:color="@color/status_text_cancelled" />
+    <size android:width="12dp" android:height="12dp" />
+</shape>

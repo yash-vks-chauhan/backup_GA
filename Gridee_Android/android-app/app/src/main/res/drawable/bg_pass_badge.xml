@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- shadcn secondary badge: quiet fill, hairline stroke, full radius. Sits under the
+     pass code as the tap affordance without competing with the destructive pill. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/pass_badge_fill" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/pass_badge_stroke" />
+    <corners android:radius="100dp" />
+</shape>

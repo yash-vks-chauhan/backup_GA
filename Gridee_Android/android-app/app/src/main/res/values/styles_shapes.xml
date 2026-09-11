@@ -5,9 +5,10 @@
         <item name="cornerSize">28dp</item>
     </style>
 
-    <!-- 14 dp rounded app icon in the compact AdMob row. -->
+    <!-- 6 dp rounded icon asset on the native ad's scrim. A shape appearance rather than
+         android:clipToOutline, which only takes effect on API 31+ against a minSdk of 24. -->
     <style name="ShapeAppearance.Gridee.AdIcon" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">14dp</item>
+        <item name="cornerSize">6dp</item>
     </style>
 </resources>

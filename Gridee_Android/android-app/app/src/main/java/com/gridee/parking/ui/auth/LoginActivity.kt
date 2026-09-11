@@ -66,8 +66,7 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        // Theme-aware status bar
-        window.statusBarColor = androidx.core.content.ContextCompat.getColor(this, R.color.background_primary)
+        // Theme-aware status-bar icons; the edge-to-edge content owns the background.
         androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
             !com.gridee.parking.utils.ThemeManager.isDarkMode(this)
         

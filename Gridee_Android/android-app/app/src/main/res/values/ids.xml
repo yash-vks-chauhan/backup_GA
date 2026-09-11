@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="tag_floating_nav_padding_applied" type="id" />
+    <!-- Holds the extra bottom padding Home is currently reserving for the native ad,
+         so the clearance can be reversed exactly when the ad hides. -->
+    <item name="tag_home_native_ad_clearance" type="id" />
 </resources>

@@ -7,12 +7,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.widget.NestedScrollView
-import androidx.recyclerview.widget.RecyclerView
+import androidx.lifecycle.LifecycleOwner
 import androidx.viewbinding.ViewBinding
 import com.gridee.parking.R
 import com.gridee.parking.ui.auth.LoginActivity
@@ -42,6 +40,7 @@ abstract class BaseActivityWithBottomNav<T : ViewBinding> : AppCompatActivity(),
     protected lateinit var bottomNavigation: CustomBottomNavigation
 
     private var inAppUpdateController: InAppUpdateController? = null
+    private val bottomNavScrollListener = LifecycleBoundScrollListener()
 
     abstract fun getViewBinding(): T
     abstract fun getCurrentTab(): Int
@@ -124,29 +123,17 @@ abstract class BaseActivityWithBottomNav<T : ViewBinding> : AppCompatActivity(),
     }
     
     // Method that activities can call to setup scroll behavior for specific views
-    protected fun setupScrollBehaviorForView(scrollableView: View) {
+    protected fun setupScrollBehaviorForView(scrollableView: View, viewLifecycleOwner: LifecycleOwner) {
+        if (!isViewReady || isFinishing || isDestroyed) return
         // Content scrolls behind the floating capsule. Reserve bottom padding so the
         // last item clears the capsule + gesture-nav inset. Apply once via tag.
         applyFloatingNavBottomPadding(scrollableView)
 
-        // Read current scroll position from whichever scrollable variant we got.
-        val readScrollY: () -> Int = when (scrollableView) {
-            is NestedScrollView -> { { scrollableView.scrollY } }
-            is ScrollView -> { { scrollableView.scrollY } }
-            is RecyclerView -> { { scrollableView.computeVerticalScrollOffset() } }
-            else -> return
-        }
+        bottomNavScrollListener.bind(scrollableView, viewLifecycleOwner, ::applyScrollPressure)
+    }
 
-        // Initial state — covers the case where a fragment is restored at a non-zero
-        // scroll position (rotation, fragment switch back to a previously-scrolled tab).
-        applyScrollPressure(readScrollY())
-
-        // Additive listener: fragments may already own the View's setOnScrollChangeListener
-        // for their own visual effects (ProfileFragment.setupFrostedToolbar). Hooking the
-        // viewTreeObserver coexists with that instead of overwriting it.
-        scrollableView.viewTreeObserver.addOnScrollChangedListener {
-            applyScrollPressure(readScrollY())
-        }
+    protected fun clearScrollBehavior() {
+        bottomNavScrollListener.clear()
     }
 
     /**
@@ -238,6 +225,7 @@ abstract class BaseActivityWithBottomNav<T : ViewBinding> : AppCompatActivity(),
     abstract fun setupUI()
     
     override fun onDestroy() {
+        clearScrollBehavior()
         inAppUpdateController?.onDestroy()
         inAppUpdateController = null
         super.onDestroy()

@@ -17,7 +17,6 @@
     <string name="vehicle_scan_success_toast">वाहन %1$s मिला</string>
     <string name="vehicle_scan_success_title">वाहन मिल गया</string>
     <string name="vehicle_scan_success_message">वाहन %1$s मिला और चेक-इन के लिए तैयार है।</string>
-    <string name="scanner_corner">स्कैनर फ़्रेम कोना</string>
     <string name="vehicle_scan_best_guess">संभावित मिलान: %1$s</string>
     <string name="vehicle_scan_flash_on">फ़्लैश चालू</string>
     <string name="vehicle_scan_flash_off">फ़्लैश बंद</string>
@@ -53,11 +52,31 @@
     <string name="scanner_enter_number">नंबर दर्ज करें</string>
     <string name="scanner_manual_sheet_hint">प्लेट पर दिख रहा वाहन नंबर लिखें।</string>
     <string name="scanner_qr_scan_hint">बुकिंग QR को फ्रेम के भीतर रखें</string>
+    <string name="scanner_one_qr_at_a_time_warning">फ़्रेम के भीतर एक समय में केवल एक बुकिंग QR रखें।</string>
+    <string name="scanner_low_light_hint">रोशनी कम है — टॉर्च चालू करें या बेहतर रोशनी वाली जगह पर जाएँ</string>
+    <string name="scanner_refocusing_hint">केंद्र वाले फ्रेम पर फिर से फ़ोकस किया जा रहा है…</string>
+    <string name="scanner_tap_to_focus">कैमरे को फ़ोकस करने के लिए स्कैनिंग फ्रेम पर टैप करें</string>
+    <string name="scanner_viewport_too_small_title">अधिक स्क्रीन स्थान की आवश्यकता है</string>
+    <string name="scanner_viewport_too_small_message">स्कैनिंग जारी रखने के लिए डिवाइस घुमाएँ या ऐप का आकार बढ़ाएँ।</string>
+    <string name="scanner_automatic_recognition_disabled_title">स्वचालित स्कैनिंग रोकी गई है</string>
+    <string name="scanner_automatic_recognition_disabled_message">वाहन नंबर मैन्युअल रूप से दर्ज करें। नंबर प्लेट और QR की स्वचालित पहचान अस्थायी रूप से बंद है।</string>
+    <string name="scanner_camera_access_needed_title">कैमरा एक्सेस आवश्यक है</string>
+    <string name="scanner_camera_unavailable_title">कैमरा उपलब्ध नहीं है</string>
+    <string name="scanner_camera_permission_manual_message">सेटिंग्स में कैमरा एक्सेस की अनुमति दें या वाहन नंबर मैन्युअल रूप से दर्ज करें।</string>
+    <string name="scanner_camera_unavailable_manual_message">कैमरा उपलब्ध नहीं है। वाहन नंबर मैन्युअल रूप से दर्ज करें या फिर से कोशिश करें।</string>
+    <string name="scanner_retry_camera">कैमरा फिर से आज़माएँ</string>
     <string name="scanner_qr_required">बुकिंग QR ज़रूरी है</string>
     <string name="scanner_processing_qr_checkin">बुकिंग QR से चेक-इन हो रहा है…</string>
     <string name="scanner_processing_qr_checkout">बुकिंग QR से चेक-आउट हो रहा है…</string>
     <string name="scanner_checked_in_at">%1$s पर चेक-इन हुआ</string>
     <string name="scanner_checked_out_at">%1$s पर चेक-आउट हुआ</string>
+    <string name="scanner_operator_request_still_processing">ऑपरेटर के अनुरोध को अभी संसाधित किया जा रहा है। कृपया पुष्टि होने तक प्रतीक्षा करें।</string>
+    <string name="scanner_recent_scan_title">हाल ही में संसाधित</string>
+    <plurals name="scanner_recent_scan_cooldown">
+        <item quantity="one">यह स्कैन अभी संसाधित हुआ है। %1$d सेकंड बाद फिर कोशिश करें।</item>
+        <item quantity="other">यह स्कैन अभी संसाधित हुआ है। %1$d सेकंड बाद फिर कोशिश करें।</item>
+    </plurals>
+    <string name="scanner_spot_outside_assigned_lot">यह पार्किंग स्थान आपके निर्धारित पार्किंग लॉट का हिस्सा नहीं है।</string>
     <string name="scanner_open">स्कैनर खोलें</string>
     <string name="vehicle_sheet_status_fetching">सक्रिय बुकिंग लाई जा रही है…</string>
     <string name="vehicle_sheet_status_not_found">%1$s से कोई बुकिंग जुड़ी नहीं है।</string>
@@ -374,7 +393,6 @@
     <string name="no_transactions_yet">अभी कोई लेन-देन नहीं</string>
     <string name="your_transaction_history_will_appear_here">आपका लेन-देन इतिहास यहाँ दिखेगा</string>
     <string name="vehicles">वाहन</string>
-    <string name="add_money_is_temporarily_unavailable_were">पैसे जोड़ना अभी उपलब्ध नहीं है।\nहम अपने पेमेंट एग्रीगेटर से जुड़ रहे हैं।</string>
     <string name="current_balance">मौजूदा बैलेंस</string>
     <string name="minimum_amount">न्यूनतम राशि</string>
     <string name="secured_by">सुरक्षित</string>
@@ -541,7 +559,6 @@
     <string name="no_transactions_found">कोई लेन-देन नहीं मिला</string>
     <string name="please_enter_a_valid_amount">कृपया मान्य राशि दर्ज करें</string>
     <string name="please_login_to_add_money">पैसे जोड़ने के लिए लॉग इन करें</string>
-    <string name="add_money_temporarily_unavailable_during_payment">भुगतान एकीकरण के दौरान पैसे जोड़ना अस्थायी रूप से बंद है।</string>
     <string name="session_expired_please_log_in_again">सेशन समाप्त हो गया। कृपया फिर लॉग इन करें।</string>
     <string name="wallet_is_temporarily_unavailable">वॉलेट अस्थायी रूप से उपलब्ध नहीं है।</string>
     <string name="no_real_wallet_data_available">कोई वॉलेट डेटा उपलब्ध नहीं</string>
@@ -685,5 +702,18 @@
     <string name="payment_pending_confirmation">भुगतान की पुष्टि हो रही है। पूरा होते ही आपका वॉलेट अपडेट हो जाएगा।</string>
     <string name="payment_failed_or_cancelled">भुगतान विफल रहा या रद्द कर दिया गया। आपसे कोई शुल्क नहीं लिया गया है।</string>
     <string name="payment_could_not_be_confirmed">हम इस भुगतान की पुष्टि नहीं कर सके। कृपया थोड़ी देर बाद अपना वॉलेट देखें।</string>
+    <string name="scanner_preparing_title">स्कैनर तैयार किया जा रहा है</string>
+    <string name="scanner_preparing_message">सुरक्षित OCR और QR घटकों की जाँच हो रही है…</string>
+    <string name="scanner_unavailable_title">स्कैनर सेटअप आवश्यक है</string>
+    <string name="scanner_unavailable_message">स्कैनर के घटक तैयार नहीं हैं। इंटरनेट से कनेक्ट करके फिर से कोशिश करें या वाहन नंबर मैन्युअल रूप से दर्ज करें।</string>
+    <string name="scanner_retry_setup">सेटअप फिर से करें</string>
+    <string name="scanner_plate_confirmation_needed">पहचानी गई नंबर प्लेट की पुष्टि करें: %1$s</string>
+    <string name="scanner_plate_confirm_title">वाहन की नंबर प्लेट की पुष्टि करें</string>
+    <string name="scanner_plate_confirm_message">आगे बढ़ने से पहले %1$s की पुष्टि करें।</string>
+    <string name="scanner_plate_confirm_corrected_message">कुछ एक जैसे दिखने वाले अक्षर या अंक सुधारे गए हैं। आगे बढ़ने से पहले %1$s की पुष्टि करें।</string>
+    <string name="scanner_confirm_plate">नंबर प्लेट की पुष्टि करें</string>
     <string name="wallet_top_up_title">वॉलेट टॉप-अप</string>
+    <string name="scanner_operator_offline">सत्यापित इंटरनेट कनेक्शन उपलब्ध नहीं है। फिर से कनेक्ट करें, फिर दोबारा स्कैन करें पर टैप करें। कोई चेक-इन या चेक-आउट नहीं भेजा गया।</string>
+    <string name="scanner_operator_slow_network">%1$s नेटवर्क धीमा है; इस स्क्रीन को खुला रखें और दोबारा स्कैन न करें।</string>
+    <string name="op_scanner_tab">स्कैनर</string>
 </resources>

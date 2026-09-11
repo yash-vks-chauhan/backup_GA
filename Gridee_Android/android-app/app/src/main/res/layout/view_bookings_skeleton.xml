@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The bookings rail, loading.
+
+  This is not a generic grey block standing in for "a card". It is the rail card's own
+  anatomy, built from the same views: StageRailView draws the gutter, TicketView punches the
+  same 16 dp notches at the same tear line, the head band is the same height with the same
+  16/14/16/13 padding, and the pass stub keeps the code's 76 dp square and its badge. Every
+  padding, margin and corner radius below is copied from stage_card_pending and stage_row —
+  if one of them drifts, this drifts with it or the reveal will jump.
+
+  Only the text is replaced, each pill sized from the line it stands in for. The one thing
+  deliberately NOT copied is the head colour: see bg_stage_card_head_skeleton.
+
+  The stops around the card are rearranged by BookingsFragmentNew.showSkeleton to match the
+  state it is standing in for, because the two cards do not sit in the same place on the rail:
+
+    Booked  card first, then two stops ahead (checked in, checked out), cancel row present.
+    Live    one stop behind the card (booked), the card, one stop ahead (checked out), and
+            no cancel row — the backend refuses cancellation once a car is checked in.
+
+  Without that the silhouette is ~50 dp too tall for a Live booking and the reveal visibly
+  drops. Which one to draw comes from BookingsSkeletonHint, remembered from the last render.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_bookings_skeleton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="20dp"
+    android:visibility="gone">
+
+    <!-- Only for Live: the Booked stop, already behind you. Gone for a Booked booking, whose
+         card is the first thing on the rail. -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/skeleton_stop_lead"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone">
+
+        <com.gridee.parking.ui.views.StageRailView
+            android:id="@+id/skeleton_rail_lead"
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            style="@style/BookingSkeletonPill.Label"
+            android:id="@+id/skeleton_stop_lead_label"
+            android:layout_width="60dp"
+            android:layout_marginStart="13dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toEndOf="@id/skeleton_rail_lead"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            style="@style/BookingSkeletonPill.Label"
+            android:layout_width="70dp"
+            android:layout_marginEnd="2dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/skeleton_stop_lead_label" />
+
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/skeleton_stop_lead_label" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- ───────── the card stop ───────── -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.gridee.parking.ui.views.StageRailView
+            android:id="@+id/skeleton_rail_card"
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.gridee.parking.ui.views.TicketView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="13dp"
+            android:layout_marginBottom="15dp"
+            app:cardBackgroundColor="@color/background_secondary"
+            app:cardCornerRadius="36dp"
+            app:cardElevation="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/skeleton_rail_card"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- head -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_stage_card_head_skeleton"
+                    android:orientation="vertical"
+                    android:paddingStart="16dp"
+                    android:paddingTop="14dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="13dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="6dp"
+                            android:layout_marginEnd="6dp"
+                            android:alpha="0.55"
+                            android:background="@drawable/bg_skeleton_circle"
+                            android:tag="skeleton_pill" />
+
+                        <View
+                            style="@style/BookingSkeletonPill.Caps"
+                            android:layout_width="58dp" />
+
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <View
+                            style="@style/BookingSkeletonPill.Label"
+                            android:layout_width="76dp" />
+                    </LinearLayout>
+
+                    <View
+                        style="@style/BookingSkeletonPill.Title"
+                        android:layout_width="92dp"
+                        android:layout_marginTop="10dp" />
+
+                    <View
+                        style="@style/BookingSkeletonPill.Label"
+                        android:layout_width="172dp"
+                        android:layout_marginTop="6dp" />
+                </LinearLayout>
+
+                <!-- body: check-in ── capsule ── check-out -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="14dp"
+                    android:paddingEnd="16dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <View
+                            style="@style/BookingSkeletonPill.Label"
+                            android:layout_width="54dp" />
+
+                        <View
+                            style="@style/BookingSkeletonPill.Value"
+                            android:layout_width="80dp"
+                            android:layout_marginTop="7dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="2dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:background="@color/divider_hairline" />
+
+                        <View
+                            style="@style/BookingSkeletonPill"
+                            android:layout_width="38dp"
+                            android:layout_height="24dp"
+                            android:layout_marginHorizontal="7dp" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_marginEnd="10dp"
+                            android:layout_weight="1"
+                            android:background="@color/divider_hairline" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:orientation="vertical">
+
+                        <View
+                            style="@style/BookingSkeletonPill.Label"
+                            android:layout_width="62dp" />
+
+                        <View
+                            style="@style/BookingSkeletonPill.Value"
+                            android:layout_width="80dp"
+                            android:layout_marginTop="7dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginTop="15dp"
+                    android:background="@color/divider_hairline" />
+
+                <!-- vehicle / paid -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="14dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="15dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <View
+                            style="@style/BookingSkeletonPill.Label"
+                            android:layout_width="50dp" />
+
+                        <View
+                            style="@style/BookingSkeletonPill.Value"
+                            android:layout_width="124dp"
+                            android:layout_marginTop="6dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:orientation="vertical">
+
+                        <View
+                            style="@style/BookingSkeletonPill.Label"
+                            android:layout_width="30dp" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginTop="6dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <View
+                                android:layout_width="14dp"
+                                android:layout_height="14dp"
+                                android:layout_marginEnd="5dp"
+                                android:alpha="0.55"
+                                android:background="@drawable/bg_skeleton_circle"
+                                android:tag="skeleton_pill" />
+
+                            <View
+                                style="@style/BookingSkeletonPill.Value"
+                                android:layout_width="52dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- the tear line. TicketView finds this by id and bites 16dp out of each edge. -->
+                <FrameLayout
+                    android:id="@+id/layout_cutout"
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="2dp"
+                        android:background="@drawable/bg_perforated_divider_subtle"
+                        android:layerType="software" />
+                </FrameLayout>
+
+                <!-- stub: the pass -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/pass_stub_surface"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:id="@+id/skeleton_pass_stub"
+                    android:paddingTop="15dp">
+
+                    <View
+                        style="@style/BookingSkeletonPill.Label"
+                        android:layout_width="94dp" />
+
+                    <View
+                        style="@style/BookingSkeletonPill"
+                        android:layout_width="76dp"
+                        android:layout_height="76dp"
+                        android:layout_marginTop="14dp" />
+
+                    <View
+                        style="@style/BookingSkeletonPill"
+                        android:layout_width="90dp"
+                        android:layout_height="26dp"
+                        android:layout_marginTop="13dp" />
+
+                    <View
+                        android:id="@+id/skeleton_cancel_divider"
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:layout_marginTop="15dp"
+                        android:background="@color/divider_hairline" />
+
+                    <!-- 54dp, exactly the real row, so the card ends where its replacement will.
+                         Hidden for Live, whose card carries no cancel. -->
+                    <FrameLayout
+                        android:id="@+id/skeleton_cancel_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:layout_marginTop="1dp">
+
+                        <View
+                            style="@style/BookingSkeletonPill.Value"
+                            android:layout_width="128dp"
+                            android:layout_gravity="center" />
+                    </FrameLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.gridee.parking.ui.views.TicketView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- ───────── the stops ahead ───────── -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/skeleton_stop_one"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.gridee.parking.ui.views.StageRailView
+            android:id="@+id/skeleton_rail_one"
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            style="@style/BookingSkeletonPill.Label"
+            android:id="@+id/skeleton_stop_one_label"
+            android:layout_width="84dp"
+            android:layout_marginStart="13dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toEndOf="@id/skeleton_rail_one"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            style="@style/BookingSkeletonPill.Label"
+            android:layout_width="66dp"
+            android:layout_marginEnd="2dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/skeleton_stop_one_label" />
+
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/skeleton_stop_one_label" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/skeleton_stop_two"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.gridee.parking.ui.views.StageRailView
+            android:id="@+id/skeleton_rail_two"
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            style="@style/BookingSkeletonPill.Label"
+            android:id="@+id/skeleton_stop_two_label"
+            android:layout_width="92dp"
+            android:layout_marginStart="13dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toEndOf="@id/skeleton_rail_two"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            style="@style/BookingSkeletonPill.Label"
+            android:layout_width="58dp"
+            android:layout_marginEnd="2dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/skeleton_stop_two_label" />
+
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/skeleton_stop_two_label" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

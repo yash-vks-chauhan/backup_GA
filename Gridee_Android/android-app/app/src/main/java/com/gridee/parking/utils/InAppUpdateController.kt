@@ -3,7 +3,6 @@ package com.gridee.parking.utils
 import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
-import android.util.Log
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.play.core.appupdate.AppUpdateInfo
@@ -36,7 +35,9 @@ class InAppUpdateController(
         appUpdateManager.appUpdateInfo
             .addOnSuccessListener { info -> handleUpdateInfo(info, isFromResume = false) }
             .addOnFailureListener { e ->
-                Log.w(TAG, "Failed to fetch appUpdateInfo (is app installed from Play Store?)", e)
+                AppLog.w(TAG) {
+                    "Failed to fetch appUpdateInfo (${e.javaClass.simpleName})"
+                }
             }
     }
 
@@ -44,7 +45,9 @@ class InAppUpdateController(
         appUpdateManager.appUpdateInfo
             .addOnSuccessListener { info -> handleUpdateInfo(info, isFromResume = true) }
             .addOnFailureListener { e ->
-                Log.w(TAG, "Failed to fetch appUpdateInfo onResume", e)
+                AppLog.w(TAG) {
+                    "Failed to fetch appUpdateInfo onResume (${e.javaClass.simpleName})"
+                }
             }
     }
 
@@ -52,7 +55,9 @@ class InAppUpdateController(
         if (requestCode != this.requestCode) return
 
         if (resultCode != Activity.RESULT_OK) {
-            Log.i(TAG, "In-app update flow did not complete (resultCode=$resultCode); re-checking")
+            AppLog.i(TAG) {
+                "In-app update flow did not complete (resultCode=$resultCode); re-checking"
+            }
             checkForUpdates()
         }
     }
@@ -63,7 +68,7 @@ class InAppUpdateController(
 
     private fun handleUpdateInfo(info: AppUpdateInfo, isFromResume: Boolean) {
         if (info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
-            Log.i(TAG, "Update in progress; resuming immediate update flow")
+            AppLog.i(TAG) { "Update in progress; resuming immediate update flow" }
             startUpdateFlow(info, AppUpdateType.IMMEDIATE)
             return
         }
@@ -76,7 +81,7 @@ class InAppUpdateController(
         if (isFromResume) return
 
         if (info.updateAvailability() != UpdateAvailability.UPDATE_AVAILABLE) {
-            Log.d(TAG, "No update available (availability=${info.updateAvailability()})")
+            AppLog.d(TAG) { "No update available (availability=${info.updateAvailability()})" }
             return
         }
 
@@ -90,10 +95,9 @@ class InAppUpdateController(
         )
 
         if (updateType == null) {
-            Log.w(
-                TAG,
+            AppLog.w(TAG) {
                 "Update available but no allowed update type (immediateAllowed=$immediateAllowed, flexibleAllowed=$flexibleAllowed)"
-            )
+            }
             return
         }
 
@@ -101,7 +105,7 @@ class InAppUpdateController(
             registerFlexibleListener()
         }
 
-        Log.i(TAG, "Starting in-app update flow (type=$updateType)")
+        AppLog.i(TAG) { "Starting in-app update flow (type=$updateType)" }
         startUpdateFlow(info, updateType)
     }
 
@@ -109,9 +113,11 @@ class InAppUpdateController(
         try {
             appUpdateManager.startUpdateFlowForResult(info, updateType, activity, requestCode)
         } catch (e: IntentSender.SendIntentException) {
-            Log.e(TAG, "Failed to start in-app update flow", e)
+            AppLog.e(TAG) { "Failed to start in-app update flow (${e.javaClass.simpleName})" }
         } catch (e: RuntimeException) {
-            Log.e(TAG, "Unexpected error starting in-app update flow", e)
+            AppLog.e(TAG) {
+                "Unexpected error starting in-app update flow (${e.javaClass.simpleName})"
+            }
         }
     }
 

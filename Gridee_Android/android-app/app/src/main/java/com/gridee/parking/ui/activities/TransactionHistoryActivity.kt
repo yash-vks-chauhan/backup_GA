@@ -22,8 +22,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.gridee.parking.R
-import com.gridee.parking.data.api.ApiClient
+import com.gridee.parking.GrideeApplication
 import com.gridee.parking.data.model.WalletTransaction
+import com.gridee.parking.data.repository.WalletRepository
 import com.gridee.parking.databinding.ActivityTransactionHistoryBinding
 import com.gridee.parking.ui.adapters.Transaction
 import com.gridee.parking.ui.adapters.TransactionType
@@ -58,6 +59,9 @@ class TransactionHistoryActivity : AppCompatActivity() {
     private var currentSubtitleText: String? = null
     private var isSubtitleAnimating = false
     private var isClosing = false
+    private val walletRepository by lazy {
+        GrideeApplication.instance.repositories.walletRepository
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
@@ -70,7 +74,6 @@ class TransactionHistoryActivity : AppCompatActivity() {
         ViewCompat.setTransitionName(binding.root, VIEW_ALL_TRANSITION_NAME)
         runCatching { window.sharedElementsUseOverlay = false }
 
-        window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
         val isDarkMode = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !isDarkMode
 
@@ -465,15 +468,8 @@ class TransactionHistoryActivity : AppCompatActivity() {
         filteredTransactionList = null
 
         lifecycleScope.launch {
-            try {
-                val response = ApiClient.apiService.getWalletTransactions(
-                    userId = userId,
-                    page = 0,
-                    size = 1000,
-                    sort = listOf("timestamp", "desc")
-                )
-                if (response.isSuccessful) {
-                    val rawTransactions = response.body()?.content.orEmpty()
+            walletRepository.getWalletTransactions(size = 1000).fold(
+                onSuccess = { rawTransactions ->
 
                     val processedTransactions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
                         rawTransactions
@@ -496,24 +492,17 @@ class TransactionHistoryActivity : AppCompatActivity() {
                     } else {
                         loadPage(0)
                     }
-                } else {
+                },
+                onFailure = { error ->
                     Toast.makeText(
                         this@TransactionHistoryActivity,
-                        getString(R.string.wallet_transactions_load_failed, response.code()),
+                        error.message ?: getString(R.string.wallet_load_error),
                         Toast.LENGTH_SHORT
                     ).show()
                     showEmptyState()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(
-                    this@TransactionHistoryActivity,
-                    getString(R.string.wallet_load_error),
-                    Toast.LENGTH_SHORT
-                ).show()
-                showEmptyState()
-            } finally {
-                showLoading(false)
-            }
+                },
+            )
+            showLoading(false)
         }
     }
 

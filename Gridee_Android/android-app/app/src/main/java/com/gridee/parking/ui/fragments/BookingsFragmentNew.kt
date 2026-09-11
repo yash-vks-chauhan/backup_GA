@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -19,22 +20,33 @@ import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.doOnNextLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gridee.parking.R
-import com.gridee.parking.data.api.ApiClient
+import com.gridee.parking.ui.components.CustomBottomNavigation
+import com.gridee.parking.ui.main.MainContainerActivity
+import android.content.Intent
+import com.gridee.parking.GrideeApplication
 import com.gridee.parking.data.model.Booking as BackendBooking
+import com.gridee.parking.data.model.BookingPolicyResolver
 import com.gridee.parking.databinding.FragmentBookingsNewBinding
 import com.gridee.parking.ui.adapters.Booking
 import com.gridee.parking.ui.adapters.BookingStatus
+import com.gridee.parking.ui.adapters.BookingRailAdapter
 import com.gridee.parking.ui.adapters.BookingsAdapter
 import com.gridee.parking.ui.base.BaseTabFragment
-import com.gridee.parking.databinding.BottomSheetBookingOverviewBinding
+import com.gridee.parking.databinding.BottomSheetCancelBookingBinding
 import android.view.WindowManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.gridee.parking.debug.DebugSampleBookings
 import com.gridee.parking.data.repository.BookingRepository
+import com.gridee.parking.data.repository.BookingMutationRefreshCoordinator
 import com.gridee.parking.data.repository.ParkingRepository
 import com.gridee.parking.notifications.BookingActiveNotificationManager
 import com.gridee.parking.notifications.BookingStatusEvents
@@ -42,8 +54,12 @@ import com.gridee.parking.ui.bookings.BookingAdStatus
 import com.gridee.parking.ui.bookings.BookingAdTarget
 import com.gridee.parking.ui.bookings.BookingAdTransition
 import com.gridee.parking.ui.bookings.BookingAdTransitionDetector
+import com.gridee.parking.ui.bookings.BookingDetailsActivity
 import com.gridee.parking.ui.bottomsheet.BookingQrPassBottomSheet
+import com.gridee.parking.ui.wallet.WalletRefreshSource
+import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.BookingAdTransitionStore
+import com.gridee.parking.utils.AppForegroundTracker
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -57,45 +73,41 @@ import kotlin.math.abs
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
 import androidx.dynamicanimation.animation.DynamicAnimation
+import com.gridee.parking.ui.bookings.BookingsSkeletonHint
+import com.gridee.parking.ui.views.SkeletonShimmer
+import com.gridee.parking.ui.views.StageRailView
+import androidx.core.view.isVisible
 
-data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D) : java.io.Serializable
 class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
 
-    private lateinit var bookingsAdapter: BookingsAdapter
+    private lateinit var railAdapter: BookingRailAdapter
     private var userBookings = mutableListOf<BackendBooking>()
-    private var currentTab = BookingStatus.ACTIVE
+    /** Receipts the user has already moved on from; in-memory, so a fresh launch forgets. */
 
-    /**
-     * Set once the tab is somebody's deliberate choice — a tap, a drag, or a caller navigating
-     * here with a destination in mind. While it is set, [autoSelectTabWithBookings] keeps its
-     * hands off, so a user who taps an empty tab to check it is not bounced straight back out.
-     * It is cleared each time the screen returns to the foreground.
-     */
-    private var tabPinnedByUser = false
+    /** Header height the refresh spinner is currently offset for; -1 until first layout. */
     private var blurOverlayView: View? = null
     private var currentBlurAnimator: ValueAnimator? = null
-    private var isSliderDragging = false
-    private var sliderDragOffset = 0f
-
-    /**
-     * Slider work has to be deferred until the segmented control is laid out, which in practice is
-     * after the destination tab is already known. Every deferred hop re-reads [currentTab] rather
-     * than carrying a captured status, and a stale hop is dropped by comparing the generation it
-     * was scheduled under — otherwise a callback queued for the default tab can settle last and
-     * park the pill on a tab the list is not showing.
-     */
-    private var sliderGeneration = 0
-    private var sliderSpring: SpringAnimation? = null
-    private var sliderWidthAnimator: ValueAnimator? = null
     private var lastActiveBookingId: String? = null
     private var bookingsLoadJob: Job? = null
     private var refreshAfterCurrentLoad = false
+    private var forceActiveRefreshAfterCurrentLoad = false
+    private var forceHistoryRefreshAfterCurrentLoad = false
+    private var includeHistoryAfterCurrentLoad = false
     private var observedAdStatuses: Map<String, BookingAdStatus>? = null
     private val pendingAdTransitions = ArrayDeque<PendingAdTransition>()
     private var activeAdTransition: PendingAdTransition? = null
     private var visibleQrBookingId: String? = null
+    private var skeletonAnimator: android.animation.ValueAnimator? = null
+    private var skeletonShowing = false
     private var bookingQrPassSheet: BookingQrPassBottomSheet? = null
-    private var qrRefreshGraceUntilMs = 0L
+    private var handledForegroundGeneration = Long.MIN_VALUE
+    private var loadedParkingLotId: String? = null
+    private var hasLoadedBookings = false
+    private var pendingPushRefresh = false
+    private var pendingPushRequiresActiveNetwork = false
+    private var pendingPushRequiresHistoryNetwork = false
+    private var lastManualRefreshElapsedMs = Long.MIN_VALUE
+    private val cancellingBookingIds = mutableSetOf<String>()
 
     private data class PendingAdTransition(
         val bookingId: String,
@@ -108,7 +120,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     // Cache for parking lot and spot names
     private val parkingLotCache = mutableMapOf<String, String>() // lotId -> name
     private val parkingSpotCache = mutableMapOf<String, String>() // spotId -> name
-    private var isCacheLoaded = false
+    private val loadedSpotLotIds = mutableSetOf<String>()
     private data class NavigationRequest(
         val showPending: Boolean,
         val highlightBookingId: String?,
@@ -117,35 +129,112 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     private var pendingNavigationRequest: NavigationRequest? = null
     private var pendingHighlightBookingId: String? = null
     private var pendingOpenBookingId: String? = null
+    /**
+     * Watches for the operator acting on a booking, wherever the user happens to be.
+     *
+     * The check-in choreography — pass closes, interstitial, status flips — hangs off
+     * detectBookingAdTransitions, which only runs inside a fetch. Nothing else notices a scan:
+     * there is no socket, the backend sends no push on check-in, and pull-to-refresh is gone.
+     *
+     * It is not tied to the QR pass, because the pass is not the only way in — an operator can
+     * check a car in off its number plate with the phone on any other tab. So it runs whenever a
+     * booking exists that can still move, and stops when none does.
+     */
+    private val transitionWatchHandler = Handler(Looper.getMainLooper())
+    private val transitionWatchRunnable = object : Runnable {
+        override fun run() {
+            if (!hasViewBinding() || view == null) return
+            if (!hasWatchableBooking()) return
+            // A live booking is watched for check-OUT, which lands it in history — so that read
+            // has to include history or the booking simply vanishes from the fetch and the
+            // transition is never seen. A booked one is watched for check-IN, which stays in the
+            // active list, so it can skip the second request.
+            val awaitingCheckOut = userBookings.any {
+                mapBackendStatus(it.status) == BookingStatus.ACTIVE
+            }
+            loadUserBookings(
+                forceActiveRefresh = true,
+                includeHistory = awaitingCheckOut,
+                queueIfBusy = false,
+            )
+            transitionWatchHandler.postDelayed(this, watchIntervalMs())
+        }
+    }
+
+    private fun hasWatchableBooking(): Boolean = userBookings.any {
+        val status = mapBackendStatus(it.status)
+        status == BookingStatus.PENDING || status == BookingStatus.ACTIVE
+    }
+
+    /**
+     * How hard to look, by how close the user is to the moment. Standing at the barrier with the
+     * pass open is the one place a delay reads as a broken app; another tab is watched slowly on
+     * purpose, because a parking session runs for hours.
+     */
+    private fun watchIntervalMs(): Long = when {
+        visibleQrBookingId != null -> WATCH_AT_BARRIER_MS
+        !isHidden -> WATCH_TAB_IN_FRONT_MS
+        else -> WATCH_OTHER_TAB_MS
+    }
+
+    private fun syncTransitionWatch() {
+        syncTransitionAdWarmUp()
+        transitionWatchHandler.removeCallbacks(transitionWatchRunnable)
+        if (!isResumed || !hasViewBinding() || view == null) return
+        if (!hasWatchableBooking()) return
+        transitionWatchHandler.postDelayed(transitionWatchRunnable, watchIntervalMs())
+    }
+
+    /**
+     * Keeps the transition interstitial warm on the same signal the watch runs on: a booking that
+     * can still move.
+     *
+     * The ad used to be requested once per activity resume, for everyone, whether or not they
+     * held a booking at all - and it only ever displays on a check-in, check-out or cancellation,
+     * so the great majority of those requests loaded an ad nobody was ever shown. This is the
+     * same question asked the other way round: request only while there is a transition that
+     * could plausibly arrive, and stop the moment there isn't.
+     *
+     * Deliberately not gated on the tab being in front. An operator can check a car in off its
+     * number plate while the user is on Home, which is exactly the transition this has to have an
+     * ad ready for.
+     */
+    private fun syncTransitionAdWarmUp() {
+        if (!isAdded) return
+        val host = activity ?: return
+        // A transition already owed counts as well as a booking that can still move. The last
+        // two of the three moments — check-out and cancellation — leave nothing watchable behind
+        // them, and the ad for that moment has not necessarily been shown yet: it waits here
+        // whenever the operator worked the barrier while the app was not in front.
+        if (hasWatchableBooking() || hasUnfinishedBookingTransition()) {
+            com.gridee.parking.utils.AdMobManager.warmUpBookingInterstitial(host)
+        } else {
+            com.gridee.parking.utils.AdMobManager.stopBookingInterstitialWarmUp()
+        }
+    }
+
+    private fun stopTransitionWatch() {
+        transitionWatchHandler.removeCallbacks(transitionWatchRunnable)
+    }
+
     private val activeTimerHandler = Handler(Looper.getMainLooper())
     private val activeTimerRunnable = object : Runnable {
         override fun run() {
             if (!hasViewBinding() || view == null) return
-            if (::bookingsAdapter.isInitialized && (currentTab == BookingStatus.ACTIVE || currentTab == BookingStatus.PENDING)) {
-                val itemCount = bookingsAdapter.itemCount
-                if (itemCount > 0) {
-                    bookingsAdapter.notifyItemRangeChanged(
-                        0,
-                        itemCount,
-                        BookingsAdapter.PAYLOAD_TIMER_UPDATE
-                    )
-                }
+            if (::railAdapter.isInitialized && railAdapter.hasLiveTimer()) {
+                railAdapter.tickLiveTimers()
             }
             if (hasViewBinding() && view != null) {
                 activeTimerHandler.postDelayed(this, ACTIVE_TIMER_REFRESH_MS)
             }
         }
     }
-    private val bookingStatusRefreshHandler = Handler(Looper.getMainLooper())
-    private val bookingStatusRefreshRunnable = object : Runnable {
-        override fun run() {
-            if (!shouldAutoRefreshBookingStatus()) return
-            requestBookingStatusRefresh()
-            scheduleBookingStatusRefresh()
-        }
+    private val bookingRepository by lazy {
+        GrideeApplication.instance.repositories.bookingRepository
     }
-
-    private val bookingRepository by lazy { BookingRepository(requireContext()) }
+    private val parkingRepository by lazy {
+        GrideeApplication.instance.repositories.parkingRepository
+    }
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentBookingsNewBinding {
         return FragmentBookingsNewBinding.inflate(inflater, container, false)
@@ -162,18 +251,147 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     override fun setupUI() {
         setupBookingQrPassResults()
         setupRecyclerView()
-        setupPullToRefresh()
-        setupSegmentedControl()
+        applyStatusBarInset()
+        showSkeletonIfExpected()
+        setupEmptyState()
         observeBookingStatusEvents()
-        loadUserBookings() // Use real API instead of sample data
     }
 
-    private fun setupPullToRefresh() {
-        binding.swipeRefresh.setProgressBackgroundColorSchemeResource(R.color.background_secondary)
-        binding.swipeRefresh.setColorSchemeResources(R.color.text_primary)
-        binding.swipeRefresh.setOnRefreshListener {
-            loadUserBookings()
+    /**
+     * A booking leaves this tab the moment it ends — cancelled, checked out or missed, it goes
+     * to Booking History and the tab is empty again. Booking again starts on Home, so the empty
+     * state hands the user straight there rather than leaving them to work it out.
+     */
+    /**
+     * Pays the status-bar inset here rather than waiting for the activity to do it.
+     *
+     * MainContainerActivity.applyTopInsetToFragmentView re-pads every added fragment, but only
+     * when the window dispatches insets. A fragment whose view is created after the last
+     * dispatch — a tab opened for the first time, which is exactly this screen — never gets
+     * that call, so its root kept paddingTop 0 and the top of the booking card was sliced off
+     * by the status bar. Owning it here makes it deterministic; the activity setting the same
+     * value later is a no-op.
+     */
+    private fun applyStatusBarInset() {
+        val root = binding.root
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            view.updatePadding(top = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top)
+            insets
         }
+        ViewCompat.requestApplyInsets(root)
+    }
+
+    /**
+     * Raises the loading state for the first paint, and only when there is something to load.
+     *
+     * Gated on [BookingsSkeletonHint] rather than shown unconditionally: a skeleton is a promise
+     * that content is coming, and showing a card-shaped ghost to someone with no booking is a
+     * promise the screen immediately breaks. It is also skipped once bookings are in hand — a
+     * tab switch back to a fragment that already has data has nothing to wait for.
+     */
+    private fun showSkeletonIfExpected() {
+        if (hasLoadedBookings || userBookings.isNotEmpty()) return
+        val userId = getUserId() ?: return
+        val expected = BookingsSkeletonHint.expected(requireContext(), userId)
+        if (expected == BookingsSkeletonHint.Expected.NOTHING) return
+        showSkeleton(live = expected == BookingsSkeletonHint.Expected.LIVE)
+    }
+
+    /**
+     * Lays the ghost out as whichever card is coming.
+     *
+     * Booked and Live are not the same silhouette: a Booked card is the first thing on the rail
+     * with two stops ahead of it and a cancel row at the bottom; a Live one has a stop behind
+     * it, one ahead, and no cancel — the backend refuses cancellation once a car is checked in.
+     * Drawing the wrong one is ~50 dp of height that visibly drops when the real card lands.
+     */
+    private fun showSkeleton(live: Boolean) {
+        if (skeletonShowing) return
+        skeletonShowing = true
+        val skeleton = binding.layoutSkeleton
+        // Muted rails: the gutter is the one part of the card that carries status colour, and
+        // the skeleton has not read a status yet. Same geometry, no claim.
+        val ink = ContextCompat.getColor(requireContext(), R.color.stage_rail_ink)
+
+        skeleton.skeletonStopLead.isVisible = live
+        skeleton.skeletonStopTwo.isVisible = !live
+        skeleton.skeletonCancelRow.isVisible = !live
+        skeleton.skeletonCancelDivider.isVisible = !live
+        // The stub loses its closing row on a Live card, so it pays that space back as padding
+        // rather than letting the badge sit against the card's bottom edge.
+        skeleton.skeletonPassStub.updatePadding(bottom = if (live) dpToPx(18f).toInt() else 0)
+
+        if (live) {
+            railStub(skeleton.skeletonRailLead, StageRailView.Marker.DONE, StageRailView.Line.NONE, StageRailView.Line.SOLID, ink)
+            railStub(skeleton.skeletonRailCard, StageRailView.Marker.CURRENT, StageRailView.Line.SOLID, StageRailView.Line.DASHED, ink)
+            railStub(skeleton.skeletonRailOne, StageRailView.Marker.FUTURE, StageRailView.Line.DASHED, StageRailView.Line.NONE, ink)
+        } else {
+            railStub(skeleton.skeletonRailCard, StageRailView.Marker.CURRENT, StageRailView.Line.NONE, StageRailView.Line.DASHED, ink)
+            railStub(skeleton.skeletonRailOne, StageRailView.Marker.FUTURE, StageRailView.Line.DASHED, StageRailView.Line.DASHED, ink)
+            railStub(skeleton.skeletonRailTwo, StageRailView.Marker.FUTURE, StageRailView.Line.DASHED, StageRailView.Line.NONE, ink)
+        }
+
+        binding.rvBookings.isVisible = false
+        binding.layoutEmptyState.isVisible = false
+        skeleton.layoutBookingsSkeleton.isVisible = true
+        skeletonAnimator = SkeletonShimmer.start(skeleton.layoutBookingsSkeleton)
+    }
+
+    /**
+     * Matches BookingRailAdapter.rail so the ghost gutter lines up with the real one — same
+     * marker centre, same dash pattern. A skeleton whose rail sits a few dp off its replacement
+     * is the tell that gives the whole thing away.
+     */
+    private fun railStub(
+        view: StageRailView,
+        marker: StageRailView.Marker,
+        lead: StageRailView.Line,
+        tail: StageRailView.Line,
+        ink: Int,
+    ) {
+        view.marker = marker
+        view.leadLine = lead
+        view.tailLine = tail
+        view.markerCenterY = 20f * resources.displayMetrics.density
+        view.accentColor = ink
+        view.haloColor = 0
+    }
+
+    /**
+     * Hands over to the real content.
+     *
+     * The skeleton is removed outright and the incoming list carries the reveal by rising into
+     * place — the app's shared idiom. No crossfade: two versions of the same card dissolving
+     * through each other reads as a glitch rather than as an arrival.
+     */
+    private fun hideSkeleton() {
+        skeletonAnimator?.cancel()
+        skeletonAnimator = null
+        if (!skeletonShowing) return
+        skeletonShowing = false
+        bindingOrNull?.let { view ->
+            view.layoutSkeleton.layoutBookingsSkeleton.isVisible = false
+            if (view.rvBookings.isVisible) SkeletonShimmer.revealView(view.rvBookings)
+            else if (view.layoutEmptyState.isVisible) SkeletonShimmer.revealView(view.layoutEmptyState)
+        }
+    }
+
+    private fun setupEmptyState() {
+        binding.buttonFindParking.setOnClickListener { goToHome() }
+    }
+
+    /**
+     * Back to Home, where booking starts. Routed through the container's intent rather than
+     * onTabSelected because onNewIntent syncs the nav pill and the fragment together.
+     */
+    private fun goToHome() {
+        val host = activity ?: return
+        startActivity(
+            Intent(host, MainContainerActivity::class.java).apply {
+                putExtra(MainContainerActivity.EXTRA_TARGET_TAB, CustomBottomNavigation.TAB_HOME)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            }
+        )
     }
 
     private fun dpToPx(value: Float): Float {
@@ -193,50 +411,13 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     }
 
     private fun setupRecyclerView() {
-        bookingsAdapter = BookingsAdapter(
-            emptyList(),
-            onBookingClick = { booking ->
-                // Handle booking click (e.g., show details)
-                showBookingDetails(booking)
-            },
-            onQrDialogVisibilityChanged = { bookingId, visible ->
-                handleBookingQrVisibilityChanged(bookingId, visible)
-            },
-            onQrPassClick = { booking -> showBookingQrPass(booking) }
+        railAdapter = BookingRailAdapter(
+            onPassClick = { booking -> showBookingQrPass(booking) },
+            onCancelRequested = { booking -> showCancelConfirmation(booking) },
         )
         binding.rvBookings.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = bookingsAdapter
-
-            addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    syncStickyHeaderState()
-                }
-            })
-        }
-    }
-
-    private fun handleSegmentSelection(newStatus: BookingStatus, userTriggered: Boolean = true) {
-        android.util.Log.d("BookingsFragment", "handleSegmentSelection called with status: $newStatus")
-        val changed = newStatus != currentTab
-        if (userTriggered) {
-            // Their choice now, not the screen's. Even landing on an empty tab is a choice.
-            tabPinnedByUser = true
-        }
-        if (changed && userTriggered) {
-            val rootView = binding.segmentedControlContainer.segmentContainer
-            rootView?.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-        }
-
-        // The tab is committed before any visual work: the deferred slider hops and the label
-        // emphasis both resolve their target from currentTab, so updating visuals first would
-        // let them read the tab being navigated away from.
-        currentTab = newStatus
-        updateSegmentVisualState()
-
-        if (changed) {
-            showBookingsForStatus(newStatus)
+            adapter = railAdapter
         }
     }
 
@@ -251,21 +432,20 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     override fun onResume() {
         super.onResume()
         requireActivity().title = "My Bookings"
-        // Coming back is a fresh look at the screen, so the landing tab is up for decision
-        // again. It can still only move off a tab with nothing on it.
-        tabPinnedByUser = false
         startActiveTimerUpdates()
-        // Also catches a transition performed by an operator while this app was backgrounded.
-        // The load guard below leaves the initial request untouched.
-        loadUserBookings()
+        syncTransitionWatch()
+        refreshForVisibleEntry()
         // A transition detected while this tab was hidden waits here for the tab to come forward.
         processPendingBookingTransition()
-        scheduleBookingStatusRefresh()
     }
 
     override fun onPause() {
         stopActiveTimerUpdates()
-        stopBookingStatusRefresh()
+        stopTransitionWatch()
+        // The warm buffer itself is kept. The commonest shape of this placement is the operator
+        // checking a car in while the phone is in the user's pocket, and dropping the warm ad on
+        // every pause would make that a cold load every time.
+        com.gridee.parking.utils.AdMobManager.pauseBookingInterstitialWarmUp()
         super.onPause()
     }
 
@@ -273,16 +453,46 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         super.onHiddenChanged(hidden)
         if (hidden) {
             stopActiveTimerUpdates()
-            stopBookingStatusRefresh()
+            // Deliberately NOT stopped: an operator can check a car in off its plate while the
+            // user is on another tab, and this is what notices. It just slows down.
+            syncTransitionWatch()
         } else {
             // The bottom nav shows and hides this fragment rather than recreating it, so this
             // is the "screen opened" moment onResume does not get to see.
-            tabPinnedByUser = false
             startActiveTimerUpdates()
+            syncTransitionWatch()
+            refreshForVisibleEntry()
             processPendingBookingTransition()
-            scheduleBookingStatusRefresh(immediate = true)
-            autoSelectTabWithBookings()
         }
+    }
+
+    private fun refreshForVisibleEntry() {
+        if (!hasViewBinding() || view == null) return
+        val generation = AppForegroundTracker.currentGeneration()
+        val foregroundChanged = generation != handledForegroundGeneration
+        val currentLotId = currentBookingsLotId()
+        val lotChanged = currentLotId != loadedParkingLotId
+        val mustRefresh = pendingPushRefresh ||
+            !hasLoadedBookings ||
+            foregroundChanged ||
+            lotChanged
+        if (!mustRefresh) return
+
+        val pushRefresh = pendingPushRefresh
+        val forceActiveRefresh = pushRefresh && pendingPushRequiresActiveNetwork
+        val forceHistoryRefresh = pushRefresh && pendingPushRequiresHistoryNetwork
+        pendingPushRefresh = false
+        pendingPushRequiresActiveNetwork = false
+        pendingPushRequiresHistoryNetwork = false
+        handledForegroundGeneration = generation
+        loadedParkingLotId = currentLotId
+        loadUserBookings(
+            forceActiveRefresh = forceActiveRefresh,
+            forceHistoryRefresh = forceHistoryRefresh,
+            includeHistory = !hasLoadedBookings || forceHistoryRefresh ||
+                foregroundChanged || lotChanged,
+            queueIfBusy = pushRefresh || lotChanged,
+        )
     }
 
     private fun startActiveTimerUpdates() {
@@ -297,12 +507,26 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     private fun observeBookingStatusEvents() {
         viewLifecycleOwner.lifecycleScope.launch {
             BookingStatusEvents.events.collect { event ->
-                if (!isResumed || isHidden) return@collect
-                android.util.Log.d(
-                    AD_FLOW_TAG,
-                    "push refresh requested for ${event.bookingId ?: "unknown booking"} (${event.statusHint})"
-                )
-                requestBookingStatusRefresh()
+                val terminalEvent = event.statusHint.isTerminalBookingRefreshHint()
+                val appliedLocally = applyBookingStatusHint(event)
+                if (event.cacheAlreadyRefreshed && appliedLocally) {
+                    // The coordinator already performed the one allowed active-bookings read.
+                    // Preserve the backend notification's status locally instead of fetching
+                    // history as a fourth post-mutation request.
+                    return@collect
+                }
+                if (!isResumed || isHidden) {
+                    pendingPushRefresh = true
+                    pendingPushRequiresActiveNetwork = pendingPushRequiresActiveNetwork ||
+                        !event.cacheAlreadyRefreshed
+                    pendingPushRequiresHistoryNetwork = pendingPushRequiresHistoryNetwork ||
+                        (!event.cacheAlreadyRefreshed && terminalEvent)
+                } else {
+                    requestBookingStatusRefresh(
+                        forceActiveRefresh = !event.cacheAlreadyRefreshed,
+                        forceHistoryRefresh = !event.cacheAlreadyRefreshed && terminalEvent,
+                    )
+                }
             }
         }
     }
@@ -314,15 +538,8 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             wasVisibleBooking -> null
             else -> visibleQrBookingId
         }
-        if (visible) {
-            qrRefreshGraceUntilMs = 0L
-            requestBookingStatusRefresh()
-        } else if (wasVisibleBooking) {
-            // Operators normally scan just before the user closes the pass. Keep the fast cadence
-            // through the backend's commit window instead of dropping immediately to normal polling.
-            qrRefreshGraceUntilMs = System.currentTimeMillis() + QR_DISMISS_REFRESH_GRACE_MS
-        }
-        scheduleBookingStatusRefresh()
+        // Opening or closing the pass changes how hard the watch looks, not whether it runs.
+        syncTransitionWatch()
     }
 
     private fun setupBookingQrPassResults() {
@@ -335,11 +552,6 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             if (bookingQrPassSheet?.bookingId == bookingId) bookingQrPassSheet = null
         }
 
-        childFragmentManager.setFragmentResultListener(
-            BookingQrPassBottomSheet.RESULT_KEY_HOUSE_PROMO,
-            viewLifecycleOwner
-        ) { _, _ -> showPartnerReferral() }
-
         bookingQrPassSheet = childFragmentManager.findFragmentByTag(
             BookingQrPassBottomSheet.TAG
         ) as? BookingQrPassBottomSheet
@@ -350,493 +562,174 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
 
     private fun showBookingQrPass(booking: com.gridee.parking.ui.adapters.Booking) {
         val bookingId = booking.id.trim()
-        if (bookingId.isBlank() || childFragmentManager.isStateSaved) return
+        if (!isAdded || bookingId.isBlank()) return
+        val currentViewLifecycle = viewLifecycleOwnerLiveData.value?.lifecycle ?: return
+        val fragmentManager = childFragmentManager
+        if (!currentViewLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            fragmentManager.isDestroyed || fragmentManager.isStateSaved
+        ) return
+
+        (fragmentManager.findFragmentByTag(BookingQrPassBottomSheet.TAG)
+            as? BookingQrPassBottomSheet)?.let { restored ->
+            bookingQrPassSheet = restored
+            restored.bookingId.takeIf { it.isNotBlank() }?.let { restoredBookingId ->
+                handleBookingQrVisibilityChanged(restoredBookingId, true)
+            }
+            return
+        }
         val current = bookingQrPassSheet
-        if (current?.isAdded == true) return
+        // Also covers a transaction admitted earlier on this main-loop turn but not yet observed
+        // by FragmentManager. New launches use showNow, while this protects an in-memory upgrade
+        // edge and any future asynchronous caller.
+        if (current != null && !current.isRemoving) return
 
         val sheet = BookingQrPassBottomSheet.newInstance(booking)
         bookingQrPassSheet = sheet
         handleBookingQrVisibilityChanged(bookingId, true)
-        runCatching { sheet.show(childFragmentManager, BookingQrPassBottomSheet.TAG) }
+        runCatching { sheet.showNow(fragmentManager, BookingQrPassBottomSheet.TAG) }
             .onFailure {
                 bookingQrPassSheet = null
                 handleBookingQrVisibilityChanged(bookingId, false)
-                android.util.Log.e(AD_FLOW_TAG, "Unable to open booking QR pass", it)
             }
-    }
-
-    /**
-     * The pass's house-promo rung asks for the referral sheet. It is shown on the activity's
-     * manager, exactly as MainContainerActivity does, so it is not nested inside the pass.
-     */
-    private fun showPartnerReferral() {
-        val host = activity ?: return
-        val manager = host.supportFragmentManager
-        if (manager.isStateSaved) return
-        if (manager.findFragmentByTag(
-                com.gridee.parking.ui.bottomsheet.PartnerReferralBottomSheet.TAG
-            ) != null
-        ) {
-            return
-        }
-        com.gridee.parking.ui.bottomsheet.PartnerReferralBottomSheet().show(
-            manager,
-            com.gridee.parking.ui.bottomsheet.PartnerReferralBottomSheet.TAG
-        )
     }
 
     private fun dismissBookingQrPass(bookingId: String) {
-        bookingQrPassSheet
-            ?.takeIf { it.bookingId == bookingId }
-            ?.dismissAllowingStateLoss()
+        val sheet = bookingQrPassSheet?.takeIf { it.bookingId == bookingId } ?: return
+        val fragmentManager = childFragmentManager
+        if (fragmentManager.isDestroyed || fragmentManager.isStateSaved || !sheet.isAdded) return
+        sheet.dismiss()
     }
 
-    private fun requestBookingStatusRefresh() {
-        if (bookingsLoadJob?.isActive == true) {
-            refreshAfterCurrentLoad = true
-            return
-        }
-        loadUserBookings(showRefreshIndicator = false)
-    }
-
-    private fun shouldAutoRefreshBookingStatus(): Boolean {
-        if (!hasViewBinding() || view == null || !isResumed || isHidden) return false
-        return userBookings.any {
-            val status = mapBackendStatus(it.status)
-            status == BookingStatus.PENDING || status == BookingStatus.ACTIVE
-        }
-    }
-
-    private fun scheduleBookingStatusRefresh(immediate: Boolean = false) {
-        bookingStatusRefreshHandler.removeCallbacks(bookingStatusRefreshRunnable)
-        if (!shouldAutoRefreshBookingStatus()) return
-        val delay = when {
-            immediate -> 0L
-            visibleQrBookingId != null || System.currentTimeMillis() < qrRefreshGraceUntilMs -> {
-                QR_VISIBLE_REFRESH_INTERVAL_MS
-            }
-            else -> BOOKING_STATUS_REFRESH_INTERVAL_MS
-        }
-        bookingStatusRefreshHandler.postDelayed(bookingStatusRefreshRunnable, delay)
-    }
-
-    private fun stopBookingStatusRefresh() {
-        bookingStatusRefreshHandler.removeCallbacks(bookingStatusRefreshRunnable)
-    }
-
-    private fun setupSegmentedControl() {
-        val container = binding.segmentedControlContainer
-        val segments = listOf(
-            container.segmentActive to BookingStatus.ACTIVE,
-            container.segmentPending to BookingStatus.PENDING
-        )
-
-        segments.forEach { (segmentView, status) ->
-            segmentView.setOnClickListener {
-                handleSegmentSelection(status)
-            }
-        }
-
-        setupSliderDragGesture()
-
-        // The destination tab is settled before any pill work is scheduled. A caller-supplied
-        // destination (Done -> Booked) arrives before this control has been laid out, so
-        // scheduling for the default tab first would leave a stale hop racing this one.
-        applyPendingNavigationIfReady()
-
-        updateSegmentVisualState()
-        container.segmentGroup.doOnLayout { positionSliderInstantly() }
-    }
-
-    private fun updateSegmentVisualState() {
-        val container = binding.segmentedControlContainer
-        val selectedStatus = currentTab
-        val isActive = selectedStatus == BookingStatus.ACTIVE
-        val isPending = selectedStatus == BookingStatus.PENDING
-
-        // Animate the previously selected segment out
-        val segments = listOf(
-            container.segmentActive to isActive,
-            container.segmentPending to isPending
-        )
-
-        segments.forEach { (segment, shouldBeSelected) ->
-            if (segment.isSelected != shouldBeSelected) {
-                // Animate selection change
-                if (shouldBeSelected) {
-                    // Animate in
-                    animateSegmentIn(segment)
-                } else {
-                    // Animate out
-                    animateSegmentOut(segment)
-                }
-                segment.isSelected = shouldBeSelected
-            }
-        }
-
-        sliderGeneration++
-        animateSegmentSlider()
-    }
-
-    private fun getSegmentView(status: BookingStatus): View {
-        val container = binding.segmentedControlContainer
-        return when (status) {
-            BookingStatus.ACTIVE -> container.segmentActive
-            BookingStatus.PENDING -> container.segmentPending
-            else -> container.segmentActive
-        }
-    }
-
-    // Position the slider within the track padding.
-    private fun positionSliderInstantly(generation: Int = sliderGeneration) {
-        if (generation != sliderGeneration) return
-        if (!hasViewBinding() || view == null) return
-        val container = binding.segmentedControlContainer
-        val slider = container.segmentSlider ?: return
-        val root = container.segmentContainer ?: return // FRAME LAYOUT ROOT
-        val targetStatus = currentTab
-        val targetSegment = getSegmentView(targetStatus)
-
-        if (targetSegment.width == 0 || !root.isLaidOut) {
-            // doOnNextLayout, not doOnLayout: the latter runs inline when the root is already
-            // laid out, which recurses without end while a segment still measures to zero.
-            root.doOnNextLayout { positionSliderInstantly(generation) }
-            return
-        }
-
-        cancelSliderAnimations()
-
-        // Match the slider to the segment width; container padding provides the inset.
-        val params = slider.layoutParams
-        params.width = targetSegment.width
-        slider.layoutParams = params
-
-        // Align the slider with the target segment inside the padded track.
-        slider.translationX = calculateSliderTargetX(targetSegment)
-
-        slider.visibility = View.VISIBLE
-        updateSegmentLabelsForSlider(selectedStatusOverride = targetStatus)
-    }
-
-    private fun cancelSliderAnimations() {
-        sliderSpring?.cancel()
-        sliderSpring = null
-        sliderWidthAnimator?.cancel()
-        sliderWidthAnimator = null
-    }
-
-    private fun calculateSliderTargetX(targetSegment: View): Float {
-        return targetSegment.left.toFloat()
-    }
-
-    private fun animateSegmentSlider(generation: Int = sliderGeneration) {
-        if (generation != sliderGeneration) return
-        if (isSliderDragging || !hasViewBinding() || view == null) return
-        val container = binding.segmentedControlContainer
-        val slider = container.segmentSlider ?: return
-        val root = container.segmentContainer ?: return
-        val targetStatus = currentTab
-        val targetSegment = getSegmentView(targetStatus)
-
-        if (!targetSegment.isLaidOut || !root.isLaidOut || !slider.isLaidOut) {
-            root.doOnNextLayout { animateSegmentSlider(generation) }
-            return
-        }
-
-        val targetWidth = targetSegment.width
-        val targetX = calculateSliderTargetX(targetSegment)
-
-        if (slider.visibility != View.VISIBLE) {
-            positionSliderInstantly(generation)
-            return
-        }
-
-        // A spring from an earlier selection can still be running; two live springs would both
-        // drive translationX and the pill would settle wherever the slower one finished.
-        cancelSliderAnimations()
-
-        // Use Spring Animation for "Liquid" feel
-        val springAnim = SpringAnimation(slider, DynamicAnimation.TRANSLATION_X, targetX).apply {
-            spring = SpringForce(targetX).apply {
-                dampingRatio = SpringForce.DAMPING_RATIO_NO_BOUNCY
-                stiffness = SpringForce.STIFFNESS_LOW
-            }
-        }
-        sliderSpring = springAnim
-
-        // Also animate width if needed
-        if (slider.width != targetWidth) {
-            sliderWidthAnimator = ValueAnimator.ofInt(slider.width, targetWidth).apply {
-                addUpdateListener { animator ->
-                    val params = slider.layoutParams
-                    params.width = animator.animatedValue as Int
-                    slider.layoutParams = params
-                }
-                duration = 250
-                start()
-            }
-        }
-
-        springAnim.addUpdateListener { _, _, _ ->
-            updateSegmentLabelsForSlider(
-                selectedStatusOverride = targetStatus,
-                allowPostLayout = false
-            )
-        }
-        springAnim.addEndListener { _, _, _, _ ->
-            if (sliderSpring === springAnim) sliderSpring = null
-            // Emphasis is interpolated from the pill's pixel distance while it travels, so a
-            // spring that is cancelled part-way would leave the wrong label bold. Settle the
-            // labels on the committed tab once motion is over.
-            if (generation == sliderGeneration && hasViewBinding() && view != null) {
-                updateSegmentLabelsForSlider(selectedStatusOverride = currentTab)
-            }
-        }
-
-        springAnim.start()
-    }
-
-    private fun updateSegmentLabelsForSlider(
-        sliderCenterOverride: Float? = null,
-        selectedStatusOverride: BookingStatus? = null,
-        allowPostLayout: Boolean = true
+    private fun requestBookingStatusRefresh(
+        forceActiveRefresh: Boolean = true,
+        forceHistoryRefresh: Boolean = false,
     ) {
-        val container = binding.segmentedControlContainer
-        val slider = container.segmentSlider ?: return
-        val root = container.segmentContainer ?: return
-
-        val needsLayout = !root.isLaidOut ||
-            slider.width == 0 ||
-            container.segmentActive.width == 0 ||
-            container.segmentPending.width == 0
-
-        if (needsLayout) {
-            if (allowPostLayout) {
-                root.doOnLayout {
-                    updateSegmentLabelsForSlider(
-                        sliderCenterOverride,
-                        selectedStatusOverride,
-                        false
-                    )
-                }
-            }
-            return
-        }
-
-        val sliderCenter = sliderCenterOverride ?: (slider.translationX + slider.width / 2f)
-        val selection = selectedStatusOverride ?: currentTab
-
-        val segments = listOf(
-            Quad(BookingStatus.ACTIVE, container.segmentActive, container.textActive, "textActiveBold"),
-            Quad(BookingStatus.PENDING, container.segmentPending, container.textPending, "textPendingBold")
+        loadUserBookings(
+            forceActiveRefresh = forceActiveRefresh,
+            forceHistoryRefresh = forceHistoryRefresh,
+            includeHistory = forceHistoryRefresh,
+            queueIfBusy = true,
         )
+    }
 
-        // Remove unused color defs if strict, but kept for safety
+    private fun String.isTerminalBookingRefreshHint(): Boolean {
+        val normalized = trim().uppercase(Locale.ROOT)
+        return normalized.contains("CHECKED_OUT") ||
+            normalized.contains("CHECKOUT") ||
+            normalized.contains("COMPLET") ||
+            normalized.contains("CANCEL") ||
+            normalized.contains("ENDED") ||
+            normalized.contains("EXPIRED")
+    }
 
-        segments.forEach { segmentTriple ->
-            val status = segmentTriple.first
-            val segment = segmentTriple.second
-            val label = segmentTriple.third
-            val width = segment.width
-            if (width == 0) return@forEach
-
-            val segmentLeft = segment.left.toFloat()
-            val segmentCenter = segmentLeft + width / 2f
-
-            val boldTag = segmentTriple.fourth
-            val boldLabel = if (segment.tag is View) segment.tag as TextView else segment.findViewWithTag<TextView>(boldTag)?.also { segment.tag = it }
-
-            val distance = abs(sliderCenter - segmentCenter)
-            val influenceRadius = (width * 0.9f).coerceAtLeast(1f)
-            val emphasis = (1f - (distance / influenceRadius)).coerceIn(0f, 1f)
-
-            // Cross-fade Alpha
-            // Medium Label (Unselected) fades OUT as emphasis increases
-            label.alpha = 1f - emphasis
-
-            // Bold Label (Selected) fades IN as emphasis increases
-            boldLabel?.alpha = emphasis
-
-            // Ensure visibility (optimization)
-            if (label.alpha > 0) label.visibility = View.VISIBLE else label.visibility = View.INVISIBLE
-            if ((boldLabel?.alpha ?: 0f) > 0) boldLabel?.visibility = View.VISIBLE else boldLabel?.visibility = View.INVISIBLE
-
-            label.isSelected = status == selection
+    /** Applies a backend push hint only to an already-known booking; unknown rows are read from cache. */
+    private fun applyBookingStatusHint(event: BookingStatusEvents.Event): Boolean {
+        val bookingId = event.bookingId ?: return false
+        val existing = userBookings.firstOrNull { it.id == bookingId } ?: return false
+        val canonicalStatus = when {
+            event.statusHint.contains("CANCEL", ignoreCase = true) -> "cancelled"
+            event.statusHint.isTerminalBookingRefreshHint() -> "completed"
+            event.statusHint.contains("ACTIVE", ignoreCase = true) ||
+                event.statusHint.contains("CHECK_IN", ignoreCase = true) ||
+                event.statusHint.contains("CHECKIN", ignoreCase = true) -> "active"
+            else -> event.statusHint
         }
-    }
-
-    private fun animateSegmentIn(segment: View) {
-        val scaleX = ObjectAnimator.ofFloat(segment, "scaleX", 0.98f, 1.0f)
-        val scaleY = ObjectAnimator.ofFloat(segment, "scaleY", 0.98f, 1.0f)
-        val alpha = ObjectAnimator.ofFloat(segment, "alpha", 0.7f, 1.0f)
-
-        val animatorSet = AnimatorSet()
-        animatorSet.playTogether(scaleX, scaleY, alpha)
-        animatorSet.duration = 200
-        animatorSet.interpolator = DecelerateInterpolator()
-        animatorSet.start()
-    }
-
-    private fun animateSegmentOut(segment: View) {
-        val scaleX = ObjectAnimator.ofFloat(segment, "scaleX", 1.0f, 0.98f)
-        val scaleY = ObjectAnimator.ofFloat(segment, "scaleY", 1.0f, 0.98f)
-        val alpha = ObjectAnimator.ofFloat(segment, "alpha", 1.0f, 0.85f)
-
-        val animatorSet = AnimatorSet()
-        animatorSet.playTogether(scaleX, scaleY, alpha)
-        animatorSet.duration = 200
-        animatorSet.interpolator = DecelerateInterpolator()
-        animatorSet.start()
-    }
-
-    private fun setupSliderDragGesture() {
-        val container = binding.segmentedControlContainer
-        container.segmentContainer.setOnTouchListener { view, event ->
-            val slider = container.segmentSlider ?: return@setOnTouchListener false
-            if (!slider.isShown || slider.width == 0) {
-                return@setOnTouchListener false
-            }
-            val localX = event.x - view.paddingLeft
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    val sliderStart = slider.translationX
-                    val sliderEnd = sliderStart + slider.width
-                    val withinSlider = localX in sliderStart..sliderEnd
-                    if (withinSlider) {
-                        isSliderDragging = true
-                        sliderDragOffset = localX - sliderStart
-                        view.parent?.requestDisallowInterceptTouchEvent(true)
-                        true
-                    } else {
-                        isSliderDragging = false
-                        false
-                    }
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    if (!isSliderDragging) return@setOnTouchListener false
-                    val desiredTranslation = localX - sliderDragOffset
-                    slider.translationX = clampSliderTranslation(desiredTranslation, view, slider)
-                    updateSegmentLabelsForSlider()
-                    true
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (!isSliderDragging) return@setOnTouchListener false
-                    isSliderDragging = false
-                    view.parent?.requestDisallowInterceptTouchEvent(false)
-                    val status = determineNearestStatus(slider)
-                    handleSegmentSelection(status)
-                    true
-                }
-                else -> false
-            }
-        }
-    }
-
-    private fun clampSliderTranslation(desiredTranslation: Float, root: View, slider: View): Float {
-        val min = 0f
-        val max = (root.width - root.paddingLeft - root.paddingRight - slider.width).toFloat()
-        return desiredTranslation.coerceIn(min, max.coerceAtLeast(min))
-    }
-
-    private fun determineNearestStatus(slider: View): BookingStatus {
-        val sliderCenter = slider.translationX + slider.width / 2f
-        val container = binding.segmentedControlContainer
-        val centers = listOf(
-            BookingStatus.ACTIVE to container.segmentActive,
-            BookingStatus.PENDING to container.segmentPending
-        )
-        return centers.minByOrNull { (_, view) ->
-             // View left is relative to the segment group; sliderCenter is in the same local coordinates.
-             abs(sliderCenter - (view.left + view.width / 2f))
-        }?.first ?: currentTab
+        val oldAdStatus = bookingAdStatus(existing.status)
+        val updated = existing.copy(status = canonicalStatus)
+        applyUpdatedBooking(updated)
+        BookingAdTransitionDetector.detect(
+            previous = mapOf(bookingId to oldAdStatus),
+            current = mapOf(bookingId to bookingAdStatus(canonicalStatus)),
+        ).forEach(::queueBookingTransitionAd)
+        return true
     }
 
     override fun onDestroyView() {
-        if (::bookingsAdapter.isInitialized) {
-            bookingsAdapter.dismissVisibleBookingQrDialog()
-        }
+        skeletonAnimator?.cancel()
+        skeletonAnimator = null
+        skeletonShowing = false
+        stopTransitionWatch()
+        // Nothing is left to notice a transition, so nothing should still be requesting ads for
+        // one. Restarted by the first sync after the view comes back.
+        com.gridee.parking.utils.AdMobManager.stopBookingInterstitialWarmUp()
         bookingQrPassSheet = null
         visibleQrBookingId = null
         stopActiveTimerUpdates()
-        stopBookingStatusRefresh()
-        cancelSliderAnimations()
         toggleBackgroundBlur(false)
         super.onDestroyView()
     }
 
-    private fun showBookingsForStatus(status: BookingStatus) {
-        // Reached from coroutine continuations that resume on Main.immediate during view
-        // teardown (config change / process death). At that point the binding is already
-        // null, so bail instead of dereferencing it — the list re-renders on the next
-        // onViewCreated from the cached userBookings.
+    /**
+     * The whole screen, rendered from one list. Active and Booked live on the same rail now,
+     * so there is nothing to filter by and nothing to switch between.
+     *
+     * Reached from coroutine continuations that resume on Main.immediate during view teardown
+     * (config change / process death). At that point the binding is already null, so bail
+     * instead of dereferencing it — the list re-renders on the next onViewCreated from the
+     * cached userBookings.
+     */
+    private fun renderBookings() {
         if (!hasViewBinding()) return
-        val sortedBookings = sortBookings(userBookings.filter { mapBackendStatus(it.status) == status })
+        val live = liveBookings()
+        getUserId()?.let { userId ->
+            BookingsSkeletonHint.remember(
+                requireContext(),
+                userId,
+                when {
+                    live.isEmpty() -> BookingsSkeletonHint.Expected.NOTHING
+                    live.any { mapBackendStatus(it.status) == BookingStatus.ACTIVE } ->
+                        BookingsSkeletonHint.Expected.LIVE
+                    else -> BookingsSkeletonHint.Expected.BOOKED
+                }
+            )
+        }
 
-        if (sortedBookings.isEmpty()) {
-            // Show empty state
+        if (live.isEmpty()) {
             binding.rvBookings.visibility = View.GONE
             binding.layoutEmptyState.visibility = View.VISIBLE
-
-            // Update empty state text based on status
-            when (status) {
-                BookingStatus.ACTIVE -> {
-                    binding.tvEmptyTitle.text = getString(R.string.no_active_bookings_2)
-                    binding.tvEmptySubtitle.text = getString(R.string.your_active_parking_bookings_will_appear)
-                }
-                BookingStatus.PENDING -> {
-                    binding.tvEmptyTitle.text = getString(R.string.no_booked_bookings_2)
-                    binding.tvEmptySubtitle.text = getString(R.string.your_booked_parking_reservations_will_appear)
-                }
-                else -> {
-                    binding.tvEmptyTitle.text = getString(R.string.no_bookings)
-                    binding.tvEmptySubtitle.text = getString(R.string.your_bookings_will_appear_here)
-                }
-            }
-        } else {
-            // Show bookings list
-            binding.rvBookings.visibility = View.VISIBLE
-            binding.layoutEmptyState.visibility = View.GONE
-
-            // Convert to UI bookings before updating adapter
-            val uiBookings = sortedBookings.map { convertToBooking(it) }
-            updateAdapterWithBookings(uiBookings)
+            binding.tvEmptyTitle.text = getString(R.string.empty_bookings_title)
+            binding.tvEmptySubtitle.text = getString(R.string.empty_bookings_body)
+            // Nothing left that can move, so the watch stops paying for itself.
+            syncTransitionWatch()
+            hideSkeleton()
+            return
         }
+
+        binding.rvBookings.visibility = View.VISIBLE
+        binding.layoutEmptyState.visibility = View.GONE
+        updateAdapterWithBookings(live.map { convertToBooking(it) })
+        syncTransitionWatch()
+        hideSkeleton()
     }
 
     /**
-     * Opens the screen on a tab that actually has something on it.
+     * What the tab shows: the booking in progress, and nothing else.
      *
-     * The control was hard-wired to Active, so a user whose only booking was still Booked
-     * landed on an empty list and had to work out for themselves that the other tab held it.
+     * A booking leaves this tab the moment it ends. Cancelled, checked out or missed, it goes
+     * to Booking History under Profile — that is where it lives and where the app already
+     * renders it properly — and the tab falls back to its empty state, which points at Home.
      *
-     * The rule is deliberately one-directional: this only ever moves *off* an empty tab, so it
-     * can never pull the screen away from a list somebody is reading, and it stands down
-     * completely once [tabPinnedByUser] says the tab was chosen rather than defaulted to.
-     * Active wins when both have bookings — a session already running is the more urgent of
-     * the two.
-     *
-     * Returns true when the tab moved, so the caller can skip the render it was about to do
-     * for the tab that is no longer showing.
+     * This briefly showed a receipt for a just-finished booking, with "View history" and "Book
+     * again" on it. It was cut: the tab is for the booking you are in the middle of, and a
+     * receipt with a 30-minute half-life is a second, weaker copy of a screen that already
+     * exists.
      */
-    private fun autoSelectTabWithBookings(): Boolean {
-        if (tabPinnedByUser || !hasViewBinding()) return false
-        if (visibleBookingCount(currentTab) > 0) return false
-
-        val target = when {
-            visibleBookingCount(BookingStatus.ACTIVE) > 0 -> BookingStatus.ACTIVE
-            visibleBookingCount(BookingStatus.PENDING) > 0 -> BookingStatus.PENDING
-            else -> return false
+    private fun liveBookings(): List<BackendBooking> = sortBookings(
+        displayBookings().filter { booking ->
+            val status = mapBackendStatus(booking.status)
+            status == BookingStatus.ACTIVE || status == BookingStatus.PENDING
         }
-        if (target == currentTab) return false
+    )
 
-        android.util.Log.d("BookingsFragment", "auto-selecting $target: $currentTab has nothing to show")
-        handleSegmentSelection(target, userTriggered = false)
-        return true
-    }
-
-    /** What [showBookingsForStatus] would put on screen for [status], counted rather than built. */
-    private fun visibleBookingCount(status: BookingStatus): Int {
-        return userBookings.count { mapBackendStatus(it.status) == status }
+    /**
+     * The list as the screen renders it: the real bookings, plus [DebugSampleBookings] when the
+     * debug samples are switched on. Everything that talks to the backend — the notification,
+     * the ad-transition baseline, cancel — keeps reading [userBookings] directly, so the fakes
+     * stay purely a rendering concern.
+     */
+    private fun displayBookings(): List<BackendBooking> {
+        if (!DebugSampleBookings.isOn) return userBookings
+        return userBookings + DebugSampleBookings.bookings()
     }
 
     /** Newest first — the only order this screen has ever shipped. */
@@ -850,30 +743,8 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             ?: abs(booking.id?.hashCode() ?: 0).toLong()
     }
 
-    /**
-     * Sync the sticky-header fog and segmented-control elevation to the
-     * recyclerview's current scroll offset. Driven by [onScrolled] during
-     * scrolls, and called manually after data updates / tab switches /
-     * refreshes — those reset the list to top without firing [onScrolled],
-     * so the fog would otherwise stay opaque over an already-at-top list.
-     */
-    private fun syncStickyHeaderState() {
-        if (view == null) return
-        val offset = binding.rvBookings.computeVerticalScrollOffset()
-        val fogAlpha = (offset / dpToPx(60f)).coerceIn(0f, 1f)
-        binding.viewFogOverlay.alpha = fogAlpha
-        val elevation = dpToPx(4f) * (offset / dpToPx(40f)).coerceIn(0f, 1f)
-        binding.segmentedControlContainer.segmentContainer?.elevation = elevation
-    }
-
     private fun updateAdapterWithBookings(bookings: List<Booking>) {
-        android.util.Log.d("BookingsFragment", "updateAdapterWithBookings called with ${bookings.size} bookings")
-        bookingsAdapter.updateBookings(bookings)
-        binding.rvBookings.post {
-            if (hasViewBinding() && view != null) {
-                syncStickyHeaderState()
-            }
-        }
+        railAdapter.submit(bookings)
 
         pendingHighlightBookingId?.let { highlightId ->
             val index = bookings.indexOfFirst { it.id == highlightId }
@@ -893,7 +764,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             if (booking != null) {
                 binding.rvBookings.post {
                     if (hasViewBinding() && view != null) {
-                        showBookingDetails(booking)
+                        showBookingQrPass(booking)
                     }
                 }
                 pendingOpenBookingId = null
@@ -901,46 +772,57 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         }
     }
 
-    private fun loadUserBookings(showRefreshIndicator: Boolean = true) {
+    private fun loadUserBookings(
+        forceActiveRefresh: Boolean = false,
+        forceHistoryRefresh: Boolean = false,
+        includeHistory: Boolean = true,
+        queueIfBusy: Boolean = false,
+    ) {
         if (!hasViewBinding() || view == null) return
         if (bookingsLoadJob?.isActive == true) {
-            if (!showRefreshIndicator) refreshAfterCurrentLoad = true
+            if (queueIfBusy) {
+                refreshAfterCurrentLoad = true
+                forceActiveRefreshAfterCurrentLoad =
+                    forceActiveRefreshAfterCurrentLoad || forceActiveRefresh
+                forceHistoryRefreshAfterCurrentLoad =
+                    forceHistoryRefreshAfterCurrentLoad || forceHistoryRefresh
+                includeHistoryAfterCurrentLoad = includeHistoryAfterCurrentLoad || includeHistory
+            }
             return
         }
-
-        if (showRefreshIndicator) setRefreshing(true)
 
         val userId = getUserId()
         if (userId == null) {
             showToast(getString(R.string.please_login_to_view_your_bookings))
             userBookings.clear()
             updateActiveBookingNotification(emptyList())
-            if (showRefreshIndicator) setRefreshing(false)
-            showBookingsForStatus(currentTab)
+            renderBookings()
             return
         }
+        val requestedLotId = currentBookingsLotId()
 
         bookingsLoadJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
-                // Load parking lots and spots cache first
-                if (!isCacheLoaded) {
-                    loadParkingDataCache()
-                }
-
                 // Get active/pending + history bookings from backend using robust repository parsing.
-                val primaryResult = bookingRepository.getUserBookings()
-                val historyResult = bookingRepository.getUserBookingHistory()
-                primaryResult.exceptionOrNull()?.let { error ->
-                    android.util.Log.e("BookingsFragment", "Failed loading current bookings: ${error.message}")
-                }
-                historyResult.exceptionOrNull()?.let { error ->
-                    android.util.Log.e("BookingsFragment", "Failed loading booking history: ${error.message}")
+                val primaryResult = bookingRepository.getUserBookings(forceActiveRefresh)
+                val historyResult = if (includeHistory) {
+                    bookingRepository.getUserBookingHistory(forceHistoryRefresh)
+                } else {
+                    Result.success(
+                        userBookings.filter { booking ->
+                            mapBackendStatus(booking.status) !in setOf(
+                                BookingStatus.ACTIVE,
+                                BookingStatus.PENDING,
+                            )
+                        }
+                    )
                 }
                 if (primaryResult.isFailure && historyResult.isFailure) {
                     throw primaryResult.exceptionOrNull()
                         ?: historyResult.exceptionOrNull()
                         ?: IllegalStateException("Booking refresh failed")
                 }
+                if (currentBookingsLotId() != requestedLotId) return@launch
 
                 val fetchedBookings = mergeBookings(
                     primaryResult.getOrDefault(emptyList()),
@@ -954,53 +836,67 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
                 } else {
                     mergeBookingSnapshots(userBookings, fetchedBookings)
                 }
+                loadParkingDataCache(mergedBookings)
+                if (currentBookingsLotId() != requestedLotId) return@launch
                 val detectedTransitions = detectBookingAdTransitions(mergedBookings)
                 userBookings.clear()
 
                 if (mergedBookings.isNotEmpty()) {
                     userBookings.addAll(mergedBookings)
-
-                    mergedBookings.forEach { booking ->
-                        android.util.Log.d(
-                            "BookingsFragment",
-                            "Raw booking status from backend: '${booking.status}' mapped to ${mapBackendStatus(booking.status)}"
-                        )
-                    }
                 }
 
                 updateActiveBookingNotification(mergedBookings)
+                hasLoadedBookings = true
                 detectedTransitions.forEach(::queueBookingTransitionAd)
+                // After the queueing, never before it. Check-out and cancellation stop the
+                // booking being watchable in the very same pass that queues its ad, so syncing
+                // first would tear the warm buffer down microseconds before the ad that needs it.
+                // The render that would otherwise sync this is held back below while one is owed.
+                syncTransitionAdWarmUp()
+                // Held back while a transition ad is still owed: the interstitial's terminal
+                // callback re-renders, and painting the new state behind the ad would reveal it
+                // twice.
                 if (!hasUnfinishedBookingTransition()) {
-                    // This is the first point at which the tabs are known to be empty or not,
-                    // so it is where the landing tab gets decided. The hop renders the list
-                    // itself, hence the else.
-                    if (!autoSelectTabWithBookings()) {
-                        showBookingsForStatus(currentTab)
-                    }
+                    renderBookings()
                 }
 
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) {
-                android.util.Log.e("BookingsFragment", "Error loading bookings", e)
+            } catch (_: Exception) {
+                if (currentBookingsLotId() != requestedLotId) return@launch
                 // Keep the last verified state during a transient garage/network failure. Clearing
                 // it would hide the QR and stop the bounded retry loop at exactly the wrong time.
-                showBookingsForStatus(currentTab)
+                renderBookings()
             } finally {
-                if (showRefreshIndicator) setRefreshing(false)
                 bookingsLoadJob = null
                 processPendingBookingTransition()
 
                 val shouldRefreshAgain = refreshAfterCurrentLoad
+                val shouldForceActiveRefreshAgain = forceActiveRefreshAfterCurrentLoad
+                val shouldForceHistoryRefreshAgain = forceHistoryRefreshAfterCurrentLoad
+                val shouldIncludeHistoryAgain = includeHistoryAfterCurrentLoad
                 refreshAfterCurrentLoad = false
+                forceActiveRefreshAfterCurrentLoad = false
+                forceHistoryRefreshAfterCurrentLoad = false
+                includeHistoryAfterCurrentLoad = false
                 if (shouldRefreshAgain && hasViewBinding() && view != null) {
-                    binding.root.post { loadUserBookings(showRefreshIndicator = false) }
-                } else {
-                    scheduleBookingStatusRefresh()
+                    binding.root.post {
+                        loadUserBookings(
+                            forceActiveRefresh = shouldForceActiveRefreshAgain,
+                            forceHistoryRefresh = shouldForceHistoryRefreshAgain,
+                            includeHistory = shouldIncludeHistoryAgain,
+                            queueIfBusy = false
+                        )
+                    }
                 }
             }
         }
     }
+
+    private fun currentBookingsLotId(): String? =
+        AuthSession.getParkingLotId(requireContext())
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
 
     /**
      * The previously seen statuses are the baseline. They are persisted, because the operator
@@ -1020,7 +916,6 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         // A failed or partial fetch must not be mistaken for "every booking disappeared", which
         // would wipe the baseline and swallow the next transition.
         if (current.isEmpty()) {
-            android.util.Log.d(AD_FLOW_TAG, "no bookings in this fetch; baseline left untouched")
             return emptyList()
         }
 
@@ -1029,20 +924,9 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         val merged = if (previous == null) current else previous + current
         observedAdStatuses = merged
         BookingAdTransitionStore.save(context, userId, merged.mapValues { it.value.name })
-        android.util.Log.d(
-            AD_FLOW_TAG,
-            "statuses now=$current previous=${previous ?: "<none: first snapshot, no ad this pass>"}"
-        )
         if (previous == null) return emptyList()
 
-        return BookingAdTransitionDetector.detect(previous, current).also { transitions ->
-            transitions.forEach { transition ->
-                android.util.Log.d(
-                    AD_FLOW_TAG,
-                    "transition detected: ${transition.bookingId} -> ${transition.target.name}"
-                )
-            }
-        }
+        return BookingAdTransitionDetector.detect(previous, current)
     }
 
     private fun loadPersistedAdStatuses(
@@ -1088,7 +972,6 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         ) {
             return
         }
-        android.util.Log.d(AD_FLOW_TAG, "queued ${candidate.eventKey}")
         pendingAdTransitions.addLast(candidate)
         processPendingBookingTransition()
     }
@@ -1098,9 +981,19 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
     }
 
     /**
-     * The transition is held until this tab is actually in front. MainContainerActivity keeps the
-     * fragment added and refreshing while it is hidden, and an interstitial fired from there would
-     * land on top of whatever tab the user is really looking at.
+     * The transition is held only while the app itself is not in front.
+     *
+     * It used to be held unless the bookings tab was the visible one, on the reasoning that an
+     * interstitial fired from a hidden fragment lands on top of whatever tab the user is really
+     * looking at. But the check-in is not something the user did on a tab — an operator can
+     * check a car in off its number plate while the user is anywhere in the app — and holding
+     * the ad meant the booking silently stayed Booked until they wandered back to the tab.
+     * Landing on top of whatever they are looking at IS the behaviour: it is a response to
+     * their car being let in, not to a tap.
+     *
+     * isResumed is the gate that still matters, and it is doing real work: it goes false when
+     * MainContainerActivity is paused, so nothing fires over the top-up flow, support chat,
+     * booking details, or a backgrounded app.
      *
      * Navigation is completed from AdMobManager's terminal callback. That callback also fires for
      * no-fill, disabled ads, load timeout, and show failure, so monetisation can never strand the
@@ -1122,11 +1015,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             return
         }
 
-        if (!isResumed || isHidden || !hasViewBinding()) {
-            android.util.Log.d(
-                AD_FLOW_TAG,
-                "holding ${pending.eventKey}: tab not in front (resumed=$isResumed hidden=$isHidden)"
-            )
+        if (!isResumed || !hasViewBinding()) {
             return
         }
         val host = activity ?: return
@@ -1135,48 +1024,143 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
 
         // The operator has already consumed this pass. Remove it before presenting the full-screen
         // ad so the stale QR is never revealed again when the ad closes.
-        if (::bookingsAdapter.isInitialized) {
-            bookingsAdapter.dismissBookingQrDialog(pending.bookingId)
-        }
         dismissBookingQrPass(pending.bookingId)
 
-        android.util.Log.d(AD_FLOW_TAG, "handing ${pending.eventKey} to AdMobManager")
         com.gridee.parking.utils.AdMobManager.showBookingTransitionInterstitial(
             host,
             pending.bookingId,
             pending.target.name
-        ) { outcome ->
+        ) {
             if (activeAdTransition?.eventKey != pending.eventKey) return@showBookingTransitionInterstitial
-            android.util.Log.d(AD_FLOW_TAG, "${pending.eventKey} completed with $outcome")
             activeAdTransition = null
             applyBookingTransitionDestination(pending)
             processPendingBookingTransition()
         }
     }
 
+    /**
+     * Where the interstitial hands back to. There is no tab to switch to any more — the rail
+     * already shows every stop — so the destination is simply the re-render, scrolled to the
+     * booking that moved.
+     */
     private fun applyBookingTransitionDestination(transition: PendingAdTransition) {
-        qrRefreshGraceUntilMs = 0L
-        when (transition.target) {
-            BookingAdTarget.ACTIVE -> {
-                currentTab = BookingStatus.ACTIVE
-                // The booking just started; this destination is the point of the transition.
-                tabPinnedByUser = true
-                if (hasViewBinding()) {
-                    updateSegmentVisualState()
-                    showBookingsForStatus(BookingStatus.ACTIVE)
-                    binding.rvBookings.post {
-                        if (hasViewBinding() && bookingsAdapter.itemCount > 0) {
-                            binding.rvBookings.scrollToPosition(0)
-                        }
-                    }
+        if (!hasViewBinding()) return
+        renderBookings()
+        if (transition.target == BookingAdTarget.ACTIVE) {
+            binding.rvBookings.post {
+                if (hasViewBinding() && railAdapter.itemCount > 0) {
+                    binding.rvBookings.scrollToPosition(0)
                 }
             }
-            BookingAdTarget.COMPLETED,
-            BookingAdTarget.CANCELLED -> {
-                if (hasViewBinding()) showBookingsForStatus(currentTab)
+        }
+    }
+
+    /**
+     * The guard on the card's cancel row. It restates what is being cancelled — a confirmation
+     * that names nothing is one people learn to tap through — and gives the way out the wider,
+     * calmer button of the two.
+     */
+    private fun showCancelConfirmation(booking: Booking) {
+        if (!isAdded) return
+        if (booking.id in cancellingBookingIds) {
+            showToast("Cancellation is already processing")
+            return
+        }
+        val dialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme)
+        val sheet = BottomSheetCancelBookingBinding.inflate(layoutInflater)
+        dialog.setContentView(sheet.root)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        sheet.textCancelSpot.text = booking.spotName
+        val from = booking.scheduledStartTime.ifBlank { booking.startTime }
+        sheet.textCancelWhen.text = listOf(from, booking.endTime)
+            .filter { it.isNotBlank() && !it.equals("TBD", ignoreCase = true) }
+            .joinToString(" – ") { it.uppercase(Locale.getDefault()) }
+        sheet.textCancelAmount.text = booking.amount
+        sheet.coinCancelAmount.visibility =
+            if (booking.amount.isBlank()) View.GONE else View.VISIBLE
+        sheet.textCancelBody.text = getString(R.string.cancel_sheet_body_policy_loading)
+
+        val lotId = userBookings.firstOrNull { it.id == booking.id }
+            ?.lotId
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+        if (lotId == null) {
+            sheet.textCancelBody.text = getString(R.string.cancel_sheet_body_policy_unavailable)
+        } else {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val response = runCatching { parkingRepository.getBookingPolicy(lotId) }.getOrNull()
+                if (!dialog.isShowing || !isAdded) return@launch
+                val policy = response?.body()
+                    ?.takeIf { response.isSuccessful }
+                    ?.let { runCatching { BookingPolicyResolver.resolve(it) }.getOrNull() }
+                sheet.textCancelBody.text = when {
+                    policy == null -> getString(R.string.cancel_sheet_body_policy_unavailable)
+                    !policy.bookingChargeRequired -> getString(R.string.cancel_sheet_body_free_booking)
+                    policy.isNoRefund -> getString(R.string.cancel_sheet_body_no_refund)
+                    else -> getString(R.string.cancel_sheet_body)
+                }
             }
         }
-        scheduleBookingStatusRefresh()
+
+        sheet.buttonKeepBooking.setOnClickListener { dialog.dismiss() }
+        sheet.buttonConfirmCancel.setOnClickListener {
+            sheet.buttonConfirmCancel.isEnabled = false
+            dialog.dismiss()
+            cancelBookingFromCard(booking)
+        }
+
+        toggleBackgroundBlur(true)
+        dialog.setOnDismissListener { toggleBackgroundBlur(false) }
+        dialog.show()
+    }
+
+    /**
+     * Runs once the confirmation sheet says yes.
+     */
+    private fun cancelBookingFromCard(booking: Booking) {
+        if (DebugSampleBookings.isSample(booking.id)) {
+            showToast("Debug sample booking")
+            return
+        }
+        if (booking.status != BookingStatus.PENDING) {
+            showToast(getString(R.string.active_bookings_cannot_be_cancelled_please))
+            return
+        }
+        if (!cancellingBookingIds.add(booking.id)) return
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val result = bookingRepository.cancelBooking(booking.id)
+                if (!isAdded) return@launch
+                if (result.isSuccess) {
+                    showToast(getString(R.string.booking_cancelled))
+                    val cancelled = userBookings.firstOrNull { it.id == booking.id }
+                    cancelled?.copy(status = "cancelled")?.let { applyUpdatedBooking(it, render = false) }
+                    queueBookingTransitionAd(booking.id, BookingAdTarget.CANCELLED)
+                    BookingMutationRefreshCoordinator.refreshAfterSuccess(
+                        context = requireContext(),
+                        parkingLotId = cancelled?.lotId,
+                        bookingId = booking.id,
+                        statusHint = "cancelled",
+                        walletSource = WalletRefreshSource.BOOKING_CANCEL,
+                        cachesAlreadyInvalidated = true,
+                    )
+                    renderBookings()
+                } else {
+                    showToast(result.exceptionOrNull()?.message ?: "Failed to cancel booking")
+                    renderBookings()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (isAdded) {
+                    showToast(e.message ?: "Failed to cancel booking")
+                    renderBookings()
+                }
+            } finally {
+                cancellingBookingIds.remove(booking.id)
+            }
+        }
     }
 
     private fun updateActiveBookingNotification(bookings: List<BackendBooking>) {
@@ -1255,75 +1239,60 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
 
         pendingNavigationRequest = null
 
-        val targetStatus = if (request.showPending) BookingStatus.PENDING else BookingStatus.ACTIVE
+        // request.showPending is kept in the contract because MainContainerActivity and the
+        // confirmation screen still pass it, but it no longer selects anything: both states
+        // are on screen together. The highlight and open ids still do their work.
         pendingHighlightBookingId = request.highlightBookingId
         pendingOpenBookingId = request.openBookingId
-
-        handleSegmentSelection(targetStatus, userTriggered = false)
-        // A caller that named a destination outranks the landing-tab guess, even if the tab it
-        // asked for turns out to be empty — it usually knows about a booking not fetched yet.
-        tabPinnedByUser = true
     }
 
-    private suspend fun loadParkingDataCache() {
-        try {
-            // ✅ Load ALL parking spots first (works now after JsonNull fix!)
-            try {
-                val allSpotsResponse = ApiClient.apiService.getParkingSpots()
-                if (allSpotsResponse.isSuccessful) {
-                    allSpotsResponse.body()?.forEach { spot ->
-                        val spotName = spot.name ?: spot.zoneName ?: "Spot ${spot.id}"
-                        parkingSpotCache[spot.id] = spotName
-                        android.util.Log.d("BookingsFragment", "Cached spot: ${spot.id} -> $spotName")
-                    }
-                    android.util.Log.d("BookingsFragment", "Loaded ${parkingSpotCache.size} spots from /api/parking-spots")
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("BookingsFragment", "Error loading all parking spots: ${e.message}")
+    private suspend fun loadParkingDataCache(bookings: List<BackendBooking>) {
+        // Booking payloads already contain their lot context. Resolve only lots referenced by
+        // this user's bookings; the old global-spots + every-lot loop created an N+1 burst each
+        // time the fragment was rebuilt.
+        bookings.forEach { booking ->
+            booking.lotName
+                ?.takeIf { it.isNotBlank() }
+                ?.let { parkingLotCache[booking.lotId] = it }
+        }
+
+        val missingLotIds = bookings.asSequence()
+            .filter { booking ->
+                mapBackendStatus(booking.status) == BookingStatus.ACTIVE ||
+                    mapBackendStatus(booking.status) == BookingStatus.PENDING
             }
+            .map { it.lotId.trim() }
+            .filter { it.isNotEmpty() && it !in loadedSpotLotIds }
+            .distinct()
+            .toList()
 
-            // Load parking lots
-            val lotsResponse = ApiClient.apiService.getParkingLots()
-            if (lotsResponse.isSuccessful) {
-                lotsResponse.body()?.forEach { lot ->
-                    parkingLotCache[lot.id] = lot.name
-                    android.util.Log.d("BookingsFragment", "Cached lot: ${lot.id} -> ${lot.name}")
-
-                    // Also try to load spots for this lot (as fallback)
-                    try {
-                        val spotsForLot = ParkingRepository().getParkingSpotsByLot(lot.id)
-                        if (spotsForLot.isSuccessful) {
-                            spotsForLot.body()?.forEach { spot ->
-                                // Only cache if not already cached from /api/parking-spots
-                                if (!parkingSpotCache.containsKey(spot.id)) {
-                                    val spotName = spot.name ?: spot.zoneName ?: "Spot ${spot.id}"
-                                    parkingSpotCache[spot.id] = spotName
-                                    android.util.Log.d("BookingsFragment", "Cached spot from lot: ${spot.id} -> ${spotName}")
-                                }
-                            }
-                        }
-                    } catch (e: Exception) {
-                        android.util.Log.e("BookingsFragment", "Error loading spots for lot ${lot.id}: ${e.message}")
+        missingLotIds.forEach { lotId ->
+            runCatching { parkingRepository.getParkingSpotsByLot(lotId) }
+                .onSuccess { response ->
+                    if (!response.isSuccessful) return@onSuccess
+                    response.body().orEmpty().forEach { spot ->
+                        parkingSpotCache[spot.id] = spot.name
+                            ?: spot.zoneName
+                            ?: spot.spotCode
+                            ?: "Spot ${spot.id}"
                     }
+                    loadedSpotLotIds += lotId
                 }
-            }
-
-            // Avoid admin-only all-spots endpoint; rely on by-lot cache above
-
-            isCacheLoaded = true
-            android.util.Log.d("BookingsFragment", "Cache loaded: ${parkingLotCache.size} lots, ${parkingSpotCache.size} spots")
-        } catch (e: Exception) {
-            android.util.Log.e("BookingsFragment", "Error loading parking data cache: ${e.message}")
-            // Continue without cache - will use fallback names
         }
     }
 
     private fun convertToBooking(backendBooking: BackendBooking): Booking {
-        val parkingLocation = "SRM University Parking Lot"
+        val parkingLocation = backendBooking.lotName
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: backendBooking.locationName
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+            ?: parkingLotCache[backendBooking.lotId]
+            ?: "Parking lot"
 
-        // Get spot name from cache with debug logging
+        // Resolve the display name from the lot-scoped cache.
         val spotId = backendBooking.spotId ?: "Unknown"
-        android.util.Log.d("BookingsFragment", "Looking up spot: $spotId in cache (${parkingSpotCache.size} entries)")
 
         val spotName = parkingSpotCache[spotId]
             ?: spotId
@@ -1363,6 +1332,14 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             locationAddress = "",
             startTime = startTime,
             endTime = endTime,
+            scheduledStartTime = scheduledCheckInTime?.let { timeFormat.format(it) } ?: startTime,
+            scannedAtTime = backendBooking.actualCheckInTime?.let { timeFormat.format(it) },
+            endedAtTimestamp = (
+                backendBooking.cancelledAt
+                    ?: backendBooking.actualCheckOutTime
+                    ?: backendBooking.checkOutTime
+                    ?: backendBooking.updatedAt
+                )?.time ?: 0L,
             duration = duration,
             bookingDate = bookingDate,
             checkInTimestamp = checkInTime?.time ?: 0L,
@@ -1396,18 +1373,25 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
                 normalized.contains("confirm") || normalized.contains("book") ||
                 normalized.contains("init") || normalized.contains("hold") -> BookingStatus.PENDING
 
-            else -> {
-                android.util.Log.w("BookingsFragment", "Unknown booking status '$backendStatus', defaulting to Pending")
-                BookingStatus.PENDING
-            }
+            else -> BookingStatus.PENDING
         }
     }
 
     companion object {
         private const val ACTIVE_TIMER_REFRESH_MS = 1000L
-        private const val QR_VISIBLE_REFRESH_INTERVAL_MS = 2_000L
-        private const val QR_DISMISS_REFRESH_GRACE_MS = 15_000L
-        private const val BOOKING_STATUS_REFRESH_INTERVAL_MS = 10_000L
+
+        /** Pass open, user at the barrier: the one place a delay reads as a broken app. */
+        private const val WATCH_AT_BARRIER_MS = 1_500L
+
+        /** Bookings tab in front — a plate check-in has to land here on its own. */
+        private const val WATCH_TAB_IN_FRONT_MS = 2_500L
+
+        /**
+         * Any other tab. Slow on purpose: a parking session runs for hours, and watching it
+         * every couple of seconds for that long costs more than the wait it saves.
+         */
+        private const val WATCH_OTHER_TAB_MS = 12_000L
+        private const val MANUAL_REFRESH_COOLDOWN_MS = 20_000L
         private val PENDING_STATUSES = setOf(
             "pending",
             "created",
@@ -1480,155 +1464,6 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         )
     }
 
-    private fun showBookingDetails(booking: Booking) {
-        val dialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme)
-        val sheetBinding = BottomSheetBookingOverviewBinding.inflate(layoutInflater)
-        dialog.setContentView(sheetBinding.root)
-        dialog.window?.let { window ->
-            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                window.isNavigationBarContrastEnforced = false
-            }
-            window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-                    window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-                    window.setBackgroundBlurRadius(80)
-                    val attrs = window.attributes
-                    attrs.blurBehindRadius = 80
-                    window.attributes = attrs
-                    window.setDimAmount(0f)
-                }
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-                    window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-                    window.setDimAmount(0f)
-                }
-                else -> {
-                    window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-                    window.setDimAmount(0.25f)
-                }
-            }
-        }
-
-        toggleBackgroundBlur(true)
-
-        sheetBinding.apply {
-            textLocationName.text = booking.spotName
-
-            textSpotName.text = booking.locationName
-            textVehicleNumber.text = booking.vehicleNumber
-            textBookingId.text = "ID: #${booking.id}"
-            textBookingId.setOnClickListener {
-                val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                val clip = android.content.ClipData.newPlainText("Booking ID", booking.id)
-                clipboard.setPrimaryClip(clip)
-                if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.S_V2) {
-                    showToast(getString(R.string.booking_id_copied))
-                }
-            }
-
-            textCheckIn.text = getStringFormattedTime(booking.bookingDate, booking.startTime).split(" · ").lastOrNull() ?: booking.startTime
-            textCheckOut.text = getStringFormattedTime(booking.bookingDate, booking.endTime).split(" · ").lastOrNull() ?: booking.endTime
-            textBookingDate.text = booking.bookingDate
-
-            textDuration.text = if (booking.status == BookingStatus.ACTIVE && booking.checkInTimestamp > 0L) {
-                formatDuration(System.currentTimeMillis() - booking.checkInTimestamp)
-            } else {
-                booking.duration
-            }
-            textAmount.text = booking.amount
-
-            // Use Soft Status Styling to match Cards e.g. status_soft_active
-            val (statusLabel, statusBackgroundRes, statusTextColor, statusDotVisible) = when (booking.status) {
-                BookingStatus.ACTIVE -> Quad("Active", R.drawable.status_soft_active, androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_text_active), true)
-                BookingStatus.PENDING -> Quad("Booked", R.drawable.status_soft_pending, androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_text_pending), false)
-                BookingStatus.COMPLETED -> Quad("Completed", R.drawable.status_soft_completed, androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_text_completed), false)
-                BookingStatus.CANCELLED -> Quad("Cancelled", R.drawable.status_soft_cancelled, androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_text_cancelled), false)
-                BookingStatus.NO_SHOW -> Quad("No Show", R.drawable.status_soft_noshow, androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_text_noshow), false)
-            }
-
-            textStatusChip.text = statusLabel
-            textStatusChip.setTextColor(statusTextColor)
-            textStatusChip.background = ContextCompat.getDrawable(requireContext(), statusBackgroundRes)
-        }
-
-        val showCancel = booking.status == BookingStatus.PENDING
-        sheetBinding.actionCancel.visibility = if (showCancel) View.VISIBLE else View.GONE
-
-
-        sheetBinding.buttonCloseSheet.setOnClickListener { dialog.dismiss() }
-        sheetBinding.actionCancel.setOnClickListener {
-            when (booking.status) {
-                BookingStatus.PENDING -> {
-                    // Confirm cancellation
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Cancel Booking")
-                        .setMessage("Are you sure you want to cancel this booking? Any holds or promotions may be released.")
-                        .setNegativeButton("No", null)
-                        .setPositiveButton("Yes, Cancel") { _, _ ->
-                            // Disable action to prevent double taps
-                            sheetBinding.actionCancel.isEnabled = false
-                            sheetBinding.actionCancel.alpha = 0.6f
-
-                            lifecycleScope.launch {
-                                try {
-                                    val result = bookingRepository.cancelBooking(booking.id)
-                                    if (result.isSuccess) {
-                                        showToast(getString(R.string.booking_cancelled))
-                                        dialog.dismiss()
-                                        userBookings
-                                            .firstOrNull { it.id == booking.id }
-                                            ?.copy(status = "cancelled")
-                                            ?.let { applyUpdatedBooking(it, render = false) }
-                                        queueBookingTransitionAd(booking.id, BookingAdTarget.CANCELLED)
-                                        loadUserBookings(showRefreshIndicator = false)
-                                    } else {
-                                        showToast(result.exceptionOrNull()?.message ?: "Failed to cancel booking")
-                                        sheetBinding.actionCancel.isEnabled = true
-                                        sheetBinding.actionCancel.alpha = 1f
-                                    }
-                                } catch (e: Exception) {
-                                    showToast(e.message ?: "Failed to cancel booking")
-                                    sheetBinding.actionCancel.isEnabled = true
-                                    sheetBinding.actionCancel.alpha = 1f
-                                }
-                            }
-                        }
-                        .show()
-                }
-                BookingStatus.ACTIVE -> {
-                    showToast(getString(R.string.active_bookings_cannot_be_cancelled_please))
-                }
-                BookingStatus.COMPLETED, BookingStatus.CANCELLED, BookingStatus.NO_SHOW -> {
-                    showToast(getString(R.string.this_booking_is_already_finished))
-                }
-            }
-        }
-
-        dialog.setOnShowListener {
-            val bottomSheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-            bottomSheet?.let {
-                it.setBackgroundColor(Color.TRANSPARENT)
-                val behavior = BottomSheetBehavior.from(it)
-                behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                behavior.skipCollapsed = true
-                behavior.isFitToContents = true
-            }
-        }
-        dialog.behavior.isDraggable = true
-        dialog.show()
-
-        dialog.setOnDismissListener {
-            toggleBackgroundBlur(false)
-        }
-        dialog.setOnCancelListener {
-            toggleBackgroundBlur(false)
-        }
-    }
-
     private fun applyUpdatedBooking(updated: BackendBooking, render: Boolean = true) {
         val updatedId = updated.id ?: return
         val index = userBookings.indexOfFirst { it.id == updatedId }
@@ -1638,25 +1473,7 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
             userBookings.add(updated)
         }
         updateActiveBookingNotification(userBookings)
-        if (render) showBookingsForStatus(currentTab)
-    }
-
-    private fun setRefreshing(show: Boolean) {
-        val currentBinding = bindingOrNull ?: return
-
-        if (show) {
-            if (!currentBinding.swipeRefresh.isRefreshing) {
-                currentBinding.swipeRefresh.post {
-                    bindingOrNull?.let { activeBinding ->
-                        if (view != null) {
-                            activeBinding.swipeRefresh.isRefreshing = true
-                        }
-                    }
-                }
-            }
-        } else {
-            currentBinding.swipeRefresh.isRefreshing = false
-        }
+        if (render) renderBookings()
     }
 
     private fun formatDuration(durationMillis: Long): String {
@@ -1664,14 +1481,6 @@ class BookingsFragmentNew : BaseTabFragment<FragmentBookingsNewBinding>() {
         val hours = safeDuration / (1000 * 60 * 60)
         val minutes = (safeDuration % (1000 * 60 * 60)) / (1000 * 60)
         return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
-    }
-
-    private fun getStringFormattedTime(date: String, time: String): String {
-        return if (date == "TBD" || time == "TBD") {
-            "TBD"
-        } else {
-            "$date · $time"
-        }
     }
 
     private fun toggleBackgroundBlur(show: Boolean) {

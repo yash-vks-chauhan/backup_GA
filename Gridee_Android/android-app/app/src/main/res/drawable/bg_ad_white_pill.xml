@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Solid white action pill, matching the partner referral pill's material rather than the
+  glass the card used to carry. Glass borrowed its brightness from whatever creative sat
+  behind it, so on a pale image the call to action all but disappeared; a flat white body
+  reads the same on every creative.
+
+  White and near-black are hardcoded here, unlike the referral pill's themed
+  partner_pill_surface: this button sits on the advertiser's media, not on the page, so it
+  has no light/dark surface to follow — the scrim behind it is dark in both themes.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#1F000000">
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+            <corners android:radius="22dp" />
+        </shape>
+    </item>
+
+</ripple>

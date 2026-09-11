@@ -5,13 +5,14 @@ import com.google.gson.annotations.SerializedName
 /**
  * Wallet top-up request for `POST /api/payments/initiate`.
  *
- * A selected parking lot is required. Organization and location are included when the app knows
- * them, but are optional in the backend contract.
+ * Parking/tenant context is included when the app knows it. It remains optional because the
+ * authenticated backend can resolve the user's authoritative default context; a stale or missing
+ * local preference must not make the wallet screen unable to add money.
  */
 data class PaymentInitiateRequest(
     @SerializedName("userId") val userId: String,
     @SerializedName("amount") val amount: Double,
-    @SerializedName("parkingLotId") val parkingLotId: String,
+    @SerializedName("parkingLotId") val parkingLotId: String? = null,
     @SerializedName("organizationId") val organizationId: String? = null,
     @SerializedName("locationId") val locationId: String? = null
 )

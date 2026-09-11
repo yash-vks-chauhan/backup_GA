@@ -2,6 +2,9 @@ package com.gridee.parking.utils
 
 import android.content.Context
 import com.gridee.parking.data.model.User
+import com.gridee.parking.data.repository.BookingRepository
+import com.gridee.parking.data.repository.ParkingRepository
+import com.gridee.parking.data.repository.WalletRepository
 
 /**
  * Centralized session helpers to keep JWT storage and legacy SharedPreferences in sync.
@@ -199,6 +202,13 @@ object AuthSession {
 
         runCatching {
             WalletCache.clear(context)
+        }
+
+        runCatching {
+            // Process-wide repository caches outlive screens, so release all account-scoped data.
+            BookingRepository.clearReadCache()
+            WalletRepository.clearReadCache()
+            ParkingRepository.clearReadCache()
         }
 
         runCatching {

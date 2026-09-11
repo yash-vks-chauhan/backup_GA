@@ -1,6 +1,5 @@
 package com.gridee.parking.utils
 
-import android.util.Log
 import com.google.android.gms.ads.initialization.AdapterStatus
 import com.google.android.gms.ads.initialization.InitializationStatus
 import com.gridee.parking.BuildConfig
@@ -56,33 +55,31 @@ object AdMediationStatus {
 
         val statusMap = status?.adapterStatusMap.orEmpty()
         if (statusMap.isEmpty()) {
-            Log.w(TAG, "No adapter status reported — mediation may not be initialised yet")
+            AppLog.w(TAG) { "No adapter status reported — mediation may not be initialised yet" }
             return
         }
 
-        Log.i(TAG, "── Mediation adapter status (${statusMap.size} reported) ──")
+        AppLog.i(TAG) { "── Mediation adapter status (${statusMap.size} reported) ──" }
         statusMap.forEach { (className, adapterStatus) ->
-            val label = KNOWN_ADAPTERS[className] ?: className.substringAfterLast('.')
+            val label = KNOWN_ADAPTERS[className] ?: "Unknown adapter"
             val state = when (adapterStatus.initializationState) {
                 AdapterStatus.State.READY -> "READY"
                 AdapterStatus.State.NOT_READY -> "NOT READY"
                 else -> "UNKNOWN"
             }
-            val detail = adapterStatus.description.takeIf { it.isNotBlank() }?.let { " — $it" }.orEmpty()
-            Log.i(TAG, "  [$state] $label (${adapterStatus.latency}ms)$detail")
+            AppLog.i(TAG) { "  [$state] $label (${adapterStatus.latency}ms)" }
         }
 
         EXPECTED_ADAPTERS.filterNot { statusMap.containsKey(it) }.forEach { missing ->
             val label = KNOWN_ADAPTERS[missing] ?: missing
-            Log.w(TAG, "  [ABSENT] $label — bundled adapter did not report; check the dependency")
+            AppLog.w(TAG) { "  [ABSENT] $label — bundled adapter did not report; check the dependency" }
         }
 
         val unbundled = KNOWN_ADAPTERS.keys.filterNot { statusMap.containsKey(it) || it in EXPECTED_ADAPTERS }
-        Log.i(
-            TAG,
+        AppLog.i(TAG) {
             "Not bundled: " + unbundled.joinToString { KNOWN_ADAPTERS.getValue(it) } +
                 ". If any of these are enabled in the AdMob console, they cannot fill — " +
                 "add the adapter dependency or disable them in the mediation group."
-        )
+        }
     }
 }

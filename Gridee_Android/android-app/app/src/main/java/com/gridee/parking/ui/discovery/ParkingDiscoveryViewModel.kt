@@ -4,10 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
+import com.gridee.parking.GrideeApplication
 import com.gridee.parking.data.model.ParkingLot
 import com.gridee.parking.data.model.ParkingSpot
+import com.gridee.parking.data.model.BookingPolicyResolver
+import com.gridee.parking.data.model.ResolvedBookingPolicy
 import com.gridee.parking.data.repository.ParkingRepository
 import com.gridee.parking.utils.ParkingSpotSchedulePolicy
+import com.gridee.parking.utils.AuthSession
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 data class Location(
@@ -18,7 +23,7 @@ data class Location(
 
 class ParkingDiscoveryViewModel : ViewModel() {
     
-    private val parkingRepository = ParkingRepository()
+    private val parkingRepository = GrideeApplication.instance.repositories.parkingRepository
     
     private val _parkingSpots = MutableLiveData<List<ParkingSpot>>()
     val parkingSpots: LiveData<List<ParkingSpot>> = _parkingSpots
@@ -44,6 +49,9 @@ class ParkingDiscoveryViewModel : ViewModel() {
     // When a screen explicitly loads spots for a lot, don't let background "loadParkingData()"
     // overwrite the spot list (can otherwise revert UI back to empty).
     private var lockSpotUpdates: Boolean = false
+    private var parkingLoadJob: Job? = null
+    private var selectedLotPolicy: ResolvedBookingPolicy? = null
+    private var selectedLotPolicyId: String? = null
     
     init {
         loadParkingData()
@@ -57,49 +65,62 @@ class ParkingDiscoveryViewModel : ViewModel() {
         filterParkingSpots()
     }
     
-    fun loadParkingData() {
+    fun loadParkingData(forceRefresh: Boolean = false) {
+        if (parkingLoadJob?.isActive == true) return
         _isLoading.value = true
 
-        viewModelScope.launch {
+        parkingLoadJob = viewModelScope.launch {
             try {
-                println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Starting data load")
-                
-                // Load parking lots
-                val lotsResponse = parkingRepository.getParkingLots()
+                val app = GrideeApplication.instance
+                val selectedLotId = AuthSession.getParkingLotId(app)
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+                if (selectedLotId == null) {
+                    _parkingLots.value = emptyList()
+                    if (!lockSpotUpdates) _parkingSpots.value = emptyList()
+                    return@launch
+                }
+
+                val policyResponse = parkingRepository.getBookingPolicy(selectedLotId, forceRefresh)
+                val policyBody = policyResponse.body()
+                if (!policyResponse.isSuccessful || policyBody == null) {
+                    selectedLotPolicy = null
+                    selectedLotPolicyId = null
+                    _parkingLots.value = emptyList()
+                    if (!lockSpotUpdates) _parkingSpots.value = emptyList()
+                    return@launch
+                }
+                val policy = BookingPolicyResolver.resolve(policyBody)
+                selectedLotPolicy = policy
+                selectedLotPolicyId = selectedLotId
+
+                val lotsResponse = parkingRepository.getParkingLots(
+                    organizationId = AuthSession.getOrganizationId(app),
+                    locationId = AuthSession.getLocationId(app),
+                    forceRefresh = forceRefresh,
+                )
                 if (!lotsResponse.isSuccessful) { 
-                    println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Lots API failed - ${lotsResponse.code()}")
-                    _isLoading.value = false
                     return@launch 
                 }
-                val lots = lotsResponse.body() ?: emptyList()
-                println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Loaded ${lots.size} parking lots")
-
-                // NO FILTERING - show ALL lots
-                val filteredLots = lots
+                val filteredLots = lotsResponse.body().orEmpty().filter { it.id == selectedLotId }
                 
-                // Aggregate spots per lot
-                val allSpots = mutableListOf<ParkingSpot>()
+                // Inventory is tenant-scoped. Fetch only the user's selected/assigned lot; the
+                // former all-lots loop generated an N+1 request burst merely by opening discovery.
+                val allSpots = fetchSpotsForLot(selectedLotId, forceRefresh)
                 
-                for (lot in filteredLots) {
-                    println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Fetching spots for lot: id=${lot.id}, name=${lot.name}")
-                    val spots = fetchSpotsForLot(lot.id)
-                    println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Got ${spots.size} spots for lot ${lot.name}")
-                    allSpots.addAll(spots)
-                }
-                
-                println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Total spots aggregated=${allSpots.size}")
-                val visibleSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(allSpots)
+                val visibleSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(
+                    allSpots,
+                    policy = policy,
+                )
                 
                 _parkingLots.value = filteredLots
                 if (!lockSpotUpdates) {
                     _parkingSpots.value = visibleSpots
-                    println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Updated _parkingSpots LiveData with ${visibleSpots.size} spots")
                 }
-                _isLoading.value = false
             } catch (e: Exception) {
-                println("DEBUG ParkingDiscoveryViewModel.loadParkingData: Exception - ${e.message}")
-                e.printStackTrace()
+            } finally {
                 _isLoading.value = false
+                parkingLoadJob = null
             }
         }
     }
@@ -110,34 +131,47 @@ class ParkingDiscoveryViewModel : ViewModel() {
         
         viewModelScope.launch {
             try {
+                val policyResponse = parkingRepository.getBookingPolicy(lotId)
+                val policyBody = policyResponse.body()
+                if (!policyResponse.isSuccessful || policyBody == null) {
+                    selectedLotPolicy = null
+                    selectedLotPolicyId = null
+                    _parkingSpots.value = emptyList()
+                    return@launch
+                }
+                val policy = BookingPolicyResolver.resolve(policyBody)
+                selectedLotPolicy = policy
+                selectedLotPolicyId = lotId.trim()
                 val spots = fetchSpotsForLot(lotId)
-                val visibleSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(spots)
-                println("DEBUG ParkingDiscoveryViewModel.loadParkingSpotsForLot: Fetched spots for lotId='$lotId', lotName='$lotName', size=${spots.size}, visible=${visibleSpots.size}")
+                val visibleSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(
+                    spots,
+                    policy = policy,
+                )
                 _parkingSpots.value = visibleSpots
-                _isLoading.value = false
             } catch (e: Exception) {
-                println("DEBUG ParkingDiscoveryViewModel.loadParkingSpotsForLot: Exception - ${e.message}")
+                _parkingSpots.value = emptyList()
+            } finally {
                 _isLoading.value = false
             }
         }
     }
     
     fun getCurrentLocation() {
-        _isLoading.value = true
-        
-        // TODO: Implement actual location detection
-        // Mock current location (Chennai, near SRM University)
-        _currentLocation.value = Location(
-            latitude = 12.8231,
-            longitude = 80.0414,
-            address = "Kattankulathur, SRM Nagar, Chennai"
-        )
-        
-        loadParkingData()
+        _parkingLots.value?.firstOrNull()?.let { selectedLot ->
+            _currentLocation.value = Location(
+                latitude = selectedLot.latitude,
+                longitude = selectedLot.longitude,
+                address = selectedLot.address,
+            )
+        }
     }
     
     private fun filterParkingSpots() {
-        val allSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(_parkingSpots.value ?: emptyList())
+        val policy = selectedLotPolicy.takeIf { selectedLotPolicyId != null }
+        val allSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(
+            _parkingSpots.value ?: emptyList(),
+            policy = policy,
+        )
         val query = _searchQuery.value?.lowercase() ?: ""
         
         val filteredSpots = allSpots.filter { spot ->
@@ -161,7 +195,6 @@ class ParkingDiscoveryViewModel : ViewModel() {
             matchesQuery
         }
         
-        println("DEBUG ParkingDiscoveryViewModel.filterParkingSpots: Filtered from ${allSpots.size} to ${filteredSpots.size} spots")
         _parkingSpots.value = filteredSpots
         _isLoading.value = false
     }
@@ -178,13 +211,22 @@ class ParkingDiscoveryViewModel : ViewModel() {
         filterParkingSpots()
     }
 
-    private suspend fun fetchSpotsForLot(lotId: String): List<ParkingSpot> {
+    private suspend fun fetchSpotsForLot(
+        lotId: String,
+        forceRefresh: Boolean = false,
+    ): List<ParkingSpot> {
         if (lotId.isBlank()) return emptyList()
 
         return try {
-            val resp = parkingRepository.getParkingSpotsByLot(lotId)
+            val resp = parkingRepository.getParkingSpotsByLot(lotId, forceRefresh)
             if (!resp.isSuccessful) return emptyList()
-            resp.body() ?: emptyList()
+            resp.body().orEmpty().mapNotNull { spot ->
+                when (spot.lotId.trim()) {
+                    "" -> spot.copy(lotId = lotId)
+                    lotId -> spot
+                    else -> null
+                }
+            }
         } catch (_: Exception) {
             emptyList()
         }

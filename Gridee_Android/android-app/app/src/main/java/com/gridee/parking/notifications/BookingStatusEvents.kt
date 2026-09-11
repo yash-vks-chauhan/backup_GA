@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 object BookingStatusEvents {
     data class Event(
         val bookingId: String?,
-        val statusHint: String
+        val statusHint: String,
+        val cacheAlreadyRefreshed: Boolean = false,
     )
 
     private val mutableEvents = MutableSharedFlow<Event>(
@@ -23,11 +24,16 @@ object BookingStatusEvents {
 
     val events = mutableEvents.asSharedFlow()
 
-    fun publish(bookingId: String?, statusHint: String) {
+    fun publish(
+        bookingId: String?,
+        statusHint: String,
+        cacheAlreadyRefreshed: Boolean = false,
+    ) {
         mutableEvents.tryEmit(
             Event(
                 bookingId = bookingId?.trim()?.takeIf { it.isNotEmpty() },
-                statusHint = statusHint.trim()
+                statusHint = statusHint.trim(),
+                cacheAlreadyRefreshed = cacheAlreadyRefreshed,
             )
         )
     }

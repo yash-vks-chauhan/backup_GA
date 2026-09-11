@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.gridee.parking.data.model.ParkingLot
 import com.gridee.parking.databinding.ItemSelectLotBinding
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 
 /**
  * Single-selection list of parking lots for [SelectParkingLotActivity]. Rows are
@@ -195,7 +196,7 @@ class SelectLotAdapter(
             detailAnimator = null
             view.animate().cancel()
 
-            if (!animate || !ValueAnimator.areAnimatorsEnabled()) {
+            if (!animate || !AnimatorSettingsCompat.areEnabled(view.context)) {
                 view.visibility = if (expanded) View.VISIBLE else View.GONE
                 view.alpha = if (expanded) 1f else 0f
                 setHeight(view, ViewGroup.LayoutParams.WRAP_CONTENT)

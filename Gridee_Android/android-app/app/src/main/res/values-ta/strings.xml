@@ -17,7 +17,6 @@
     <string name="vehicle_scan_success_toast">வாகனம் %1$s கண்டறியப்பட்டது</string>
     <string name="vehicle_scan_success_title">வாகனம் கண்டறியப்பட்டது</string>
     <string name="vehicle_scan_success_message">வாகனம் %1$s கண்டறியப்பட்டு செக்-இன் செய்யத் தயாராக உள்ளது.</string>
-    <string name="scanner_corner">ஸ்கேனர் சட்டக மூலை</string>
     <string name="vehicle_scan_best_guess">சாத்தியமான பொருத்தம்: %1$s</string>
     <string name="vehicle_scan_flash_on">ஃபிளாஷ் ஆன்</string>
     <string name="vehicle_scan_flash_off">ஃபிளாஷ் ஆஃப்</string>
@@ -53,11 +52,31 @@
     <string name="scanner_enter_number">எண்ணை உள்ளிடவும்</string>
     <string name="scanner_manual_sheet_hint">தகட்டில் உள்ள வாகன எண்ணைத் தட்டச்சு செய்யவும்.</string>
     <string name="scanner_qr_scan_hint">முன்பதிவு QR-ஐ சட்டகத்திற்குள் வைக்கவும்</string>
+    <string name="scanner_one_qr_at_a_time_warning">ஒரே நேரத்தில் ஒரு முன்பதிவு QR-ஐ மட்டும் சட்டகத்திற்குள் வைக்கவும்.</string>
+    <string name="scanner_low_light_hint">வெளிச்சம் குறைவாக உள்ளது — டார்ச்சை இயக்கவும் அல்லது அதிக வெளிச்சமுள்ள இடத்திற்குச் செல்லவும்</string>
+    <string name="scanner_refocusing_hint">மையச் சட்டகத்தில் மீண்டும் கவனம் செலுத்துகிறது…</string>
+    <string name="scanner_tap_to_focus">கேமராவை ஃபோகஸ் செய்ய ஸ்கேனிங் சட்டகத்தைத் தட்டவும்</string>
+    <string name="scanner_viewport_too_small_title">கூடுதல் திரை இடம் தேவை</string>
+    <string name="scanner_viewport_too_small_message">ஸ்கேன் செய்வதைத் தொடர சாதனத்தைச் சுழற்றவும் அல்லது செயலியின் அளவை விரிவாக்கவும்.</string>
+    <string name="scanner_automatic_recognition_disabled_title">தானியங்கி ஸ்கேனிங் இடைநிறுத்தப்பட்டுள்ளது</string>
+    <string name="scanner_automatic_recognition_disabled_message">வாகன எண்ணைக் கைமுறையாக உள்ளிடவும். எண் பலகை மற்றும் QR-ஐத் தானாக அடையாளம் காணும் வசதி தற்காலிகமாக முடக்கப்பட்டுள்ளது.</string>
+    <string name="scanner_camera_access_needed_title">கேமரா அணுகல் தேவை</string>
+    <string name="scanner_camera_unavailable_title">கேமரா கிடைக்கவில்லை</string>
+    <string name="scanner_camera_permission_manual_message">அமைப்புகளில் கேமரா அணுகலை அனுமதிக்கவும் அல்லது வாகன எண்ணைக் கைமுறையாக உள்ளிடவும்.</string>
+    <string name="scanner_camera_unavailable_manual_message">கேமரா கிடைக்கவில்லை. வாகன எண்ணைக் கைமுறையாக உள்ளிடவும் அல்லது மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="scanner_retry_camera">கேமராவை மீண்டும் முயற்சிக்கவும்</string>
     <string name="scanner_qr_required">முன்பதிவு QR தேவை</string>
     <string name="scanner_processing_qr_checkin">முன்பதிவு QR மூலம் செக்-இன் செய்யப்படுகிறது…</string>
     <string name="scanner_processing_qr_checkout">முன்பதிவு QR மூலம் செக்-அவுட் செய்யப்படுகிறது…</string>
     <string name="scanner_checked_in_at">%1$s இல் செக்-இன் செய்யப்பட்டது</string>
     <string name="scanner_checked_out_at">%1$s இல் செக்-அவுட் செய்யப்பட்டது</string>
+    <string name="scanner_operator_request_still_processing">ஆபரேட்டர் கோரிக்கை இன்னும் செயலாக்கப்படுகிறது. உறுதிப்படுத்தலுக்காகக் காத்திருக்கவும்.</string>
+    <string name="scanner_recent_scan_title">சமீபத்தில் செயலாக்கப்பட்டது</string>
+    <plurals name="scanner_recent_scan_cooldown">
+        <item quantity="one">இந்த ஸ்கேன் இப்போதுதான் செயலாக்கப்பட்டது. %1$d வினாடிக்குப் பிறகு மீண்டும் முயலவும்.</item>
+        <item quantity="other">இந்த ஸ்கேன் இப்போதுதான் செயலாக்கப்பட்டது. %1$d வினாடிகளுக்குப் பிறகு மீண்டும் முயலவும்.</item>
+    </plurals>
+    <string name="scanner_spot_outside_assigned_lot">இந்த வாகன நிறுத்துமிடம் உங்களுக்கு ஒதுக்கப்பட்ட பார்க்கிங் வளாகத்தைச் சேர்ந்தது அல்ல.</string>
     <string name="scanner_open">ஸ்கேனரைத் திறக்கவும்</string>
     <string name="vehicle_sheet_status_fetching">செயலில் உள்ள முன்பதிவு பெறப்படுகிறது…</string>
     <string name="vehicle_sheet_status_not_found">%1$s உடன் எந்த முன்பதிவும் இணைக்கப்படவில்லை.</string>
@@ -374,7 +393,6 @@
     <string name="no_transactions_yet">இதுவரை பரிவர்த்தைகள் இல்லை</string>
     <string name="your_transaction_history_will_appear_here">உங்கள் பரிவர்த்தை வரலாறு இங்கே தோன்றும்</string>
     <string name="vehicles">வாகனங்கள்</string>
-    <string name="add_money_is_temporarily_unavailable_were">பணம் சேர்ப்பது தற்காலிகமாகக் கிடைக்கவில்லை.\nஎங்கள் கட்டண ஒருங்கிணைப்பாளருடன் இணைத்து வருகிறோம்.</string>
     <string name="current_balance">தற்போதைய இருப்பு</string>
     <string name="minimum_amount">குறைந்தபட்சத் தொகை</string>
     <string name="secured_by">பாதுகாக்கப்பட்டது</string>
@@ -541,7 +559,6 @@
     <string name="no_transactions_found">பரிவர்த்தைகள் எதுவும் கிடைக்கவில்லை</string>
     <string name="please_enter_a_valid_amount">செல்லுபடியாகும் தொகையை உள்ளிடவும்</string>
     <string name="please_login_to_add_money">பணம் சேர்க்க உள்நுழையவும்</string>
-    <string name="add_money_temporarily_unavailable_during_payment">கட்டண ஒருங்கிணைப்பின்போது பணம் சேர்ப்பது தற்காலிகமாகக் கிடைக்காது.</string>
     <string name="session_expired_please_log_in_again">அமர்வு காலாவதியானது. மீண்டும் உள்நுழையவும்.</string>
     <string name="wallet_is_temporarily_unavailable">வாலட் தற்காலிகமாகக் கிடைக்கவில்லை.</string>
     <string name="no_real_wallet_data_available">வாலட் தரவு எதுவும் கிடைக்கவில்லை</string>
@@ -685,5 +702,18 @@
     <string name="payment_pending_confirmation">கட்டணம் இன்னும் உறுதிசெய்யப்படுகிறது. முடிந்ததும் உங்கள் வாலட் புதுப்பிக்கப்படும்.</string>
     <string name="payment_failed_or_cancelled">கட்டணம் தோல்வியடைந்தது அல்லது ரத்துசெய்யப்பட்டது. உங்களிடம் கட்டணம் வசூலிக்கப்படவில்லை.</string>
     <string name="payment_could_not_be_confirmed">இந்தக் கட்டணத்தை உறுதிப்படுத்த முடியவில்லை. சிறிது நேரத்தில் உங்கள் வாலட்டைப் பாருங்கள்.</string>
+    <string name="scanner_preparing_title">ஸ்கேனர் தயாராகிறது</string>
+    <string name="scanner_preparing_message">பாதுகாப்பான OCR மற்றும் QR கூறுகள் சரிபார்க்கப்படுகின்றன…</string>
+    <string name="scanner_unavailable_title">ஸ்கேனர் அமைப்பு தேவை</string>
+    <string name="scanner_unavailable_message">ஸ்கேனர் கூறுகள் தயாராக இல்லை. இணையத்துடன் இணைந்து மீண்டும் முயற்சிக்கவும் அல்லது வாகன எண்ணை கைமுறையாக உள்ளிடவும்.</string>
+    <string name="scanner_retry_setup">அமைப்பை மீண்டும் முயற்சிக்கவும்</string>
+    <string name="scanner_plate_confirmation_needed">கண்டறியப்பட்ட எண் பலகையை உறுதிப்படுத்தவும்: %1$s</string>
+    <string name="scanner_plate_confirm_title">வாகன எண் பலகையை உறுதிப்படுத்தவும்</string>
+    <string name="scanner_plate_confirm_message">தொடர்வதற்கு முன் %1$s என்பதை உறுதிப்படுத்தவும்.</string>
+    <string name="scanner_plate_confirm_corrected_message">ஒரே மாதிரி தோன்றும் சில எழுத்துகள் அல்லது எண்கள் திருத்தப்பட்டுள்ளன. தொடர்வதற்கு முன் %1$s என்பதை உறுதிப்படுத்தவும்.</string>
+    <string name="scanner_confirm_plate">எண் பலகையை உறுதிப்படுத்தவும்</string>
     <string name="wallet_top_up_title">வாலட் டாப்-அப்</string>
+    <string name="scanner_operator_offline">சரிபார்க்கப்பட்ட இணைய இணைப்பு இல்லை. மீண்டும் இணைந்த பின், மீண்டும் ஸ்கேன் செய் என்பதைத் தட்டவும். எந்தச் செக்-இன் அல்லது செக்-அவுட் தகவலும் அனுப்பப்படவில்லை.</string>
+    <string name="scanner_operator_slow_network">%1$s நெட்வொர்க் மெதுவாக உள்ளது; இந்தத் திரையைத் திறந்தே வைத்திருந்து மீண்டும் ஸ்கேன் செய்ய வேண்டாம்.</string>
+    <string name="op_scanner_tab">ஸ்கேனர்</string>
 </resources>

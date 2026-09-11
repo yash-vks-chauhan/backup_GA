@@ -67,6 +67,11 @@
     <dimen name="ios26_back_button_stroke_width">0dp</dimen>
     <dimen name="ios26_back_icon_size">20dp</dimen>
 
+    <!-- Base bottom padding for the copy on the booking pass's bled creative. The gesture
+         inset is added to this in code; see BookingQrNativeAdView.applyBottomInset. Must
+         match the paddingBottom in view_booking_qr_native_ad.xml. -->
+    <dimen name="pass_creative_text_bottom_padding">34dp</dimen>
+
     <!-- Edit Profile Input Field Outline -->
     <dimen name="profile_input_outline_width">1dp</dimen>
 

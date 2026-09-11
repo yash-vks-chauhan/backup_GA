@@ -12,12 +12,12 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.graphics.Shader
 import android.graphics.Typeface
-import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.content.res.ResourcesCompat
 import com.gridee.parking.R
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 import kotlin.math.sin
 
 /**
@@ -240,8 +240,7 @@ class RewardAmountView @JvmOverloads constructor(
         glintAlpha = 0f
     }
 
-    private fun animatorsEnabled(): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()
+    private fun animatorsEnabled(): Boolean = AnimatorSettingsCompat.areEnabled(context)
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()

@@ -272,6 +272,7 @@
             </androidx.cardview.widget.CardView>
 
             <TextView
+                android:id="@+id/tvVehicleTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
@@ -344,6 +345,7 @@
             </androidx.cardview.widget.CardView>
 
             <TextView
+                android:id="@+id/tvPaymentWalletTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
@@ -505,6 +507,19 @@
                 </LinearLayout>
 
             </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/tvPolicySummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:background="@drawable/bg_container_outline_28"
+                android:fontFamily="@font/inter_medium"
+                android:lineSpacingMultiplier="1.2"
+                android:padding="16dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                tools:text="Standard refund and deduction rules apply to this parking lot." />
 
         </LinearLayout>
 

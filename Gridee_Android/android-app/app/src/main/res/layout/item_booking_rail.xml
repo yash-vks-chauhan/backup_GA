@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One booking = one rail. The stops are added by BookingRailAdapter rather than declared
+  here, because which stop carries the card moves as the booking advances, and a layout
+  holding every stop in both forms would be six blocks with four of them always gone.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rail_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="20dp" />

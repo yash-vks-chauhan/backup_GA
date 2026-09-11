@@ -28,6 +28,7 @@ import com.gridee.parking.data.model.AppRemoteConfig
 import com.gridee.parking.databinding.ActivitySplashBinding
 import com.gridee.parking.ui.maintenance.MaintenanceActivity
 import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 import com.gridee.parking.ui.operator.OperatorDashboardActivity
 import com.gridee.parking.utils.AuthSession
 import kotlinx.coroutines.Job
@@ -111,12 +112,12 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun shouldSkipCinematic(): Boolean {
-        return hasShownCinematic || ValueAnimator.getDurationScale() == 0f
+        return SplashCinematicPolicy.shouldSkip(hasShownCinematic) {
+            AnimatorSettingsCompat.areEnabled(this)
+        }
     }
 
     private fun configureSystemBars() {
-        window.statusBarColor = Color.BLACK
-        window.navigationBarColor = Color.BLACK
         WindowInsetsControllerCompat(window, window.decorView).apply {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false

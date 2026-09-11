@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rounded matte behind the 20dp icon asset, and the outline clipToOutline rounds it with. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#33FFFFFF" />
+    <corners android:radius="6dp" />
+</shape>

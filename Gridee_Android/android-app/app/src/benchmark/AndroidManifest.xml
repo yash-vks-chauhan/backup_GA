@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Camera/UI benchmarks are local-only. This is removed only from the benchmark APK. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+
+    <application>
+        <!-- Shell profiling is enabled only for the local benchmark variant. -->
+        <profileable
+            android:shell="true"
+            tools:targetApi="29" />
+
+        <!--
+          Benchmark-only external entry point. The production QrScannerActivity remains
+          non-exported; launching this alias draws the real scanner as the first activity.
+        -->
+        <activity-alias
+            android:name=".benchmark.OperatorScannerBenchmarkActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:targetActivity=".ui.qr.QrScannerActivity" />
+
+        <!--
+          PERF-024 entry point. The production MainContainerActivity remains non-exported;
+          this alias exists only in the offline benchmark APK.
+        -->
+        <activity-alias
+            android:name=".benchmark.MainContainerBenchmarkActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:targetActivity=".ui.main.MainContainerActivity" />
+
+        <!-- Seeds a synthetic local-only JWT so the real authenticated main UI can be measured. -->
+        <receiver
+            android:name=".benchmark.Perf024BenchmarkSeedReceiver"
+            android:enabled="true"
+            android:exported="true" />
+    </application>
+
+</manifest>

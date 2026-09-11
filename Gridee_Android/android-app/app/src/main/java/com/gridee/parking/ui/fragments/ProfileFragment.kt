@@ -13,11 +13,14 @@ import android.view.animation.PathInterpolator
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.Lifecycle
 import com.gridee.parking.R
 import com.gridee.parking.databinding.FragmentProfileBinding
 import com.gridee.parking.ui.base.BaseTabFragment
 import com.gridee.parking.ui.bottomsheet.AddVehicleBottomSheet
 import com.gridee.parking.ui.bottomsheet.LogoutConfirmationBottomSheet
+import com.gridee.parking.ui.bottomsheet.ProfilePageBottomSheet
+import com.gridee.parking.ui.bottomsheet.VehicleOptionsBottomSheet
 import com.gridee.parking.ui.profile.AccountSettingsActivity
 import com.gridee.parking.ui.profile.DisplayThemeActivity
 import com.gridee.parking.ui.profile.HelpSupportActivity
@@ -54,6 +57,7 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
 
     override fun setupUI() {
         viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+        setupFragmentResultListeners()
         renderProfileHeader(AuthSession.getUserName(requireContext()))
         
         // Setup frosted glass toolbar scroll effect
@@ -79,6 +83,68 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
                 duration = 3000L
             )
         }
+    }
+
+    private fun setupFragmentResultListeners() {
+        childFragmentManager.setFragmentResultListener(
+            AddVehicleBottomSheet.RESULT_KEY,
+            viewLifecycleOwner,
+        ) { _, result ->
+            val vehicleNumber = result.getString(AddVehicleBottomSheet.RESULT_VEHICLE_NUMBER)
+                ?.takeIf { it.isNotBlank() }
+                ?: return@setFragmentResultListener
+            viewModel.addVehicle(vehicleNumber)
+            showVehicleSuccess(R.string.vehicle_added_successfully)
+        }
+
+        childFragmentManager.setFragmentResultListener(
+            VehicleOptionsBottomSheet.RESULT_KEY,
+            viewLifecycleOwner,
+        ) { _, result ->
+            val action = result.getString(VehicleOptionsBottomSheet.RESULT_ACTION)
+                ?: return@setFragmentResultListener
+            val originalNumber = result.getString(
+                VehicleOptionsBottomSheet.RESULT_ORIGINAL_VEHICLE_NUMBER
+            )?.takeIf { it.isNotBlank() } ?: return@setFragmentResultListener
+
+            when (action) {
+                VehicleOptionsBottomSheet.ACTION_EDIT -> {
+                    val newNumber = result.getString(
+                        VehicleOptionsBottomSheet.RESULT_NEW_VEHICLE_NUMBER
+                    )?.takeIf { it.isNotBlank() } ?: return@setFragmentResultListener
+                    viewModel.editVehicle(originalNumber, newNumber)
+                    showVehicleSuccess(R.string.vehicle_number_saved_successfully)
+                }
+                VehicleOptionsBottomSheet.ACTION_MAKE_DEFAULT -> {
+                    setDefaultVehicle(originalNumber)
+                }
+                VehicleOptionsBottomSheet.ACTION_DELETE -> {
+                    viewModel.removeVehicle(originalNumber)
+                    showVehicleSuccess(R.string.vehicle_removed_successfully)
+                }
+            }
+        }
+
+        childFragmentManager.setFragmentResultListener(
+            LogoutConfirmationBottomSheet.RESULT_KEY,
+            viewLifecycleOwner,
+        ) { _, result ->
+            if (result.getBoolean(LogoutConfirmationBottomSheet.RESULT_CONFIRMED)) {
+                viewModel.logout()
+            }
+        }
+    }
+
+    private fun showVehicleSuccess(messageRes: Int) {
+        val parentView = requireActivity().findViewById<android.view.ViewGroup>(R.id.fragment_container)
+            ?: requireActivity().window.decorView as? android.view.ViewGroup
+            ?: binding.root
+        NotificationHelper.showSuccess(
+            parent = parentView,
+            title = getString(R.string.success),
+            message = getString(messageRes),
+            duration = 3000L,
+        )
     }
 
     private fun setupFrostedToolbar() {
@@ -198,8 +264,18 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
         // Account section click
         val editProfileListener = View.OnClickListener { view ->
             view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-            com.gridee.parking.ui.bottomsheet.ProfilePageBottomSheet.newInstance()
-                .show(childFragmentManager, com.gridee.parking.ui.bottomsheet.ProfilePageBottomSheet.TAG)
+            if (!isAdded) return@OnClickListener
+            val currentViewLifecycle = viewLifecycleOwnerLiveData.value?.lifecycle
+                ?: return@OnClickListener
+            val fragmentManager = childFragmentManager
+            if (!currentViewLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+                fragmentManager.isDestroyed || fragmentManager.isStateSaved ||
+                fragmentManager.findFragmentByTag(ProfilePageBottomSheet.TAG) != null
+            ) return@OnClickListener
+            runCatching {
+                ProfilePageBottomSheet.newInstance()
+                    .showNow(fragmentManager, ProfilePageBottomSheet.TAG)
+            }
         }
 
         binding.btnEditProfile.setOnClickListener(editProfileListener)
@@ -406,51 +482,25 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
     }
 
     private fun showVehicleOptionsDialog(vehicleNumber: String) {
+        if (!isAdded) return
+        val currentViewLifecycle = viewLifecycleOwnerLiveData.value?.lifecycle ?: return
+        val fragmentManager = childFragmentManager
+        if (!currentViewLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            fragmentManager.isDestroyed || fragmentManager.isStateSaved ||
+            fragmentManager.findFragmentByTag(VehicleOptionsBottomSheet.TAG) != null
+        ) return
         val isDefault = viewModel.userProfile.value?.defaultVehicle == vehicleNumber
         val existingVehicles = viewModel.userProfile.value?.vehicleNumbers ?: emptyList()
-        
-        val bottomSheet = com.gridee.parking.ui.bottomsheet.VehicleOptionsBottomSheet(
+
+        val bottomSheet = VehicleOptionsBottomSheet.newInstance(
             vehicleNumber = vehicleNumber,
             existingVehicleNumbers = existingVehicles,
             isDefault = isDefault,
-            onEditSave = { newVehicleNumber ->
-                // Edit is handled inside the sheet with slide animation.
-                // This callback fires when user saves the new number.
-                viewModel.editVehicle(vehicleNumber, newVehicleNumber)
-                
-                // Show professional success notification globally
-                val parentView = requireActivity().findViewById<android.view.ViewGroup>(R.id.fragment_container)
-                    ?: requireActivity().window.decorView as? android.view.ViewGroup 
-                    ?: binding.root
-                NotificationHelper.showSuccess(
-                    parent = parentView,
-                    title = getString(R.string.success),
-                    message = getString(R.string.vehicle_number_saved_successfully),
-                    duration = 3000L
-                )
-            },
-            onMakeDefault = { 
-                setDefaultVehicle(it) 
-            },
-            onDeleteConfirm = { 
-                // Delete confirmation is handled inside the sheet with slide animation.
-                // This callback fires when user confirms deletion.
-                viewModel.removeVehicle(it)
-                
-                // Show professional success notification globally
-                val parentView = requireActivity().findViewById<android.view.ViewGroup>(R.id.fragment_container)
-                    ?: requireActivity().window.decorView as? android.view.ViewGroup 
-                    ?: binding.root
-                NotificationHelper.showSuccess(
-                    parent = parentView,
-                    title = getString(R.string.success),
-                    message = getString(R.string.vehicle_removed_successfully),
-                    duration = 3000L
-                )
-            }
         )
-        
-        bottomSheet.show(childFragmentManager, com.gridee.parking.ui.bottomsheet.VehicleOptionsBottomSheet.TAG)
+
+        runCatching {
+            bottomSheet.showNow(fragmentManager, VehicleOptionsBottomSheet.TAG)
+        }
     }
 
     private fun setDefaultVehicle(vehicleNumber: String) {
@@ -458,31 +508,34 @@ class ProfileFragment : BaseTabFragment<FragmentProfileBinding>() {
     }
 
     private fun showAddVehicleDialog() {
+        if (!isAdded) return
+        val currentViewLifecycle = viewLifecycleOwnerLiveData.value?.lifecycle ?: return
+        val fragmentManager = childFragmentManager
+        if (!currentViewLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            fragmentManager.isDestroyed || fragmentManager.isStateSaved ||
+            fragmentManager.findFragmentByTag(AddVehicleBottomSheet.TAG) != null
+        ) return
         // Show the add vehicle bottom sheet with spring animation
         val existingVehicles = viewModel.userProfile.value?.vehicleNumbers ?: emptyList()
-        val bottomSheet = AddVehicleBottomSheet(existingVehicles) { newVehicleNumber ->
-            // Add the vehicle to the backend
-            viewModel.addVehicle(newVehicleNumber)
-            
-            // Show professional success notification globally
-            val parentView = requireActivity().findViewById<android.view.ViewGroup>(R.id.fragment_container)
-                ?: requireActivity().window.decorView as? android.view.ViewGroup 
-                ?: binding.root
-            NotificationHelper.showSuccess(
-                parent = parentView,
-                title = getString(R.string.success),
-                message = getString(R.string.vehicle_added_successfully),
-                duration = 3000L
-            )
-        }
+        val bottomSheet = AddVehicleBottomSheet.newInstance(existingVehicles)
         
-        bottomSheet.show(childFragmentManager, AddVehicleBottomSheet.TAG)
+        runCatching {
+            bottomSheet.showNow(fragmentManager, AddVehicleBottomSheet.TAG)
+        }
     }
 
     private fun showLogoutConfirmation() {
-        LogoutConfirmationBottomSheet.newInstance()
-            .setOnLogoutConfirmed { viewModel.logout() }
-            .show(childFragmentManager, LogoutConfirmationBottomSheet.TAG)
+        if (!isAdded) return
+        val currentViewLifecycle = viewLifecycleOwnerLiveData.value?.lifecycle ?: return
+        val fragmentManager = childFragmentManager
+        if (!currentViewLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            fragmentManager.isDestroyed || fragmentManager.isStateSaved ||
+            fragmentManager.findFragmentByTag(LogoutConfirmationBottomSheet.TAG) != null
+        ) return
+        runCatching {
+            LogoutConfirmationBottomSheet.newInstance()
+                .showNow(fragmentManager, LogoutConfirmationBottomSheet.TAG)
+        }
     }
 
     private fun navigateToLogin() {

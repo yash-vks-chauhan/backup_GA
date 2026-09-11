@@ -467,6 +467,7 @@
 
                 <!-- Divider -->
                 <View
+                    android:id="@+id/dividerVehicleWallet"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="54dp"
@@ -571,6 +572,7 @@
 
             <!-- Refund & Penalty Policy -->
             <TextView
+                android:id="@+id/tvPolicyTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
@@ -583,6 +585,7 @@
                 android:textSize="11sp" />
 
             <LinearLayout
+                android:id="@+id/policyContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -592,6 +595,7 @@
 
                 <!-- Policy Item 1 -->
                 <LinearLayout
+                    android:id="@+id/policyItemRefund"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
@@ -605,6 +609,7 @@
                         android:backgroundTint="@color/text_tertiary" />
 
                     <TextView
+                        android:id="@+id/tvPolicyRefund"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -617,6 +622,7 @@
 
                 <!-- Policy Item 2 -->
                 <LinearLayout
+                    android:id="@+id/policyItemPenalty"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -631,6 +637,7 @@
                         android:backgroundTint="@color/text_tertiary" />
 
                     <TextView
+                        android:id="@+id/tvPolicyPenalty"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -643,6 +650,7 @@
 
                 <!-- Policy Item 3 -->
                 <LinearLayout
+                    android:id="@+id/policyItemCancellation"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -657,6 +665,7 @@
                         android:backgroundTint="@color/text_tertiary" />
 
                     <TextView
+                        android:id="@+id/tvPolicyCancellation"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"

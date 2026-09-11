@@ -27,13 +27,15 @@ NOTE: `minifyEnabled false` in app/build.gradle — none of this is stripped by 
 - [ ] `.ui.profile.EditProfileActivity` — no such file
 - [ ] `.ui.wallet.WalletActivity` — no such file
 
-## 3. Manifest-declared but never launched (demo/test screens)
-These are only "alive" because the manifest names them; nothing starts them.
-- [ ] ui/MainComposeActivity.kt — intent-filter commented out, 0 launch sites
+## 3. [DONE] Manifest-declared but never launched (demo/test screens)
+Three unreachable demo activities were deleted. The JWT diagnostic screen and its
+dedicated support files were moved to `src/debug`, so they remain available for
+internal diagnostics but are absent from release APK/AAB artifacts.
+- [x] ui/MainComposeActivity.kt — deleted; intent-filter commented out, 0 launch sites
       (keep ui/MainViewModel.kt — HomeFragment uses it independently)
-- [ ] ui/compose/EdgeToEdgeComposeActivity.kt — 0 launch sites
-- [ ] ui/demo/EdgeToEdgeDemoActivity.kt — 0 launch sites, "Test activity" comment
-- [ ] ui/auth/JwtTestActivity.kt (+ layout activity_jwt_test.xml) — 0 launch sites
+- [x] ui/compose/EdgeToEdgeComposeActivity.kt — deleted; 0 launch sites
+- [x] ui/demo/EdgeToEdgeDemoActivity.kt — deleted; 0 launch sites, "Test activity" comment
+- [x] ui/auth/JwtTestActivity.kt (+ dedicated ViewModel/resources) — moved to `src/debug`; 0 launch sites in production
 
 ## 4. [DONE] Unreachable Kotlin files — 29 deleted (EdgeToEdgeUtils.kt RETAINED, see landmine above)
 - [ ] com/example/edge2edge/EdgeToEdgeActivity.kt

@@ -10,7 +10,8 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import android.os.SystemClock
+import com.gridee.parking.utils.AppLog
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
@@ -24,6 +25,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.SpringAnimation
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -37,15 +40,86 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
 import com.google.android.material.progressindicator.IndeterminateDrawable
 import com.gridee.parking.R
-import com.gridee.parking.data.repository.WalletRepository
 import com.gridee.parking.databinding.BottomSheetRewardBinding
 import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 import com.gridee.parking.ui.views.RewardCoinView
+import com.gridee.parking.ui.wallet.OneShotGate
+import com.gridee.parking.ui.wallet.RewardCreditCoordinator
+import com.gridee.parking.config.RemoteConfigManager
+import com.gridee.parking.utils.AdConsentManager
 import com.gridee.parking.utils.AdMobManager
+import com.gridee.parking.utils.AdRevenueAnalytics
+import com.gridee.parking.utils.DailyRewardState
 import com.gridee.parking.utils.InAppReviewManager
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+
+private const val ARG_REWARD_START_RECT = "reward.start_rect"
+private const val ARG_REWARD_ENTRY_POINT = "reward.entry_point"
+private const val STATE_REWARD_SOURCE_GEOMETRY_CONSUMED = "reward_source_geometry_consumed"
+private const val STATE_REWARD_COIN_AIRBORNE_RESULT_SENT = "reward_coin_airborne_result_sent"
+private const val STATE_REWARD_DISMISS_RESULT_SENT = "reward_dismiss_result_sent"
+
+internal data class RewardBottomSheetLaunchConfig(
+    val startRect: IntArray? = null,
+    val entryPoint: String = RewardBottomSheet.ENTRY_POINT_UNKNOWN,
+) {
+    fun toBundle(): Bundle = Bundle().apply {
+        putIntArray(ARG_REWARD_START_RECT, startRect?.copyOf())
+        putString(ARG_REWARD_ENTRY_POINT, entryPoint)
+    }
+
+    companion object {
+        fun from(bundle: Bundle): RewardBottomSheetLaunchConfig =
+            RewardBottomSheetLaunchConfig(
+                startRect = sanitizeStartRect(bundle.getIntArray(ARG_REWARD_START_RECT)),
+                entryPoint = bundle.getString(ARG_REWARD_ENTRY_POINT)
+                    ?.takeIf(String::isNotBlank)
+                    ?: RewardBottomSheet.ENTRY_POINT_UNKNOWN,
+            )
+
+        private fun sanitizeStartRect(rect: IntArray?): IntArray? = rect
+            ?.takeIf { it.size >= 3 && it[2] > 0 }
+            ?.copyOfRange(0, 3)
+    }
+
+    /** A screen-space source rect is valid only for the activity/view tree that captured it. */
+    fun forFragmentCreation(restoringSavedInstance: Boolean): RewardBottomSheetLaunchConfig =
+        if (restoringSavedInstance) copy(startRect = null) else this
+}
+
+internal data class RewardBottomSheetOneShotState(
+    val sourceGeometryConsumed: Boolean = false,
+    val coinAirborneResultSent: Boolean = false,
+    val dismissResultSent: Boolean = false,
+) {
+    fun writeTo(bundle: Bundle) {
+        bundle.putBoolean(STATE_REWARD_SOURCE_GEOMETRY_CONSUMED, sourceGeometryConsumed)
+        bundle.putBoolean(STATE_REWARD_COIN_AIRBORNE_RESULT_SENT, coinAirborneResultSent)
+        bundle.putBoolean(STATE_REWARD_DISMISS_RESULT_SENT, dismissResultSent)
+    }
+
+    companion object {
+        fun from(bundle: Bundle?): RewardBottomSheetOneShotState =
+            RewardBottomSheetOneShotState(
+                sourceGeometryConsumed = bundle?.getBoolean(
+                    STATE_REWARD_SOURCE_GEOMETRY_CONSUMED,
+                    false,
+                ) ?: false,
+                coinAirborneResultSent = bundle?.getBoolean(
+                    STATE_REWARD_COIN_AIRBORNE_RESULT_SENT,
+                    false,
+                ) ?: false,
+                dismissResultSent = bundle?.getBoolean(
+                    STATE_REWARD_DISMISS_RESULT_SENT,
+                    false,
+                ) ?: false,
+            )
+    }
+}
 
 /**
  * "The Mint" — the daily-reward sheet, designed as one continuous gesture with
@@ -73,17 +147,6 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
     /** Screen rect of the source coin: [x, y, sizePx]. Null = no flight (fade in). */
     private var startRect: IntArray? = null
 
-    /** Invoked on dismiss so the host can restore its hidden source coin. */
-    var onDismissed: (() -> Unit)? = null
-
-    /**
-     * Invoked the instant the flying coin copy is airborne in the sheet. The host
-     * keeps its source coin fully in place until this fires, then recedes it into
-     * a faint "empty socket" — so the lift-off is a seamless hand-off with no
-     * visible gap on the home header.
-     */
-    var onCoinAirborne: (() -> Unit)? = null
-
     // ── Rewarded-ad / wallet state ───────────────────────────────────────────
     private var rewardedAd: RewardedAd? = null
     private var isLoadingRewardedAd = false
@@ -92,6 +155,49 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
     private var isViewDestroyed = false
     private var isRewardEarned = false
     private val rewardAmount = 10.0
+    private val rewardAdShowing = AtomicBoolean(false)
+
+    /**
+     * Where this sheet was opened from, reported on every rewarded event. Home and Wallet are
+     * different populations — Home opens off the daily coin nudge, Wallet off a deliberate visit
+     * — and their claim rates have no reason to match.
+     */
+    private var entryPoint: String = ENTRY_POINT_UNKNOWN
+
+    /** Set once this sheet has joined the process-wide consent request, so it cannot recurse. */
+    private var consentRetryRequested = false
+
+    /**
+     * Set once that request has come back, whatever it decided. Without it, a consent flow that
+     * resolves as *denied* before the user taps Watch would look identical to one still in
+     * flight, and the tap would be absorbed as "a retry is pending" — leaving the button
+     * spinning on a retry that is never coming.
+     */
+    private var consentRetryResolved = false
+
+    /** Elapsed-realtime stamp of when the held ad finished loading, for the expiry check. */
+    private var rewardedAdLoadedAtMs = 0L
+
+    /**
+     * The winning adapter for the currently held ad, captured at load. Read from `responseInfo`
+     * at show time instead would be too late on the paths where the ad is cleared first.
+     */
+    private var loadedAdSourceName: String? = null
+
+    /** Whether the ad we are holding, or held, ever reached [FullScreenContentCallback.onAdImpression]. */
+    private val rewardImpressionLogged = AtomicBoolean(false)
+
+    /**
+     * Why the most recent attempt failed, if one did. Discards are reported once, at teardown,
+     * rather than at each failure: a load can fail and a retry can then succeed, and a sheet that
+     * ends in an impression is not a discard no matter how many attempts it took to get there.
+     */
+    private var lastRewardFailureReason: String? = null
+
+    /** Guards the single discard event so a dismiss following onDestroyView cannot double-count. */
+    private val rewardDiscardLogged = AtomicBoolean(false)
+    private val rewardCreditStarted = AtomicBoolean(false)
+    private var rewardEventId = newRewardEventId()
 
     // ── Entrance choreography ────────────────────────────────────────────────
     private var flightOverlay: RewardCoinView? = null
@@ -101,11 +207,53 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
     private var hasFinishedEntrance = false
     private var hasLanded = false
     private var haloBreatheAnim: ObjectAnimator? = null
+    private var useSettledRestoredPresentation = false
+    private var sourceGeometryConsumed = false
+    private var coinAirborneResultSent = false
+    private var dismissResultSent = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
+        val restoringSavedInstance = savedInstanceState != null
+        useSettledRestoredPresentation = restoringSavedInstance
+        val launchConfig = (savedInstanceState?.getBundle(STATE_LAUNCH_CONFIG)
+            ?.let(RewardBottomSheetLaunchConfig::from)
+            ?: arguments?.let(RewardBottomSheetLaunchConfig::from))
+            ?.forFragmentCreation(restoringSavedInstance)
+        launchConfig?.let { config ->
+            startRect = config.startRect?.copyOf()
+            entryPoint = config.entryPoint
+        }
+        // Source coordinates belong to the old window. A restored open sheet starts settled and
+        // Home reconstructs its socket state by finding this sheet, rather than replaying flight.
+        val oneShotState = RewardBottomSheetOneShotState.from(savedInstanceState)
+        sourceGeometryConsumed = restoringSavedInstance || oneShotState.sourceGeometryConsumed
+        coinAirborneResultSent = oneShotState.coinAirborneResultSent
+        dismissResultSent = oneShotState.dismissResultSent
+        rewardEventId = savedInstanceState?.getString(STATE_REWARD_EVENT_ID)
+            ?.takeIf { it.isNotBlank() }
+            ?: rewardEventId
+        // Compatibility with state written by builds before launch configuration moved to args.
+        entryPoint = savedInstanceState?.getString(STATE_ENTRY_POINT)
+            ?.takeIf { it.isNotBlank() }
+            ?: entryPoint
         preloadRewardedAd()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_REWARD_EVENT_ID, rewardEventId)
+        outState.putString(STATE_ENTRY_POINT, entryPoint)
+        RewardBottomSheetOneShotState(
+            sourceGeometryConsumed = sourceGeometryConsumed,
+            coinAirborneResultSent = coinAirborneResultSent,
+            dismissResultSent = dismissResultSent,
+        ).writeTo(outState)
+        outState.putBundle(
+            STATE_LAUNCH_CONFIG,
+            RewardBottomSheetLaunchConfig(startRect, entryPoint).toBundle(),
+        )
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -136,15 +284,13 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
 
             dialog.window?.let { window ->
                 WindowCompat.setDecorFitsSystemWindows(window, false)
-                window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                window.isNavigationBarContrastEnforced = false
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
+                }
                 val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
                     Configuration.UI_MODE_NIGHT_YES
                 WindowCompat.getInsetsController(window, window.decorView)
                     .isAppearanceLightNavigationBars = !isDark
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    window.navigationBarDividerColor = android.graphics.Color.TRANSPARENT
-                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     window.attributes.blurBehindRadius = 50
                     window.attributes = window.attributes
@@ -237,6 +383,8 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
         // and the earn row feel physical rather than flat.
         addPressBounce(binding.btnPrimary)
         addPressBounce(binding.earnRow)
+
+        applyDailyCapState()
     }
 
     /** Springy scale-down on touch, scale-back on release — clicks still fire. */
@@ -312,6 +460,19 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
 
     /** Hide everything before the first frame; arm a safety so we always bloom. */
     private fun prepareEntrance() {
+        if (useSettledRestoredPresentation) {
+            // This dialog was already open. Re-enter fully settled: replaying the source flight
+            // would use coordinates from the destroyed window and make rotation/theme changes
+            // look like a second user action.
+            hasStartedEntrance = true
+            hasFinishedEntrance = true
+            hasLanded = true
+            binding.heroMedallion.alpha = 1f
+            binding.chamberGlow.alpha = 1f
+            cascadeItems.forEach { it.alpha = 1f }
+            binding.rewardAmountView.setAmount(rewardAmount.toInt(), animate = false)
+            return
+        }
         binding.heroMedallion.alpha = 0f
         binding.chamberGlow.alpha = 0f
         cascadeItems.forEach { it.alpha = 0f }
@@ -331,6 +492,12 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
         if (hasStartedEntrance || _binding == null) return
         hasStartedEntrance = true
 
+        // Consume source geometry exactly once. It is window-relative and must never be replayed
+        // after this view tree changes; keep only this local copy for the current choreography.
+        val launchRect = startRect
+        startRect = null
+        if (launchRect != null) sourceGeometryConsumed = true
+
         if (!animatorsEnabled()) {
             binding.heroMedallion.alpha = 1f
             binding.chamberGlow.alpha = 1f
@@ -348,7 +515,7 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
         binding.chamberGlow.postDelayed({ if (_binding != null) startHaloBreathing() }, 820L)
 
         val hero = binding.heroMedallion
-        val rect = startRect
+        val rect = launchRect
         if (rect != null && hero.width > 0) {
             // Capture the slot's RESTING position before we push the sheet down.
             val restingLoc = IntArray(2).also { hero.getLocationOnScreen(it) }
@@ -410,9 +577,12 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
         binding.heroMedallion.alpha = 0f
 
         // The bright copy now exists exactly over the source coin — tell the host
-        // to recede its header coin into a socket so the lift-off has no gap.
-        onCoinAirborne?.invoke()
-        onCoinAirborne = null
+        // to recede its header coin into a socket so the lift-off has no gap. A
+        // FragmentResult survives host view recreation; an assigned lambda does not.
+        if (!coinAirborneResultSent) {
+            coinAirborneResultSent = true
+            publishHostResult(RESULT_KEY_COIN_AIRBORNE)
+        }
 
         overlay.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
 
@@ -535,21 +705,76 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private fun animatorsEnabled(): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
-            android.animation.ValueAnimator.areAnimatorsEnabled()
+    private fun animatorsEnabled(): Boolean {
+        val currentContext = context ?: return false
+        return AnimatorSettingsCompat.areEnabled(currentContext)
+    }
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
     private fun dpF(v: Float): Float = v * resources.displayMetrics.density
 
     // ── Rewarded ad + wallet credit (ported, behaviour unchanged) ──────────────
 
+    /**
+     * Whether this user has spent today's rewards.
+     *
+     * Gated on the remote switch so the cap can be lifted without a release. Note the switch's
+     * inverted sense: off means uncapped, which is the pre-cap behaviour.
+     */
+    private fun isDailyCapReached(): Boolean {
+        val ctx = context ?: return false
+        if (!RemoteConfigManager.isRewardedDailyCapEnabled()) return false
+        return DailyRewardState.hasReachedDailyCap(ctx)
+    }
+
+    /**
+     * Reflects the remaining allowance in the sheet. The count is stated plainly rather than
+     * hidden until it runs out — a CTA that silently stops working reads as a bug, and a user
+     * who knows the rule can pace themselves against it.
+     */
+    private fun applyDailyCapState() {
+        if (_binding == null) return
+        val ctx = context ?: return
+        val capEnforced = RemoteConfigManager.isRewardedDailyCapEnabled()
+        if (!capEnforced) {
+            binding.tvRewardNote.setText(R.string.a_new_reward_every_day)
+            return
+        }
+        val remaining = DailyRewardState.rewardsRemainingToday(ctx)
+        if (remaining <= 0) {
+            binding.btnPrimary.isEnabled = false
+            binding.btnPrimary.alpha = 0.55f
+            binding.btnPrimary.text = getString(R.string.reward_cap_reached_cta)
+            primaryButtonIdleLabel = binding.btnPrimary.text
+            binding.tvRewardNote.text =
+                getString(R.string.reward_cap_reached_note, DailyRewardState.DAILY_REWARD_CAP)
+        } else {
+            binding.tvRewardNote.text = getString(
+                R.string.reward_rewards_left_today,
+                remaining,
+                DailyRewardState.DAILY_REWARD_CAP
+            )
+        }
+    }
+
     private fun preloadRewardedAd() {
         if (isLoadingRewardedAd || rewardedAd != null) return
+        // A capped user will not be shown an ad, so a request here could never become an
+        // impression. Run enough of them and the placement's request-to-impression ratio falls
+        // for a reason unrelated to demand, which is a signal mediation partners bid down on.
+        // Recording the reason as well makes the discard event say the cap was what bound.
+        if (isDailyCapReached()) {
+            lastRewardFailureReason = DISCARD_DAILY_CAP_REACHED
+            return
+        }
         // Mediated networks such as Meta require an Activity context for rewarded requests.
         // The request still uses the AdMob ad-unit ID and the normal Google Mobile Ads API.
         val activity = requireActivity()
         val adUnitId = AdMobManager.rewardedAdUnitId
+        // Every callback below can outlive this fragment's view, so telemetry reports through the
+        // application context rather than requireContext().
+        val appContext = activity.applicationContext
+        val requestEntryPoint = entryPoint
         isLoadingRewardedAd = true
 
         val initialized = AdMobManager.initializeIfEnabled(requireContext()) {
@@ -565,6 +790,31 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
                 object : RewardedAdLoadCallback() {
                     override fun onAdLoaded(ad: RewardedAd) {
                         isLoadingRewardedAd = false
+                        val adSourceName = ad.responseInfo
+                            .loadedAdapterResponseInfo
+                            ?.adSourceName
+                            ?.takeIf { it.isNotBlank() }
+                        loadedAdSourceName = adSourceName
+                        rewardedAdLoadedAtMs = SystemClock.elapsedRealtime()
+                        AdRevenueAnalytics.logRewardedLoad(
+                            appContext,
+                            loaded = true,
+                            adSourceName = adSourceName,
+                            entryPoint = requestEntryPoint
+                        )
+                        // Set at load rather than at show: some mediation adapters report the
+                        // paid event as soon as the auction resolves, and the show path clears
+                        // `rewardedAd` before the callback would otherwise be attached.
+                        ad.setOnPaidEventListener { value ->
+                            AdRevenueAnalytics.logRewardedPaidEvent(
+                                appContext,
+                                value.valueMicros,
+                                value.currencyCode,
+                                value.precisionType,
+                                adSourceName,
+                                requestEntryPoint
+                            )
+                        }
                         rewardedAd = ad
                         maybeShowRewardedAdIfPending()
                     }
@@ -573,6 +823,16 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
                         logRewardedAdLoadFailure(adError)
                         isLoadingRewardedAd = false
                         rewardedAd = null
+                        loadedAdSourceName = null
+                        rewardedAdLoadedAtMs = 0L
+                        AdRevenueAnalytics.logRewardedLoad(
+                            appContext,
+                            loaded = false,
+                            adSourceName = null,
+                            entryPoint = requestEntryPoint,
+                            errorCode = adError.code
+                        )
+                        lastRewardFailureReason = DISCARD_LOAD_FAILED
                         handleRewardedAdLoadFailure(rewardedAdLoadFailureMessage(adError))
                     }
                 }
@@ -581,13 +841,24 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
 
         if (!initialized) {
             isLoadingRewardedAd = false
-            handleRewardedAdLoadFailure("Rewards are temporarily unavailable. Please try again later.")
+            if (!joinConsentFlowAndRetry()) {
+                lastRewardFailureReason = DISCARD_ADS_UNAVAILABLE
+                handleRewardedAdLoadFailure("Rewards are temporarily unavailable. Please try again later.")
+            }
         }
     }
 
     private fun showRewardVideo() {
-        val ad = rewardedAd
+        if (isDailyCapReached()) {
+            lastRewardFailureReason = DISCARD_DAILY_CAP_REACHED
+            applyDailyCapState()
+            return
+        }
+        val ad = rewardedAd?.takeUnless { isRewardedAdExpired() }
         if (ad == null) {
+            // Drop an expired ad rather than showing it: it would fail at show time and surface
+            // as "we could not open the reward" to a user who did nothing wrong.
+            if (rewardedAd != null) discardExpiredRewardedAd()
             pendingShowRewardedAd = true
             setRewardedAdLoading(true)
             preloadRewardedAd()
@@ -600,19 +871,80 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
 
     private fun maybeShowRewardedAdIfPending() {
         if (!pendingShowRewardedAd) return
-        val ad = rewardedAd ?: return
+        val ad = rewardedAd?.takeUnless { isRewardedAdExpired() } ?: return
         if (isViewDestroyed || !isAdded) return
         pendingShowRewardedAd = false
         setRewardedAdLoading(false)
         showRewardedAd(ad)
     }
 
+    /**
+     * Joins the in-flight consent request rather than giving up on the reward.
+     *
+     * UMP is refreshed once per process from `MainContainerActivity.onResume`, and
+     * `AdConsentManager.canRequestAds` stays false until that network call returns. The sheet
+     * loads its ad on open, so anyone who taps the home coin during a cold start over a slow
+     * connection was being told "Rewards are temporarily unavailable" for a race they had no
+     * part in — on the highest-eCPM placement in the app. Both native placements already wait
+     * for consent this way; rewarded was the only one that simply gave up.
+     *
+     * @return true when the failure has been absorbed and a retry is pending, false when the
+     *         caller should report it — consent is settled and something else is the blocker,
+     *         such as the `adMob` or `rewards` switch being off.
+     */
+    private fun joinConsentFlowAndRetry(): Boolean {
+        val host = activity?.takeIf { !it.isFinishing && !it.isDestroyed } ?: return false
+        // Consent already resolved, so it is not what blocked this load.
+        if (AdConsentManager.canRequestAds(host)) return false
+        // Consent has already come back and did not allow ads. Nothing further is pending, so
+        // this is a real failure and the caller must report it rather than wait.
+        if (consentRetryResolved) return false
+        // Already waiting on the request started below. The pending-show machinery covers the
+        // user who taps Watch inside the window: they keep the spinner, and the load that
+        // follows completion is shown by maybeShowRewardedAdIfPending().
+        if (consentRetryRequested) return true
+        consentRetryRequested = true
+        AdConsentManager.gatherConsent(host) { allowed ->
+            // Recorded before the lifecycle guard: the flow is settled either way, and a sheet
+            // that is briefly detached must not come back thinking one is still in flight.
+            consentRetryResolved = true
+            if (isViewDestroyed || !isAdded) return@gatherConsent
+            if (allowed) {
+                preloadRewardedAd()
+            } else {
+                lastRewardFailureReason = DISCARD_CONSENT_DENIED
+                handleRewardedAdLoadFailure(
+                    "Rewards are unavailable until you allow personalised ads."
+                )
+            }
+        }
+        return true
+    }
+
+    private fun isRewardedAdExpired(): Boolean =
+        rewardedAdLoadedAtMs > 0L &&
+            SystemClock.elapsedRealtime() - rewardedAdLoadedAtMs >= REWARDED_MAX_AGE_MS
+
+    private fun discardExpiredRewardedAd() {
+        rewardedAd = null
+        loadedAdSourceName = null
+        rewardedAdLoadedAtMs = 0L
+        lastRewardFailureReason = DISCARD_AD_EXPIRED
+    }
+
     private fun setRewardedAdLoading(isLoading: Boolean) {
         if (_binding == null) return
         if (primaryButtonIdleLabel == null) primaryButtonIdleLabel = binding.btnPrimary.text
 
-        binding.btnPrimary.isEnabled = !isLoading
-        binding.btnPrimary.alpha = if (isLoading) 0.7f else 1f
+        // A capped button must stay disabled through every state restore. Both loading helpers
+        // otherwise re-enable it on their way back to idle, which would hand back a fourth watch.
+        val capped = isDailyCapReached()
+        binding.btnPrimary.isEnabled = !isLoading && !capped
+        binding.btnPrimary.alpha = when {
+            isLoading -> 0.7f
+            capped -> 0.55f
+            else -> 1f
+        }
 
         if (isLoading) {
             binding.btnPrimary.text = getString(R.string.preparing_video)
@@ -643,23 +975,33 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
 
     private fun showRewardedAd(ad: RewardedAd) {
         if (!isAdded) return
+        if (!rewardAdShowing.compareAndSet(false, true)) return
         if (_binding != null) {
             binding.btnPrimary.isEnabled = false
             binding.btnPrimary.alpha = 0.6f
         }
+        // Scoped to this exact ad display so even a duplicated mediation callback can submit
+        // only one wallet mutation.
+        val callbackGate = OneShotGate()
+        // Full-screen callbacks routinely arrive after this fragment's view is gone, so they
+        // report through the application context and never touch the binding directly.
+        val appContext = requireContext().applicationContext
+        val showEntryPoint = entryPoint
+        val adSourceName = loadedAdSourceName
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
+                rewardAdShowing.set(false)
                 rewardedAd = null
                 if (!isRewardEarned) dismissAllowingStateLoss()
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                Log.w(
-                    TAG,
-                    "Rewarded ad failed to show: code=${adError.code}, " +
-                        "domain=${adError.domain}, message=${adError.message}"
-                )
+                rewardAdShowing.set(false)
+                AppLog.w(TAG) { "Rewarded ad failed to show (code=${adError.code})" }
                 rewardedAd = null
+                loadedAdSourceName = null
+                rewardedAdLoadedAtMs = 0L
+                lastRewardFailureReason = DISCARD_SHOW_FAILED
                 preloadRewardedAd()
                 setRewardedAdLoading(false)
                 Toast.makeText(
@@ -671,10 +1013,41 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
 
             override fun onAdShowedFullScreenContent() {
                 rewardedAd = null
+                rewardedAdLoadedAtMs = 0L
+            }
+
+            override fun onAdImpression() {
+                // The claim-rate denominator. Counted here rather than in onAdShowed because a
+                // shown ad that never registers an impression earns nothing.
+                if (rewardImpressionLogged.compareAndSet(false, true)) {
+                    AdRevenueAnalytics.logRewardedImpression(
+                        appContext,
+                        adSourceName,
+                        showEntryPoint
+                    )
+                }
+            }
+
+            override fun onAdClicked() {
+                AdRevenueAnalytics.logRewardedClick(appContext, adSourceName)
             }
         }
-        ad.show(requireActivity()) {
+        ad.show(requireActivity()) rewardCallback@{
+            if (!callbackGate.tryAcquire()) return@rewardCallback
             isRewardEarned = true
+            // Recorded before the credit call and committed synchronously: this is the last
+            // moment the app fully controls, and a count lost to process death here would hand
+            // back a free extra reward.
+            DailyRewardState.recordRewardClaimed(appContext)
+            // The claim-rate numerator. Against rewarded_impression this is the share of shown
+            // ads that actually complete, which every cost-per-reward figure so far has assumed
+            // to be 100%.
+            AdRevenueAnalytics.logRewardedEarned(
+                appContext,
+                adSourceName,
+                showEntryPoint,
+                rewardAmount
+            )
             creditRewardToWallet(rewardAmount)
             Toast.makeText(
                 requireContext(),
@@ -694,12 +1067,7 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun logRewardedAdLoadFailure(adError: LoadAdError) {
-        Log.w(
-            TAG,
-            "Rewarded ad failed to load: code=${adError.code}, " +
-                "domain=${adError.domain}, message=${adError.message}, " +
-                "responseInfo=${adError.responseInfo}"
-        )
+        AppLog.w(TAG) { "Rewarded ad failed to load (code=${adError.code})" }
     }
 
     private fun rewardedAdLoadFailureMessage(adError: LoadAdError): String {
@@ -719,21 +1087,29 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
 
     private fun creditRewardToWallet(amount: Double) {
         if (!isAdded) return
+        if (!rewardCreditStarted.compareAndSet(false, true)) return
         val ctx = requireContext()
         viewLifecycleOwner.lifecycleScope.launch {
             setRewardLoading(true)
             try {
-                val result = withContext(Dispatchers.IO) { WalletRepository(ctx).topUpWallet(amount) }
+                val result = RewardCreditCoordinator.credit(ctx, rewardEventId, amount)
                 result.fold(
-                    onSuccess = { payload -> showRewardDialog(amount, payload["balance"] as? Double) },
+                    onSuccess = {
+                        showRewardDialog(amount)
+                    },
                     onFailure = { error ->
                         Toast.makeText(
                             ctx,
                             "Reward earned but could not be added: ${error.message ?: "Unknown error"}",
                             Toast.LENGTH_LONG
                         ).show()
+                        // There is no safe client-side idempotency key for this legacy endpoint,
+                        // so a failed reward POST must not be retried automatically or by a tap.
+                        dismissAllowingStateLoss()
                     }
                 )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 Toast.makeText(ctx, "Reward earned but could not be added: ${e.message}", Toast.LENGTH_LONG).show()
                 dismissAllowingStateLoss()
@@ -745,11 +1121,16 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
 
     private fun setRewardLoading(isLoading: Boolean) {
         if (_binding == null) return
-        binding.btnPrimary.isEnabled = !isLoading
-        binding.btnPrimary.alpha = if (isLoading) 0.6f else 1f
+        val capped = isDailyCapReached()
+        binding.btnPrimary.isEnabled = !isLoading && !capped
+        binding.btnPrimary.alpha = when {
+            isLoading -> 0.6f
+            capped -> 0.55f
+            else -> 1f
+        }
     }
 
-    private fun showRewardDialog(amount: Double, newBalance: Double?) {
+    private fun showRewardDialog(amount: Double) {
         val activityContext = activity ?: return
         val rewardIntent = Intent(activityContext, MainContainerActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -766,8 +1147,29 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
         dismissAllowingStateLoss()
     }
 
+    /**
+     * Reports, once, that this sheet was opened and produced no impression.
+     *
+     * Rotation is deliberately excluded: `screenOrientation` is unlocked and rotation is not in
+     * this activity's `configChanges`, so a turn of the device tears the sheet down and rebuilds
+     * it. That is one continuous reward attempt to the user, and counting it as an abandonment
+     * would inflate the discard rate with something the placement did not do wrong.
+     */
+    private fun reportRewardedDiscardIfUnmonetized() {
+        if (activity?.isChangingConfigurations == true) return
+        if (rewardImpressionLogged.get()) return
+        if (!rewardDiscardLogged.compareAndSet(false, true)) return
+        val appContext = context?.applicationContext ?: return
+        AdRevenueAnalytics.logRewardedDiscarded(
+            appContext,
+            lastRewardFailureReason ?: DISCARD_CLOSED_WITHOUT_WATCH,
+            entryPoint
+        )
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        reportRewardedDiscardIfUnmonetized()
         isViewDestroyed = true
         pendingShowRewardedAd = false
         isLoadingRewardedAd = false
@@ -778,26 +1180,93 @@ class RewardBottomSheet : BottomSheetDialogFragment() {
         haloBreatheAnim = null
         flightOverlay?.let { (it.parent as? ViewGroup)?.removeView(it) }
         flightOverlay = null
-        onCoinAirborne = null
         _binding = null
         rewardedAd = null
+        rewardedAdLoadedAtMs = 0L
     }
 
     override fun onDismiss(dialog: DialogInterface) {
         pendingShowRewardedAd = false
-        onDismissed?.invoke()
-        onDismissed = null
+        if (activity?.isChangingConfigurations != true && !dismissResultSent) {
+            dismissResultSent = true
+            publishHostResult(RESULT_KEY_DISMISSED)
+        }
         super.onDismiss(dialog)
+    }
+
+    private fun publishHostResult(requestKey: String) {
+        if (!isAdded) return
+        setFragmentResult(
+            requestKey,
+            Bundle().apply { putString(RESULT_ENTRY_POINT, entryPoint) },
+        )
+    }
+
+    /** Used by a recreated Home view to restore the socket without replaying stale flight. */
+    internal fun wasOpenedFrom(entryPoint: String): Boolean {
+        val argumentEntryPoint = arguments
+            ?.let(RewardBottomSheetLaunchConfig::from)
+            ?.entryPoint
+        return (argumentEntryPoint ?: this.entryPoint) == entryPoint
+    }
+
+    /**
+     * Atomically admits one dialog for [TAG]. `showNow` closes the same-loop double-tap window
+     * left by `show()`, while the state checks avoid transactions after FragmentManager saved.
+     */
+    fun showIfPossible(fragmentManager: FragmentManager): Boolean {
+        if (fragmentManager.isDestroyed || fragmentManager.isStateSaved) return false
+        if (fragmentManager.findFragmentByTag(TAG) != null) return false
+        showNow(fragmentManager, TAG)
+        return true
     }
 
     companion object {
         const val TAG = "RewardBottomSheet"
+        const val RESULT_KEY_COIN_AIRBORNE = "reward_bottom_sheet.coin_airborne"
+        const val RESULT_KEY_DISMISSED = "reward_bottom_sheet.dismissed"
+        const val RESULT_ENTRY_POINT = "reward_bottom_sheet.entry_point"
+        private const val STATE_REWARD_EVENT_ID = "reward_event_id"
+        private const val STATE_ENTRY_POINT = "reward_entry_point"
+        private const val STATE_LAUNCH_CONFIG = "reward_launch_config"
+
+        const val ENTRY_POINT_HOME = "home"
+        const val ENTRY_POINT_WALLET = "wallet"
+        internal const val ENTRY_POINT_UNKNOWN = "unknown"
+
+        // Why an opened sheet never produced an impression.
+        private const val DISCARD_LOAD_FAILED = "load_failed"
+        private const val DISCARD_ADS_UNAVAILABLE = "ads_unavailable"
+        private const val DISCARD_SHOW_FAILED = "show_failed"
+        private const val DISCARD_CLOSED_WITHOUT_WATCH = "closed_without_watch"
+        private const val DISCARD_DAILY_CAP_REACHED = "daily_cap_reached"
+        private const val DISCARD_AD_EXPIRED = "ad_expired"
+        private const val DISCARD_CONSENT_DENIED = "consent_denied"
 
         /**
-         * @param startRect screen [x, y, sizePx] of the coin to fly in from, or
-         *                  null to reveal with a scale/fade instead of a flight.
+         * How long a loaded rewarded ad stays usable.
+         *
+         * AdMob expires rewarded ads roughly an hour after load, and an expired one does not
+         * fail quietly — it reaches [FullScreenContentCallback.onAdFailedToShowFullScreenContent]
+         * and the user is told the reward could not open. The sheet loads its ad on open, so any
+         * session where the app is backgrounded with the sheet up and returned to much later
+         * lands in that window. 55 minutes leaves margin under the hour, matching the guard
+         * `AdMobManager` already applies to the booking-transition interstitial.
          */
-        fun newInstance(startRect: IntArray? = null): RewardBottomSheet =
-            RewardBottomSheet().apply { this.startRect = startRect }
+        private const val REWARDED_MAX_AGE_MS = 55L * 60L * 1000L
+
+        private fun newRewardEventId(): String = "rewarded-ad:${UUID.randomUUID()}"
+
+        /**
+         * @param startRect  screen [x, y, sizePx] of the coin to fly in from, or
+         *                   null to reveal with a scale/fade instead of a flight.
+         * @param entryPoint which surface opened the sheet, reported on every rewarded event.
+         */
+        fun newInstance(
+            startRect: IntArray? = null,
+            entryPoint: String = ENTRY_POINT_UNKNOWN
+        ): RewardBottomSheet = RewardBottomSheet().apply {
+            arguments = RewardBottomSheetLaunchConfig(startRect, entryPoint).toBundle()
+        }
     }
 }

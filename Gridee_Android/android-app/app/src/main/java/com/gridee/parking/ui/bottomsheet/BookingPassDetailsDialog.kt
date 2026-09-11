@@ -33,12 +33,24 @@ class BookingPassDetailsDialog : DialogFragment() {
     private var _binding: DialogBookingPassDetailsBinding? = null
     private val binding get() = requireNotNull(_binding)
 
-    private val booking: Booking?
-        get() = @Suppress("DEPRECATION") (arguments?.getSerializable(ARG_BOOKING) as? Booking)
+    private var booking: BookingPassSnapshot? = null
+    private var closedResultDelivered = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.Theme_Gridee_NoActionBar)
+        booking = restoreBookingPassSnapshot(arguments, savedInstanceState)
+        migrateBookingPassArguments(arguments, booking)
+        closedResultDelivered = savedInstanceState?.getBoolean(
+            STATE_CLOSED_RESULT_DELIVERED,
+            false,
+        ) ?: false
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        booking?.let { outState.putBundle(STATE_BOOKING_PASS_SNAPSHOT, it.toBundle()) }
+        outState.putBoolean(STATE_CLOSED_RESULT_DELIVERED, closedResultDelivered)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -102,7 +114,12 @@ class BookingPassDetailsDialog : DialogFragment() {
     }
 
     override fun onDismiss(dialog: DialogInterface) {
-        setFragmentResult(RESULT_KEY_CLOSED, bundleOf())
+        // DialogFragment tears down and recreates its Dialog for a configuration change. That is
+        // not a user close and must not notify the restored host or consume this one-shot result.
+        if (activity?.isChangingConfigurations != true && !closedResultDelivered && isAdded) {
+            closedResultDelivered = true
+            setFragmentResult(RESULT_KEY_CLOSED, bundleOf())
+        }
         super.onDismiss(dialog)
     }
 
@@ -114,10 +131,11 @@ class BookingPassDetailsDialog : DialogFragment() {
     companion object {
         const val TAG = "BookingPassDetailsDialog"
         const val RESULT_KEY_CLOSED = "booking_pass_details_closed"
-        private const val ARG_BOOKING = "booking"
-
+        private const val STATE_CLOSED_RESULT_DELIVERED = "closed_result_delivered"
         fun newInstance(booking: Booking) = BookingPassDetailsDialog().apply {
-            arguments = bundleOf(ARG_BOOKING to booking)
+            arguments = Bundle().apply {
+                putBundle(ARG_BOOKING_PASS_SNAPSHOT, BookingPassSnapshot.from(booking).toBundle())
+            }
         }
     }
 }

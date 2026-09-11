@@ -3,18 +3,20 @@ package com.gridee.parking.ui.booking
 import com.gridee.parking.R
 
 import android.content.Intent
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import android.app.AlertDialog
 import android.view.View
-import android.widget.EditText
 import com.gridee.parking.data.model.ParkingSpot
-import com.gridee.parking.utils.AuthSession
+import com.gridee.parking.data.model.BookingPolicyResolver
+import com.gridee.parking.data.model.ResolvedBookingPolicy
 import com.gridee.parking.utils.ParkingSpotSchedulePolicy
 import com.gridee.parking.databinding.ActivityBookingFlowBinding
+import com.gridee.parking.ui.wallet.WalletAddMoneyActivity
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,6 +28,7 @@ class BookingFlowActivity : AppCompatActivity() {
     private var selectedLotId: String = ""
     private var selectedLotName: String = ""
     private var selectedSpotId: String = ""
+    private var bookingPolicy: ResolvedBookingPolicy? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +45,9 @@ class BookingFlowActivity : AppCompatActivity() {
         setupUI()
         setupClickListeners()
         setupObservers()
-        loadParkingSpot(selectedSpotId)
+        viewModel.loadBookingPolicy(selectedLotId) { loaded ->
+            if (loaded) loadParkingSpot(selectedSpotId)
+        }
     }
     
     override fun onResume() {
@@ -55,39 +60,14 @@ class BookingFlowActivity : AppCompatActivity() {
 
     private fun setupUI() {
         binding.tvTitle.text = getString(R.string.book_parking)
-        
-        // Set default times based on current time and backend business rules
-        val calendar = Calendar.getInstance()
-        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
-        
-        // Backend rule: "Bookings after 8 pm are only allowed for tomorrow"
-        // This means: 8 PM - 11:59 PM = must book for next day
-        // After midnight (12 AM onwards) = can book for current day again
-        if (currentHour >= 20) { // 8 PM to 11:59 PM
-            // Set start time to tomorrow at 9 AM
-            calendar.add(Calendar.DAY_OF_MONTH, 1)
-            calendar.set(Calendar.HOUR_OF_DAY, 9)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            viewModel.setStartTime(calendar.time)
-            
-            // Set end time to 2 hours later
-            calendar.add(Calendar.HOUR_OF_DAY, 2)
-            viewModel.setEndTime(calendar.time)
-        } else {
-            // Before 8 PM or after midnight (12 AM - 7:59 AM): can book for current day
-            // For very early hours (12 AM - 6 AM), set a reasonable start time
-            if (currentHour < 6) {
-                calendar.set(Calendar.HOUR_OF_DAY, 9)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
-            }
-            // Otherwise use current time
-            
-            viewModel.setStartTime(calendar.time)
-            calendar.add(Calendar.HOUR_OF_DAY, 2)
-            viewModel.setEndTime(calendar.time)
-        }
+        binding.cardStartTime.visibility = View.INVISIBLE
+        binding.cardEndTime.visibility = View.INVISIBLE
+        binding.tvVehicleTitle.visibility = View.INVISIBLE
+        binding.cardVehicleSelection.visibility = View.INVISIBLE
+        binding.tvPaymentWalletTitle.visibility = View.INVISIBLE
+        binding.cardWallet.visibility = View.INVISIBLE
+        binding.tvPolicySummary.visibility = View.INVISIBLE
+        binding.btnContinueToPayment.isEnabled = false
     }
 
     private fun setupClickListeners() {
@@ -97,6 +77,13 @@ class BookingFlowActivity : AppCompatActivity() {
 
         binding.btnSelectSpot.setOnClickListener {
             showSpotSelectionDialog()
+        }
+
+        binding.cardStartTime.setOnClickListener {
+            if (bookingPolicy?.usesDynamicTimeSelection == true) showDateTimePicker(true)
+        }
+        binding.cardEndTime.setOnClickListener {
+            if (bookingPolicy?.usesDynamicTimeSelection == true) showDateTimePicker(false)
         }
         
         binding.cardVehicleSelection.setOnClickListener {
@@ -108,11 +95,44 @@ class BookingFlowActivity : AppCompatActivity() {
         }
         
         binding.btnAddMoney.setOnClickListener {
-            showAddMoneyDialog()
+            startActivity(
+                WalletAddMoneyActivity.createIntent(
+                    context = this,
+                    currentBalance = viewModel.walletBalance.value ?: 0.0,
+                    parkingLotId = selectedLotId,
+                )
+            )
         }
     }
 
     private fun setupObservers() {
+        viewModel.bookingPolicy.observe(this) { policy ->
+            bookingPolicy = policy
+            if (policy != null) {
+                binding.cardStartTime.visibility = View.VISIBLE
+                binding.cardEndTime.visibility = View.VISIBLE
+                binding.tvVehicleTitle.visibility =
+                    if (policy.requiresVehicleRegistration) View.VISIBLE else View.GONE
+                binding.cardVehicleSelection.visibility =
+                    if (policy.requiresVehicleRegistration) View.VISIBLE else View.GONE
+                binding.tvPaymentWalletTitle.visibility =
+                    if (policy.bookingChargeRequired) View.VISIBLE else View.GONE
+                binding.cardWallet.visibility = if (policy.bookingChargeRequired) View.VISIBLE else View.GONE
+                binding.tvPolicySummary.text = when {
+                    !policy.bookingChargeRequired -> getString(R.string.booking_policy_no_payment)
+                    policy.isNoRefund -> getString(R.string.booking_policy_no_refund)
+                    else -> getString(R.string.booking_policy_standard_refund)
+                }
+                binding.tvPolicySummary.visibility = View.VISIBLE
+                initializePolicyTimes(policy)
+                binding.btnContinueToPayment.isEnabled = true
+            }
+        }
+
+        viewModel.policyError.observe(this) { error ->
+            if (!error.isNullOrBlank()) showToast(error)
+        }
+
         viewModel.startTime.observe(this) { time ->
             updateStartTimeDisplay(time)
             calculatePricing()
@@ -128,7 +148,11 @@ class BookingFlowActivity : AppCompatActivity() {
         }
 
         viewModel.totalPrice.observe(this) { price ->
-            binding.tvTotalPrice.text = "₹${String.format(Locale.getDefault(), "%.2f", price)}"
+            binding.tvTotalPrice.text = if (bookingPolicy?.bookingChargeRequired == false) {
+                "Free"
+            } else {
+                "₹${String.format(Locale.getDefault(), "%.2f", price)}"
+            }
         }
 
         viewModel.duration.observe(this) { duration ->
@@ -140,12 +164,14 @@ class BookingFlowActivity : AppCompatActivity() {
         }
         
         viewModel.walletBalance.observe(this) { balance ->
-            binding.tvWalletBalance.text = "₹${String.format(Locale.getDefault(), "%.2f", balance)}"
+            if (bookingPolicy?.bookingChargeRequired != false) {
+                binding.tvWalletBalance.text = "₹${String.format(Locale.getDefault(), "%.2f", balance)}"
+            }
         }
         
         // Backend integration observers
         viewModel.isLoading.observe(this) { isLoading ->
-            binding.btnContinueToPayment.isEnabled = !isLoading
+            binding.btnContinueToPayment.isEnabled = !isLoading && bookingPolicy != null
             // Note: Since btnContinueToPayment is a CardView with TextView, 
             // we can't directly set text. The button text stays as "Continue to Payment"
         }
@@ -154,7 +180,7 @@ class BookingFlowActivity : AppCompatActivity() {
             booking?.let {
                 val startMillis = viewModel.startTime.value?.time ?: System.currentTimeMillis()
                 val endMillis = viewModel.endTime.value?.time ?: (startMillis + 60 * 60 * 1000)
-                val totalAmount = viewModel.totalPrice.value ?: 0.0
+                val totalAmount = it.amount
                 val selectedSpotName = viewModel.selectedSpot.value
                     ?: parkingSpot?.name
                     ?: parkingSpot?.zoneName
@@ -173,7 +199,14 @@ class BookingFlowActivity : AppCompatActivity() {
                     putExtra("START_TIME", startMillis)
                     putExtra("END_TIME", endMillis)
                     putExtra("TOTAL_AMOUNT", totalAmount)
-                    putExtra("PAYMENT_METHOD", "Wallet")
+                    putExtra(
+                        "PAYMENT_METHOD",
+                        when {
+                            bookingPolicy?.walletPaymentRequired == true -> "Gridee Coin Wallet"
+                            bookingPolicy?.paymentRequired == true -> "Wallet"
+                            else -> "No payment required"
+                        }
+                    )
                     putExtra("PAYMENT_STATUS", it.status ?: "Pending")
                     putExtra("BOOKING_TIMESTAMP", it.createdAt?.time ?: System.currentTimeMillis())
                 }
@@ -200,20 +233,12 @@ class BookingFlowActivity : AppCompatActivity() {
         } else if (spotId.isNotEmpty()) {
             // Load actual parking spot data from API
             viewModel.loadParkingSpotById(spotId) { spot ->
-                if (spot != null) {
+                if (spot != null && spot.lotId == selectedLotId) {
                     parkingSpot = spot
                 } else {
-                    // Fallback: create spot with the data we have
-                    parkingSpot = ParkingSpot(
-                        id = spotId,
-                        lotId = selectedLotId,
-                        spotCode = spotId,
-                        name = "Selected Spot",
-                        zoneName = "Unknown Spot",
-                        capacity = 0,
-                        available = 0,
-                        status = "unknown"
-                    )
+                    showToast("This parking spot could not be verified for the selected lot.")
+                    binding.btnContinueToPayment.isEnabled = false
+                    return@loadParkingSpotById
                 }
                 updateParkingSpotDisplay()
             }
@@ -261,6 +286,15 @@ class BookingFlowActivity : AppCompatActivity() {
             viewModel.setSelectedSpot(spotName)
 
             viewModel.setParkingSpot(spot)
+            bookingPolicy?.takeIf { it.usesFixedDailySlots }?.let { policy ->
+                val now = ParkingSpotSchedulePolicy.currentTime()
+                val start = ParkingSpotSchedulePolicy.minimumAllowedStartTime(spot, now, policy)
+                val end = ParkingSpotSchedulePolicy.sessionEndTime(spot, now, policy)
+                if (start != null && end != null && start.before(end)) {
+                    viewModel.setStartTime(start.time)
+                    viewModel.setEndTime(end.time)
+                }
+            }
             calculatePricing()
             viewModel.loadUserVehicles()
         }
@@ -269,7 +303,6 @@ class BookingFlowActivity : AppCompatActivity() {
     private fun updateSelectedSpotDisplay(spot: String?) {
         // Display the selected spot name or default to "Any available spot"
         binding.tvSelectedSpot.text = spot ?: "Any available spot"
-        println("BookingFlowActivity: updateSelectedSpotDisplay called with: '$spot', set text to: '${binding.tvSelectedSpot.text}'")
     }
 
     private fun showSpotSelectionDialog() {
@@ -308,21 +341,12 @@ class BookingFlowActivity : AppCompatActivity() {
         // Load parking spots for current lot
         showProgress(progressBar, recyclerView, emptyState, true)
         
-        // Debug: Check what lot ID we're using
-        println("BookingFlowActivity: Loading spots for lot ID: '$selectedLotId'")
-        showToast("Loading spots for lot: $selectedLotId")
-        
         // Use the repository directly like the discovery screen does
         lifecycleScope.launch {
             try {
                 val parkingRepository = com.gridee.parking.data.repository.ParkingRepository()
-                val start = viewModel.startTime.value ?: java.util.Calendar.getInstance().time
-                val end = viewModel.endTime.value ?: java.util.Calendar.getInstance().apply { add(java.util.Calendar.HOUR_OF_DAY, 2) }.time
-                val df = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", java.util.Locale.getDefault())
-                val startStr = df.format(start)
-                val endStr = df.format(end)
                 val spotsResponse = if (selectedLotId.isNotEmpty()) {
-                    parkingRepository.getAvailableSpots(selectedLotId, startStr, endStr)
+                    parkingRepository.getParkingSpotsByLot(selectedLotId)
                 } else {
                     retrofit2.Response.success(emptyList<com.gridee.parking.data.model.ParkingSpot>())
                 }
@@ -330,27 +354,25 @@ class BookingFlowActivity : AppCompatActivity() {
                 runOnUiThread {
                     if (spotsResponse.isSuccessful) {
                         val filteredSpots = ParkingSpotSchedulePolicy.filterVisibleSpots(
-                            spotsResponse.body()?.filter { it.available > 0 } ?: emptyList()
+                            spotsResponse.body().orEmpty().mapNotNull { spot ->
+                                when (spot.lotId.trim()) {
+                                    "" -> spot.copy(lotId = selectedLotId)
+                                    selectedLotId -> spot
+                                    else -> null
+                                }
+                            }.filter { it.available > 0 },
+                            policy = bookingPolicy,
                         )
-                        
-                        showToast("Filtered spots for lot '$selectedLotId': ${filteredSpots.size}")
-                        println("BookingFlowActivity: Received ${filteredSpots.size} spots for lot $selectedLotId")
                         
                         showProgress(progressBar, recyclerView, emptyState, false)
                         
                         if (filteredSpots.isNotEmpty()) {
-                            showToast("Setting ${filteredSpots.size} spots to adapter")
                             spotAdapter.submitList(filteredSpots)
                             recyclerView.visibility = android.view.View.VISIBLE
                             emptyState.visibility = android.view.View.GONE
                             
                             // Force layout update
                             recyclerView.requestLayout()
-                            
-                            // Debug adapter state
-                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                showToast("Adapter item count: ${spotAdapter.itemCount}")
-                            }, 500)
                             
                             // Pre-select the current spot if it matches one in the list
                             if (!isAnySpotSelected) {
@@ -400,7 +422,6 @@ class BookingFlowActivity : AppCompatActivity() {
         
         // Select button
         btnSelect.setOnClickListener {
-            println("BookingFlowActivity: Select button clicked. isAnySpotSelected: $isAnySpotSelected, selectedSpot: ${selectedSpot?.id}")
             
             if (isAnySpotSelected) {
                 // User chose "Any available spot"
@@ -414,7 +435,6 @@ class BookingFlowActivity : AppCompatActivity() {
                     showToast("Applying: $spotName")
                     
                     // Debug: Check what we're setting
-                    println("BookingFlowActivity: Setting spot text to: '$spotName'")
                     binding.tvSelectedSpot.text = spotName
                     
                     // Force UI update
@@ -422,11 +442,9 @@ class BookingFlowActivity : AppCompatActivity() {
                     binding.tvSelectedSpot.invalidate()
                     
                     // Debug: Check what was actually set
-                    println("BookingFlowActivity: Spot text after setting: '${binding.tvSelectedSpot.text}'")
                     
                     // Debug: Check text after a delay to see if something overwrites it
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        println("BookingFlowActivity: Spot text after 500ms: '${binding.tvSelectedSpot.text}'")
                     }, 500)
                     
                     viewModel.setSelectedSpot(spotName)
@@ -437,7 +455,6 @@ class BookingFlowActivity : AppCompatActivity() {
                     viewModel.setParkingSpot(spot)
                 } ?: run {
                     showToast(getString(R.string.no_specific_spot_selected_using_any))
-                    println("BookingFlowActivity: No spot selected, falling back to Any available spot")
                     binding.tvSelectedSpot.text = getString(R.string.any_available_spot)
                     viewModel.setSelectedSpot(null)
                 }
@@ -502,10 +519,8 @@ class BookingFlowActivity : AppCompatActivity() {
         btnAddVehicle.setOnClickListener {
             dialog.dismiss()
             showAddVehicleDialog { newVehicleNumber ->
-                println("BookingFlowActivity: Attempting to add vehicle: $newVehicleNumber")
                 // After adding vehicle, reload the vehicles list and reopen selection dialog
                 viewModel.addVehicleToProfile(newVehicleNumber) { success ->
-                    println("BookingFlowActivity: Add vehicle result: $success")
                     runOnUiThread {
                         if (success) {
                             showToast(getString(R.string.vehicle_added_successfully_2))
@@ -567,6 +582,114 @@ class BookingFlowActivity : AppCompatActivity() {
         binding.tvEndTime.text = formatter.format(time)
     }
 
+    private fun initializePolicyTimes(policy: ResolvedBookingPolicy) {
+        if (viewModel.startTime.value != null && viewModel.endTime.value != null) return
+        val now = Calendar.getInstance().apply {
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            val remainder = get(Calendar.MINUTE) % 15
+            if (remainder != 0) add(Calendar.MINUTE, 15 - remainder)
+        }
+        var start = (now.clone() as Calendar)
+        if (!start.before(policy.endOfBookingDay(start))) {
+            val tomorrow = (now.clone() as Calendar).apply {
+                add(Calendar.DAY_OF_MONTH, 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+            }
+            if (policy.advanceBookingDays >= 1 && policy.isFutureDateOpen(tomorrow, now)) {
+                start = tomorrow
+            }
+        }
+        val end = (start.clone() as Calendar).apply { add(Calendar.HOUR_OF_DAY, 2) }
+        val cutoff = policy.endOfBookingDay(end)
+        if (end.after(cutoff)) end.timeInMillis = cutoff.timeInMillis
+        viewModel.setStartTime(start.time)
+        viewModel.setEndTime(end.time)
+    }
+
+    private fun showDateTimePicker(selectingStart: Boolean) {
+        val policy = bookingPolicy ?: return
+        if (!policy.usesDynamicTimeSelection) return
+        val now = Calendar.getInstance()
+        val current = (if (selectingStart) viewModel.startTime.value else viewModel.endTime.value)
+            ?.let { Calendar.getInstance().apply { time = it } }
+            ?: now
+        val latest = (now.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, policy.advanceBookingDays) }
+        val dialog = DatePickerDialog(
+            this,
+            { _, year, month, day ->
+                val selected = (current.clone() as Calendar).apply {
+                    set(year, month, day)
+                }
+                if (!policy.isDateWithinAdvanceWindow(selected, now) || !policy.isFutureDateOpen(selected, now)) {
+                    val opens = policy.nextDayBookingOpenMinutes?.let(BookingPolicyResolver::formatTime)
+                    showToast(opens?.let { "Future bookings open at $it." }
+                        ?: "That date is not available for booking.")
+                    return@DatePickerDialog
+                }
+                TimePickerDialog(
+                    this,
+                    { _, hour, minute ->
+                        selected.set(Calendar.HOUR_OF_DAY, hour)
+                        selected.set(Calendar.MINUTE, minute)
+                        selected.set(Calendar.SECOND, 0)
+                        selected.set(Calendar.MILLISECOND, 0)
+                        val cutoff = policy.endOfBookingDay(selected)
+                        if (selected.after(cutoff)) {
+                            showToast("Bookings must end by ${BookingPolicyResolver.formatTime(policy.dailyBookingEndMinutes)}.")
+                            return@TimePickerDialog
+                        }
+                        if (selectingStart) {
+                            if (selected.before(now)) {
+                                showToast("Start time cannot be in the past.")
+                                return@TimePickerDialog
+                            }
+                            viewModel.setStartTime(selected.time)
+                            val currentEnd = viewModel.endTime.value
+                            if (currentEnd == null || currentEnd.time <= selected.timeInMillis) {
+                                val end = (selected.clone() as Calendar).apply { add(Calendar.HOUR_OF_DAY, 2) }
+                                val endCutoff = policy.endOfBookingDay(end)
+                                if (end.after(endCutoff)) end.timeInMillis = endCutoff.timeInMillis
+                                viewModel.setEndTime(end.time)
+                            }
+                        } else {
+                            val start = viewModel.startTime.value
+                            if (start == null || selected.timeInMillis <= start.time) {
+                                showToast("Checkout must be after check-in.")
+                                return@TimePickerDialog
+                            }
+                            if (!policy.allowOvernightBookings) {
+                                val startDay = Calendar.getInstance().apply { time = start }
+                                if (startDay.get(Calendar.YEAR) != selected.get(Calendar.YEAR) ||
+                                    startDay.get(Calendar.DAY_OF_YEAR) != selected.get(Calendar.DAY_OF_YEAR)
+                                ) {
+                                    showToast("This parking lot does not allow overnight bookings.")
+                                    return@TimePickerDialog
+                                }
+                            }
+                            viewModel.setEndTime(selected.time)
+                        }
+                    },
+                    current.get(Calendar.HOUR_OF_DAY),
+                    current.get(Calendar.MINUTE),
+                    false,
+                ).show()
+            },
+            current.get(Calendar.YEAR),
+            current.get(Calendar.MONTH),
+            current.get(Calendar.DAY_OF_MONTH),
+        )
+        dialog.datePicker.minDate = (now.clone() as Calendar).apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        dialog.datePicker.maxDate = latest.timeInMillis
+        dialog.show()
+    }
+
     private fun calculatePricing() {
         viewModel.calculatePricing()
     }
@@ -582,76 +705,20 @@ class BookingFlowActivity : AppCompatActivity() {
     }
     
     private fun createBooking() {
+        val policy = bookingPolicy ?: run {
+            showToast("Parking rules are unavailable. Please try again.")
+            return
+        }
         val selectedVehicle = viewModel.selectedVehicle.value
         
-        if (selectedVehicle == null) {
+        if (policy.requiresVehicleRegistration && selectedVehicle == null) {
             showToast(getString(R.string.please_select_a_vehicle))
             return
         }
         
-        viewModel.setVehicleNumber(selectedVehicle.number)
+        viewModel.setVehicleNumber(selectedVehicle?.number.orEmpty())
         viewModel.createBackendBooking()
     }
-    
-    private fun showAddMoneyDialog() {
-        val dialogView = layoutInflater.inflate(android.R.layout.select_dialog_item, null)
-        val input = EditText(this)
-        input.hint = "Enter amount (e.g., 500)"
-        input.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-        
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Add Money to Wallet")
-        builder.setMessage("Enter the amount you want to add to your wallet:")
-        builder.setView(input)
-        
-        builder.setPositiveButton("Add") { _, _ ->
-            val amountText = input.text.toString().trim()
-            if (amountText.isNotEmpty()) {
-                try {
-                    val amount = amountText.toDouble()
-                    if (amount > 0) {
-                        initiateWalletTopUp(amount)
-                    } else {
-                        showToast(getString(R.string.please_enter_a_valid_amount))
-                    }
-                } catch (e: NumberFormatException) {
-                    showToast(getString(R.string.invalid_amount_format))
-                }
-            } else {
-                showToast(getString(R.string.please_enter_an_amount))
-            }
-        }
-        
-        builder.setNegativeButton("Cancel", null)
-        builder.show()
-    }
-    
-    private fun initiateWalletTopUp(amount: Double) {
-        val userId = AuthSession.getUserId(this)
-        
-        if (userId == null) {
-            showToast(getString(R.string.please_log_in_to_add_money))
-            return
-        }
-        
-        lifecycleScope.launch {
-            when (
-                val result = com.gridee.parking.ui.wallet.WalletTopUpLauncher.createTopUp(
-                    this@BookingFlowActivity,
-                    amount,
-                    parkingLotId = selectedLotId
-                )
-            ) {
-                is com.gridee.parking.ui.wallet.WalletTopUpLauncher.Result.Ready ->
-                    startActivity(result.intent)
-
-                is com.gridee.parking.ui.wallet.WalletTopUpLauncher.Result.Failed ->
-                    showToast(result.message)
-            }
-        }
-    }
-
-    
     
     private fun createDefaultParkingSpot(): ParkingSpot {
         return ParkingSpot(

@@ -8,7 +8,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gridee.parking.R
-import com.gridee.parking.data.api.ApiClient
+import com.gridee.parking.GrideeApplication
 import com.gridee.parking.data.repository.BookingRepository
 import com.gridee.parking.data.repository.ParkingRepository
 import com.gridee.parking.databinding.ActivityBookingHistoryPlaceholderBinding
@@ -27,8 +27,12 @@ import java.util.TimeZone
 class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPlaceholderBinding>() {
 
     private lateinit var bookingsAdapter: BookingsAdapter
-    private val bookingRepository by lazy { BookingRepository() }
-    private val parkingRepository by lazy { ParkingRepository() }
+    private val bookingRepository by lazy {
+        GrideeApplication.instance.repositories.bookingRepository
+    }
+    private val parkingRepository by lazy {
+        GrideeApplication.instance.repositories.parkingRepository
+    }
     private val istTimeZone: TimeZone = TimeZone.getTimeZone("Asia/Kolkata")
     private val weekdayShortDateFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
     private val longDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
@@ -36,7 +40,6 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
     private val bookingSectionTitles = mutableMapOf<String, String>()
     private val parkingLotCache = mutableMapOf<String, String>()
     private val parkingSpotCache = mutableMapOf<String, String>()
-    private var isCacheLoaded = false
 
     override fun getViewBinding(): ActivityBookingHistoryPlaceholderBinding {
         return ActivityBookingHistoryPlaceholderBinding.inflate(layoutInflater)
@@ -45,7 +48,6 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
         val isNightMode = resources.configuration.uiMode and
             android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
             android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -108,11 +110,9 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
         showLoading(true)
 
         lifecycleScope.launch {
-            if (!isCacheLoaded) {
-                loadParkingDataCache()
-            }
             val result = bookingRepository.getUserBookingHistory()
             result.onSuccess { bookings ->
+                loadParkingDataCache(bookings)
                 val sorted = bookings.sortedByDescending { getComparableTimestamp(it) }
                 bookingSectionTitles.clear()
                 val uiBookings = sorted.map { backend ->
@@ -203,6 +203,9 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
         val lotLabel = backendBooking.lotName
             ?.trim()
             ?.takeIf { it.isNotEmpty() }
+            ?: backendBooking.locationName
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
             ?: getLotLabel(rawLotId)
         val amountText = String.format(Locale.getDefault(), "%.2f", backendBooking.amount)
 
@@ -235,46 +238,30 @@ class BookingHistoryPlaceholderActivity : BaseActivity<ActivityBookingHistoryPla
         return parkingLotCache[lotId] ?: lotId
     }
 
-    private suspend fun loadParkingDataCache() {
-        try {
-            // Try admin all-spots endpoint first (same approach as bookings screen)
-            try {
-                val allSpotsResponse = ApiClient.apiService.getParkingSpots()
-                if (allSpotsResponse.isSuccessful) {
-                    allSpotsResponse.body()?.forEach { spot ->
-                        val spotName = spot.name ?: spot.zoneName ?: "Spot ${spot.id}"
-                        parkingSpotCache[spot.id] = spotName
-                    }
-                }
-            } catch (_: Exception) {
-                // Ignore and fall back to per-lot spot loading
-            }
-
-            val lotsResponse = ApiClient.apiService.getParkingLots()
-            if (lotsResponse.isSuccessful) {
-                lotsResponse.body()?.forEach { lot ->
-                    parkingLotCache[lot.id] = lot.name
-
-                    try {
-                        val spotsForLot = parkingRepository.getParkingSpotsByLot(lot.id)
-                        if (spotsForLot.isSuccessful) {
-                            spotsForLot.body()?.forEach { spot ->
-                                if (!parkingSpotCache.containsKey(spot.id)) {
-                                    val spotName = spot.name ?: spot.zoneName ?: "Spot ${spot.id}"
-                                    parkingSpotCache[spot.id] = spotName
-                                }
-                            }
-                        }
-                    } catch (_: Exception) {
-                        // Ignore per-lot spot failures
-                    }
-                }
-            }
-
-            isCacheLoaded = true
-        } catch (_: Exception) {
-            // Continue without cache
+    private suspend fun loadParkingDataCache(bookings: List<BackendBooking>) {
+        bookings.forEach { booking ->
+            booking.lotName
+                ?.takeIf { it.isNotBlank() }
+                ?.let { parkingLotCache[booking.lotId] = it }
         }
+
+        bookings.asSequence()
+            .map { it.lotId.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .forEach { lotId ->
+                runCatching { parkingRepository.getParkingSpotsByLot(lotId) }
+                    .getOrNull()
+                    ?.takeIf { it.isSuccessful }
+                    ?.body()
+                    .orEmpty()
+                    .forEach { spot ->
+                        parkingSpotCache[spot.id] = spot.name
+                            ?: spot.zoneName
+                            ?: spot.spotCode
+                            ?: "Spot ${spot.id}"
+                    }
+            }
     }
 
     private fun formatRelativeDate(date: java.util.Date): String {

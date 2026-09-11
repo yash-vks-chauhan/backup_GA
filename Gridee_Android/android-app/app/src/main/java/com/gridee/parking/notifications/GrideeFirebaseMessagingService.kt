@@ -8,9 +8,11 @@ import androidx.core.app.TaskStackBuilder
 import com.google.firebase.messaging.RemoteMessage
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.gridee.parking.R
+import com.gridee.parking.data.repository.BookingMutationRefreshCoordinator
 import com.gridee.parking.ui.activities.TransactionHistoryActivity
 import com.gridee.parking.ui.auth.LoginActivity
 import com.gridee.parking.ui.main.MainContainerActivity
+import com.gridee.parking.ui.wallet.WalletRefreshSource
 import com.gridee.parking.ui.profile.SupportTicketChatActivity
 import com.gridee.parking.ui.components.CustomBottomNavigation
 import com.gridee.parking.utils.AuthSession
@@ -38,7 +40,7 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
                 return
             }
             "BOOKING_CHECKED_IN", "BOOKING_ACTIVE" -> {
-                handleBookingCheckedIn(data)
+                handleBookingCheckedIn(data, remoteMessage)
                 return
             }
             "SUPPORT_REPLY" -> {
@@ -157,11 +159,19 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun handleBookingCheckedIn(data: Map<String, String>) {
+    private fun handleBookingCheckedIn(
+        data: Map<String, String>,
+        remoteMessage: RemoteMessage,
+    ) {
         val bookingId = data["bookingId"].orEmpty()
-        // Wake a visible booking page even when the notification payload does not include an end
-        // time. The page reconciles with the backend before changing any UI.
-        BookingStatusEvents.publish(bookingId, "ACTIVE")
+        BookingMutationRefreshCoordinator.refreshAfterSuccess(
+            context = this,
+            parkingLotId = resolveParkingLotId(data),
+            bookingId = bookingId,
+            statusHint = "ACTIVE",
+            walletSource = WalletRefreshSource.CHECK_IN,
+            mutationEventId = remoteMessage.messageId,
+        )
         val endTimeMillis = resolveBookingEndTime(data) ?: return
         BookingActiveNotificationManager.showOrUpdate(this, bookingId, endTimeMillis)
     }
@@ -169,10 +179,20 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
     private fun handleBookingEnded(data: Map<String, String>, remoteMessage: RemoteMessage) {
         val bookingId = data["bookingId"].orEmpty()
         val endTimeMillis = resolveBookingEndTime(data)
+        val statusHint = data["type"] ?: remoteMessage.data["type"] ?: "COMPLETED"
 
-        BookingStatusEvents.publish(
-            bookingId,
-            data["type"] ?: remoteMessage.data["type"] ?: "COMPLETED"
+        BookingMutationRefreshCoordinator.refreshAfterSuccess(
+            context = this,
+            parkingLotId = resolveParkingLotId(data),
+            bookingId = bookingId,
+            statusHint = statusHint,
+            walletSource = if (statusHint.contains("CANCEL", ignoreCase = true)) {
+                WalletRefreshSource.BOOKING_CANCEL
+            } else {
+                WalletRefreshSource.CHECK_OUT
+            },
+            invalidateHistory = true,
+            mutationEventId = remoteMessage.messageId,
         )
 
         if (bookingId.isNotBlank()) {
@@ -192,6 +212,12 @@ class GrideeFirebaseMessagingService : FirebaseMessagingService() {
             intent = buildBookingIntent(bookingId),
             notificationId = ("booking_end_${bookingId.ifBlank { System.currentTimeMillis().toString() }}").hashCode()
         )
+    }
+
+    private fun resolveParkingLotId(data: Map<String, String>): String? {
+        return data["lotId"]
+            ?: data["parkingLotId"]
+            ?: AuthSession.getParkingLotId(this)
     }
 
     private fun resolveBookingEndTime(data: Map<String, String>): Long? {

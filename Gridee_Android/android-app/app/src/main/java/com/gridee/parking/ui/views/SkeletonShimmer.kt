@@ -9,6 +9,7 @@ import android.view.animation.PathInterpolator
 import androidx.core.view.doOnPreDraw
 import androidx.recyclerview.widget.RecyclerView
 import com.gridee.parking.R
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 
 /**
  * The app's shared transaction-list loading skeleton.
@@ -49,8 +50,6 @@ object SkeletonShimmer {
     // easeOutCubic — smooth, gentle deceleration with a long settle. Reads calmer
     // than the snappier Material emphasized curve for a content reveal.
     private fun smoothDecelerate() = PathInterpolator(0.33f, 1f, 0.68f, 1f)
-
-    private fun animationsEnabled() = ValueAnimator.areAnimatorsEnabled()
 
     /**
      * Inflate [rowCount] skeleton rows into [container]. When [includeHeaders] is
@@ -94,7 +93,7 @@ object SkeletonShimmer {
         val pills = collectPills(root)
         if (pills.isEmpty()) return null
 
-        if (!animationsEnabled()) {
+        if (!AnimatorSettingsCompat.areEnabled(root.context)) {
             pills.forEach { it.alpha = BREATH_HIGH }
             return null
         }
@@ -118,7 +117,7 @@ object SkeletonShimmer {
      * pre-draw hook animates whatever children ended up laid out.
      */
     fun revealStagger(recyclerView: RecyclerView) {
-        if (!animationsEnabled()) return
+        if (!AnimatorSettingsCompat.areEnabled(recyclerView.context)) return
         recyclerView.doOnPreDraw {
             val rise = REVEAL_RISE_DP * recyclerView.resources.displayMetrics.density
             for (i in 0 until recyclerView.childCount) {
@@ -144,7 +143,7 @@ object SkeletonShimmer {
 
     /** Reveal a single view (e.g. an empty state) with the same rise-in motion. */
     fun revealView(view: View) {
-        if (!animationsEnabled()) return
+        if (!AnimatorSettingsCompat.areEnabled(view.context)) return
         val rise = REVEAL_RISE_DP * view.resources.displayMetrics.density
         view.translationY = rise
         view.alpha = 0f

@@ -22,13 +22,12 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.gridee.parking.R
 import com.gridee.parking.databinding.BottomSheetEditPhotoBinding
 
-class EditPhotoBottomSheet(
-    private val onPhotoSelected: (Uri) -> Unit
-) : BottomSheetDialogFragment() {
+class EditPhotoBottomSheet : BottomSheetDialogFragment() {
 
     private var _binding: BottomSheetEditPhotoBinding? = null
     private val binding get() = _binding!!
     private var selectedPhotoUri: Uri? = null
+    private var resultDelivered = false
 
     // Gallery launcher
     private val galleryLauncher = registerForActivityResult(
@@ -54,6 +53,8 @@ class EditPhotoBottomSheet(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        selectedPhotoUri = savedInstanceState?.getString(STATE_SELECTED_URI)?.let(Uri::parse)
+        resultDelivered = savedInstanceState?.getBoolean(STATE_RESULT_DELIVERED) ?: false
         setStyle(STYLE_NORMAL, R.style.BottomSheetDialogTheme)
     }
 
@@ -92,6 +93,7 @@ class EditPhotoBottomSheet(
         
         setupListeners()
         applyBlurAndOpacityAnimation()
+        selectedPhotoUri?.let(::renderRestoredPhoto)
     }
 
     private fun setupListeners() {
@@ -108,7 +110,13 @@ class EditPhotoBottomSheet(
         // Save button
         binding.btnSave.setOnClickListener {
             selectedPhotoUri?.let { uri ->
-                onPhotoSelected(uri)
+                if (!resultDelivered) {
+                    resultDelivered = true
+                    parentFragmentManager.setFragmentResult(
+                        RESULT_KEY,
+                        Bundle().apply { putString(RESULT_PHOTO_URI, uri.toString()) },
+                    )
+                }
                 dismissWithAnimation()
             }
         }
@@ -175,6 +183,19 @@ class EditPhotoBottomSheet(
         binding.tvSubtitle.text = "Preview your photo and tap save to confirm"
     }
 
+    private fun renderRestoredPhoto(uri: Uri) {
+        binding.ivPhotoPreview.setImageURI(uri)
+        binding.cardPhotoPreview.visibility = View.VISIBLE
+        binding.cardPhotoPreview.alpha = 1f
+        binding.cardPhotoPreview.scaleX = 1f
+        binding.cardPhotoPreview.scaleY = 1f
+        binding.btnSave.visibility = View.VISIBLE
+        binding.btnSave.alpha = 1f
+        binding.btnSave.translationY = 0f
+        binding.btnSave.isEnabled = !resultDelivered
+        binding.tvSubtitle.text = "Preview your photo and tap save to confirm"
+    }
+
     private fun saveBitmapToCache(bitmap: Bitmap): Uri? {
         return try {
             val filename = "profile_photo_${System.currentTimeMillis()}.jpg"
@@ -196,7 +217,6 @@ class EditPhotoBottomSheet(
             
             uri
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }
@@ -305,7 +325,19 @@ class EditPhotoBottomSheet(
         _binding = null
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(STATE_SELECTED_URI, selectedPhotoUri?.toString())
+        outState.putBoolean(STATE_RESULT_DELIVERED, resultDelivered)
+        super.onSaveInstanceState(outState)
+    }
+
     companion object {
         const val TAG = "EditPhotoBottomSheet"
+        const val RESULT_KEY = "profile_photo_selected"
+        const val RESULT_PHOTO_URI = "photo_uri"
+        private const val STATE_SELECTED_URI = "selected_uri"
+        private const val STATE_RESULT_DELIVERED = "result_delivered"
+
+        fun newInstance(): EditPhotoBottomSheet = EditPhotoBottomSheet()
     }
 }

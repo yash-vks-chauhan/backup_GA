@@ -1,6 +1,8 @@
 package com.gridee.parking.utils
 
 import com.gridee.parking.data.model.ParkingSpot
+import com.gridee.parking.data.model.BookingPolicyResolver
+import com.gridee.parking.data.model.ParkingLotBookingPolicy
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -178,6 +180,28 @@ class ParkingSpotSchedulePolicyTest {
                 calendarAt(17, 0)
             )?.contains("5:00 AM") == true
         )
+    }
+
+    @Test
+    fun `flexible lot uses its own daily end and future opening`() {
+        val policy = BookingPolicyResolver.resolve(
+            ParkingLotBookingPolicy(
+                bookingMode = ParkingLotBookingPolicy.MODE_FLEXIBLE,
+                dailyBookingEndTime = "21:15",
+                nextDayBookingOpenTime = "22:00",
+                advanceBookingDays = 3,
+                fixedTimeSlotsEnabled = false,
+                refundPolicy = ParkingLotBookingPolicy.REFUND_STANDARD,
+                paymentRequired = true,
+                requiresVehicleRegistration = true,
+                supportsOperatorValidation = true,
+            )
+        )
+        val spot = parkingSpot(id = "corporate", name = "Tower B")
+
+        assertTrue(ParkingSpotSchedulePolicy.canBookNow(spot, calendarAt(21, 14), policy))
+        assertFalse(ParkingSpotSchedulePolicy.canBookNow(spot, calendarAt(21, 15), policy))
+        assertTrue(ParkingSpotSchedulePolicy.canBookNow(spot, calendarAt(22, 0), policy))
     }
 
     @Test

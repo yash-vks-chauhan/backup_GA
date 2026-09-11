@@ -563,19 +563,6 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!--
-                  Existing first-party campaign slot, retained as an in-content fallback when
-                  the floating portrait AdMob placement is disabled or cannot fill.
-                -->
-                <com.gridee.parking.ui.ads.CustomAdBannerView
-                    android:id="@+id/custom_ad_home"
-                    android:layout_width="280dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="4dp"
-                    android:visibility="gone" />
-
             </LinearLayout>
 
         </ScrollView>

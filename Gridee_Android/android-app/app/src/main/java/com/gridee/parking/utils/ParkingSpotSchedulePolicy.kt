@@ -1,6 +1,7 @@
 package com.gridee.parking.utils
 
 import com.gridee.parking.data.model.ParkingSpot
+import com.gridee.parking.data.model.ResolvedBookingPolicy
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -47,10 +48,12 @@ object ParkingSpotSchedulePolicy {
 
     fun filterVisibleSpots(
         spots: List<ParkingSpot>,
-        now: Calendar = currentTime()
+        now: Calendar = currentTime(),
+        policy: ResolvedBookingPolicy? = null,
     ): List<ParkingSpot> {
-        if (isBookingClosed(now)) return emptyList()
-        return spots.filter { isVisibleNow(it, now) }
+        if (isBookingClosed(now, policy)) return emptyList()
+        if (policy?.usesDynamicTimeSelection == true) return spots
+        return spots.filter { isVisibleNow(it, now, policy) }
     }
 
     fun filterUnsegmentedSpots(spots: List<ParkingSpot>): List<ParkingSpot> {
@@ -77,9 +80,12 @@ object ParkingSpotSchedulePolicy {
 
     fun isVisibleNow(
         spot: ParkingSpot,
-        now: Calendar = currentTime()
+        now: Calendar = currentTime(),
+        policy: ResolvedBookingPolicy? = null,
     ): Boolean {
-        if (isBookingClosed(now)) return false
+        if (isBookingClosed(now, policy)) return false
+        if (policy?.usesDynamicTimeSelection == true) return true
+        if (isNextDayBookingOpen(now, policy)) return true
 
         if (FORCE_EVENING_ONLY_FOR_TESTING) {
             return classifySlotSession(spot) == SlotSession.EVENING
@@ -100,9 +106,12 @@ object ParkingSpotSchedulePolicy {
 
     fun canBookNow(
         spot: ParkingSpot,
-        now: Calendar = currentTime()
+        now: Calendar = currentTime(),
+        policy: ResolvedBookingPolicy? = null,
     ): Boolean {
-        if (isBookingClosed(now)) return false
+        if (isBookingClosed(now, policy)) return false
+        if (policy?.usesDynamicTimeSelection == true) return true
+        if (isNextDayBookingOpen(now, policy)) return true
 
         return when (classifySlotSession(spot)) {
             SlotSession.EVENING -> isWithinAfternoonBookingWindow(now)
@@ -119,11 +128,16 @@ object ParkingSpotSchedulePolicy {
 
     fun bookingRestrictionMessage(
         spot: ParkingSpot,
-        now: Calendar = currentTime()
+        now: Calendar = currentTime(),
+        policy: ResolvedBookingPolicy? = null,
     ): String? {
-        if (isBookingClosed(now)) {
-            return "Parking bookings are closed. Booking begins at 5:00 AM."
+        if (isBookingClosed(now, policy)) {
+            val nextOpening = policy?.nextDayBookingOpenMinutes?.let {
+                com.gridee.parking.data.model.BookingPolicyResolver.formatTime(it)
+            } ?: "5:00 AM"
+            return "Parking bookings are closed. The next booking window opens at $nextOpening."
         }
+        if (policy?.usesDynamicTimeSelection == true) return null
 
         return when (classifySlotSession(spot)) {
             SlotSession.EVENING -> {
@@ -160,10 +174,12 @@ object ParkingSpotSchedulePolicy {
 
     fun minimumAllowedStartTime(
         spot: ParkingSpot,
-        reference: Calendar = currentTime()
+        reference: Calendar = currentTime(),
+        policy: ResolvedBookingPolicy? = null,
     ): Calendar? {
+        if (policy?.usesDynamicTimeSelection == true) return trimToMinute(reference)
         val sessionStart = sessionStartTime(spot, reference) ?: return null
-        val sessionEnd = sessionEndTime(spot, reference) ?: return null
+        val sessionEnd = sessionEndTime(spot, reference, policy) ?: return null
         val currentMoment = trimToMinute(reference)
 
         return when {
@@ -175,11 +191,12 @@ object ParkingSpotSchedulePolicy {
 
     fun sessionEndTime(
         spot: ParkingSpot,
-        reference: Calendar = currentTime()
+        reference: Calendar = currentTime(),
+        policy: ResolvedBookingPolicy? = null,
     ): Calendar? {
         val sessionDay = resolveSessionDay(spot, reference) ?: return null
 
-        return when (classifySlotSession(spot)) {
+        val fixedEnd = when (classifySlotSession(spot)) {
             SlotSession.MORNING -> {
                 if (isQuickBookSpot(spot)) {
                     atTime(sessionDay, QUICK_BOOKING_CLOSE_HOUR, QUICK_BOOKING_CLOSE_MINUTE)
@@ -193,14 +210,25 @@ object ParkingSpotSchedulePolicy {
 
             SlotSession.UNKNOWN -> null
         }
+        val policyEnd = policy?.endOfBookingDay(sessionDay)
+        return when {
+            fixedEnd == null -> policyEnd
+            policyEnd == null -> fixedEnd
+            fixedEnd.after(policyEnd) -> policyEnd
+            else -> fixedEnd
+        }
     }
 
     fun isStartTimeAllowed(
         spot: ParkingSpot,
-        startTime: Date
+        startTime: Date,
+        policy: ResolvedBookingPolicy? = null,
     ): Boolean {
         val startCalendar = Calendar.getInstance().apply { time = startTime }
-        val minStart = minimumAllowedStartTime(spot, startCalendar) ?: return true
+        if (policy != null &&
+            (!policy.isDateWithinAdvanceWindow(startCalendar) || !policy.isFutureDateOpen(startCalendar))
+        ) return false
+        val minStart = minimumAllowedStartTime(spot, startCalendar, policy) ?: return true
         return !startCalendar.before(minStart)
     }
 
@@ -222,15 +250,19 @@ object ParkingSpotSchedulePolicy {
     fun currentTime(): Calendar = Calendar.getInstance(IST_TIME_ZONE)
 
     fun homeFilterAvailability(
-        now: Calendar = currentTime()
+        now: Calendar = currentTime(),
+        policy: ResolvedBookingPolicy? = null,
     ): HomeFilterAvailability {
-        if (isBookingClosed(now)) {
+        if (isBookingClosed(now, policy)) {
             return HomeFilterAvailability(
                 morningEnabled = false,
                 standardEnabled = false,
                 quickEnabled = false,
                 afternoonEnabled = false
             )
+        }
+        if (policy?.usesDynamicTimeSelection == true) {
+            return HomeFilterAvailability(true, true, true, true)
         }
 
         val morningEnabled = isWithinMorningStandardBookingWindow(now)
@@ -242,10 +274,32 @@ object ParkingSpotSchedulePolicy {
         )
     }
 
-    /** All parking discovery and booking is paused daily from 5:00 PM until 5:00 AM IST. */
-    fun isBookingClosed(now: Calendar = currentTime()): Boolean {
+    /** Determines whether the selected lot currently exposes a same-day or future window. */
+    fun isBookingClosed(
+        now: Calendar = currentTime(),
+        policy: ResolvedBookingPolicy? = null,
+    ): Boolean {
         val minutes = minutesOfDay(now)
+        if (policy != null) {
+            if (policy.usesDynamicTimeSelection) {
+                if (minutes < policy.dailyBookingEndMinutes) return false
+                val nextOpen = policy.nextDayBookingOpenMinutes
+                return nextOpen == null || policy.advanceBookingDays < 1 || minutes < nextOpen
+            }
+            if (minutes < DAILY_BOOKING_OPEN_MINUTES) return true
+            if (minutes <= policy.dailyBookingEndMinutes) return false
+            val nextOpen = policy.nextDayBookingOpenMinutes
+            return nextOpen == null || policy.advanceBookingDays < 1 || minutes < nextOpen
+        }
         return minutes < DAILY_BOOKING_OPEN_MINUTES || minutes >= DAILY_BOOKING_CLOSE_MINUTES
+    }
+
+    private fun isNextDayBookingOpen(
+        now: Calendar,
+        policy: ResolvedBookingPolicy?,
+    ): Boolean {
+        val open = policy?.nextDayBookingOpenMinutes ?: return false
+        return policy.advanceBookingDays >= 1 && minutesOfDay(now) >= open
     }
 
     fun classifySlotSession(spot: ParkingSpot): SlotSession {

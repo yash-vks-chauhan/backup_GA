@@ -1,7 +1,6 @@
 package com.gridee.parking.ui.profile
 
 import android.os.Bundle
-import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.gridee.parking.R
 import com.gridee.parking.databinding.ActivityAccountSettingsBinding
@@ -20,7 +19,6 @@ class AccountSettingsActivity : BaseActivity<ActivityAccountSettingsBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.statusBarColor = ContextCompat.getColor(this, R.color.background_primary)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = !ThemeManager.isDarkMode(this)
 
         binding.btnBackToProfile.setOnClickListener {
@@ -37,4 +35,3 @@ class AccountSettingsActivity : BaseActivity<ActivityAccountSettingsBinding>() {
         }
     }
 }
-

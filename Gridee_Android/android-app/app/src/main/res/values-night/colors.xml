@@ -351,4 +351,25 @@
     <color name="background_primary_a80">#CC000000</color>
     <color name="background_primary_a50">#80000000</color>
 
+
+    <!-- ============ Bookings stage rail (Option D) ============ -->
+    <color name="stage_rail_ink">#6E6E73</color>
+    <color name="stage_head_pending">#392D1B</color>
+    <color name="stage_head_pending_ink">#FFFFFF</color>
+    <color name="stage_head_pending_sub">#C9A473</color>
+    <color name="stage_head_active">#1E3426</color>
+    <color name="stage_head_active_ink">#FFFFFF</color>
+    <color name="stage_head_active_sub">#8FC5A2</color>
+    <color name="stage_head_ended">#3A2320</color>
+    <color name="stage_head_ended_ink">#FFFFFF</color>
+    <color name="stage_head_ended_sub">#C99191</color>
+    <color name="stage_head_done">#2C2C2E</color>
+    <color name="pass_stub_surface">#1C1C1E</color>
+    <color name="pass_code_ink">#E9E9EC</color>
+    <color name="pass_stub_label">#8E8E93</color>
+    <color name="pass_badge_fill">#2C2C2E</color>
+    <color name="pass_badge_stroke">#3A3A3C</color>
+    <color name="pass_badge_ink">#A1A1AA</color>
+    <color name="pass_stub_rule">#2C2C2E</color>
+    <color name="hold_cancel_stroke">#66FF453A</color>
 </resources>

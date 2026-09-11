@@ -17,7 +17,6 @@
     <string name="vehicle_scan_success_toast">వాహనం %1$s గుర్తించబడింది</string>
     <string name="vehicle_scan_success_title">వాహనం గుర్తించబడింది</string>
     <string name="vehicle_scan_success_message">వాహనం %1$s గుర్తించబడి చెక్-ఇన్‌కు సిద్ధంగా ఉంది.</string>
-    <string name="scanner_corner">స్కానర్ ఫ్రేమ్ మూల</string>
     <string name="vehicle_scan_best_guess">సాధ్యమైన సరిపోలిక: %1$s</string>
     <string name="vehicle_scan_flash_on">ఫ్లాష్ ఆన్</string>
     <string name="vehicle_scan_flash_off">ఫ్లాష్ ఆఫ్</string>
@@ -53,11 +52,31 @@
     <string name="scanner_enter_number">నంబర్ నమోదు చేయండి</string>
     <string name="scanner_manual_sheet_hint">ప్లేట్‌పై కనిపించే వాహన నంబర్‌ను టైప్ చేయండి.</string>
     <string name="scanner_qr_scan_hint">బుకింగ్ QR‌ను ఫ్రేమ్ లోపల ఉంచండి</string>
+    <string name="scanner_one_qr_at_a_time_warning">ఫ్రేమ్‌లో ఒకేసారి ఒక బుకింగ్ QR‌ను మాత్రమే ఉంచండి.</string>
+    <string name="scanner_low_light_hint">వెలుతురు తక్కువగా ఉంది — టార్చ్‌ను ఆన్ చేయండి లేదా మెరుగైన వెలుతురు ఉన్న ప్రదేశానికి వెళ్లండి</string>
+    <string name="scanner_refocusing_hint">మధ్య ఫ్రేమ్‌పై మళ్లీ ఫోకస్ చేస్తున్నాము…</string>
+    <string name="scanner_tap_to_focus">కెమెరాను ఫోకస్ చేయడానికి స్కానింగ్ ఫ్రేమ్‌పై నొక్కండి</string>
+    <string name="scanner_viewport_too_small_title">మరింత స్క్రీన్ స్థలం అవసరం</string>
+    <string name="scanner_viewport_too_small_message">స్కానింగ్‌ను కొనసాగించడానికి పరికరాన్ని తిప్పండి లేదా యాప్‌ను విస్తరించండి.</string>
+    <string name="scanner_automatic_recognition_disabled_title">ఆటోమేటిక్ స్కానింగ్ నిలిపివేయబడింది</string>
+    <string name="scanner_automatic_recognition_disabled_message">వాహన నంబర్‌ను మాన్యువల్‌గా నమోదు చేయండి. నంబర్ ప్లేట్ మరియు QR ఆటోమేటిక్ గుర్తింపు తాత్కాలికంగా నిలిపివేయబడింది.</string>
+    <string name="scanner_camera_access_needed_title">కెమెరా యాక్సెస్ అవసరం</string>
+    <string name="scanner_camera_unavailable_title">కెమెరా అందుబాటులో లేదు</string>
+    <string name="scanner_camera_permission_manual_message">సెట్టింగ్‌లలో కెమెరా యాక్సెస్‌ను అనుమతించండి లేదా వాహన నంబర్‌ను మాన్యువల్‌గా నమోదు చేయండి.</string>
+    <string name="scanner_camera_unavailable_manual_message">కెమెరా అందుబాటులో లేదు. వాహన నంబర్‌ను మాన్యువల్‌గా నమోదు చేయండి లేదా మళ్లీ ప్రయత్నించండి.</string>
+    <string name="scanner_retry_camera">కెమెరాను మళ్లీ ప్రయత్నించండి</string>
     <string name="scanner_qr_required">బుకింగ్ QR అవసరం</string>
     <string name="scanner_processing_qr_checkin">బుకింగ్ QR ద్వారా చెక్-ఇన్ అవుతోంది…</string>
     <string name="scanner_processing_qr_checkout">బుకింగ్ QR ద్వారా చెక్-అవుట్ అవుతోంది…</string>
     <string name="scanner_checked_in_at">%1$s కు చెక్-ఇన్ అయింది</string>
     <string name="scanner_checked_out_at">%1$s కు చెక్-అవుట్ అయింది</string>
+    <string name="scanner_operator_request_still_processing">ఆపరేటర్ అభ్యర్థన ఇంకా ప్రాసెస్ అవుతోంది. నిర్ధారణ వచ్చే వరకు వేచి ఉండండి.</string>
+    <string name="scanner_recent_scan_title">ఇటీవల ప్రాసెస్ చేయబడింది</string>
+    <plurals name="scanner_recent_scan_cooldown">
+        <item quantity="one">ఈ స్కాన్ ఇప్పుడే ప్రాసెస్ అయింది. %1$d సెకను తర్వాత మళ్లీ ప్రయత్నించండి.</item>
+        <item quantity="other">ఈ స్కాన్ ఇప్పుడే ప్రాసెస్ అయింది. %1$d సెకన్ల తర్వాత మళ్లీ ప్రయత్నించండి.</item>
+    </plurals>
+    <string name="scanner_spot_outside_assigned_lot">ఈ పార్కింగ్ స్థలం మీకు కేటాయించిన పార్కింగ్ లాట్‌కు చెందినది కాదు.</string>
     <string name="scanner_open">స్కానర్ తెరవండి</string>
     <string name="vehicle_sheet_status_fetching">క్రియాశీల బుకింగ్ పొందబడుతోంది…</string>
     <string name="vehicle_sheet_status_not_found">%1$s తో ఏ బుకింగ్ అనుసంధానించబడలేదు.</string>
@@ -374,7 +393,6 @@
     <string name="no_transactions_yet">ఇంకా లావాదేవీలు లేవు</string>
     <string name="your_transaction_history_will_appear_here">మీ లావాదేవీ చరిత్ర ఇక్కడ కనిపిస్తుంది</string>
     <string name="vehicles">వాహనాలు</string>
-    <string name="add_money_is_temporarily_unavailable_were">డబ్బు జోడించడం తాత్కాలికంగా అందుబాటులో లేదు.\nమా చెల్లింపు అగ్రిగేటర్‌తో అనుసంధానిస్తున్నాము.</string>
     <string name="current_balance">ప్రస్తుత బ్యాలెన్స్</string>
     <string name="minimum_amount">కనీస మొత్తం</string>
     <string name="secured_by">భద్రపరచబడింది</string>
@@ -541,7 +559,6 @@
     <string name="no_transactions_found">లావాదేవీలు కనుగొనబడలేదు</string>
     <string name="please_enter_a_valid_amount">దయచేసి చెల్లుబాటు అయ్యే మొత్తాన్ని నమోదు చేయండి</string>
     <string name="please_login_to_add_money">డబ్బు జోడించడానికి లాగిన్ చేయండి</string>
-    <string name="add_money_temporarily_unavailable_during_payment">చెల్లింపు అనుసంధానం సమయంలో డబ్బు జోడించడం తాత్కాలికంగా అందుబాటులో లేదు.</string>
     <string name="session_expired_please_log_in_again">సెషన్ ముగిసింది. దయచేసి మళ్లీ లాగిన్ చేయండి.</string>
     <string name="wallet_is_temporarily_unavailable">వాలెట్ తాత్కాలికంగా అందుబాటులో లేదు.</string>
     <string name="no_real_wallet_data_available">వాలెట్ డేటా అందుబాటులో లేదు</string>
@@ -685,5 +702,18 @@
     <string name="payment_pending_confirmation">చెల్లింపు ఇంకా నిర్ధారించబడుతోంది. పూర్తయిన వెంటనే మీ వాలెట్ అప్‌డేట్ అవుతుంది.</string>
     <string name="payment_failed_or_cancelled">చెల్లింపు విఫలమైంది లేదా రద్దు చేయబడింది. మీ నుండి డబ్బు తీసుకోబడలేదు.</string>
     <string name="payment_could_not_be_confirmed">ఈ చెల్లింపును నిర్ధారించలేకపోయాము. కొద్దిసేపటిలో మీ వాలెట్‌ను చూడండి.</string>
+    <string name="scanner_preparing_title">స్కానర్‌ను సిద్ధం చేస్తున్నాము</string>
+    <string name="scanner_preparing_message">సురక్షిత OCR మరియు QR భాగాలను తనిఖీ చేస్తున్నాము…</string>
+    <string name="scanner_unavailable_title">స్కానర్ సెటప్ అవసరం</string>
+    <string name="scanner_unavailable_message">స్కానర్ భాగాలు సిద్ధంగా లేవు. ఇంటర్నెట్‌కు కనెక్ట్ అయి మళ్లీ ప్రయత్నించండి లేదా వాహన నంబర్‌ను మాన్యువల్‌గా నమోదు చేయండి.</string>
+    <string name="scanner_retry_setup">సెటప్‌ను మళ్లీ ప్రయత్నించండి</string>
+    <string name="scanner_plate_confirmation_needed">గుర్తించిన నంబర్ ప్లేట్‌ను నిర్ధారించండి: %1$s</string>
+    <string name="scanner_plate_confirm_title">వాహన నంబర్ ప్లేట్‌ను నిర్ధారించండి</string>
+    <string name="scanner_plate_confirm_message">కొనసాగించే ముందు %1$sను నిర్ధారించండి.</string>
+    <string name="scanner_plate_confirm_corrected_message">ఒకేలా కనిపించే కొన్ని అక్షరాలు లేదా అంకెలు సరిచేయబడ్డాయి. కొనసాగించే ముందు %1$sను నిర్ధారించండి.</string>
+    <string name="scanner_confirm_plate">నంబర్ ప్లేట్‌ను నిర్ధారించండి</string>
     <string name="wallet_top_up_title">వాలెట్ టాప్-అప్</string>
+    <string name="scanner_operator_offline">ధృవీకరించిన ఇంటర్నెట్ కనెక్షన్ లేదు. మళ్లీ కనెక్ట్ అయ్యి, ఆపై మళ్లీ స్కాన్ చేయండి నొక్కండి. చెక్-ఇన్ లేదా చెక్-అవుట్ పంపబడలేదు.</string>
+    <string name="scanner_operator_slow_network">%1$s నెట్‌వర్క్ నెమ్మదిగా ఉంది; ఈ స్క్రీన్‌ను తెరిచే ఉంచండి, మళ్లీ స్కాన్ చేయవద్దు.</string>
+    <string name="op_scanner_tab">స్కానర్</string>
 </resources>

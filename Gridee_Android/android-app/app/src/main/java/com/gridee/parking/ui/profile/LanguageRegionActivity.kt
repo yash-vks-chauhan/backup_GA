@@ -83,8 +83,6 @@ class LanguageRegionActivity : BaseActivity<ActivityLanguageRegionBinding>() {
             }
         }
 
-        val bgColor = ContextCompat.getColor(this, R.color.background_primary)
-        window.statusBarColor = bgColor
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
             !ThemeManager.isDarkMode(this)
 

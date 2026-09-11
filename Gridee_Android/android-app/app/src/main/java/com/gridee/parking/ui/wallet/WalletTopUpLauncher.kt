@@ -10,6 +10,7 @@ import com.gridee.parking.utils.AuthSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.DecimalFormat
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Single entry point for starting a wallet top-up.
@@ -62,66 +63,74 @@ object WalletTopUpLauncher {
         val sessionParkingLotId = AuthSession.getParkingLotId(appContext).normalizedOrNull()
         val requestedParkingLotId = parkingLotId.normalizedOrNull()
         val resolvedParkingLotId = requestedParkingLotId ?: sessionParkingLotId
-            ?: return Result.Failed(
-                appContext.getString(R.string.please_choose_your_parking_location_to)
-            )
 
         // Organization/location are optional. Reuse the saved tenant only when it belongs to the
         // same lot; otherwise omit it so stale tenant data cannot be paired with a newly selected
-        // parking lot.
-        val selectedSessionLot = resolvedParkingLotId == sessionParkingLotId
+        // parking lot. When no local lot exists, let the authenticated backend resolve all three
+        // values from the user's authoritative parking context.
+        val selectedSessionLot = resolvedParkingLotId != null &&
+            resolvedParkingLotId == sessionParkingLotId
         val resolvedOrganizationId = organizationId.normalizedOrNull()
             ?: AuthSession.getOrganizationId(appContext).takeIf { selectedSessionLot }
         val resolvedLocationId = locationId.normalizedOrNull()
             ?: AuthSession.getLocationId(appContext).takeIf { selectedSessionLot }
 
-        val response = withContext(Dispatchers.IO) {
-            runCatching {
-                ApiClient.apiService.initiatePayment(
-                    PaymentInitiateRequest(
-                        userId = userId,
-                        amount = amount,
-                        parkingLotId = resolvedParkingLotId,
-                        organizationId = resolvedOrganizationId,
-                        locationId = resolvedLocationId
-                    )
-                )
-            }.getOrNull()
-        } ?: return Result.Failed(
-            appContext.getString(R.string.add_money_temporarily_unavailable_during_payment)
-        )
-
-        if (!response.isSuccessful) {
-            return Result.Failed(errorMessage(appContext, response.code()))
-        }
-
-        val body = response.body()
-        if (body == null || !body.isLaunchable) {
-            // This also rejects an unknown gateway or environment. In particular, a production
-            // payment session is never opened by silently defaulting the SDK to sandbox.
+        // Initiation is a money mutation and cannot be transparently repeated. Reject a second
+        // tap while the first POST is unresolved instead of creating two Cashfree orders.
+        if (!initiationInFlight.compareAndSet(false, true)) {
             return Result.Failed(
-                appContext.getString(R.string.add_money_temporarily_unavailable_during_payment)
+                appContext.getString(R.string.payment_request_already_in_progress)
             )
         }
 
-        val intent = Intent(appContext, WalletTopUpActivity::class.java).apply {
-            putExtra(WalletTopUpActivity.EXTRA_USER_ID, userId)
-            putExtra(WalletTopUpActivity.EXTRA_AMOUNT, amount)
-            putExtra(WalletTopUpActivity.EXTRA_ORDER_ID, body.normalizedOrderId)
-            putExtra(WalletTopUpActivity.EXTRA_PAYMENT_SESSION_ID, body.normalizedPaymentSessionId)
-            putExtra(WalletTopUpActivity.EXTRA_ENVIRONMENT, body.paymentEnvironment?.name)
-            putExtra(WalletTopUpActivity.EXTRA_GATEWAY, body.gateway?.trim()?.uppercase())
-            putExtra(WalletTopUpActivity.EXTRA_PARKING_LOT_ID, resolvedParkingLotId)
-            putExtra(WalletTopUpActivity.EXTRA_ORGANIZATION_ID, resolvedOrganizationId)
-            putExtra(WalletTopUpActivity.EXTRA_LOCATION_ID, resolvedLocationId)
+        return try {
+            val response = withContext(Dispatchers.IO) {
+                runCatching {
+                    ApiClient.apiService.initiatePayment(
+                        PaymentInitiateRequest(
+                            userId = userId,
+                            amount = amount,
+                            parkingLotId = resolvedParkingLotId,
+                            organizationId = resolvedOrganizationId,
+                            locationId = resolvedLocationId
+                        )
+                    )
+                }.getOrNull()
+            } ?: return Result.Failed(
+                appContext.getString(R.string.payment_could_not_be_started)
+            )
+
+            if (!response.isSuccessful) {
+                return Result.Failed(errorMessage(appContext, response.code()))
+            }
+
+            val body = response.body()
+            if (body == null || !body.isLaunchable) {
+                // This also rejects an unknown gateway or environment. In particular, a production
+                // payment session is never opened by silently defaulting the SDK to sandbox.
+                return Result.Failed(
+                    appContext.getString(R.string.payment_could_not_be_started)
+                )
+            }
+
+            val intent = Intent(appContext, WalletTopUpActivity::class.java).apply {
+                putExtra(WalletTopUpActivity.EXTRA_USER_ID, userId)
+                putExtra(WalletTopUpActivity.EXTRA_AMOUNT, amount)
+                putExtra(WalletTopUpActivity.EXTRA_ORDER_ID, body.normalizedOrderId)
+                putExtra(WalletTopUpActivity.EXTRA_PAYMENT_SESSION_ID, body.normalizedPaymentSessionId)
+                putExtra(WalletTopUpActivity.EXTRA_ENVIRONMENT, body.paymentEnvironment?.name)
+                putExtra(WalletTopUpActivity.EXTRA_GATEWAY, body.gateway?.trim()?.uppercase())
+            }
+            Result.Ready(intent)
+        } finally {
+            initiationInFlight.set(false)
         }
-        return Result.Ready(intent)
     }
 
-    /** Product minimum for an Android wallet top-up. */
+    /** Backend-aligned minimum for a wallet top-up. */
     fun minAmount(context: Context): Double {
         RemoteConfigManager.loadCached(context.applicationContext)
-        return MIN_TOP_UP_AMOUNT
+        return RemoteConfigManager.currentConfig.financial.minWalletTopUpAmount
     }
 
     fun maxAmount(context: Context): Double {
@@ -146,11 +155,11 @@ object WalletTopUpLauncher {
     private fun errorMessage(context: Context, code: Int): String = when (code) {
         401 -> context.getString(R.string.session_expired_please_log_in_again)
         403 -> context.getString(R.string.wallet_top_up_is_temporarily_unavailable)
-        else -> context.getString(R.string.add_money_temporarily_unavailable_during_payment)
+        else -> context.getString(R.string.payment_could_not_be_started)
     }
 
     private fun String?.normalizedOrNull(): String? =
         this?.trim()?.takeIf { it.isNotEmpty() }
 
-    private const val MIN_TOP_UP_AMOUNT = 1.0
+    private val initiationInFlight = AtomicBoolean(false)
 }

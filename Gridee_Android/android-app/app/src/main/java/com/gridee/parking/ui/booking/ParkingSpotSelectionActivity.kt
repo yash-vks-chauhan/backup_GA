@@ -63,19 +63,16 @@ class ParkingSpotSelectionActivity : AppCompatActivity() {
 
     private fun setupObservers() {
         viewModel.parkingSpots.observe(this) { spots ->
-            println("DEBUG ParkingSpotSelectionActivity: Received spots size=${spots.size}")
             // Spots are already filtered by lot ID in the ViewModel
             adapter.submitList(spots)
             
             if (spots.isEmpty()) {
                 binding.emptyState.visibility = android.view.View.VISIBLE
                 binding.recyclerViewParkingSpots.visibility = android.view.View.GONE
-                println("DEBUG ParkingSpotSelectionActivity: Showing empty state")
             } else {
                 // Ensure RecyclerView is ALWAYS visible when we have data
                 binding.emptyState.visibility = android.view.View.GONE
                 binding.recyclerViewParkingSpots.visibility = android.view.View.VISIBLE
-                println("DEBUG ParkingSpotSelectionActivity: RecyclerView set to VISIBLE with ${spots.size} spots")
             }
         }
 

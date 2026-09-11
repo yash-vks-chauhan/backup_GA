@@ -48,6 +48,7 @@ class MaintenanceActivity : AppCompatActivity(), SensorEventListener {
 
     /** elapsedRealtime of the last completed config check; drives the ticker. */
     private var lastCheckedAt = 0L
+    private var lastManualCheckAt = Long.MIN_VALUE
 
     private var sensorManager: SensorManager? = null
     private var accelerometer: Sensor? = null
@@ -131,6 +132,7 @@ class MaintenanceActivity : AppCompatActivity(), SensorEventListener {
     override fun onStart() {
         super.onStart()
         startLoop()
+        if (RemoteConfigManager.isCacheStale(this)) runCheck(manual = false)
     }
 
     override fun onStop() {
@@ -155,7 +157,6 @@ class MaintenanceActivity : AppCompatActivity(), SensorEventListener {
             while (isActive) {
                 if (!checking && !proceeding) {
                     updateTicker()
-                    if (secondsSinceChecked() >= AUTO_POLL_SECONDS) runCheck(manual = false)
                 }
                 delay(1000)
             }
@@ -179,6 +180,15 @@ class MaintenanceActivity : AppCompatActivity(), SensorEventListener {
      */
     private fun runCheck(manual: Boolean) {
         if (checking || proceeding) return
+        if (manual) {
+            val now = SystemClock.elapsedRealtime()
+            if (lastManualCheckAt != Long.MIN_VALUE &&
+                now - lastManualCheckAt < MANUAL_REFRESH_COOLDOWN_MS
+            ) {
+                return
+            }
+            lastManualCheckAt = now
+        }
         checking = true
 
         if (manual) {
@@ -190,7 +200,10 @@ class MaintenanceActivity : AppCompatActivity(), SensorEventListener {
 
         lifecycleScope.launch {
             val startedAt = System.currentTimeMillis()
-            RemoteConfigManager.refresh(this@MaintenanceActivity)
+            RemoteConfigManager.refresh(
+                this@MaintenanceActivity,
+                forceRefresh = manual,
+            )
 
             // Keep a manual spinner visible long enough to read as deliberate.
             if (manual) {
@@ -272,7 +285,7 @@ class MaintenanceActivity : AppCompatActivity(), SensorEventListener {
     companion object {
         private const val EXTRA_TITLE = "extra_maintenance_title"
         private const val EXTRA_MESSAGE = "extra_maintenance_message"
-        private const val AUTO_POLL_SECONDS = 25
+        private const val MANUAL_REFRESH_COOLDOWN_MS = 30_000L
         private const val MIN_SPINNER_MS = 650L
 
         fun newIntent(context: Context, title: String?, message: String?): Intent =

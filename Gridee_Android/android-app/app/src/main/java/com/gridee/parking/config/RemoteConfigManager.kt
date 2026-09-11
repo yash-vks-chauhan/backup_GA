@@ -23,7 +23,9 @@ object RemoteConfigManager {
     // "string", 0.0, additionalProp*). These guard a live production app against
     // being bricked or degraded by a bad server-side config write. The frontend
     // can never fix the server, so it must refuse to trust obviously-invalid values.
-    private const val FALLBACK_MIN_TOPUP = 1.0
+    // Must match PaymentController's defensive fallback when the shared config contains the
+    // placeholder 0.0 value; otherwise Android would offer amounts the backend rejects.
+    private const val FALLBACK_MIN_TOPUP = 10.0
     private const val FALLBACK_MAX_TOPUP = 50000.0
     private const val FALLBACK_CURRENCY = "INR"
     private const val FALLBACK_CURRENCY_SYMBOL = "₹"
@@ -60,12 +62,12 @@ object RemoteConfigManager {
         return currentConfig
     }
 
-    suspend fun refresh(context: Context): AppRemoteConfig {
+    suspend fun refresh(context: Context, forceRefresh: Boolean = false): AppRemoteConfig {
         val appContext = context.applicationContext
         loadCached(appContext)
 
         return withContext(Dispatchers.IO) {
-            val fetched = repository.fetchAppConfig()
+            val fetched = repository.fetchAppConfig(forceRefresh)
             if (fetched != null) {
                 val sanitized = sanitize(fetched)
                 currentConfig = sanitized
@@ -99,6 +101,35 @@ object RemoteConfigManager {
     fun isEmailSignInEnabled(): Boolean = isFeatureEnabled("emailSignIn")
 
     fun isGoogleSignInEnabled(): Boolean = isFeatureEnabled("googleSignIn")
+
+    /**
+     * The booking-transition interstitial, gated on top of the global AdMob switch rather than
+     * instead of it.
+     *
+     * Operable with no backend deploy: the free-form `featureToggleMap` is consulted before
+     * the typed flags, and key normalisation strips case, dashes, underscores and a trailing
+     * "Enabled", so any of `bookingTransitionInterstitialEnabled`,
+     * `booking_transition_interstitial` or `bookingTransitionInterstitial` in that map turns the
+     * placement off.
+     */
+    fun isBookingTransitionInterstitialEnabled(): Boolean =
+        isFeatureEnabled("adMob") && isFeatureEnabled("bookingTransitionInterstitial")
+
+    /**
+     * The warm preload buffer behind that placement. Off falls back to the just-in-time load,
+     * which is the behaviour that predated the buffer — the placement keeps serving.
+     */
+    fun isBookingTransitionPreloadBufferEnabled(): Boolean =
+        isFeatureEnabled("bookingTransitionPreloadBuffer")
+
+    /**
+     * Whether the per-user daily cap on completed rewards is enforced.
+     *
+     * Note the inverted sense against the placement switches above: off here *removes* a limit
+     * rather than removing a placement, so this is the escape hatch if the cap proves to cost
+     * more engagement than the price improvement is worth.
+     */
+    fun isRewardedDailyCapEnabled(): Boolean = isFeatureEnabled("rewardedDailyCap")
 
     fun shouldShowHomeSlotFilters(): Boolean {
         return runCatching { currentConfig.home.showSlotFilters }.getOrDefault(true)
@@ -167,6 +198,11 @@ object RemoteConfigManager {
             "ratelimiting" -> currentConfig.features.rateLimitingEnabled
             "admob" -> currentConfig.features.adMobEnabled
             "rewards" -> currentConfig.features.rewardsEnabled
+            "bookingtransitioninterstitial" ->
+                currentConfig.features.bookingTransitionInterstitialEnabled
+            "bookingtransitionpreloadbuffer" ->
+                currentConfig.features.bookingTransitionPreloadBufferEnabled
+            "rewardeddailycap" -> currentConfig.features.rewardedDailyCapEnabled
             else -> null
         }
     }
@@ -206,7 +242,12 @@ object RemoteConfigManager {
 
     private fun isCacheExpired(config: AppRemoteConfig, fetchedAt: Long): Boolean {
         if (fetchedAt <= 0) return true
-        val ttlMs = max(60L, config.cacheTtlSeconds) * 1000L
+        // Operational config (maintenance and force-update included) must be reconciled at least
+        // every five minutes while the app is used. The backend-provided value may request a
+        // shorter local freshness window, but it must not stretch this Android peak-load TTL to
+        // the old 15-minute default (or as far as the accepted 24-hour maximum).
+        val configuredTtlMs = max(60L, config.cacheTtlSeconds) * 1000L
+        val ttlMs = minOf(configuredTtlMs, RemoteConfigRepository.APP_CONFIG_TTL_MILLIS)
         return System.currentTimeMillis() - fetchedAt > ttlMs
     }
 

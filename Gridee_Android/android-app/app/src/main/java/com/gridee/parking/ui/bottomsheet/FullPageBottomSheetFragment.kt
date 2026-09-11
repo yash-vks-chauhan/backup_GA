@@ -15,6 +15,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.gridee.parking.R
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 
 /**
  * A bottom sheet that opens as a full page, with the app's "Lift & Settle" motion.
@@ -124,18 +125,15 @@ open class FullPageBottomSheetFragment : BottomSheetDialogFragment() {
 
             bottomSheetDialog.window?.let { window ->
                 WindowCompat.setDecorFitsSystemWindows(window, false)
-                window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                window.isNavigationBarContrastEnforced = false
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
+                }
 
                 val isLightMode = (resources.configuration.uiMode and
                     Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
                 val wic = WindowCompat.getInsetsController(window, window.decorView)
                 wic.isAppearanceLightNavigationBars = isLightMode
                 wic.isAppearanceLightStatusBars = isLightMode
-
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                    window.navigationBarDividerColor = android.graphics.Color.TRANSPARENT
-                }
 
                 if (crossWindowBlurSupported) {
                     window.addFlags(android.view.WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
@@ -265,8 +263,10 @@ open class FullPageBottomSheetFragment : BottomSheetDialogFragment() {
         touchShield = null
     }
 
-    private fun shouldReduceMotion(): Boolean =
-        !android.animation.ValueAnimator.areAnimatorsEnabled()
+    private fun shouldReduceMotion(): Boolean {
+        val currentContext = context ?: return true
+        return !AnimatorSettingsCompat.areEnabled(currentContext)
+    }
 
     // ── Lift & Settle: exit ─────────────────────────────────────────
     // Two paths:

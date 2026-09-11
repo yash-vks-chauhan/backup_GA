@@ -7,6 +7,5 @@ data class CreateBookingRequest(
     @SerializedName("lotId") val lotId: String,
     @SerializedName("checkInTime") val checkInTime: String,
     @SerializedName("checkOutTime") val checkOutTime: String,
-    @SerializedName("vehicleNumber") val vehicleNumber: String
+    @SerializedName("vehicleNumber") val vehicleNumber: String? = null
 )
-

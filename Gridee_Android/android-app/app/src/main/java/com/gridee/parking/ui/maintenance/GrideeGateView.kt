@@ -11,13 +11,13 @@ import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
-import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import androidx.core.content.ContextCompat
 import com.gridee.parking.R
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 import kotlin.math.min
 import kotlin.math.sin
 
@@ -287,8 +287,7 @@ class GrideeGateView @JvmOverloads constructor(
         lampAnim?.cancel(); lampAnim = null
     }
 
-    private fun animatorsEnabled(): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()
+    private fun animatorsEnabled(): Boolean = AnimatorSettingsCompat.areEnabled(context)
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()

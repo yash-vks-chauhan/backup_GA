@@ -1,17 +1,20 @@
 package com.gridee.parking.ui.operator
 
 import android.content.Context
-import android.util.Log
+import android.os.SystemClock
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.gridee.parking.data.api.BackendGsonFactory
 import com.gridee.parking.data.model.ParkingSpot
+import com.gridee.parking.data.model.BookingPolicyResolver
 import com.gridee.parking.data.repository.ParkingRepository
 import com.gridee.parking.data.repository.UserRepository
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.UserProfileCache
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import retrofit2.Response
 
@@ -20,13 +23,20 @@ object OperatorParkingSpotLoader {
     private const val KEY_PARKING_LOT_ID = "parking_lot_id"
     private const val KEY_PARKING_LOT_NAME = "parking_lot_name"
     private const val KEY_LAST_SELECTED_SPOT_ID = "operator_last_selected_spot_id"
-    private const val LEGACY_LOT_ID_PREFIX = "pl"
+    private const val KEY_LAST_SELECTED_LOT_ID = "operator_last_selected_lot_id"
+    private const val CACHE_TTL_MS = 30_000L
+    private const val STALE_CACHE_MAX_AGE_MS = 5 * 60_000L
+    private const val MAX_CACHE_ENTRIES = 16
     private val gson = BackendGsonFactory.gson
+    private val loadMutex = Mutex()
+    private val cacheLock = Any()
+    private val resultCache = LinkedHashMap<String, CachedLoadResult>()
 
     data class LoadResult(
         val spots: List<ParkingSpot>,
         val emptyMessage: String? = null,
-        val retryable: Boolean = false
+        val retryable: Boolean = false,
+        internal val allowStaleFallback: Boolean = false
     )
 
     internal enum class EmptyReason {
@@ -46,59 +56,193 @@ object OperatorParkingSpotLoader {
     suspend fun load(
         context: Context,
         parkingRepository: ParkingRepository,
-        logTag: String,
         userRepository: UserRepository = UserRepository()
     ): LoadResult = withContext(Dispatchers.IO) {
-        val lotContext = resolveAndRepairOperatorLotContext(
-            context = context,
-            parkingRepository = parkingRepository,
-            userRepository = userRepository,
-            logTag = logTag
-        )
+        // A warm result avoids both the profile repair lookup and every spot-list call.
+        val quickCacheKey = currentCacheKey(context)
+        getCached(quickCacheKey)?.let { return@withContext it }
+
+        loadMutex.withLock {
+            getCached(currentCacheKey(context))?.let { return@withLock it }
+
+            val lotContext = resolveAndRepairOperatorLotContext(
+                context = context,
+                parkingRepository = parkingRepository,
+                userRepository = userRepository,
+            )
+            val assignedLotId = lotContext.id
+            if (assignedLotId.isNullOrBlank()) {
+                return@withLock LoadResult(
+                    spots = emptyList(),
+                    emptyMessage = "Your operator account is not assigned to a parking lot. Ask an administrator to assign it, then try again.",
+                    retryable = true
+                )
+            }
+
+            val cacheKey = cacheKey(AuthSession.getUserId(context), assignedLotId)
+            getCached(cacheKey)?.let { return@withLock it }
+
+            val staleResult = getCached(cacheKey, allowStale = true)
+            loadAssignedLot(
+                context = context,
+                parkingRepository = parkingRepository,
+                lotContext = lotContext,
+            ).let { result ->
+                if (result.allowStaleFallback && staleResult != null) {
+                    return@withLock staleResult
+                }
+                // Cache authoritative data and authoritative empty lists. Transient failures and
+                // access errors remain retryable and must not poison the cache.
+                if (result.spots.isNotEmpty() || !result.retryable) {
+                    putCached(cacheKey, result)
+                }
+                result
+            }
+        }
+    }
+
+    /**
+     * Refreshes the exact operator-scoped selected-lot source used by the scanner and dashboard.
+     * This bypasses both cache layers after a successful mutation, but keeps the last known list
+     * available if the refresh fails transiently.
+     */
+    suspend fun refreshSelectedLot(
+        context: Context,
+        parkingRepository: ParkingRepository,
+        parkingLotId: String,
+    ): Boolean = withContext(Dispatchers.IO) {
+        val normalizedLotId = parkingLotId.validPreferenceValue() ?: return@withContext false
+        val cacheKey = cacheKey(AuthSession.getUserId(context), normalizedLotId)
+
+        loadMutex.withLock {
+            val result = loadAssignedLot(
+                context = context,
+                parkingRepository = parkingRepository,
+                lotContext = OperatorLotContext(
+                    id = normalizedLotId,
+                    name = AuthSession.getParkingLotName(context),
+                ),
+                forceRefresh = true,
+            )
+
+            // Only an authoritative response replaces the operator-visible list. Keeping the
+            // prior entry on a transient failure lets the next selector show cached data.
+            if (result.spots.isNotEmpty() || !result.retryable) {
+                putCached(cacheKey, result)
+            } else if (!result.allowStaleFallback) {
+                // Authentication/access failures must never leave an older authorized list warm.
+                invalidate(normalizedLotId)
+            }
+            !result.retryable
+        }
+    }
+
+    /** Invalidate the selected-lot list after a successful operator mutation. */
+    fun invalidate(parkingLotId: String?) {
+        val normalizedLotId = parkingLotId.validPreferenceValue() ?: return
+        synchronized(cacheLock) {
+            val suffix = "|$normalizedLotId"
+            resultCache.keys.removeAll { it.endsWith(suffix) }
+        }
+    }
+
+    private suspend fun loadAssignedLot(
+        context: Context,
+        parkingRepository: ParkingRepository,
+        lotContext: OperatorLotContext,
+        forceRefresh: Boolean = false,
+    ): LoadResult {
+        val assignedLotId = requireNotNull(lotContext.id)
         val attempts = mutableListOf<SpotLoadAttempt>()
 
-        if (!lotContext.id.isNullOrBlank()) {
-            attempts += fetchAttempt(logTag, "operator assigned-lot parking spots") {
-                parkingRepository.getOperatorParkingSpotsForLotPayload(lotContext.id)
+        val policyResponse = try {
+            parkingRepository.getBookingPolicy(assignedLotId, forceRefresh = forceRefresh)
+        } catch (error: Exception) {
+            return LoadResult(
+                spots = emptyList(),
+                emptyMessage = "Parking-lot validation rules could not be loaded. Check your connection and try again.",
+                retryable = true,
+                allowStaleFallback = true,
+            )
+        }
+        val policy = policyResponse.body()
+        if (!policyResponse.isSuccessful || policy == null) {
+            return LoadResult(
+                spots = emptyList(),
+                emptyMessage = "Parking-lot validation rules are unavailable. Try again.",
+                retryable = true,
+                allowStaleFallback = policyResponse.code() >= 500,
+            )
+        }
+        val resolvedPolicy = runCatching { BookingPolicyResolver.resolve(policy) }.getOrNull()
+            ?: return LoadResult(
+                spots = emptyList(),
+                emptyMessage = "Parking-lot validation rules are incomplete. Try again.",
+                retryable = true,
+            )
+        if (!resolvedPolicy.supportsOperatorValidation) {
+            return LoadResult(
+                spots = emptyList(),
+                emptyMessage = "Operator validation is disabled for ${lotContext.name ?: "this parking lot"}.",
+                retryable = false,
+            )
+        }
+
+        attempts += fetchAttempt {
+            parkingRepository.getOperatorParkingSpotsForLotPayload(
+                assignedLotId,
+                forceRefresh = forceRefresh,
+            )
+        }
+        attempts.last().takeIf { it.successful }?.let { attempt ->
+            return successfulResult(attempt.spots, assignedLotId, lotContext.name)
+        }
+
+        // Alternate routes are compatibility fallbacks, not retries for an overloaded or
+        // unreachable backend. Only an explicit route-not-supported response may use them.
+        if (attempts.last().canTryAlternateRoute()) {
+            attempts += fetchAttempt {
+                parkingRepository.getOperatorParkingSpotsPayload(forceRefresh = forceRefresh)
             }
-            attempts.last().spots.takeIf { it.isNotEmpty() }?.let { spots ->
-                return@withContext successfulResult(spots, lotContext.id, logTag)
+            attempts.last().takeIf { it.successful }?.let { attempt ->
+                return successfulResult(attempt.spots, assignedLotId, lotContext.name)
             }
         }
 
-        attempts += fetchAttempt(logTag, "operator parking spots") {
-            parkingRepository.getOperatorParkingSpotsPayload()
-        }
-        attempts.last().spots.takeIf { it.isNotEmpty() }?.let { spots ->
-            return@withContext successfulResult(spots, lotContext.id, logTag)
-        }
-
-        // Keep a generic lot-scoped endpoint as a rollout fallback. It remains
-        // constrained to the operator's assigned parking lot.
-        if (!lotContext.id.isNullOrBlank()) {
-            attempts += fetchAttempt(logTag, "assigned-lot parking spots") {
-                parkingRepository.getParkingSpotsByLotPayload(lotContext.id)
+        if (attempts.last().canTryAlternateRoute()) {
+            attempts += fetchAttempt {
+                parkingRepository.getParkingSpotsByLotPayload(
+                    assignedLotId,
+                    forceRefresh = forceRefresh,
+                )
             }
-            attempts.last().spots.takeIf { it.isNotEmpty() }?.let { spots ->
-                return@withContext successfulResult(spots, lotContext.id, logTag)
+            attempts.last().takeIf { it.successful }?.let { attempt ->
+                return successfulResult(attempt.spots, assignedLotId, lotContext.name)
             }
         }
 
-        // Retain a safe single-spot fallback for operators who already selected a
-        // spot before a list endpoint became unavailable.
-        val lastSelectedSpot = fetchLastSelectedSpot(
-            context,
-            parkingRepository,
-            logTag,
-            attempts
-        )
-        if (lastSelectedSpot != null) {
-            return@withContext successfulResult(listOf(lastSelectedSpot), lotContext.id, logTag)
+        // A single selected-spot lookup is retained only for old servers that do not expose any
+        // of the list routes. Network/429/5xx failures never fan out into more immediate calls.
+        if (attempts.isNotEmpty() && attempts.all(SpotLoadAttempt::canTryAlternateRoute)) {
+            val lastSelectedSpot = fetchLastSelectedSpot(
+                context,
+                parkingRepository,
+                attempts,
+                forceRefresh,
+                assignedLotId,
+            )
+            if (lastSelectedSpot != null) {
+                return successfulResult(
+                    listOf(lastSelectedSpot),
+                    assignedLotId,
+                    lotContext.name
+                )
+            }
         }
 
         val reason = classifyEmptyResult(
             attempts = attempts.map(SpotLoadAttempt::summary),
-            hasLotContext = !lotContext.id.isNullOrBlank()
+            hasLotContext = true
         )
         val message = when (reason) {
             EmptyReason.NO_LOT_ASSIGNMENT ->
@@ -108,29 +252,74 @@ object OperatorParkingSpotLoader {
             EmptyReason.ACCESS_DENIED ->
                 attempts.firstNotNullOfOrNull { attempt ->
                     attempt.message.takeIf { attempt.code == 403 }
-                }
-                    ?: "Your operator account does not have access to this parking lot."
+                } ?: "Your operator account does not have access to this parking lot."
             EmptyReason.LOAD_FAILED ->
                 "Parking spots could not be loaded. Check your connection and tap to try again."
         }
-        LoadResult(
+        return LoadResult(
             spots = emptyList(),
             emptyMessage = message,
-            retryable = reason != EmptyReason.NO_ACTIVE_SPOTS
+            retryable = reason != EmptyReason.NO_ACTIVE_SPOTS,
+            allowStaleFallback = canUseStaleFallback(attempts.map(SpotLoadAttempt::summary))
         )
+    }
+
+    private fun currentCacheKey(context: Context): String? {
+        val userId = AuthSession.getUserId(context)
+        val cachedUser = userId?.let { UserProfileCache.get(context, it) }
+        val lotId = cachedUser?.parkingLotId.validPreferenceValue()
+            ?: AuthSession.getParkingLotId(context).validPreferenceValue()
+        return cacheKey(userId, lotId)
+    }
+
+    private fun cacheKey(userId: String?, parkingLotId: String?): String? {
+        val normalizedUserId = userId.validPreferenceValue() ?: return null
+        val normalizedLotId = parkingLotId.validPreferenceValue() ?: return null
+        return "$normalizedUserId|$normalizedLotId"
+    }
+
+    private fun getCached(key: String?, allowStale: Boolean = false): LoadResult? {
+        if (key == null) return null
+        val now = SystemClock.elapsedRealtime()
+        return synchronized(cacheLock) {
+            val entry = resultCache[key] ?: return@synchronized null
+            val ageMs = now - entry.storedAtElapsedRealtimeMs
+            if (ageMs < 0L || ageMs >= STALE_CACHE_MAX_AGE_MS) {
+                resultCache.remove(key)
+                null
+            } else if (!allowStale && ageMs >= CACHE_TTL_MS) {
+                null
+            } else {
+                entry.result
+            }
+        }
+    }
+
+    private fun putCached(key: String?, result: LoadResult) {
+        if (key == null) return
+        synchronized(cacheLock) {
+            resultCache[key] = CachedLoadResult(
+                result = result,
+                storedAtElapsedRealtimeMs = SystemClock.elapsedRealtime()
+            )
+            while (resultCache.size > MAX_CACHE_ENTRIES) {
+                val oldestKey = resultCache.entries.minByOrNull {
+                    it.value.storedAtElapsedRealtimeMs
+                }?.key ?: break
+                resultCache.remove(oldestKey)
+            }
+        }
     }
 
     private suspend fun resolveAndRepairOperatorLotContext(
         context: Context,
         parkingRepository: ParkingRepository,
         userRepository: UserRepository,
-        logTag: String
     ): OperatorLotContext {
         val userId = AuthSession.getUserId(context)
         val cachedUser = userId?.let { UserProfileCache.get(context, it) }
         val freshUser = userId?.let { id ->
             runCatching { userRepository.getUserById(id) }
-                .onFailure { Log.w(logTag, "Unable to refresh operator profile", it) }
                 .getOrNull()
         }
         if (freshUser != null) {
@@ -147,7 +336,7 @@ object OperatorParkingSpotLoader {
         // unambiguous name and persist the canonical ID on the operator's own profile
         // so the strict lot-scoped backend can authorize this and future requests.
         if (lotId.isNullOrBlank() && !lotName.isNullOrBlank() && !userId.isNullOrBlank()) {
-            val resolvedLot = resolveLotFromAllLots(parkingRepository, lotName, logTag)
+            val resolvedLot = resolveLotFromAllLots(parkingRepository, lotName)
             if (resolvedLot != null) {
                 val repairResponse = runCatching {
                     userRepository.assignParkingLot(
@@ -155,8 +344,6 @@ object OperatorParkingSpotLoader {
                         resolvedLot.id,
                         resolvedLot.name ?: lotName
                     )
-                }.onFailure {
-                    Log.w(logTag, "Unable to repair legacy operator parking-lot assignment", it)
                 }.getOrNull()
 
                 if (repairResponse?.isSuccessful == true) {
@@ -165,12 +352,6 @@ object OperatorParkingSpotLoader {
                     AuthSession.saveParkingLot(context, lotId, lotName)
                     profile?.copy(parkingLotId = lotId, parkingLotName = lotName)
                         ?.let { AuthSession.updateCachedUserProfile(context, it) }
-                    Log.i(logTag, "Repaired legacy operator parking-lot assignment")
-                } else {
-                    Log.w(
-                        logTag,
-                        "Legacy operator parking-lot repair failed: ${repairResponse?.code() ?: "network error"}"
-                    )
                 }
             }
         }
@@ -179,29 +360,24 @@ object OperatorParkingSpotLoader {
     }
 
     private suspend fun fetchAttempt(
-        logTag: String,
-        source: String,
         request: suspend () -> Response<JsonElement>
     ): SpotLoadAttempt {
         return try {
             val response = request()
             if (!response.isSuccessful) {
                 val backendMessage = response.readBackendErrorMessage()
-                Log.w(logTag, "$source request failed: ${response.code()} $backendMessage")
                 SpotLoadAttempt(
                     code = response.code(),
                     message = backendMessage
                 )
             } else {
-                val spots = parseParkingSpots(response.body(), logTag, source)
-                Log.d(logTag, "$source response count=${spots.size}")
+                val spots = parseParkingSpots(response.body())
                 SpotLoadAttempt(
                     successful = true,
                     spots = spots
                 )
             }
         } catch (error: Exception) {
-            Log.w(logTag, "$source source failed", error)
             SpotLoadAttempt(failedWithException = true, message = error.message)
         }
     }
@@ -209,17 +385,26 @@ object OperatorParkingSpotLoader {
     private suspend fun fetchLastSelectedSpot(
         context: Context,
         parkingRepository: ParkingRepository,
-        logTag: String,
-        attempts: MutableList<SpotLoadAttempt>
+        attempts: MutableList<SpotLoadAttempt>,
+        forceRefresh: Boolean,
+        assignedLotId: String,
     ): ParkingSpot? {
-        val spotId = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString(KEY_LAST_SELECTED_SPOT_ID, null)
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val savedLotId = prefs.getString(KEY_LAST_SELECTED_LOT_ID, null)
+            .validPreferenceValue()
+        if (savedLotId != assignedLotId) return null
+        val spotId = prefs.getString(KEY_LAST_SELECTED_SPOT_ID, null)
             .validPreferenceValue()
             ?: return null
         return try {
-            val response = parkingRepository.getParkingSpotById(spotId)
+            val response = parkingRepository.getParkingSpotById(
+                spotId,
+                forceRefresh = forceRefresh,
+            )
             if (response.isSuccessful) {
-                response.body()?.takeIf { it.id.isNotBlank() }.also { spot ->
+                response.body()?.takeIf {
+                    it.id.isNotBlank() && it.lotId.trim() == assignedLotId
+                }.also { spot ->
                     attempts += SpotLoadAttempt(
                         successful = true,
                         spots = listOfNotNull(spot)
@@ -228,29 +413,38 @@ object OperatorParkingSpotLoader {
             } else {
                 val message = response.readBackendErrorMessage()
                 attempts += SpotLoadAttempt(code = response.code(), message = message)
-                Log.w(logTag, "Last selected parking spot request failed: ${response.code()} $message")
                 null
             }
         } catch (error: Exception) {
             attempts += SpotLoadAttempt(failedWithException = true, message = error.message)
-            Log.w(logTag, "Last selected parking spot source failed", error)
             null
         }
     }
 
     private fun successfulResult(
         spots: List<ParkingSpot>,
-        assignedLotId: String?,
-        logTag: String
+        assignedLotId: String,
+        assignedLotName: String?
     ): LoadResult {
         val normalized = spots.map { spot ->
-            if (spot.lotId.isBlank() && !assignedLotId.isNullOrBlank()) {
-                spot.copy(lotId = assignedLotId)
+            if (spot.lotId.isBlank()) {
+                spot.copy(lotId = assignedLotId, lotName = spot.lotName ?: assignedLotName)
+            } else if (spot.lotId.trim() == assignedLotId && spot.lotName.isNullOrBlank()) {
+                spot.copy(lotName = assignedLotName)
             } else {
                 spot
             }
-        }
-        return LoadResult(spots = processSpots(normalized, logTag))
+        }.filter { spot -> spot.lotId.trim() == assignedLotId }
+        val processed = processSpots(normalized)
+        return LoadResult(
+            spots = processed,
+            emptyMessage = if (processed.isEmpty()) {
+                "No active parking spots are configured for ${assignedLotName ?: "your assigned parking lot"}."
+            } else {
+                null
+            },
+            retryable = false
+        )
     }
 
     internal fun classifyEmptyResult(
@@ -263,6 +457,19 @@ object OperatorParkingSpotLoader {
         }
         if (!hasLotContext) return EmptyReason.NO_LOT_ASSIGNMENT
         return EmptyReason.LOAD_FAILED
+    }
+
+    internal fun canTryAlternateRoute(attempt: AttemptSummary): Boolean {
+        return attempt.code == 404 || attempt.code == 405 || attempt.code == 501
+    }
+
+    internal fun canUseStaleFallback(attempts: List<AttemptSummary>): Boolean {
+        if (attempts.any { it.code == 401 || it.code == 403 }) return false
+        return attempts.any { attempt ->
+            attempt.failedWithException || attempt.code == 429 ||
+                attempt.code == 500 || attempt.code == 502 ||
+                attempt.code == 503 || attempt.code == 504
+        }
     }
 
     private fun Response<*>.readBackendErrorMessage(): String? {
@@ -282,235 +489,37 @@ object OperatorParkingSpotLoader {
             ?: "Unknown Spot"
     }
 
-    private suspend fun fetchSource(
-        logTag: String,
-        sourceName: String,
-        block: suspend () -> List<ParkingSpot>
-    ): List<ParkingSpot> {
-        return runCatching { block() }
-            .onFailure { Log.w(logTag, "$sourceName source failed", it) }
-            .getOrDefault(emptyList())
-    }
-
-    private suspend fun fetchAllParkingSpots(
-        parkingRepository: ParkingRepository,
-        logTag: String
-    ): List<ParkingSpot> {
-        val response = parkingRepository.getParkingSpotsPayload()
-        if (!response.isSuccessful) {
-            Log.w(logTag, "All parking spots request failed: ${response.code()}")
-            return emptyList()
-        }
-
-        val spots = parseParkingSpots(response.body(), logTag, "all parking spots")
-        Log.d(logTag, "All parking spots response count=${spots.size}")
-        return spots
-    }
-
-    private suspend fun fetchOperatorParkingSpots(
-        parkingRepository: ParkingRepository,
-        logTag: String
-    ): List<ParkingSpot> {
-        val response = parkingRepository.getOperatorParkingSpotsPayload()
-        if (!response.isSuccessful) {
-            Log.w(logTag, "Operator parking spots request failed: ${response.code()}")
-            return emptyList()
-        }
-
-        val spots = parseParkingSpots(response.body(), logTag, "operator parking spots")
-        Log.d(logTag, "Operator parking spots response count=${spots.size}")
-        return spots
-    }
-
-    private suspend fun fetchAssignedLotSpots(
-        context: Context,
-        parkingRepository: ParkingRepository,
-        logTag: String
-    ): List<ParkingSpot> {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val cachedUser = AuthSession.getUserId(context)
-            ?.let { userId -> UserProfileCache.get(context, userId) }
-
-        val assignedLotId = prefs.getString(KEY_PARKING_LOT_ID, null).validPreferenceValue()
-            ?: cachedUser?.parkingLotId.validPreferenceValue()
-        val assignedLotName = prefs.getString(KEY_PARKING_LOT_NAME, null).validPreferenceValue()
-            ?: cachedUser?.parkingLotName.validPreferenceValue()
-
-        if (!assignedLotId.isNullOrBlank()) {
-            val spots = fetchSpotsByLot(parkingRepository, assignedLotId, logTag, "assigned lot id")
-            if (spots.isNotEmpty()) return spots
-        }
-
-        if (!assignedLotName.isNullOrBlank()) {
-            val lotByNameSpots = fetchSpotsByAssignedLotName(parkingRepository, assignedLotName, logTag)
-            if (lotByNameSpots.isNotEmpty()) return lotByNameSpots
-        }
-
-        val fallbackLotKey = assignedLotId ?: assignedLotName
-        if (!fallbackLotKey.isNullOrBlank()) {
-            val resolvedLot = resolveLotFromAllLots(parkingRepository, fallbackLotKey, logTag)
-            if (resolvedLot != null) {
-                val spots = fetchSpotsForLotCandidate(parkingRepository, resolvedLot, logTag, "resolved assigned lot")
-                if (spots.isNotEmpty()) return spots
-            }
-        }
-
-        Log.w(logTag, "No assigned lot spots found for operator")
-        return emptyList()
-    }
-
-    private suspend fun fetchSpotsByAssignedLotName(
-        parkingRepository: ParkingRepository,
-        assignedLotName: String,
-        logTag: String
-    ): List<ParkingSpot> {
-        val lotResponse = parkingRepository.getParkingLotByName(assignedLotName)
-        if (lotResponse.isSuccessful) {
-            val resolvedLotId = lotResponse.body()?.id.validPreferenceValue()
-            if (!resolvedLotId.isNullOrBlank()) {
-                val spots = fetchSpotsByLot(parkingRepository, resolvedLotId, logTag, "assigned lot name")
-                if (spots.isNotEmpty()) return spots
-            }
-        } else {
-            Log.w(logTag, "Parking lot lookup by name failed: ${lotResponse.code()}")
-        }
-
-        val resolvedLot = resolveLotFromAllLots(parkingRepository, assignedLotName, logTag)
-        if (resolvedLot != null) {
-            return fetchSpotsForLotCandidate(parkingRepository, resolvedLot, logTag, "assigned lot name from lots")
-        }
-
-        return emptyList()
-    }
-
-    private suspend fun fetchLastSelectedSpotLotSpots(
-        context: Context,
-        parkingRepository: ParkingRepository,
-        logTag: String
-    ): List<ParkingSpot> {
-        val lastSelectedSpotId = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString(KEY_LAST_SELECTED_SPOT_ID, null)
-            .validPreferenceValue()
-            ?: return emptyList()
-
-        val spotResponse = parkingRepository.getParkingSpotById(lastSelectedSpotId)
-        if (!spotResponse.isSuccessful) {
-            Log.w(logTag, "Last selected spot lookup failed: ${spotResponse.code()}")
-            return emptyList()
-        }
-
-        val spot = spotResponse.body() ?: return emptyList()
-        if (spot.id.isBlank()) return emptyList()
-
-        if (spot.lotId.isNotBlank()) {
-            val lotSpots = fetchSpotsByLot(
-                parkingRepository,
-                spot.lotId,
-                logTag,
-                "last selected spot lot ${spot.lotId}"
-            )
-            if (lotSpots.isNotEmpty()) return lotSpots
-        }
-
-        Log.d(logTag, "Using last selected parking spot fallback")
-        return listOf(spot)
-    }
-
     private suspend fun resolveLotFromAllLots(
         parkingRepository: ParkingRepository,
         lotKey: String,
-        logTag: String
     ): ParkingLotCandidate? {
         val lotsResponse = parkingRepository.getParkingLotsPayload()
         if (!lotsResponse.isSuccessful) {
-            Log.w(logTag, "Parking lots request for assigned lot resolution failed: ${lotsResponse.code()}")
             return null
         }
 
         val normalizedKey = lotKey.normalizeLookupKey()
-        val lots = parseParkingLots(lotsResponse.body(), logTag)
+        val lots = parseParkingLots(lotsResponse.body())
         val matches = lots.filter { lot ->
             lot.id.normalizeLookupKey() == normalizedKey ||
                 lot.name.normalizeLookupKey() == normalizedKey
         }
         if (matches.size > 1) {
-            Log.w(logTag, "Parking lot assignment '$lotKey' is ambiguous; refusing automatic repair")
             return null
         }
         return matches.singleOrNull()
     }
 
-    private suspend fun fetchSpotsFromAllLots(
-        parkingRepository: ParkingRepository,
-        logTag: String
-    ): List<ParkingSpot> {
-        val lotsResponse = parkingRepository.getParkingLotsPayload()
-        if (!lotsResponse.isSuccessful) {
-            Log.w(logTag, "Parking lots request failed: ${lotsResponse.code()}")
-            return emptyList()
-        }
-
-        val spots = mutableListOf<ParkingSpot>()
-        parseParkingLots(lotsResponse.body(), logTag)
-            .filter { it.id.isNotBlank() }
-            .forEach { lot ->
-                spots += fetchSource(logTag, "parking spots for lot ${lot.id}") {
-                    fetchSpotsForLotCandidate(parkingRepository, lot, logTag, "lot ${lot.id}")
-                }
-            }
-
-        val distinctSpots = spots.distinctBy { it.id }
-        Log.d(logTag, "All lots spot fallback count=${distinctSpots.size}")
-        return distinctSpots
-    }
-
-    private suspend fun fetchSpotsByLot(
-        parkingRepository: ParkingRepository,
-        lotId: String,
-        logTag: String,
-        source: String
-    ): List<ParkingSpot> {
-        val response = parkingRepository.getParkingSpotsByLotPayload(lotId)
-        if (!response.isSuccessful) {
-            Log.w(logTag, "Parking spots by $source failed: ${response.code()}")
-            return emptyList()
-        }
-
-        val spots = parseParkingSpots(response.body(), logTag, "parking spots by $source")
-        Log.d(logTag, "Parking spots by $source count=${spots.size}")
-        return spots
-    }
-
-    private suspend fun fetchSpotsForLotCandidate(
-        parkingRepository: ParkingRepository,
-        lot: ParkingLotCandidate,
-        logTag: String,
-        source: String
-    ): List<ParkingSpot> {
-        for (lotId in lot.lookupIds()) {
-            val spots = fetchSpotsByLot(parkingRepository, lotId, logTag, "$source id $lotId")
-            if (spots.isNotEmpty()) return spots
-        }
-        return emptyList()
-    }
-
-    private fun parseParkingSpots(
-        payload: JsonElement?,
-        logTag: String,
-        source: String
-    ): List<ParkingSpot> {
+    private fun parseParkingSpots(payload: JsonElement?): List<ParkingSpot> {
         val array = payload.findPayloadArray() ?: run {
-            Log.w(logTag, "No spot array found in $source payload")
             return emptyList()
         }
 
         return array.mapNotNull { element ->
             runCatching { gson.fromJson(element, ParkingSpot::class.java) }
-                .onFailure { Log.w(logTag, "Unable to parse one $source item", it) }
                 .getOrNull()
         }.filter { spot ->
             if (spot.id.isBlank()) {
-                Log.w(logTag, "Dropping $source item without an id: $spot")
                 false
             } else {
                 true
@@ -518,26 +527,20 @@ object OperatorParkingSpotLoader {
         }
     }
 
-    private fun parseParkingLots(
-        payload: JsonElement?,
-        logTag: String
-    ): List<ParkingLotCandidate> {
+    private fun parseParkingLots(payload: JsonElement?): List<ParkingLotCandidate> {
         val array = payload.findPayloadArray() ?: run {
-            Log.w(logTag, "No parking lot array found in parking lots payload")
             return emptyList()
         }
 
-        return array.mapIndexedNotNull { index, element ->
-            val obj = element.asJsonObjectOrNull() ?: return@mapIndexedNotNull null
+        return array.mapNotNull { element ->
+            val obj = element.asJsonObjectOrNull() ?: return@mapNotNull null
             val id = obj.readString("id", "_id").orEmpty()
             if (id.isBlank()) {
-                Log.w(logTag, "Dropping parking lot item without an id: $obj")
                 null
             } else {
                 ParkingLotCandidate(
                     id = id,
                     name = obj.readString("name"),
-                    fallbackIds = listOf("$LEGACY_LOT_ID_PREFIX${index + 1}")
                 )
             }
         }
@@ -592,49 +595,11 @@ object OperatorParkingSpotLoader {
         return null
     }
 
-    private fun processSpots(spots: List<ParkingSpot>, logTag: String): List<ParkingSpot> {
-        val processedSpots = mutableListOf<ParkingSpot>()
-        val handledIds = mutableSetOf<String>()
-
-        for (spot in spots) {
-            if (handledIds.contains(spot.id)) continue
-
-            val displayName = getSpotDisplayName(spot)
-            if (displayName.endsWith(" Morning", ignoreCase = true) || displayName.endsWith(" Quick", ignoreCase = true)) {
-                val baseName = if (displayName.endsWith(" Morning", ignoreCase = true)) {
-                    displayName.substring(0, displayName.length - " Morning".length)
-                } else {
-                    displayName.substring(0, displayName.length - " Quick".length)
-                }
-
-                val suffixNeeded = if (displayName.endsWith(" Morning", ignoreCase = true)) " Quick" else " Morning"
-                val counterpart = spots.find {
-                    !handledIds.contains(it.id) && getSpotDisplayName(it).equals(baseName + suffixNeeded, ignoreCase = true)
-                }
-
-                if (counterpart != null) {
-                    processedSpots.add(
-                        spot.copy(
-                            name = "$baseName (M&Q)",
-                            capacity = maxOf(spot.capacity, counterpart.capacity),
-                            available = maxOf(spot.available, counterpart.available)
-                        )
-                    )
-                    handledIds.add(spot.id)
-                    handledIds.add(counterpart.id)
-                } else {
-                    processedSpots.add(spot)
-                    handledIds.add(spot.id)
-                }
-            } else {
-                processedSpots.add(spot)
-                handledIds.add(spot.id)
-            }
-        }
-
-        Log.d(logTag, "Processed operator spots count=${processedSpots.size}")
-        return processedSpots.sortedBy { getSpotDisplayName(it).lowercase() }
-    }
+    private fun processSpots(spots: List<ParkingSpot>): List<ParkingSpot> = spots
+        // A morning/quick pair may represent distinct backend spot IDs. Never merge them: the
+        // exact lot + spot pair selected here is also the pair validated after every scan.
+        .distinctBy { it.lotId.trim() to it.id.trim() }
+        .sortedBy { getSpotDisplayName(it).lowercase() }
 
     private fun String?.validPreferenceValue(): String? {
         val value = this?.trim().orEmpty()
@@ -657,19 +622,16 @@ object OperatorParkingSpotLoader {
     private data class ParkingLotCandidate(
         val id: String,
         val name: String?,
-        val fallbackIds: List<String> = emptyList()
-    ) {
-        fun lookupIds(): List<String> {
-            return (listOf(id) + fallbackIds)
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
-                .distinct()
-        }
-    }
+    )
 
     private data class OperatorLotContext(
         val id: String?,
         val name: String?
+    )
+
+    private data class CachedLoadResult(
+        val result: LoadResult,
+        val storedAtElapsedRealtimeMs: Long
     )
 
     private data class SpotLoadAttempt(
@@ -686,5 +648,9 @@ object OperatorParkingSpotLoader {
                 message = message,
                 failedWithException = failedWithException
             )
+
+        fun canTryAlternateRoute(): Boolean {
+            return OperatorParkingSpotLoader.canTryAlternateRoute(summary)
+        }
     }
 }

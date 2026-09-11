@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wallet_minimum_amount">குறைந்தபட்சம் ₹%1$s</string>
+    <string name="wallet_maximum_amount">அதிகபட்சம் ₹%1$s</string>
+    <string name="wallet_whole_rupees">முழு ரூபாய்களில் உள்ளிடவும் (தசமங்கள் வேண்டாம்)</string>
+    <string name="wallet_invalid_amount">முழு ரூபாய்களில் சரியான தொகையை உள்ளிடவும்</string>
+    <string name="wallet_amount_too_long">இந்தத் தொகையில் அதிக இலக்கங்கள் உள்ளன</string>
+    <string name="wallet_continue_amount">தொடரவும் · ₹%1$s</string>
+    <string name="wallet_opening_checkout">செக்அவுட் திறக்கப்படுகிறது…</string>
+    <string name="wallet_amount_label">முழு ரூபாய்களில் தொகை</string>
+    <string name="wallet_balance_accessibility">தற்போதைய இருப்பு: %1$s Gridee Coins</string>
+    <string name="wallet_cashfree_reassurance">Cashfree மூலம் பாதுகாக்கப்படுகிறது</string>
+    <string name="wallet_amount_range">₹%1$s முதல் ₹%2$s வரை ஒரு தொகையை உள்ளிடவும்.</string>
+</resources>

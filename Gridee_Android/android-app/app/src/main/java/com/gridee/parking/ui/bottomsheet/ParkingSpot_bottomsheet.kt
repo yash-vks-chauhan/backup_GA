@@ -1,12 +1,13 @@
 package com.gridee.parking.ui.bottomsheet
 
 import android.app.Dialog
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
+import androidx.activity.result.contract.ActivityResultContracts
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +20,11 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -27,20 +33,26 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.gridee.parking.R
 import com.gridee.parking.data.api.ApiClient
 import com.gridee.parking.data.model.ParkingSpot
+import com.gridee.parking.data.model.BookingPolicyResolver
+import com.gridee.parking.data.model.ResolvedBookingPolicy
+import com.gridee.parking.data.model.Vehicle
 import com.gridee.parking.utils.AuthSession
 import com.gridee.parking.utils.ParkingSpotSchedulePolicy
 import com.gridee.parking.databinding.BottomSheetParkingSpotBinding
-import com.gridee.parking.databinding.BottomSheetTopUpBinding
 import com.gridee.parking.ui.booking.BookingConfirmationActivity
 import com.gridee.parking.ui.booking.BookingViewModel
 import com.gridee.parking.ui.booking.ParkingSpotSelectionAdapter
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
+import com.gridee.parking.ui.wallet.WalletAddMoneyActivity
 import com.gridee.parking.ui.wallet.WalletTopUpLauncher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
 class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
 
@@ -48,6 +60,16 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     private val binding get() = _binding!!
 
     private lateinit var viewModel: BookingViewModel
+    private lateinit var selectVehicleAddCoordinator: SelectVehicleAddRequestCoordinator
+
+    private var restoredBookingDraft: ParkingSpotBookingDraftSnapshot? = null
+    private var restoredVehicleValidationPending = false
+    private var restoredTimesValidationPending = false
+    private var automaticVehicleSelectionAllowed = true
+    private var scheduleInitializedForSpot = false
+    private var activeVehicleSelectionRequestToken: String? = null
+    private var completedVehicleSelectionRequestToken: String? = null
+    private var vehicleRestorationNotice: String? = null
 
     private var parkingSpot: ParkingSpot? = null
     private var selectedLotId: String = ""
@@ -57,8 +79,23 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     private var selectedSpotZoneNameArg: String? = null
     private var selectedSpotCodeArg: String? = null
     private var selectedSpotSlotNameArg: String? = null
+    private var bookingPolicy: ResolvedBookingPolicy? = null
+    private var bookingPolicyReady = false
 
+    private var isWalletTopUpInProgress = false
+    private var shouldRetryBookingAfterWalletTopUp = false
 
+    private val walletTopUpLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        isWalletTopUpInProgress = false
+        if (!isAdded) return@registerForActivityResult
+
+        if (shouldRetryBookingAfterWalletTopUp) {
+            viewModel.loadWalletBalance()
+            return@registerForActivityResult
+        }
+
+        updateConfirmButtonState()
+    }
 
     private var isBookingInProgress = false
     // The sheet can outlive the availability the user tapped on (Home polls on an interval, and
@@ -182,6 +219,172 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             selectedSpotCodeArg = args.getString(ARG_PARKING_SPOT_CODE)
             selectedSpotSlotNameArg = args.getString(ARG_PARKING_SPOT_SLOT_NAME)
         }
+
+        restoredBookingDraft = savedInstanceState
+            ?.getBundle(STATE_BOOKING_DRAFT)
+            ?.let(ParkingSpotBookingDraftSnapshot::fromBundle)
+        restoredVehicleValidationPending = restoredBookingDraft != null
+        restoredTimesValidationPending = restoredBookingDraft?.hasCompleteTimes == true
+        automaticVehicleSelectionAllowed = restoredBookingDraft?.let { draft ->
+            !draft.hasVehicleReference && draft.allowAutomaticVehicleSelection
+        } ?: (savedInstanceState == null)
+        activeVehicleSelectionRequestToken = savedInstanceState
+            ?.getString(STATE_ACTIVE_VEHICLE_SELECTION_REQUEST_TOKEN)
+            ?.takeIf { it.isNotBlank() }
+        completedVehicleSelectionRequestToken = savedInstanceState
+            ?.getString(STATE_COMPLETED_VEHICLE_SELECTION_REQUEST_TOKEN)
+            ?.takeIf { it.isNotBlank() }
+
+        setupSelectVehicleSelectionResultContract()
+        setupSelectVehicleAddResultContract()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBundle(STATE_BOOKING_DRAFT, captureBookingDraft().toBundle())
+        outState.putString(
+            STATE_ACTIVE_VEHICLE_SELECTION_REQUEST_TOKEN,
+            activeVehicleSelectionRequestToken,
+        )
+        outState.putString(
+            STATE_COMPLETED_VEHICLE_SELECTION_REQUEST_TOKEN,
+            completedVehicleSelectionRequestToken,
+        )
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun captureBookingDraft(): ParkingSpotBookingDraftSnapshot {
+        val previousDraft = restoredBookingDraft
+        val selectedVehicle = if (this::viewModel.isInitialized) {
+            viewModel.selectedVehicle.value
+        } else {
+            null
+        }
+        val keepPendingVehicleReference =
+            selectedVehicle == null && restoredVehicleValidationPending
+        val selectedVehicleId = selectedVehicle?.id
+            ?: previousDraft?.selectedVehicleId?.takeIf { keepPendingVehicleReference }
+        val selectedVehicleNumber = selectedVehicle?.number
+            ?: previousDraft?.selectedVehicleNumber?.takeIf { keepPendingVehicleReference }
+        val startMillis = if (this::viewModel.isInitialized) {
+            viewModel.startTime.value?.time
+        } else {
+            null
+        } ?: previousDraft?.startTimeMillis
+        val endMillis = if (this::viewModel.isInitialized) {
+            viewModel.endTime.value?.time
+        } else {
+            null
+        } ?: previousDraft?.endTimeMillis
+
+        return ParkingSpotBookingDraftSnapshot(
+            selectedVehicleId = selectedVehicleId,
+            selectedVehicleNumber = selectedVehicleNumber,
+            startTimeMillis = startMillis,
+            endTimeMillis = endMillis,
+            allowAutomaticVehicleSelection =
+                selectedVehicleId == null &&
+                    selectedVehicleNumber == null &&
+                    automaticVehicleSelectionAllowed,
+        )
+    }
+
+    private fun setupSelectVehicleSelectionResultContract() {
+        childFragmentManager.setFragmentResultListener(
+            SelectVehicleBottomSheet.RESULT_KEY_VEHICLE_SELECTION,
+            this,
+        ) { _, result ->
+            val requestToken = result.getString(
+                SelectVehicleBottomSheet.BUNDLE_SELECTION_REQUEST_TOKEN,
+            )
+            val vehicleId = result.getString(SelectVehicleBottomSheet.BUNDLE_SELECTED_VEHICLE_ID)
+            val vehicleNumber = result.getString(
+                SelectVehicleBottomSheet.BUNDLE_SELECTED_VEHICLE_NUMBER,
+            )
+            if (!ParkingSpotBookingDraftPolicy.shouldAcceptVehicleSelectionResult(
+                    activeRequestToken = activeVehicleSelectionRequestToken,
+                    completedRequestToken = completedVehicleSelectionRequestToken,
+                    resultRequestToken = requestToken,
+                    vehicleId = vehicleId,
+                    vehicleNumber = vehicleNumber,
+                )
+            ) {
+                return@setFragmentResultListener
+            }
+
+            completedVehicleSelectionRequestToken = requestToken
+            activeVehicleSelectionRequestToken = null
+            acceptVehicleSelection(vehicleId.orEmpty(), vehicleNumber.orEmpty())
+        }
+    }
+
+    private fun setupSelectVehicleAddResultContract() {
+        selectVehicleAddCoordinator =
+            ViewModelProvider(this)[SelectVehicleAddRequestCoordinator::class.java]
+
+        childFragmentManager.setFragmentResultListener(
+            SelectVehicleBottomSheet.REQUEST_KEY_ADD_VEHICLE,
+            this,
+        ) { _, request ->
+            val requestToken = request.getString(
+                SelectVehicleBottomSheet.BUNDLE_REQUEST_TOKEN,
+            ).orEmpty()
+            val vehicleNumber = com.gridee.parking.utils.VehicleNumberValidator.normalize(
+                request.getString(SelectVehicleBottomSheet.BUNDLE_VEHICLE_NUMBER).orEmpty(),
+            )
+            if (requestToken.isBlank() ||
+                com.gridee.parking.utils.VehicleNumberValidator.getError(vehicleNumber) != null
+            ) {
+                publishSelectVehicleAddResult(requestToken, vehicleNumber, success = false)
+                return@setFragmentResultListener
+            }
+
+            val bookingViewModel = viewModel
+            val autoSelectFirstAfterAdd =
+                automaticVehicleSelectionAllowed && !restoredVehicleValidationPending
+            when (
+                selectVehicleAddCoordinator.submit(requestToken, vehicleNumber) { complete ->
+                    bookingViewModel.addVehicleToProfile(vehicleNumber) { success ->
+                        if (success) {
+                            bookingViewModel.loadUserVehicles(
+                                autoSelectFirst = autoSelectFirstAfterAdd,
+                            )
+                        }
+                        complete(success)
+                    }
+                }
+            ) {
+                SelectVehicleAddRequestCoordinator.Admission.BUSY ->
+                    publishSelectVehicleAddResult(requestToken, vehicleNumber, success = false)
+
+                SelectVehicleAddRequestCoordinator.Admission.STARTED,
+                SelectVehicleAddRequestCoordinator.Admission.JOINED,
+                SelectVehicleAddRequestCoordinator.Admission.REPLAYED -> Unit
+            }
+        }
+
+        selectVehicleAddCoordinator.completion.observe(this) { completion ->
+            publishSelectVehicleAddResult(
+                requestToken = completion.requestToken,
+                vehicleNumber = completion.vehicleNumber,
+                success = completion.success,
+            )
+        }
+    }
+
+    private fun publishSelectVehicleAddResult(
+        requestToken: String,
+        vehicleNumber: String,
+        success: Boolean,
+    ) {
+        if (childFragmentManager.isDestroyed) return
+        childFragmentManager.setFragmentResult(
+            SelectVehicleBottomSheet.RESULT_KEY_ADD_VEHICLE,
+            Bundle().apply {
+                putString(SelectVehicleBottomSheet.BUNDLE_REQUEST_TOKEN, requestToken)
+                putString(SelectVehicleBottomSheet.BUNDLE_VEHICLE_NUMBER, vehicleNumber)
+                putBoolean(SelectVehicleBottomSheet.BUNDLE_SUCCESS, success)
+            },
+        )
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -227,19 +430,14 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
 
             bottomSheetDialog.window?.let { window ->
                 WindowCompat.setDecorFitsSystemWindows(window, false)
-                window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                window.isNavigationBarContrastEnforced = false
 
                 val isLightMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
                 val wic = WindowCompat.getInsetsController(window, window.decorView)
                 wic.isAppearanceLightNavigationBars = isLightMode
                 wic.isAppearanceLightStatusBars = isLightMode
 
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                    window.navigationBarDividerColor = android.graphics.Color.TRANSPARENT
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                        window.isNavigationBarContrastEnforced = false
-                    }
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
                 }
 
                 if (crossWindowBlurSupported) {
@@ -286,7 +484,16 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         setupClickListeners()
         setupObservers()
 
-        loadParkingSpot(selectedSpotId)
+        // Policy is a prerequisite, not an optional decoration. Do not expose inventory or allow a
+        // booking using stale college defaults while the selected lot's rules are unknown.
+        viewModel.loadBookingPolicy(selectedLotId) { loaded ->
+            if (!isAdded || _binding == null) return@loadBookingPolicy
+            if (loaded) {
+                loadParkingSpot(selectedSpotId)
+            } else {
+                updateConfirmButtonState()
+            }
+        }
 
         // The content rides up with the sheet as a single object — no independent
         // per-child stagger. One coordinated motion reads as cinematic and confident.
@@ -308,7 +515,7 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.loadUserVehicles()
+        loadUserVehiclesForDraftValidation()
         viewModel.loadWalletBalance()
     }
 
@@ -419,7 +626,8 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     private fun shouldReduceMotion(): Boolean {
         // True when the user has disabled animations system-wide (Developer
         // Options → animation scale = 0, or Accessibility → Remove animations).
-        return !android.animation.ValueAnimator.areAnimatorsEnabled()
+        val currentContext = context ?: return true
+        return !AnimatorSettingsCompat.areEnabled(currentContext)
     }
 
     // ── Lift & Settle: unified exit ─────────────────────────────────
@@ -596,22 +804,30 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun setupUI() {
-
-
-        val (start, end) = getDefaultBookingWindow()
-
-        val normalized = normalizeBookingTimes(start, end)
-        viewModel.setStartTime(normalized.start.time)
-        viewModel.setEndTime(normalized.end.time)
-        showBookingNotice(normalized.message ?: initialBookingNotice())
+        binding.btnConfirmContainer.isClickable = false
+        binding.btnConfirmContainer.alpha = 0.6f
+        binding.tvConfirmBooking.text = "Loading parking rules…"
+        binding.cardStartTime.visibility = View.INVISIBLE
+        binding.cardEndTime.visibility = View.INVISIBLE
+        binding.cardVehicleSelection.visibility = View.INVISIBLE
+        binding.cardWallet.visibility = View.INVISIBLE
+        binding.dividerVehicleWallet.visibility = View.INVISIBLE
+        binding.tvPolicyTitle.visibility = View.INVISIBLE
+        binding.policyContainer.visibility = View.INVISIBLE
+        showBookingNotice("Loading this parking lot's booking rules…")
     }
 
     private fun setupClickListeners() {
         binding.btnClose.setOnClickListener { dismiss() }
 
-        // Check-in / check-out times are fixed for the selected slot, so the
-        // time cards are display-only. No date/time picker is opened on tap.
+        binding.cardStartTime.setOnClickListener {
+            if (bookingPolicy?.usesDynamicTimeSelection == true) showDateTimePicker(selectingStart = true)
+        }
+        binding.cardEndTime.setOnClickListener {
+            if (bookingPolicy?.usesDynamicTimeSelection == true) showDateTimePicker(selectingStart = false)
+        }
         binding.cardVehicleSelection.setOnClickListener {
+            if (bookingPolicy?.requiresVehicleRegistration == false) return@setOnClickListener
             it.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK)
             showVehicleSelectionBottomSheet()
         }
@@ -619,8 +835,208 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
 
         binding.btnAddMoney.setOnClickListener {
             it.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK)
-            showTopUpDialog()
+            startActivity(
+                WalletAddMoneyActivity.createIntent(
+                    context = requireContext(),
+                    currentBalance = viewModel.walletBalance.value ?: 0.0,
+                    parkingLotId = selectedLotId,
+                )
+            )
         }
+    }
+
+    private fun applyBookingPolicy(policy: ResolvedBookingPolicy) {
+        val dynamicTimes = policy.usesDynamicTimeSelection
+        binding.cardStartTime.visibility = View.VISIBLE
+        binding.cardEndTime.visibility = View.VISIBLE
+        binding.tvPolicyTitle.visibility = View.VISIBLE
+        binding.policyContainer.visibility = View.VISIBLE
+        binding.cardStartTime.isClickable = dynamicTimes
+        binding.cardStartTime.isFocusable = dynamicTimes
+        binding.cardEndTime.isClickable = dynamicTimes
+        binding.cardEndTime.isFocusable = dynamicTimes
+        binding.cardStartTime.alpha = if (dynamicTimes) 1f else 0.96f
+        binding.cardEndTime.alpha = if (dynamicTimes) 1f else 0.96f
+
+        binding.cardVehicleSelection.visibility =
+            if (policy.requiresVehicleRegistration) View.VISIBLE else View.GONE
+        binding.cardWallet.visibility = if (policy.bookingChargeRequired) View.VISIBLE else View.GONE
+        binding.dividerVehicleWallet.visibility =
+            if (policy.requiresVehicleRegistration && policy.bookingChargeRequired) View.VISIBLE else View.GONE
+
+        binding.tvPolicyTitle.text = if (policy.isNoRefund) "REFUND POLICY" else "REFUND & PENALTY POLICY"
+        when {
+            !policy.bookingChargeRequired -> {
+                binding.tvPolicyRefund.setText(R.string.booking_requires_no_payment)
+                binding.policyItemPenalty.visibility = View.VISIBLE
+                binding.policyItemCancellation.visibility = View.GONE
+            }
+            policy.isNoRefund -> {
+                binding.tvPolicyRefund.text = "This booking is non-refundable."
+                binding.policyItemPenalty.visibility = View.VISIBLE
+                binding.policyItemCancellation.visibility = View.GONE
+            }
+            else -> {
+                binding.tvPolicyRefund.setText(R.string.your_booking_amount_is_fully_refunded)
+                binding.policyItemPenalty.visibility = View.VISIBLE
+                binding.policyItemCancellation.visibility = View.VISIBLE
+            }
+        }
+
+        if (!policy.bookingChargeRequired) {
+            binding.tvRateBadge.text = "Included"
+            binding.tvHourlyRate.text = ""
+        }
+        showBookingNotice(
+            if (dynamicTimes) {
+                "Choose a start and end time. You can book up to ${policy.advanceBookingDays} day${if (policy.advanceBookingDays == 1) "" else "s"} ahead."
+            } else {
+                initialBookingNotice()
+            }
+        )
+    }
+
+    private fun initializeTimesForPolicy(policy: ResolvedBookingPolicy) {
+        val existingStart = viewModel.startTime.value
+        val existingEnd = viewModel.endTime.value
+        if (existingStart != null && existingEnd != null) return
+
+        val restoredDraft = restoredBookingDraft
+        if (restoredDraft?.hasCompleteTimes == true) {
+            viewModel.setStartTime(Date(requireNotNull(restoredDraft.startTimeMillis)))
+            viewModel.setEndTime(Date(requireNotNull(restoredDraft.endTimeMillis)))
+            return
+        }
+
+        if (policy.usesFixedDailySlots) {
+            val (start, end) = getDefaultBookingWindow()
+            val normalized = normalizeBookingTimes(start, end)
+            viewModel.setStartTime(normalized.start.time)
+            viewModel.setEndTime(normalized.end.time)
+            showBookingNotice(normalized.message ?: initialBookingNotice())
+            return
+        }
+
+        val now = Calendar.getInstance().apply {
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            val remainder = get(Calendar.MINUTE) % 15
+            if (remainder != 0) add(Calendar.MINUTE, 15 - remainder)
+        }
+        var start = now
+        val todayEnd = policy.endOfBookingDay(now)
+        if (!start.before(todayEnd)) {
+            val tomorrow = (now.clone() as Calendar).apply {
+                add(Calendar.DAY_OF_MONTH, 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+            }
+            if (policy.advanceBookingDays >= 1 && policy.isFutureDateOpen(tomorrow, now)) {
+                start = tomorrow
+            }
+        }
+        val end = (start.clone() as Calendar).apply { add(Calendar.MINUTE, DEFAULT_DURATION_MINUTES) }
+        val maximumEnd = policy.endOfBookingDay(end)
+        if (end.after(maximumEnd)) end.timeInMillis = maximumEnd.timeInMillis
+        viewModel.setStartTime(start.time)
+        viewModel.setEndTime(end.time)
+    }
+
+    private fun showDateTimePicker(selectingStart: Boolean) {
+        val policy = bookingPolicy ?: return
+        if (!policy.usesDynamicTimeSelection) return
+        val now = Calendar.getInstance()
+        val current = (if (selectingStart) viewModel.startTime.value else viewModel.endTime.value)
+            ?.let(::calendarFromDate)
+            ?: now
+        val latest = (now.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, policy.advanceBookingDays) }
+
+        val dateDialog = DatePickerDialog(
+            requireContext(),
+            { _, year, month, day ->
+                val chosenDate = (current.clone() as Calendar).apply {
+                    set(Calendar.YEAR, year)
+                    set(Calendar.MONTH, month)
+                    set(Calendar.DAY_OF_MONTH, day)
+                }
+                if (!policy.isDateWithinAdvanceWindow(chosenDate, now)) {
+                    showBookingNotice("Choose a date within the next ${policy.advanceBookingDays} days.")
+                    return@DatePickerDialog
+                }
+                if (!policy.isFutureDateOpen(chosenDate, now)) {
+                    val opening = policy.nextDayBookingOpenMinutes?.let(BookingPolicyResolver::formatTime)
+                        ?: "the configured opening time"
+                    showBookingNotice("Future-date booking for this lot opens at $opening.")
+                    return@DatePickerDialog
+                }
+                TimePickerDialog(
+                    requireContext(),
+                    { _, hour, minute ->
+                        chosenDate.set(Calendar.HOUR_OF_DAY, hour)
+                        chosenDate.set(Calendar.MINUTE, minute)
+                        chosenDate.set(Calendar.SECOND, 0)
+                        chosenDate.set(Calendar.MILLISECOND, 0)
+                        applyFlexibleTimeSelection(chosenDate, selectingStart, policy, now)
+                    },
+                    current.get(Calendar.HOUR_OF_DAY),
+                    current.get(Calendar.MINUTE),
+                    false,
+                ).show()
+            },
+            current.get(Calendar.YEAR),
+            current.get(Calendar.MONTH),
+            current.get(Calendar.DAY_OF_MONTH),
+        )
+        dateDialog.datePicker.minDate = getStartOfDay(now).timeInMillis
+        dateDialog.datePicker.maxDate = getEndOfDay(latest).timeInMillis
+        dateDialog.show()
+    }
+
+    private fun applyFlexibleTimeSelection(
+        selected: Calendar,
+        selectingStart: Boolean,
+        policy: ResolvedBookingPolicy,
+        now: Calendar,
+    ) {
+        if (selectingStart && selected.before(now)) {
+            showBookingNotice("Start time cannot be in the past.")
+            return
+        }
+        val dayEnd = policy.endOfBookingDay(selected)
+        if (selected.after(dayEnd)) {
+            showBookingNotice(
+                "Bookings for this lot must end by ${BookingPolicyResolver.formatTime(policy.dailyBookingEndMinutes)}."
+            )
+            return
+        }
+
+        if (selectingStart) {
+            viewModel.setStartTime(selected.time)
+            val currentEnd = viewModel.endTime.value?.let(::calendarFromDate)
+            if (currentEnd == null || !currentEnd.after(selected) ||
+                (!policy.allowOvernightBookings && !isSameDate(selected, currentEnd))
+            ) {
+                val adjustedEnd = (selected.clone() as Calendar).apply {
+                    add(Calendar.MINUTE, DEFAULT_DURATION_MINUTES)
+                }
+                val maximumEnd = policy.endOfBookingDay(adjustedEnd)
+                if (adjustedEnd.after(maximumEnd)) adjustedEnd.timeInMillis = maximumEnd.timeInMillis
+                viewModel.setEndTime(adjustedEnd.time)
+            }
+        } else {
+            val start = viewModel.startTime.value?.let(::calendarFromDate)
+            if (start == null || !selected.after(start)) {
+                showBookingNotice("Checkout must be after check-in.")
+                return
+            }
+            if (!policy.allowOvernightBookings && !isSameDate(start, selected)) {
+                showBookingNotice("This parking lot does not allow overnight bookings.")
+                return
+            }
+            viewModel.setEndTime(selected.time)
+        }
+        restoredBookingDraft = captureBookingDraft()
+        showBookingNotice(null)
     }
 
     // ── Confirm Button: Setup ─────────────────────────────────────────
@@ -1051,13 +1467,24 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
 
         val balance = viewModel.walletBalance.value ?: 0.0
         val price = viewModel.totalPrice.value ?: 0.0
-        val hasVehicle = viewModel.selectedVehicle.value != null
-        val insufficient = price > 0.0 && balance < price
+        val policy = bookingPolicy
+        val policyUnavailable = !bookingPolicyReady || policy == null
+        val walletTopUpAllowed = policy?.let { canUseWalletTopUpForShortfall(it, balance, price) } == true
+        val hasVehicle = policy?.requiresVehicleRegistration == false ||
+            viewModel.selectedVehicle.value != null
+        val draftValidationPending =
+            restoredVehicleValidationPending || restoredTimesValidationPending
+        val insufficient = isWalletBalanceInsufficient(policy, balance, price)
 
         val btn = binding.btnConfirmContainer
         val label = binding.tvConfirmBooking
 
-        if (isSelectedSpotFull) {
+        if (policyUnavailable) {
+            btn.isClickable = false
+            btn.alpha = 0.6f
+            label.text = "Loading parking rules…"
+            stopIdleGlow()
+        } else if (isSelectedSpotFull) {
             // Stays clickable so the tap still gets an answer (shake + notice) instead of dying
             // silently — same contract as the full card on Home.
             btn.isClickable = true
@@ -1065,9 +1492,16 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             label.text = getString(R.string.spot_currently_full)
             stopIdleGlow()
         } else if (insufficient) {
-            btn.isClickable = false
-            btn.alpha = 0.5f
+            btn.isClickable = walletTopUpAllowed && !isWalletTopUpInProgress
+            btn.alpha = if (walletTopUpAllowed && !isWalletTopUpInProgress) 0.95f else 0.5f
             label.text = getString(R.string.insufficient_balance)
+            stopIdleGlow()
+        } else if (draftValidationPending) {
+            // Keep the tap answerable, but never let a configuration-retained ViewModel bypass
+            // the fresh profile/session checks that a restored draft requires.
+            btn.isClickable = true
+            btn.alpha = 0.75f
+            label.text = getString(R.string.confirm_booking)
             stopIdleGlow()
         } else if (!hasVehicle) {
             btn.isClickable = true
@@ -1094,6 +1528,20 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun setupObservers() {
+        viewModel.bookingPolicy.observe(viewLifecycleOwner) { policy ->
+            bookingPolicy = policy
+            bookingPolicyReady = policy != null
+            if (policy != null) {
+                applyBookingPolicy(policy)
+                initializeTimesForPolicy(policy)
+            }
+            updateConfirmButtonState()
+        }
+
+        viewModel.policyError.observe(viewLifecycleOwner) { error ->
+            if (!error.isNullOrBlank()) showBookingNotice(error)
+        }
+
         viewModel.startTime.observe(viewLifecycleOwner) { time ->
             updateStartTimeDisplay(time)
             calculatePricing()
@@ -1109,7 +1557,11 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         }
 
         viewModel.totalPrice.observe(viewLifecycleOwner) { price ->
-            val newText = String.format(Locale.getDefault(), "%.2f", price)
+            val newText = if (bookingPolicy?.bookingChargeRequired == false) {
+                "Free"
+            } else {
+                String.format(Locale.getDefault(), "%.2f", price)
+            }
             // First emission after the spot data lands carries the real price —
             // resolve the skeleton then so the user never sees the pre-rate 0.00.
             if (parkingSpotResolvedForSkeleton && !totalPriceSkeletonResolved) {
@@ -1135,6 +1587,10 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         }
 
         viewModel.selectedVehicle.observe(viewLifecycleOwner) { vehicle ->
+            if (vehicle != null && !restoredVehicleValidationPending) {
+                automaticVehicleSelectionAllowed = false
+                restoredBookingDraft = captureBookingDraft()
+            }
             val vehicles = viewModel.userVehicles.value ?: emptyList()
             binding.tvSelectedVehicle.text = when {
                 vehicle != null -> vehicle.number
@@ -1149,6 +1605,7 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         }
 
         viewModel.userVehicles.observe(viewLifecycleOwner) { vehicles ->
+            reconcileVehicleSelection(vehicles.orEmpty())
             if (viewModel.selectedVehicle.value == null) {
                 binding.tvSelectedVehicle.text = if (vehicles.isNullOrEmpty()) {
                     "Add new vehicle"
@@ -1160,13 +1617,18 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
                 vehicleSkeletonResolved = true
                 revealText(REVEAL_ORDER_VEHICLE, binding.skelSelectedVehicle, binding.tvSelectedVehicle)
             }
+            updateConfirmButtonState()
         }
 
         viewModel.walletBalance.observe(viewLifecycleOwner) { balance ->
+            if (bookingPolicy?.bookingChargeRequired == false) return@observe
             binding.tvWalletBalance.text = String.format(Locale.getDefault(), "%.2f", balance)
             if (!walletSkeletonResolved) {
                 walletSkeletonResolved = true
                 revealText(REVEAL_ORDER_WALLET, binding.skelWalletBalance, binding.tvWalletBalance)
+            }
+            if (shouldRetryBookingAfterWalletTopUp) {
+                maybeCreateBookingAfterWalletTopUp()
             }
             updateConfirmButtonState()
         }
@@ -1182,7 +1644,9 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             booking?.let {
                 val startMillis = viewModel.startTime.value?.time ?: System.currentTimeMillis()
                 val endMillis = viewModel.endTime.value?.time ?: (startMillis + 60 * 60 * 1000)
-                val totalAmount = viewModel.totalPrice.value ?: 0.0
+                // The backend is authoritative: this is the exact amount recorded on the
+                // booking and deducted from the wallet, not a second client-side estimate.
+                val totalAmount = it.amount
                 val selectedSpotName = viewModel.selectedSpot.value
                     ?: parkingSpot?.name
                     ?: parkingSpot?.zoneName
@@ -1201,7 +1665,14 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
                     putExtra("START_TIME", startMillis)
                     putExtra("END_TIME", endMillis)
                     putExtra("TOTAL_AMOUNT", totalAmount)
-                    putExtra("PAYMENT_METHOD", "Wallet")
+                    putExtra(
+                        "PAYMENT_METHOD",
+                        when {
+                            bookingPolicy?.walletPaymentRequired == true -> "Gridee Coin Wallet"
+                            bookingPolicy?.paymentRequired == true -> "Wallet"
+                            else -> "No payment required"
+                        }
+                    )
                     putExtra("PAYMENT_STATUS", it.status ?: "Pending")
                     putExtra("BOOKING_TIMESTAMP", it.createdAt?.time ?: System.currentTimeMillis())
                 }
@@ -1242,17 +1713,20 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         if (spotId.isNotEmpty()) {
             viewModel.loadParkingSpotById(spotId) { spot ->
                 if (!isAdded || _binding == null) return@loadParkingSpotById
+                if (spot == null) {
+                    bookingPolicyReady = false
+                    showBookingNotice("Couldn't verify this parking spot. Close this sheet and try again.")
+                    updateConfirmButtonState()
+                    return@loadParkingSpotById
+                }
+                if (selectedLotId.isNotBlank() && spot.lotId.trim() != selectedLotId.trim()) {
+                    bookingPolicyReady = false
+                    showBookingNotice("This parking spot does not belong to the selected parking lot.")
+                    updateConfirmButtonState()
+                    return@loadParkingSpotById
+                }
                 parkingSpot = mergeSelectedSpotMetadata(
-                    spot ?: ParkingSpot(
-                        id = spotId,
-                        lotId = selectedLotId,
-                        spotCode = spotId,
-                        name = "Selected Spot",
-                        zoneName = "Unknown Spot",
-                        capacity = 0,
-                        available = 0,
-                        status = "unknown"
-                    )
+                    spot
                 )
                 updateParkingSpotDisplay()
             }
@@ -1283,6 +1757,14 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         )
     }
 
+    // Match the homepage card's name, zone, code, then ID fallback using the tapped spot.
+    private fun resolveSpotHeading(): String? = sequenceOf(
+        selectedSpotNameArg,
+        selectedSpotZoneNameArg,
+        selectedSpotCodeArg,
+        selectedSpotId
+    ).firstOrNull { !it.isNullOrBlank() }
+
     private fun updateParkingSpotDisplay() {
         parkingSpot?.let { spot ->
             if (selectedLotId.isBlank() && spot.lotId.isNotBlank()) {
@@ -1295,10 +1777,8 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             // honest signal that something is wrong.
             val isFakeSpot = spot.name == "Selected Spot" && spot.zoneName == "Unknown Spot"
 
-            // Name: comes from the args passed in by HomeFragment, so it's
-            // already a real value the user tapped. Reveal as long as it
-            // isn't itself a garbage string.
-            val nameText = selectedLotName.takeIf { it.isNotBlank() && !isGarbageText(it) }
+            // Use the same spot name the user tapped on the homepage card.
+            val nameText = resolveSpotHeading()
             if (nameText != null && !nameSkeletonResolved) {
                 nameSkeletonResolved = true
                 binding.tvParkingName.text = nameText
@@ -1324,7 +1804,11 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             // rate=0 isn't "free parking," it's "API didn't return anything,"
             // so the skeleton must stay.
             val hourlyRate = spot.bookingRate
-            if (hourlyRate > 0.0) {
+            if (bookingPolicy?.bookingChargeRequired == false) {
+                binding.tvHourlyRate.text = ""
+                binding.tvRateBadge.text = "Included"
+                revealBadge(REVEAL_ORDER_RATE, binding.skelRateBadge, binding.layoutRateBadge, binding.slotRateBadge, makeVisible = true)
+            } else if (hourlyRate > 0.0) {
                 binding.tvHourlyRate.text =
                     "${String.format(Locale.getDefault(), "%.2f", hourlyRate)}/hour"
                 binding.tvRateBadge.text = "${String.format(Locale.getDefault(), "%.0f", hourlyRate)}/hr"
@@ -1371,7 +1855,7 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
                 parkingSpotResolvedForSkeleton = true
             }
             calculatePricing()
-            viewModel.loadUserVehicles()
+            loadUserVehiclesForDraftValidation()
         }
     }
 
@@ -1380,33 +1864,73 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun applySlotSpecificScheduleDefaults() {
+        val policy = bookingPolicy ?: return
         val currentStart = viewModel.startTime.value?.let { calendarFromDate(it) } ?: Calendar.getInstance()
         val currentEnd = viewModel.endTime.value?.let { calendarFromDate(it) }
             ?: (currentStart.clone() as Calendar).apply { add(Calendar.MINUTE, DEFAULT_DURATION_MINUTES) }
 
-        if (isMorningSlotSelected() || isEveningSlotSelected()) {
-            val spot = parkingSpot
-            val now = ParkingSpotSchedulePolicy.currentTime()
-            val startTime = spot?.let { ParkingSpotSchedulePolicy.minimumAllowedStartTime(it, now) }
-            val endTime = spot?.let { ParkingSpotSchedulePolicy.sessionEndTime(it, now) }
-
-            if (startTime != null && endTime != null) {
-                if (!startTime.before(endTime)) {
-                    startTime.timeInMillis = endTime.timeInMillis - (60 * 1000)
+        if (policy.usesFixedDailySlots && (isMorningSlotSelected() || isEveningSlotSelected())) {
+            val bounds = currentSessionBounds()
+            if (bounds != null) {
+                val wasRestored = restoredTimesValidationPending
+                val shouldValidateExistingTimes = wasRestored || scheduleInitializedForSpot
+                val validatedTimes = if (shouldValidateExistingTimes) {
+                    ParkingSpotBookingDraftPolicy.validateTimes(
+                        requestedStartTimeMillis = currentStart.timeInMillis,
+                        requestedEndTimeMillis = currentEnd.timeInMillis,
+                        minimumStartTimeMillis = bounds.first,
+                        maximumEndTimeMillis = bounds.second,
+                    )
+                } else {
+                    ParkingSpotValidatedBookingTimes(
+                        startTimeMillis = bounds.first,
+                        endTimeMillis = bounds.second,
+                        adjusted = false,
+                    )
                 }
 
-                viewModel.setStartTime(startTime.time)
-                viewModel.setEndTime(endTime.time)
+                viewModel.setStartTime(Date(validatedTimes.startTimeMillis))
+                viewModel.setEndTime(Date(validatedTimes.endTimeMillis))
+                val scheduleNotice = if (wasRestored && validatedTimes.adjusted) {
+                    "Booking times were updated to the currently available parking window."
+                } else {
+                    null
+                }
+                showBookingNotice(combineBookingNotices(vehicleRestorationNotice, scheduleNotice))
             }
-            showBookingNotice(null)
+            restoredTimesValidationPending = false
+            scheduleInitializedForSpot = true
+            restoredBookingDraft = captureBookingDraft()
             return
         }
 
         val normalized = normalizeBookingTimes(currentStart, currentEnd)
         viewModel.setStartTime(normalized.start.time)
         viewModel.setEndTime(normalized.end.time)
-        showBookingNotice(normalized.message ?: initialBookingNotice())
+        val scheduleNotice = normalized.message ?: initialBookingNotice()
+        showBookingNotice(combineBookingNotices(vehicleRestorationNotice, scheduleNotice))
+        restoredTimesValidationPending = false
+        scheduleInitializedForSpot = true
+        restoredBookingDraft = captureBookingDraft()
     }
+
+    private fun currentSessionBounds(): Pair<Long, Long>? {
+        val spot = parkingSpot ?: return null
+        val policy = bookingPolicy ?: return null
+        val now = ParkingSpotSchedulePolicy.currentTime()
+        val minimumStart = ParkingSpotSchedulePolicy.minimumAllowedStartTime(spot, now, policy)
+            ?: return null
+        val maximumEnd = ParkingSpotSchedulePolicy.sessionEndTime(spot, now, policy)
+            ?: return null
+        if (!minimumStart.before(maximumEnd)) return null
+        return minimumStart.timeInMillis to maximumEnd.timeInMillis
+    }
+
+    private fun combineBookingNotices(vararg notices: String?): String? = notices
+        .mapNotNull { it?.trim()?.takeIf(String::isNotEmpty) }
+        .distinct()
+        .joinToString(" ")
+        .ifBlank { null }
 
     private fun showProgress(
         progressBar: android.widget.ProgressBar,
@@ -1424,25 +1948,128 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun showVehicleSelectionBottomSheet() {
+        if (!isAdded) return
+        val currentViewLifecycle = viewLifecycleOwnerLiveData.value?.lifecycle ?: return
         val vehicles = viewModel.userVehicles.value ?: emptyList()
         val selectedVehicleId = viewModel.selectedVehicle.value?.id
+        val fragmentManager = childFragmentManager
+        if (
+            !currentViewLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            fragmentManager.isDestroyed ||
+            fragmentManager.isStateSaved ||
+            fragmentManager.findFragmentByTag(SelectVehicleBottomSheet.TAG) != null
+        ) {
+            return
+        }
 
-        val bottomSheet = SelectVehicleBottomSheet(
+        val requestToken = UUID.randomUUID().toString()
+        activeVehicleSelectionRequestToken = requestToken
+        val sheet = SelectVehicleBottomSheet.newInstance(
             vehicles = vehicles,
             selectedVehicleId = selectedVehicleId,
-            onVehicleSelected = { vehicle ->
-                viewModel.setSelectedVehicle(vehicle)
-            },
-            onAddVehicle = { vehicleNumber, callback ->
-                viewModel.addVehicleToProfile(vehicleNumber) { success ->
-                    if (success) {
-                        viewModel.loadUserVehicles()
-                    }
-                    callback(success)
+            selectionRequestToken = requestToken,
+        )
+        val shown = runCatching {
+            // Synchronous admission makes the stable tag visible before another tap can launch a
+            // second picker and overwrite the parent request token on the same main-loop turn.
+            sheet.showNow(fragmentManager, SelectVehicleBottomSheet.TAG)
+        }.isSuccess
+        if (!shown && activeVehicleSelectionRequestToken == requestToken) {
+            activeVehicleSelectionRequestToken = null
+        }
+    }
+
+    private fun acceptVehicleSelection(vehicleId: String, vehicleNumber: String) {
+        if (!this::viewModel.isInitialized) return
+
+        automaticVehicleSelectionAllowed = false
+        vehicleRestorationNotice = null
+        restoredBookingDraft = captureBookingDraft().copy(
+            selectedVehicleId = vehicleId,
+            selectedVehicleNumber = vehicleNumber,
+            allowAutomaticVehicleSelection = false,
+        )
+
+        val vehicles = viewModel.userVehicles.value.orEmpty()
+        val selectedVehicle = vehicles.firstOrNull {
+            it.id == vehicleId &&
+                com.gridee.parking.utils.VehicleNumberValidator.areEquivalent(
+                    it.number,
+                    vehicleNumber,
+                )
+        }
+            ?: vehicles.firstOrNull {
+                com.gridee.parking.utils.VehicleNumberValidator.areEquivalent(
+                    it.number,
+                    vehicleNumber,
+                )
+            }
+        if (selectedVehicle != null) {
+            restoredVehicleValidationPending = false
+            viewModel.setSelectedVehicle(selectedVehicle)
+            restoredBookingDraft = captureBookingDraft()
+        } else {
+            // The child holds a snapshot. If the profile changed while it was open (or the user
+            // just added this plate), do not trust that snapshot as booking input: refresh and
+            // select only the canonical vehicle returned by the profile.
+            restoredVehicleValidationPending = true
+            viewModel.clearSelectedVehicle()
+            viewModel.loadUserVehicles(autoSelectFirst = false)
+        }
+    }
+
+    private fun loadUserVehiclesForDraftValidation() {
+        if (!this::viewModel.isInitialized) return
+        viewModel.loadUserVehicles(
+            autoSelectFirst = automaticVehicleSelectionAllowed &&
+                !restoredVehicleValidationPending,
+        )
+    }
+
+    private fun reconcileVehicleSelection(vehicles: List<Vehicle>) {
+        if (!this::viewModel.isInitialized) return
+
+        if (restoredVehicleValidationPending) {
+            val draft = restoredBookingDraft ?: ParkingSpotBookingDraftSnapshot.empty(
+                allowAutomaticVehicleSelection = automaticVehicleSelectionAllowed,
+            )
+            val resolved = ParkingSpotBookingDraftPolicy.resolveVehicle(draft, vehicles)
+            restoredVehicleValidationPending = false
+            if (resolved != null) {
+                automaticVehicleSelectionAllowed = false
+                viewModel.setSelectedVehicle(resolved)
+            } else {
+                automaticVehicleSelectionAllowed =
+                    !draft.hasVehicleReference && draft.allowAutomaticVehicleSelection
+                viewModel.clearSelectedVehicle()
+                if (draft.hasVehicleReference && _binding != null) {
+                    vehicleRestorationNotice =
+                        "Your previously selected vehicle is no longer available. " +
+                            "Please select a vehicle."
+                    showBookingNotice(vehicleRestorationNotice)
                 }
             }
+            restoredBookingDraft = captureBookingDraft()
+            return
+        }
+
+        val currentSelection = viewModel.selectedVehicle.value ?: return
+        val canonicalSelection = ParkingSpotBookingDraftPolicy.resolveVehicle(
+            snapshot = ParkingSpotBookingDraftSnapshot.empty(
+                allowAutomaticVehicleSelection = false,
+            ).copy(
+                selectedVehicleId = currentSelection.id,
+                selectedVehicleNumber = currentSelection.number,
+            ),
+            vehicles = vehicles,
         )
-        bottomSheet.show(parentFragmentManager, SelectVehicleBottomSheet.TAG)
+        if (canonicalSelection == null) {
+            automaticVehicleSelectionAllowed = false
+            viewModel.clearSelectedVehicle()
+        } else if (canonicalSelection != currentSelection) {
+            viewModel.setSelectedVehicle(canonicalSelection)
+        }
+        restoredBookingDraft = captureBookingDraft()
     }
 
     private fun updateStartTimeDisplay(time: Date) {
@@ -1490,16 +2117,76 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             return false
         }
 
-        if (isMorningSlotSelected() || isEveningSlotSelected()) return true
+        val policy = bookingPolicy ?: run {
+            showBookingNotice("Parking rules are unavailable. Please try again.")
+            return false
+        }
+
+        if (policy.usesDynamicTimeSelection) {
+            val startCalendar = calendarFromDate(start)
+            val endCalendar = calendarFromDate(end)
+            val now = Calendar.getInstance()
+            val valid = when {
+                startCalendar.before(now) -> "Start time cannot be in the past."
+                !policy.isDateWithinAdvanceWindow(startCalendar, now) ->
+                    "The selected date is outside this lot's advance-booking window."
+                !policy.isFutureDateOpen(startCalendar, now) -> {
+                    val opening = policy.nextDayBookingOpenMinutes?.let(BookingPolicyResolver::formatTime)
+                        ?: "the configured opening time"
+                    "Future-date booking for this lot opens at $opening."
+                }
+                !endCalendar.after(startCalendar) -> "Checkout must be after check-in."
+                !policy.isDateWithinAdvanceWindow(endCalendar, now) ->
+                    "The selected checkout date is outside this lot's advance-booking window."
+                !policy.allowOvernightBookings && !isSameDate(startCalendar, endCalendar) ->
+                    "This parking lot does not allow overnight bookings."
+                endCalendar.after(policy.endOfBookingDay(endCalendar)) ->
+                    "Checkout must be by ${BookingPolicyResolver.formatTime(policy.dailyBookingEndMinutes)}."
+                else -> null
+            }
+            if (valid != null) {
+                showBookingNotice(valid)
+                return false
+            }
+            return true
+        }
+
+        if (isMorningSlotSelected() || isEveningSlotSelected()) {
+            val bounds = currentSessionBounds()
+            if (bounds == null) {
+                showBookingNotice("The current parking window is unavailable. Please try again.")
+                return false
+            }
+            val validatedTimes = ParkingSpotBookingDraftPolicy.validateTimes(
+                requestedStartTimeMillis = start.time,
+                requestedEndTimeMillis = end.time,
+                minimumStartTimeMillis = bounds.first,
+                maximumEndTimeMillis = bounds.second,
+            )
+            return if (validatedTimes.adjusted) {
+                viewModel.setStartTime(Date(validatedTimes.startTimeMillis))
+                viewModel.setEndTime(Date(validatedTimes.endTimeMillis))
+                restoredBookingDraft = captureBookingDraft()
+                showBookingNotice(
+                    "Booking times were updated to the currently available parking window. " +
+                        "Please review and confirm again.",
+                )
+                false
+            } else {
+                showBookingNotice(vehicleRestorationNotice)
+                true
+            }
+        }
 
         val normalized = normalizeBookingTimes(calendarFromDate(start), calendarFromDate(end))
         return if (normalized.adjusted) {
             viewModel.setStartTime(normalized.start.time)
             viewModel.setEndTime(normalized.end.time)
-            showBookingNotice(normalized.message)
+            restoredBookingDraft = captureBookingDraft()
+            showBookingNotice(combineBookingNotices(vehicleRestorationNotice, normalized.message))
             false
         } else {
-            showBookingNotice(null)
+            showBookingNotice(vehicleRestorationNotice)
             true
         }
     }
@@ -1622,13 +2309,10 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         startSkeletonBreath()
     }
 
-    // Fields the caller already handed us don't need to wait behind the network
-    // skeleton. The parking name is always passed in (and updateParkingSpotDisplay
-    // uses that same arg for the title anyway), so we settle it solid up front —
-    // it then rides up with the sheet instead of popping in a beat later.
+    // Show the tapped spot's name from the first frame, before network data arrives.
     private fun prefillKnownFieldsFromArgs() {
         val b = _binding ?: return
-        val nameText = selectedLotName.takeIf { it.isNotBlank() && !isGarbageText(it) }
+        val nameText = resolveSpotHeading()
         if (nameText != null && !nameSkeletonResolved) {
             nameSkeletonResolved = true
             b.tvParkingName.text = nameText
@@ -1901,12 +2585,17 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun normalizeBookingTimes(start: Calendar, end: Calendar): NormalizedTimes {
+        val policy = bookingPolicy
+        if (policy?.usesDynamicTimeSelection == true) {
+            return NormalizedTimes(start, end, null, adjusted = false)
+        }
         val now = Calendar.getInstance()
         val bookingDay = getBookingDay(now)
         val cutoff = getCutoffCalendar(bookingDay)
         val opening = getEarliestStartCalendar(bookingDay, now)
         val isBeforeCutoff = now.before(getCutoffCalendar(now))
         val openingLabel = SimpleDateFormat("h:mm a", Locale.getDefault()).format(opening.time)
+        val cutoffLabel = SimpleDateFormat("h:mm a", Locale.getDefault()).format(cutoff.time)
 
         val adjustedStart = start.clone() as Calendar
         val adjustedEnd = end.clone() as Calendar
@@ -1916,7 +2605,13 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         if (!isSameDate(adjustedStart, bookingDay)) {
             alignDate(adjustedStart, bookingDay)
             adjusted = true
-            messages.add(if (isBeforeCutoff) "Before 5 PM, bookings must be for today." else "After 5 PM, bookings must be for tomorrow.")
+            messages.add(
+                if (isBeforeCutoff) {
+                    "Before $cutoffLabel, bookings must be for today."
+                } else {
+                    "At or after $cutoffLabel, bookings must be for tomorrow."
+                }
+            )
         }
 
         if (!isSameDate(adjustedEnd, bookingDay)) {
@@ -1934,7 +2629,7 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         if (adjustedEnd.after(cutoff)) {
             adjustedEnd.timeInMillis = cutoff.timeInMillis
             adjusted = true
-            messages.add("Bookings must end by 5 PM. End time adjusted to 5 PM.")
+            messages.add("Bookings must end by $cutoffLabel. End time adjusted to $cutoffLabel.")
         }
 
         if (!adjustedEnd.after(adjustedStart)) {
@@ -1960,7 +2655,15 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
 
     private fun getBookingDay(now: Calendar): Calendar {
         val today = getStartOfDay(now)
-        return if (now.before(getCutoffCalendar(now))) today else (today.clone() as Calendar).apply {
+        val policy = bookingPolicy
+        val nextDayOpen = policy?.nextDayBookingOpenMinutes
+        val shouldUseTomorrow = when {
+            policy == null -> !now.before(getCutoffCalendar(now))
+            policy.advanceBookingDays < 1 -> false
+            nextDayOpen == null -> ResolvedBookingPolicy.minutesOfDay(now) > policy.dailyBookingEndMinutes
+            else -> ResolvedBookingPolicy.minutesOfDay(now) >= nextDayOpen
+        }
+        return if (!shouldUseTomorrow) today else (today.clone() as Calendar).apply {
             add(Calendar.DAY_OF_MONTH, 1)
         }
     }
@@ -1969,9 +2672,15 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         if (!SHOW_AUTOMATIC_SCHEDULE_NOTICE) return null
 
         val now = Calendar.getInstance()
+        val policy = bookingPolicy
+        val afterDailyEnd = policy?.let {
+            ResolvedBookingPolicy.minutesOfDay(now) >= it.dailyBookingEndMinutes
+        } ?: (now.get(Calendar.HOUR_OF_DAY) >= BOOKING_CUTOFF_HOUR)
+        val dailyEndLabel = SimpleDateFormat("h:mm a", Locale.getDefault())
+            .format(getCutoffCalendar(now).time)
         if (isEveningSlotSelected()) {
             return when {
-                now.get(Calendar.HOUR_OF_DAY) >= BOOKING_CUTOFF_HOUR -> "After 5 PM, bookings must be for tomorrow."
+                afterDailyEnd -> "At or after $dailyEndLabel, bookings must be for tomorrow."
                 else -> "Afternoon slot booking opens at 8:00 AM. Parking runs from 12:30 PM to 5:30 PM."
             }
         }
@@ -1979,7 +2688,7 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         val isQuickSlotSelected = parkingSpot?.let(ParkingSpotSchedulePolicy::isQuickBookSpot) == true
 
         return when {
-            now.get(Calendar.HOUR_OF_DAY) >= BOOKING_CUTOFF_HOUR -> "After 5 PM, bookings must be for tomorrow."
+            afterDailyEnd -> "At or after $dailyEndLabel, bookings must be for tomorrow."
             isQuickSlotSelected && now.get(Calendar.HOUR_OF_DAY) < BOOKING_OPEN_HOUR ->
                 "Quick slot booking is available from 8:00 AM to 11:30 AM on the same day of parking."
             now.get(Calendar.HOUR_OF_DAY) < BOOKING_OPEN_HOUR -> "Morning slot parking runs from 7:30 AM to 12:30 PM."
@@ -1988,6 +2697,7 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun getCutoffCalendar(reference: Calendar): Calendar {
+        bookingPolicy?.let { return it.endOfBookingDay(reference) }
         return (reference.clone() as Calendar).apply {
             set(Calendar.HOUR_OF_DAY, BOOKING_CUTOFF_HOUR)
             set(Calendar.MINUTE, 0)
@@ -2018,8 +2728,14 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun getOpeningCalendar(reference: Calendar): Calendar {
+        if (bookingPolicy?.usesDynamicTimeSelection == true) {
+            return Calendar.getInstance().apply {
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+        }
         val opening = parkingSpot?.let { spot ->
-            ParkingSpotSchedulePolicy.minimumAllowedStartTime(spot, reference)
+            ParkingSpotSchedulePolicy.minimumAllowedStartTime(spot, reference, bookingPolicy)
         }
 
         return (opening ?: (reference.clone() as Calendar).apply {
@@ -2074,7 +2790,19 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         return Calendar.getInstance().apply { time = date }
     }
 
-    private fun createBooking() {
+    private fun createBooking(ignoreWalletTopUpCheck: Boolean = false) {
+        val policy = bookingPolicy
+        if (!bookingPolicyReady || policy == null) {
+            shakeDisabledButton()
+            showBookingNotice("Parking rules are unavailable. Please try again.")
+            return
+        }
+        if (restoredVehicleValidationPending || restoredTimesValidationPending) {
+            shakeDisabledButton()
+            showBookingNotice("Checking your saved vehicle and parking window. Please wait.")
+            return
+        }
+
         // Spot filled up while the sheet was open — never send a booking for a full spot.
         if (isSelectedSpotFull) {
             shakeDisabledButton()
@@ -2082,10 +2810,14 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             return
         }
 
-        // Check insufficient balance — shake the button
         val balance = viewModel.walletBalance.value ?: 0.0
         val price = viewModel.totalPrice.value ?: 0.0
-        if (price > 0.0 && balance < price) {
+        val insufficient = isWalletBalanceInsufficient(policy, balance, price)
+        if (!ignoreWalletTopUpCheck && canUseWalletTopUpForShortfall(policy, balance, price)) {
+            launchWalletTopUpForBookingShortfall(price - balance)
+            return
+        }
+        if (insufficient) {
             shakeDisabledButton()
             showBookingNotice("Insufficient wallet balance.")
             return
@@ -2093,7 +2825,7 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
 
         val selectedVehicle = viewModel.selectedVehicle.value
 
-        if (selectedVehicle == null) {
+        if (policy.requiresVehicleRegistration && selectedVehicle == null) {
             shakeDisabledButton()
             showBookingNotice("Please select a vehicle.")
             return
@@ -2103,155 +2835,83 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
             return
         }
 
-        viewModel.setVehicleNumber(selectedVehicle.number)
+        viewModel.setVehicleNumber(selectedVehicle?.number.orEmpty())
         viewModel.createBackendBooking()
     }
 
-    private fun showTopUpDialog() {
-        val bottomSheetDialog = BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme)
-        val bottomSheetBinding = BottomSheetTopUpBinding.inflate(layoutInflater)
-        bottomSheetDialog.setContentView(bottomSheetBinding.root)
-
-        bottomSheetDialog.window?.apply {
-            setWindowAnimations(R.style.BottomSheetSpringAnimation)
-            setDimAmount(0.45f)
-
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                attributes.blurBehindRadius = 50
-                attributes = attributes
-            }
-        }
-
-        bottomSheetDialog.behavior.apply {
-            skipCollapsed = true
-            state = BottomSheetBehavior.STATE_EXPANDED
-            isFitToContents = true
-        }
-
-        bottomSheetDialog.setOnShowListener {
-            val bottomSheet = bottomSheetDialog.findViewById<FrameLayout>(
-                com.google.android.material.R.id.design_bottom_sheet
-            )
-            bottomSheet?.post {
-                bottomSheet.translationY = 120f
-                bottomSheet.alpha = 0f
-                val spring = SpringAnimation(bottomSheet, DynamicAnimation.TRANSLATION_Y, 0f).apply {
-                    spring = SpringForce(0f).apply {
-                        dampingRatio = SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY
-                        stiffness = SpringForce.STIFFNESS_LOW
-                    }
-                }
-                bottomSheet.animate()
-                    .alpha(1f)
-                    .setDuration(220)
-                    .start()
-                spring.start()
-            }
-        }
-
-        val currentBalance = viewModel.walletBalance.value ?: 0.0
-        bottomSheetBinding.tvCurrentBalance.text =
-            String.format(Locale.getDefault(), "%.2f", currentBalance)
-
-        bottomSheetBinding.btnAmount50.setOnClickListener {
-            bottomSheetBinding.etAmount.setText("50")
-            updateAddButtonState(bottomSheetBinding)
-        }
-
-        bottomSheetBinding.btnAmount100.setOnClickListener {
-            bottomSheetBinding.etAmount.setText("100")
-            updateAddButtonState(bottomSheetBinding)
-        }
-
-        bottomSheetBinding.btnAmount200.setOnClickListener {
-            bottomSheetBinding.etAmount.setText("200")
-            updateAddButtonState(bottomSheetBinding)
-        }
-
-        bottomSheetBinding.btnAmount500.setOnClickListener {
-            bottomSheetBinding.etAmount.setText("500")
-            updateAddButtonState(bottomSheetBinding)
-        }
-
-        bottomSheetBinding.etAmount.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                updateAddButtonState(bottomSheetBinding)
-            }
-        })
-
-        bottomSheetBinding.btnClose.setOnClickListener {
-            animateAndDismiss(bottomSheetDialog)
-        }
-
-        bottomSheetBinding.btnAddMoneyConfirm.setOnClickListener {
-            val amountText = bottomSheetBinding.etAmount.text.toString()
-            val amount = amountText.toDoubleOrNull()
-            if (amount != null && amount > 0) {
-                showToast(getString(R.string.redirecting_to_secure_checkout))
-                initiateWalletTopUp(amount)
-                animateAndDismiss(bottomSheetDialog)
-            } else {
-                showToast(getString(R.string.please_enter_a_valid_amount))
-            }
-        }
-
-        updateAddButtonState(bottomSheetBinding)
-        bottomSheetDialog.show()
+    private fun isWalletBalanceInsufficient(
+        policy: ResolvedBookingPolicy?,
+        balance: Double,
+        price: Double,
+    ): Boolean {
+        return policy?.bookingChargeRequired == true && price > 0.0 && balance < price
     }
 
-    private fun updateAddButtonState(binding: BottomSheetTopUpBinding) {
-        val amountText = binding.etAmount.text.toString()
-        val amount = amountText.toDoubleOrNull()
-        val isValidAmount = amount != null && amount > 0
-
-        binding.btnAddMoneyConfirm.isEnabled = isValidAmount
-        binding.btnAddMoneyConfirm.text = if (isValidAmount) {
-            "Add ${amount?.toInt()} G"
-        } else {
-            "Add Money"
-        }
+    private fun canUseWalletTopUpForShortfall(
+        policy: ResolvedBookingPolicy,
+        balance: Double,
+        price: Double,
+    ): Boolean {
+        return policy.paymentRequired &&
+            policy.bookingChargeRequired &&
+            price > 0.0 &&
+            balance < price
     }
 
-    private fun animateAndDismiss(dialog: BottomSheetDialog) {
-        val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
-        if (bottomSheet == null) {
-            dialog.dismiss()
-            return
-        }
-        bottomSheet.animate()
-            .translationY(bottomSheet.height * 0.25f)
-            .alpha(0f)
-            .setDuration(200)
-            .withEndAction {
-                dialog.dismiss()
-                bottomSheet.translationY = 0f
-                bottomSheet.alpha = 1f
-            }
-            .start()
-    }
+    private fun launchWalletTopUpForBookingShortfall(
+        shortfall: Double,
+    ) {
+        val context = context ?: return
+        if (isWalletTopUpInProgress) return
 
-    private fun initiateWalletTopUp(amount: Double) {
-        val userId = AuthSession.getUserId(requireContext())
-
-        if (userId == null) {
-            showToast(getString(R.string.please_log_in_to_add_money))
-            return
-        }
+        val required = shortfall.coerceAtLeast(WalletTopUpLauncher.minAmount(context))
+        isWalletTopUpInProgress = true
+        shouldRetryBookingAfterWalletTopUp = true
+        updateConfirmButtonState()
+        showBookingNotice("Opening wallet payment...")
 
         viewLifecycleOwner.lifecycleScope.launch {
-            when (
-                val result = WalletTopUpLauncher.createTopUp(
-                    requireContext(),
-                    amount,
-                    parkingLotId = selectedLotId
-                )
-            ) {
-                is WalletTopUpLauncher.Result.Ready -> startActivity(result.intent)
-                is WalletTopUpLauncher.Result.Failed -> showToast(result.message)
+            try {
+                when (val result = WalletTopUpLauncher.createTopUp(context, required, parkingLotId = selectedLotId)) {
+                    is WalletTopUpLauncher.Result.Ready ->
+                        walletTopUpLauncher.launch(result.intent)
+
+                    is WalletTopUpLauncher.Result.Failed -> {
+                        isWalletTopUpInProgress = false
+                        shouldRetryBookingAfterWalletTopUp = false
+                        showToast(result.message)
+                        updateConfirmButtonState()
+                    }
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                isWalletTopUpInProgress = false
+                shouldRetryBookingAfterWalletTopUp = false
+                showToast(getString(R.string.payment_could_not_be_started))
+                updateConfirmButtonState()
             }
         }
+    }
+
+    private fun maybeCreateBookingAfterWalletTopUp() {
+        val policy = bookingPolicy ?: run {
+            shouldRetryBookingAfterWalletTopUp = false
+            isWalletTopUpInProgress = false
+            updateConfirmButtonState()
+            return
+        }
+        val balance = viewModel.walletBalance.value ?: 0.0
+        val price = viewModel.totalPrice.value ?: 0.0
+        if (!isWalletBalanceInsufficient(policy, balance, price)) {
+            shouldRetryBookingAfterWalletTopUp = false
+            createBooking(ignoreWalletTopUpCheck = true)
+            return
+        }
+        shouldRetryBookingAfterWalletTopUp = false
+        isWalletTopUpInProgress = false
+        showBookingNotice("Insufficient wallet balance.")
+        updateConfirmButtonState()
     }
 
     private fun createDefaultParkingSpot(): ParkingSpot {
@@ -2325,6 +2985,11 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
         private const val ARG_PARKING_SPOT_ZONE_NAME = "PARKING_SPOT_ZONE_NAME"
         private const val ARG_PARKING_SPOT_CODE = "PARKING_SPOT_CODE"
         private const val ARG_PARKING_SPOT_SLOT_NAME = "PARKING_SPOT_SLOT_NAME"
+        private const val STATE_BOOKING_DRAFT = "parking_spot.booking_draft"
+        private const val STATE_ACTIVE_VEHICLE_SELECTION_REQUEST_TOKEN =
+            "parking_spot.vehicle_selection.active_request_token"
+        private const val STATE_COMPLETED_VEHICLE_SELECTION_REQUEST_TOKEN =
+            "parking_spot.vehicle_selection.completed_request_token"
 
         fun newInstance(
             parkingSpotId: String,
@@ -2347,5 +3012,312 @@ class ParkingSpotBottomSheet : BottomSheetDialogFragment() {
                 }
             }
         }
+    }
+}
+
+/** Primitive-only booking state that Android can safely parcel across true process recreation. */
+internal data class ParkingSpotBookingDraftSnapshot(
+    val selectedVehicleId: String?,
+    val selectedVehicleNumber: String?,
+    val startTimeMillis: Long?,
+    val endTimeMillis: Long?,
+    val allowAutomaticVehicleSelection: Boolean,
+) {
+    val hasVehicleReference: Boolean
+        get() = !selectedVehicleId.isNullOrBlank() || !selectedVehicleNumber.isNullOrBlank()
+
+    val hasCompleteTimes: Boolean
+        get() = startTimeMillis != null && endTimeMillis != null
+
+    fun toBundle(): Bundle = Bundle().apply {
+        putInt(KEY_SCHEMA_VERSION, SCHEMA_VERSION)
+        putString(KEY_SELECTED_VEHICLE_ID, selectedVehicleId)
+        putString(KEY_SELECTED_VEHICLE_NUMBER, selectedVehicleNumber)
+        startTimeMillis?.let { putLong(KEY_START_TIME_MILLIS, it) }
+        endTimeMillis?.let { putLong(KEY_END_TIME_MILLIS, it) }
+        putBoolean(KEY_ALLOW_AUTOMATIC_VEHICLE_SELECTION, allowAutomaticVehicleSelection)
+    }
+
+    companion object {
+        private const val SCHEMA_VERSION = 1
+        private const val KEY_SCHEMA_VERSION = "draft.schema_version"
+        private const val KEY_SELECTED_VEHICLE_ID = "draft.vehicle_id"
+        private const val KEY_SELECTED_VEHICLE_NUMBER = "draft.vehicle_number"
+        private const val KEY_START_TIME_MILLIS = "draft.start_time_millis"
+        private const val KEY_END_TIME_MILLIS = "draft.end_time_millis"
+        private const val KEY_ALLOW_AUTOMATIC_VEHICLE_SELECTION =
+            "draft.allow_automatic_vehicle_selection"
+
+        fun empty(allowAutomaticVehicleSelection: Boolean) =
+            ParkingSpotBookingDraftSnapshot(
+                selectedVehicleId = null,
+                selectedVehicleNumber = null,
+                startTimeMillis = null,
+                endTimeMillis = null,
+                allowAutomaticVehicleSelection = allowAutomaticVehicleSelection,
+            )
+
+        fun fromBundle(bundle: Bundle): ParkingSpotBookingDraftSnapshot? {
+            if (bundle.getInt(KEY_SCHEMA_VERSION, -1) != SCHEMA_VERSION) return null
+            return ParkingSpotBookingDraftSnapshot(
+                selectedVehicleId = bundle.getString(KEY_SELECTED_VEHICLE_ID)
+                    ?.takeIf { it.isNotBlank() },
+                selectedVehicleNumber = bundle.getString(KEY_SELECTED_VEHICLE_NUMBER)
+                    ?.takeIf { it.isNotBlank() },
+                startTimeMillis = bundle.takeIf { it.containsKey(KEY_START_TIME_MILLIS) }
+                    ?.getLong(KEY_START_TIME_MILLIS),
+                endTimeMillis = bundle.takeIf { it.containsKey(KEY_END_TIME_MILLIS) }
+                    ?.getLong(KEY_END_TIME_MILLIS),
+                allowAutomaticVehicleSelection = bundle.getBoolean(
+                    KEY_ALLOW_AUTOMATIC_VEHICLE_SELECTION,
+                    false,
+                ),
+            )
+        }
+    }
+}
+
+internal data class ParkingSpotValidatedBookingTimes(
+    val startTimeMillis: Long,
+    val endTimeMillis: Long,
+    val adjusted: Boolean,
+)
+
+internal object ParkingSpotBookingDraftPolicy {
+    private const val MINIMUM_BOOKING_DURATION_MILLIS = 60_000L
+
+    /**
+     * Resolves only the saved identity. IDs generated from profile order may change, so a saved
+     * number is authoritative when both fields exist; an ID match with a different plate is never
+     * accepted. The first vehicle is considered only when no prior identity was saved.
+     */
+    fun resolveVehicle(
+        snapshot: ParkingSpotBookingDraftSnapshot,
+        vehicles: List<Vehicle>,
+    ): Vehicle? {
+        val savedId = snapshot.selectedVehicleId?.takeIf { it.isNotBlank() }
+        val savedNumber = snapshot.selectedVehicleNumber?.takeIf { it.isNotBlank() }
+
+        return when {
+            savedId != null && savedNumber != null -> vehicles.firstOrNull { vehicle ->
+                vehicle.id == savedId && numbersMatch(vehicle.number, savedNumber)
+            } ?: vehicles.firstOrNull { vehicle -> numbersMatch(vehicle.number, savedNumber) }
+
+            savedNumber != null ->
+                vehicles.firstOrNull { vehicle -> numbersMatch(vehicle.number, savedNumber) }
+
+            savedId != null -> vehicles.firstOrNull { vehicle -> vehicle.id == savedId }
+            snapshot.allowAutomaticVehicleSelection -> vehicles.firstOrNull()
+            else -> null
+        }
+    }
+
+    fun validateTimes(
+        requestedStartTimeMillis: Long,
+        requestedEndTimeMillis: Long,
+        minimumStartTimeMillis: Long,
+        maximumEndTimeMillis: Long,
+    ): ParkingSpotValidatedBookingTimes {
+        if (maximumEndTimeMillis <= minimumStartTimeMillis) {
+            return ParkingSpotValidatedBookingTimes(
+                startTimeMillis = minimumStartTimeMillis,
+                endTimeMillis = maximumEndTimeMillis,
+                adjusted = true,
+            )
+        }
+
+        val availableDuration = maximumEndTimeMillis - minimumStartTimeMillis
+        val minimumDuration = minOf(MINIMUM_BOOKING_DURATION_MILLIS, availableDuration)
+        val latestStart = maximumEndTimeMillis - minimumDuration
+        val requestedWindowDoesNotOverlap =
+            requestedEndTimeMillis <= minimumStartTimeMillis ||
+                requestedStartTimeMillis >= maximumEndTimeMillis
+
+        val validatedStart: Long
+        val validatedEnd: Long
+        if (requestedWindowDoesNotOverlap) {
+            validatedStart = minimumStartTimeMillis
+            validatedEnd = maximumEndTimeMillis
+        } else {
+            validatedStart = requestedStartTimeMillis.coerceIn(
+                minimumStartTimeMillis,
+                latestStart,
+            )
+            validatedEnd = requestedEndTimeMillis.coerceIn(
+                validatedStart + minimumDuration,
+                maximumEndTimeMillis,
+            )
+        }
+
+        return ParkingSpotValidatedBookingTimes(
+            startTimeMillis = validatedStart,
+            endTimeMillis = validatedEnd,
+            adjusted = validatedStart != requestedStartTimeMillis ||
+                validatedEnd != requestedEndTimeMillis,
+        )
+    }
+
+    fun shouldAcceptVehicleSelectionResult(
+        activeRequestToken: String?,
+        completedRequestToken: String?,
+        resultRequestToken: String?,
+        vehicleId: String?,
+        vehicleNumber: String?,
+    ): Boolean =
+        !resultRequestToken.isNullOrBlank() &&
+            resultRequestToken == activeRequestToken &&
+            resultRequestToken != completedRequestToken &&
+            !vehicleId.isNullOrBlank() &&
+            !vehicleNumber.isNullOrBlank()
+
+    private fun numbersMatch(first: String, second: String): Boolean =
+        com.gridee.parking.utils.VehicleNumberValidator.areEquivalent(first, second)
+}
+
+internal data class SelectVehicleAddCompletion(
+    val requestToken: String,
+    val vehicleNumber: String,
+    val success: Boolean,
+)
+
+/**
+ * Owns one add-vehicle request independently of either dialog instance.
+ *
+ * The ViewModel instance survives configuration changes, so a repository callback never targets
+ * the obsolete SelectVehicleBottomSheet. SavedStateHandle also remembers the request token. A
+ * process cannot continue the in-memory HTTP call, so restoration resolves that token once as a
+ * retryable failure instead of leaving the restored sheet spinning forever or submitting it again
+ * automatically. Late/duplicated callbacks are admitted only while their exact token is active.
+ */
+internal class SelectVehicleAddRequestCoordinator(
+    private val savedStateHandle: SavedStateHandle,
+) : ViewModel() {
+
+    enum class Admission {
+        STARTED,
+        JOINED,
+        REPLAYED,
+        BUSY,
+    }
+
+    private val _completion = MutableLiveData<SelectVehicleAddCompletion>()
+    val completion: LiveData<SelectVehicleAddCompletion> = _completion
+
+    init {
+        val interruptedToken = savedStateHandle.get<String>(STATE_ACTIVE_TOKEN)
+            ?.takeIf { it.isNotBlank() }
+        val interruptedNumber = savedStateHandle.get<String>(STATE_ACTIVE_VEHICLE_NUMBER)
+            ?.takeIf { it.isNotBlank() }
+
+        if (interruptedToken != null && interruptedNumber != null) {
+            clearActiveRequest()
+            recordCompletion(
+                SelectVehicleAddCompletion(
+                    requestToken = interruptedToken,
+                    vehicleNumber = interruptedNumber,
+                    success = false,
+                ),
+            )
+        } else {
+            clearActiveRequest()
+            readCompletion()?.let(_completion::setValue)
+        }
+    }
+
+    fun submit(
+        requestToken: String,
+        vehicleNumber: String,
+        start: (((Boolean) -> Unit) -> Unit),
+    ): Admission {
+        val token = requestToken.trim()
+        val number = vehicleNumber.trim()
+        if (token.isEmpty() || number.isEmpty()) return Admission.BUSY
+
+        readCompletion()?.let { completed ->
+            if (completed.requestToken == token && numbersMatch(completed.vehicleNumber, number)) {
+                _completion.value = completed
+                return Admission.REPLAYED
+            }
+        }
+
+        val activeToken = savedStateHandle.get<String>(STATE_ACTIVE_TOKEN)
+        val activeNumber = savedStateHandle.get<String>(STATE_ACTIVE_VEHICLE_NUMBER)
+        if (!activeToken.isNullOrBlank() && !activeNumber.isNullOrBlank()) {
+            return if (activeToken == token && numbersMatch(activeNumber, number)) {
+                Admission.JOINED
+            } else {
+                Admission.BUSY
+            }
+        }
+
+        savedStateHandle[STATE_ACTIVE_TOKEN] = token
+        savedStateHandle[STATE_ACTIVE_VEHICLE_NUMBER] = number
+        try {
+            start { success -> complete(token, number, success) }
+        } catch (_: Exception) {
+            complete(token, number, success = false)
+        }
+        return Admission.STARTED
+    }
+
+    internal fun complete(
+        requestToken: String,
+        vehicleNumber: String,
+        success: Boolean,
+    ): Boolean {
+        val activeToken = savedStateHandle.get<String>(STATE_ACTIVE_TOKEN)
+        val activeNumber = savedStateHandle.get<String>(STATE_ACTIVE_VEHICLE_NUMBER)
+        if (requestToken != activeToken || !numbersMatch(activeNumber.orEmpty(), vehicleNumber)) {
+            return false
+        }
+
+        clearActiveRequest()
+        recordCompletion(
+            SelectVehicleAddCompletion(
+                requestToken = requestToken,
+                vehicleNumber = vehicleNumber,
+                success = success,
+            ),
+        )
+        return true
+    }
+
+    internal fun currentCompletion(): SelectVehicleAddCompletion? = readCompletion()
+
+    private fun recordCompletion(completion: SelectVehicleAddCompletion) {
+        savedStateHandle[STATE_COMPLETED_TOKEN] = completion.requestToken
+        savedStateHandle[STATE_COMPLETED_VEHICLE_NUMBER] = completion.vehicleNumber
+        savedStateHandle[STATE_COMPLETED_SUCCESS] = completion.success
+        _completion.value = completion
+    }
+
+    private fun readCompletion(): SelectVehicleAddCompletion? {
+        val token = savedStateHandle.get<String>(STATE_COMPLETED_TOKEN)
+            ?.takeIf { it.isNotBlank() }
+            ?: return null
+        val number = savedStateHandle.get<String>(STATE_COMPLETED_VEHICLE_NUMBER)
+            ?.takeIf { it.isNotBlank() }
+            ?: return null
+        return SelectVehicleAddCompletion(
+            requestToken = token,
+            vehicleNumber = number,
+            success = savedStateHandle.get<Boolean>(STATE_COMPLETED_SUCCESS) ?: false,
+        )
+    }
+
+    private fun clearActiveRequest() {
+        savedStateHandle.remove<String>(STATE_ACTIVE_TOKEN)
+        savedStateHandle.remove<String>(STATE_ACTIVE_VEHICLE_NUMBER)
+    }
+
+    private fun numbersMatch(first: String, second: String): Boolean =
+        com.gridee.parking.utils.VehicleNumberValidator.areEquivalent(first, second)
+
+    private companion object {
+        const val STATE_ACTIVE_TOKEN = "select_vehicle.coordinator.active_token"
+        const val STATE_ACTIVE_VEHICLE_NUMBER = "select_vehicle.coordinator.active_number"
+        const val STATE_COMPLETED_TOKEN = "select_vehicle.coordinator.completed_token"
+        const val STATE_COMPLETED_VEHICLE_NUMBER = "select_vehicle.coordinator.completed_number"
+        const val STATE_COMPLETED_SUCCESS = "select_vehicle.coordinator.completed_success"
     }
 }

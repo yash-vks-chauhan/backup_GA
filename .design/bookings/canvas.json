@@ -1,0 +1,136 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 900,
+      "h": 1010
+    },
+    {
+      "file": "OptionB.dc.html",
+      "x": 980,
+      "y": 0,
+      "w": 900,
+      "h": 1010
+    },
+    {
+      "file": "OptionC.dc.html",
+      "x": 1960,
+      "y": 0,
+      "w": 900,
+      "h": 1010
+    },
+    {
+      "file": "OptionD.dc.html",
+      "x": 0,
+      "y": 1160,
+      "w": 1330,
+      "h": 1590
+    },
+    {
+      "file": "CancelGuard.dc.html",
+      "x": 1410,
+      "y": 1160,
+      "w": 900,
+      "h": 726
+    },
+    {
+      "file": "Transitions.dc.html",
+      "x": 0,
+      "y": 2870,
+      "w": 1560,
+      "h": 1620
+    },
+    {
+      "file": "EdgeStates.dc.html",
+      "x": 0,
+      "y": 4610,
+      "w": 1800,
+      "h": 1220
+    },
+    {
+      "file": "PassRedesign.dc.html",
+      "x": 0,
+      "y": 5950,
+      "w": 900,
+      "h": 1080
+    },
+    {
+      "file": "PassDirections.dc.html",
+      "x": 0,
+      "y": 7180,
+      "w": 1370,
+      "h": 2010
+    },
+    {
+      "file": "PassCombined.dc.html",
+      "x": 0,
+      "y": 9340,
+      "w": 1360,
+      "h": 1060
+    }
+  ],
+  "annotations": [
+    {
+      "id": "brief",
+      "x": 0,
+      "y": -268,
+      "w": 1000,
+      "text": "Bookings tab, redesigned.\n\nThe segmented control is gone — one booking exists at a time, and Booked becomes Active the moment an operator scans it, so there was never a second list to switch to. All of these say the same thing instead: what state you're in, and what happens next.\n\nShared throughout: real app tokens (Inter, 32dp card radii, #059669 / #D97706 status pair, #F2F2F7 / #1C1C1E surfaces), cancel visible on the card itself, and a native-ad slot that sits above the fold in the space the single card leaves behind.\n\nA, B and C are the original three directions. Option D, on the row below, is the one to look at — it combines B and C.\n\nEvery artboard has a Dark tweak above it."
+    },
+    {
+      "id": "d-note",
+      "x": 2390,
+      "y": 1160,
+      "w": 440,
+      "text": "OPTION D — the direction\n\nFrom C: the stage rail, the header's stage line, the flatter density.\nFrom B: the ticket card — tinted status head, perforated stub, hold-to-cancel pill.\nFrom A: check-in ── 5h ── check-out. On the Active card the progress bar IS that rail, so its endpoints are labelled rather than duplicated.\n\nTHE TAIL\nOne row grammar — label left, when-or-where right — and the rail carries the state instead of the copy: 9 px filled and a solid line for travelled, 8 px ring and a dashed line for ahead, 11 px and a halo for where you are. The sentences are gone; \"Scheduled for 12:30 PM\" is just \"12:30 PM\".\n\nIts greys were too light to ship. Muted future steps had drifted to #9CA3AF and #C8CCD2, which measure 2.28:1 and 1.45:1 on the tab background — WCAG AA wants 4.5:1 for text and 3:1 for the dots. Text is now t2 (5.15:1 light, 6.44:1 dark) and the rail marks have their own token, #8A8A8E / #6E6E73, at 3.08:1 and 4.14:1. The tail sits a shade heavier than it did; that is the floor, not a preference.\n\nSTILL UNDESIGNED\nCancelled, no-show and overstay all exist in mapBackendStatus and none of them have a rail. Worth doing before this is built.\n\nTHE CODE, UNBOXED\nIt is drawn straight onto the card below the perforation — no plate, no well, no border — and it inks dark on white in light mode, light on dark at night. The stub themes like everything else; nothing goes bright.\n\nInverting is free here because this code was never a scanner target: at 76 dp it is 12 mm, and the floor is ~33 mm. It exists to be recognised. The code that has to survive a scanner lives on the pass, on white, at forced brightness — that one stays as it is.\n\nSIZE: 76 dp\nBookingQrPassBottomSheet puts the scannable floor at ~33 mm. 96 dp is 15 mm — under half — and the bookings tab has neither the brightness override nor the keep-awake flag that make scanning work on the pass. The card's code cannot be the scanning surface at any size that fits, so 96 dp was the bad middle: enough to invite a scan, not enough to complete one.\n\nTAP AFFORDANCE: A BADGE, NOTHING ELSE\nshadcn's secondary badge — zinc-100 fill, zinc-200 border, zinc-600 type — centred under the code. Blur was rejected because it deletes the recognition the code exists for and reads as a skeleton placeholder in an app full of them; the bracket reticle was tried and cut for being decoration. What is left is three centred things: what the code is for, the code, what to do with it. Values are specified at the foot of the artboard."
+    },
+    {
+      "id": "guard-note",
+      "x": 1410,
+      "y": 1950,
+      "w": 900,
+      "text": "The cancel mechanism is a separate choice from the layout.\n\nYou asked for cancel to be on the card rather than buried in the bottom sheet, but visible and destructive is a dangerous pair — so each option guards it differently. Any of these three mechanisms drops into any of the layouts; D currently uses B's hold-to-cancel.\n\nOne thing that stays true regardless: cancel only exists while the booking is still Booked. Once an operator has checked the car in, the backend already refuses cancellation, so the control is simply absent from the Active card rather than present-but-disabled."
+    },
+    {
+      "id": "transitions-note",
+      "x": 1660,
+      "y": 2870,
+      "w": 440,
+      "text": "HOW THE RAIL ADVANCES\n\nOne idea for both steps: the state travels. Card folds shut → green sweep runs down the rail → next dot takes → its card opens. Leave, travel, arrive.\n\n900 ms end to end, with the beats overlapping so it never reads as a queue. The timing panel gives every track.\n\nTwo things it is easy to get wrong:\n\n1. Nobody is usually watching. The operator scans while the phone is pocketed — which is exactly why the ad-transition baseline in BookingsFragmentNew is persisted rather than in-memory. On a cold open, render the new state immediately and draw only the rail segment. Never fake the old state to animate away from it.\n\n2. The interstitial fires first. AdMobManager gets the transition before the tab re-renders, so if an ad shows, the choreography is gone. Treat them as exclusive.\n\nThe checkout receipt in the last frame is proposed behaviour, not a restyle — today the booking just vanishes."
+    },
+    {
+      "id": "edge-note",
+      "x": 1900,
+      "y": 4610,
+      "w": 440,
+      "text": "EVERY STATUS, GIVEN A RAIL\n\nOne pattern throughout: a stop that happened is filled and solid, a stop that was skipped is struck, and a rail with no future simply stops. No greyed-out steps standing in for things that will never occur.\n\nOVERSTAY is the only live one. BookingsAdapter already flips the card to \"Session Ended\" and red urgency past the end time, so the rail follows: timer counts up, bar full and red, last stop reads Overdue instead of a clock time it has already passed.\n\nCANCELLED ends at two stops. NO-SHOW keeps check-in on the rail with a struck marker, because the step was missed rather than declined — and stays neutral, since BookingDetailsActivity already tints no-show with text_secondary while cancelled gets error.\n\nCopy is lifted from the app's own vocabulary rather than invented: \"Never started\", \"Slot was never used\".\n\nTWO THINGS TO CONFIRM\nThe cancelled card shows a full ₹90.00 back to the wallet — the cancel path does refresh the wallet with BOOKING_CANCEL, but partial-refund rules were not found in the client. The no-show card deliberately claims no refund at all, because nothing in the code says either way.\n\nREVIEW NOTE\nThe four artboard captions were running at 1.27:1 on the canvas backdrop — the same miss the tail had — and are now t2 (4.53:1 / 5.64:1).\n\nTwo things left open. The Booked row reads 06:12 AM here (when the booking was made) but 07:31 AM on the live rail (when it was scanned in) — one column, two meanings; pick one.\n\nAnd no-show has three different tints in the app: applyStatusPill uses text_secondary, the sibling status-colour function uses brand_primary, and BookingsAdapter uses status_text_noshow, which is #1E40AF blue. Neutral is a fair choice, but the codebase does not agree with itself."
+    },
+    {
+      "id": "pass-note",
+      "x": 980,
+      "y": 5950,
+      "w": 440,
+      "text": "THE PASS, MADE THE SAME OBJECT\n\nToday the pass is a loose stack — a status line, a 268 dp code on a plate, a caption — with no relationship to the card you tapped to get here. Now it is the ticket: the same tinted head (amber Booked, green Live), the same perforation with punched notches, the same stub carrying vehicle and coin amount. Tapping the code enlarges the object you were already holding.\n\nWHAT MOVED\nThe status line leaves the card and goes up beside the close button, where it belongs to the screen rather than to the booking — the head already names the booking. The nav row keeps one control, so the head can start at the top of the card.\n\nTHE CODE: 212 dp, NOT 268\nBookingQrPassBottomSheet:367 puts the comfortably-scannable floor at ~33 mm; 212 dp is 33.5 mm, so this stays a real scanning surface with the brightness override and keep-awake it already has. The 56 dp it gives back is what buys the second ad slot. It sits directly on the card surface — bg_qr_plate goes away, since the card below the perforation IS the white plate now. Dark mode still inverts to light modules on #1C1C1E, which is the existing imageTintList behaviour, not a new one.\n\nTWO AD SLOTS, BOTH ABOVE THE FOLD\nThe existing swipeable rail keeps everything it already carries — AdMob at page 0, campaigns behind it, dots underneath — at 150 dp. Under it, a compact 60 dp row: icon, AD chip, one line. Deliberately not a second poster; two full cards would crowd the thing the screen exists for. On a 390×844 frame the whole stack lands with room to spare, so neither slot needs a scroll.\n\nOPEN\nThe second slot has no fill source yet — house promo is the obvious first tenant, and house_promo_row already exists in the layout for it.\n\nEvery artboard has a Dark tweak above it."
+    },
+    {
+      "id": "pass-directions-note",
+      "x": 1450,
+      "y": 7180,
+      "w": 460,
+      "text": "SIX PASSES, ONE RULE\n\nThe card came off. There is no container, no plate, no bg_qr_plate — the top of the page simply is the state, the header carries only the lot name, and the code is drawn onto the colour. From the middle down it is one white surface running the ad full width, which is what the live build already does with its rail.\n\nWHAT DIFFERS, AND ONLY THIS\n1 HALF AND HALF — the sheet lifts off the colour on a 28 px radius. Closest to the brief.\n2 FLAT SEAM — the sheet butts the colour on a straight line and the creative bleeds to both edges, headline inset below it. Most inventory per pixel; nothing rounded anywhere.\n3 SOLID CAP — full-strength #059669 / #B45309 for the top 160 dp, white type, code on white below. Boldest, and the only one where the colour reads from across a lobby.\n4 DISSOLVE — the colour fades out by y=452 and the sheet begins with no boundary at all. Softest; also the only one with no line to misalign.\n5 TEAR LINE — a dotted rule and two punched notches at the seam. Keeps the ticket idea the rail card already uses, without redrawing the card.\n6 TALL TRAY — the colour stops 72 dp higher and the sheet takes 468 dp, enough for a full poster AND a 116 dp second unit under the dots.\n\nWASH STRENGTH\n#E6F5EE and #FBF1DF, a step up from the stage_head fills the rail cards use. Those fills are sized for a 60 dp strip; across half a screen they read as a printing error rather than a colour. Amber also drops from #D97706 to #B45309 for type on the wash — 4.63:1 against 3.02:1 — since here it labels rather than badges.\n\nSCANNING\nThe washes are effectively white to a scanner (L* 95 and 94), so an unplated code still reads. 3's cap is not, which is why its code sits on the sheet. 6 is the one real cost: 192 dp is 30 mm against the ~33 mm floor BookingQrPassBottomSheet:367 sets, so the second ad slot is paid for out of scan margin. Worth it only if that slot has a tenant.\n\nDARK\nThe wash becomes #0A2413 / #241703 and the sheet #1C1C1E, so \"white half\" is a surface relationship, not a colour. The code inverts to light modules, which is the existing imageTintList behaviour.\n\nEvery artboard has a Dark tweak above it."
+    },
+    {
+      "id": "pass-combined-note",
+      "x": 1440,
+      "y": 9340,
+      "w": 460,
+      "text": "2 + 4 — WHY IT IS BETTER THAN EITHER\n\nIn 2 the drawn seam and the creative's own top edge were two hard lines with nothing between them, both saying the same thing. Dissolving the seam deletes one of them. What is left is a page with a single horizontal edge on it, and that edge belongs to the ad rather than to chrome — so the ad zone is marked by the ad and by nothing else.\n\nGEOMETRY\nThe wash is solid to 110 and fully gone by 396; the creative starts at 424. Those 28 px of clean white are the whole trick: land the gradient ON the creative's edge and any rounding error shows up as a faint coloured band above the image, which is the one way this fails. Leave the gap.\n\nThe code sits 146–358, so its lower third is already on near-white while the head above it is still tinted. That is the intended read — colour frames the booking, the code is the hinge, the ad is on plain paper.\n\nWHAT IT GIVES UP, AND C\nA seam gives the lower half an identity even when nothing fills it. Without one, an unfilled tray is just white with no edges — and the pass has real fill risk: the AdMob unit and the campaign deck can both come back empty, which is why house_promo_row exists as the last rung.\n\nC answers it structurally instead of by drawing the line back: the creative bleeds to the floor, so the region cannot read as empty because it has no empty state — the surface IS the creative. Its headline moves onto the image over a 0→62% scrim, and the dots go white and sit above the text.\n\nThe cost is the house rung. In C there is no room for a separate promo row, so the referral becomes a page in the rail rather than a rung under it — which is arguably where it belonged, since a rail page gets the whole width and the rung gets 64 dp.\n\nPICK\nA/B if the second unit and the house rung both matter. C if the ad zone should never be able to look broken. A and C are the same page above y=424; only what happens below it differs, so this is not a layout decision that has to be made before the top is built.\n\nEvery artboard has a Dark tweak above it."
+    }
+  ],
+  "launch": {
+    "view": "focused",
+    "file": "PassCombined.dc.html"
+  }
+}

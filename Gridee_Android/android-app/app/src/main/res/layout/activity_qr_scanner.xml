@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/scanner_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
     android:keepScreenOn="true">
 
     <com.journeyapps.barcodescanner.DecoratedBarcodeView
@@ -12,25 +12,32 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <androidx.camera.view.PreviewView
-        android:id="@+id/vehicle_preview"
+    <!-- The preview, authoritative ROI, and scanner chrome share one immutable full-screen stage.
+         Status text and root controls cannot change this container's centre point. -->
+    <FrameLayout
+        android:id="@+id/scanner_camera_stage"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" />
+        android:layout_height="match_parent">
 
-    <View
-        android:id="@+id/vehicle_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/scanner_overlay"
-        android:visibility="gone" />
+        <androidx.camera.view.PreviewView
+            android:id="@+id/vehicle_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/scanner_content_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingHorizontal="20dp"
-        android:visibility="gone">
+        <View
+            android:id="@+id/vehicle_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/scanner_overlay"
+            android:visibility="gone" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/scanner_content_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="20dp"
+            android:visibility="gone">
 
         <LinearLayout
             android:id="@+id/scanner_top_controls"
@@ -41,7 +48,8 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="UselessParent">
 
             <LinearLayout
                 android:id="@+id/scanner_spot_selector"
@@ -79,7 +87,7 @@
                     android:contentDescription="@null"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_arrow_down"
-                    android:tint="@color/scanner_text_secondary" />
+                    app:tint="@color/scanner_text_secondary" />
             </LinearLayout>
         </LinearLayout>
 
@@ -87,11 +95,13 @@
             android:id="@+id/scanning_frame_container"
             android:layout_width="312dp"
             android:layout_height="208dp"
-            app:layout_constraintBottom_toTopOf="@id/scanner_mode_dock"
+            android:clickable="true"
+            android:contentDescription="@string/scanner_tap_to_focus"
+            android:focusable="true"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/scanner_top_controls"
-            app:layout_constraintVertical_bias="0.52">
+            app:layout_constraintTop_toTopOf="parent">
 
             <View
                 android:layout_width="match_parent"
@@ -103,36 +113,40 @@
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:layout_gravity="top|start"
-                android:contentDescription="@string/scanner_corner"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
                 android:src="@drawable/corner_top_left"
-                android:tint="@color/scanner_corner_idle" />
+                app:tint="@color/scanner_corner_idle" />
 
             <ImageView
                 android:id="@+id/corner_top_right"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:layout_gravity="top|end"
-                android:contentDescription="@string/scanner_corner"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
                 android:src="@drawable/corner_top_right"
-                android:tint="@color/scanner_corner_idle" />
+                app:tint="@color/scanner_corner_idle" />
 
             <ImageView
                 android:id="@+id/corner_bottom_left"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:layout_gravity="bottom|start"
-                android:contentDescription="@string/scanner_corner"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
                 android:src="@drawable/corner_bottom_left"
-                android:tint="@color/scanner_corner_idle" />
+                app:tint="@color/scanner_corner_idle" />
 
             <ImageView
                 android:id="@+id/corner_bottom_right"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:layout_gravity="bottom|end"
-                android:contentDescription="@string/scanner_corner"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
                 android:src="@drawable/corner_bottom_right"
-                android:tint="@color/scanner_corner_idle" />
+                app:tint="@color/scanner_corner_idle" />
 
             <View
                 android:id="@+id/vehicle_scan_line"
@@ -164,24 +178,25 @@
             android:id="@+id/scanner_mode_dock"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="14dp"
+            android:layout_marginTop="14dp"
             android:background="@drawable/bg_scanner_mode_dock"
             android:gravity="center"
             android:orientation="vertical"
             android:padding="10dp"
-            app:layout_constraintBottom_toTopOf="@id/vehicle_status_container"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/scanner_top_controls"
             app:layout_constraintWidth_max="356dp">
 
             <LinearLayout
                 android:id="@+id/scanner_operation_toggle"
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="48dp"
+                android:baselineAligned="false"
                 android:background="@drawable/bg_scanner_button_pill"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="4dp"
+                android:paddingHorizontal="4dp"
                 android:visibility="gone">
 
                 <FrameLayout
@@ -227,12 +242,13 @@
             <LinearLayout
                 android:id="@+id/scanner_input_toggle"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="48dp"
+                android:baselineAligned="false"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_scanner_button_pill"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="4dp"
+                android:paddingHorizontal="4dp"
                 android:visibility="gone">
 
                 <FrameLayout
@@ -276,21 +292,30 @@
             </LinearLayout>
         </LinearLayout>
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
             android:id="@+id/vehicle_status_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite"
             android:background="@drawable/bg_scanner_panel_neutral"
+            android:clipToPadding="false"
+            android:fillViewport="false"
             android:minHeight="162dp"
-            android:orientation="vertical"
+            android:overScrollMode="ifContentScrolls"
             android:paddingHorizontal="18dp"
             android:paddingTop="16dp"
             android:paddingBottom="16dp"
+            android:scrollbars="none"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintWidth_max="356dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -312,7 +337,7 @@
                         android:contentDescription="@null"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_scanner_filled"
-                        android:tint="@color/scanner_text_primary" />
+                        app:tint="@color/scanner_text_primary" />
                 </FrameLayout>
 
                 <TextView
@@ -442,7 +467,8 @@
                 app:cornerRadius="16dp"
                 app:strokeColor="@color/scanner_glass_border"
                 app:strokeWidth="1dp" />
-        </LinearLayout>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_inline_manual_entry"
@@ -486,7 +512,8 @@
                     android:layout_height="wrap_content" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
 
     <ImageButton
         android:id="@+id/btn_close_scanner"
@@ -502,7 +529,7 @@
         android:scaleType="centerInside"
         android:src="@drawable/ic_close"
         android:stateListAnimator="@null"
-        android:tint="@android:color/white" />
+        app:tint="@android:color/white" />
 
     <ImageButton
         android:id="@+id/btn_flash_toggle"
@@ -527,5 +554,16 @@
         android:layout_gravity="top|start"
         android:contentDescription="@string/vehicle_scan_voice_input"
         android:src="@drawable/ic_mic"
+        android:visibility="gone" />
+
+    <!-- Enabled only by the local benchmark build. Production variants keep this node gone. -->
+    <View
+        android:id="@+id/scanner_benchmark_readiness"
+        android:layout_width="2dp"
+        android:layout_height="2dp"
+        android:layout_gravity="bottom|end"
+        android:alpha="0.01"
+        android:focusable="true"
+        android:importantForAccessibility="yes"
         android:visibility="gone" />
 </FrameLayout>

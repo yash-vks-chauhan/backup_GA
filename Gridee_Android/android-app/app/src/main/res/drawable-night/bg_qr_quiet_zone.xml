@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dark theme: white, and deliberately so.
+
+  BookingQrCodeGenerator draws BLACK modules on a transparent canvas. On the dark page that
+  would have to be inverted to light-on-dark, and an inverted code is a genuine risk on
+  barrier and turnstile hardware — plenty of fixed scanners only decode dark-on-light. This
+  is the one screen in the app whose entire job is to be scanned, so it keeps its ground the
+  way Wallet passes do.
+
+  Radius and padding match the light theme's spacing exactly, so the code renders at the same
+  size in both.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFFFFF" />
+    <corners android:radius="28dp" />
+</shape>

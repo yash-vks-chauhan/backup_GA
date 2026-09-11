@@ -33,39 +33,45 @@ object InAppReviewManager {
         if (!canRequestReview(activity)) return
 
         markReviewRequested(activity)
-        launchInAppReview(activity, fallbackToPlayStore = false)
+        launchInAppReview(activity)
     }
 
     /**
-     * On-demand trigger for an explicit "Review" tap (e.g. the reward sheet row).
-     * Shows the in-app review card overlaid on the app whenever Google allows it.
-     * If the flow can't even be *requested* (sideloaded build, no Play Services, no
-     * network) we open the Play Store listing so the tap never dead-ends.
+     * On-demand trigger for an explicit "Rate us" tap (the reward sheet row).
      *
-     * Not rate-limited — the user explicitly asked to review. Note the quota caveat:
-     * if Google suppresses the card (already reviewed / shown recently) the request
-     * still "succeeds" and nothing visible happens. The API gives no signal for that
-     * case, so we deliberately do NOT also open the Play Store then — guessing wrong
-     * would risk popping the card *and* the store on the same tap.
+     * This deliberately does **not** use the in-app review API, which is what made the row
+     * dead-end on the live build. The quota caveat is fatal for a button: when Google decides
+     * to show nothing — the user already reviewed, or the card was shown recently — the request
+     * still reports success and `launchReviewFlow` completes having drawn nothing at all. The
+     * API exposes no signal separating "shown" from "suppressed", so a button built on it does
+     * nothing on most taps and cannot even tell that it did.
+     *
+     * Google's own guidance says not to put the review flow behind a call-to-action for exactly
+     * this reason. A tap that says "Rate us" must always visibly go somewhere, so it goes to the
+     * store listing. The in-app card stays where it belongs: [onBookingConfirmed], fired
+     * silently at a natural high-satisfaction moment where showing nothing is an acceptable
+     * outcome.
      */
     fun requestReviewOnDemand(activity: Activity) {
-        launchInAppReview(activity, fallbackToPlayStore = true)
+        openPlayStoreListing(activity)
     }
 
-    private fun launchInAppReview(activity: Activity, fallbackToPlayStore: Boolean) {
+    /**
+     * Requests the in-app card and shows it if Google allows. Callers must accept that nothing
+     * may appear — see [requestReviewOnDemand] for why that makes this unsuitable for a button.
+     */
+    private fun launchInAppReview(activity: Activity) {
         val manager = ReviewManagerFactory.create(activity)
         manager.requestReviewFlow()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     manager.launchReviewFlow(activity, task.result)
-                } else if (fallbackToPlayStore) {
-                    openPlayStoreListing(activity)
                 }
             }
     }
 
     /** Deep-link to the Play Store listing — the Play Store app first, browser as a
-     *  last resort. Used as the on-demand fallback when the in-app flow is unavailable. */
+     *  last resort. This is what an explicit "Rate us" tap does. */
     fun openPlayStoreListing(activity: Activity) {
         val pkg = activity.packageName
         val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$pkg"))

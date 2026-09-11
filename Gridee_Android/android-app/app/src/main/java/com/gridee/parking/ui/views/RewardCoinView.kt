@@ -16,7 +16,6 @@ import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
-import android.os.Build
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -24,6 +23,7 @@ import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import androidx.core.content.res.ResourcesCompat
 import com.gridee.parking.R
+import com.gridee.parking.ui.motion.AnimatorSettingsCompat
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -543,8 +543,7 @@ class RewardCoinView @JvmOverloads constructor(
     }
 
     /** Respect the system "remove animations" accessibility setting. */
-    private fun animatorsEnabled(): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()
+    private fun animatorsEnabled(): Boolean = AnimatorSettingsCompat.areEnabled(context)
 
     // ── Glint lifecycle (only animates while visible & attached) ─────────────
 

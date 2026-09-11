@@ -3,15 +3,15 @@ package com.gridee.parking.ui.wallet
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ProgressBar
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.cashfree.pg.api.CFPaymentGatewayService
 import com.cashfree.pg.core.api.CFSession
@@ -22,13 +22,14 @@ import com.cashfree.pg.core.api.webcheckout.CFWebCheckoutTheme
 import com.gridee.parking.BuildConfig
 import com.gridee.parking.R
 import com.gridee.parking.config.RemoteConfigManager
-import com.gridee.parking.data.api.ApiClient
-import com.gridee.parking.data.model.PaymentStatusResponse
+import com.gridee.parking.data.repository.WalletRepository
 import com.gridee.parking.ui.main.MainContainerActivity
 import com.gridee.parking.utils.AuthSession
-import kotlinx.coroutines.delay
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Hosts the Cashfree web checkout for a wallet top-up.
@@ -47,14 +48,14 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
     private var paymentSessionId: String = ""
     private var environment: String = ""
     private var gatewayName: String = ""
-    private var parkingLotId: String = ""
-    private var organizationId: String? = null
-    private var locationId: String? = null
 
-    /** Guards against a second doPayment() when the activity is recreated mid-checkout. */
+    /** Guards against a second doPayment() when the activity is recreated or resumed. */
     private var checkoutLaunched = false
-    private var checkoutLeftHost = false
     private var reconciling = false
+    private val paymentSuccessHandled = AtomicBoolean(false)
+    private var paymentGateway: CFPaymentGatewayService? = null
+    private var terminalMessage: String? = null
+    private var terminalDialog: AlertDialog? = null
 
     private lateinit var progress: ProgressBar
 
@@ -68,11 +69,12 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
         paymentSessionId = intent.getStringExtra(EXTRA_PAYMENT_SESSION_ID).orEmpty().trim()
         environment = intent.getStringExtra(EXTRA_ENVIRONMENT).orEmpty().trim()
         gatewayName = intent.getStringExtra(EXTRA_GATEWAY).orEmpty().trim()
-        parkingLotId = intent.getStringExtra(EXTRA_PARKING_LOT_ID).orEmpty().trim()
-        organizationId = intent.getStringExtra(EXTRA_ORGANIZATION_ID).normalizedOrNull()
-        locationId = intent.getStringExtra(EXTRA_LOCATION_ID).normalizedOrNull()
         checkoutLaunched = savedInstanceState?.getBoolean(STATE_CHECKOUT_LAUNCHED) ?: false
-        checkoutLeftHost = savedInstanceState?.getBoolean(STATE_CHECKOUT_LEFT_HOST) ?: false
+        terminalMessage = savedInstanceState?.getString(STATE_TERMINAL_MESSAGE)
+
+        // A callback failure may have arrived immediately before a configuration change. Restore
+        // its actionable message instead of leaving the recreated host on an endless spinner.
+        if (terminalMessage != null) return
 
         RemoteConfigManager.loadCached(this)
 
@@ -81,7 +83,7 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
             return
         }
 
-        if (userId.isBlank() || !isAmountAllowed(amount) || orderId.isBlank() || parkingLotId.isBlank()) {
+        if (userId.isBlank() || !isAmountAllowed(amount) || orderId.isBlank()) {
             failFast(getString(R.string.invalid_payment_data))
             return
         }
@@ -98,43 +100,34 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
 
         // Registered on every creation, including after process death, so a checkout that
         // outlived this activity still reports back into the reconcile path below.
-        val gateway = runCatching { CFPaymentGatewayService.getInstance() }.getOrNull()
-        if (gateway == null) {
+        paymentGateway = runCatching { CFPaymentGatewayService.getInstance() }.getOrNull()
+        if (paymentGateway == null) {
             failFast(getString(R.string.payment_configuration_missing))
             return
         }
-        gateway.setCheckoutCallback(this)
-        (supportFragmentManager.findFragmentByTag(PaymentOutcomeBottomSheet.TAG)
-            as? PaymentOutcomeBottomSheet)?.let(::configureOutcomeSheet)
-
-        if (!checkoutLaunched) {
-            startCheckout(gateway)
-        }
+        paymentGateway?.setCheckoutCallback(this)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean(STATE_CHECKOUT_LAUNCHED, checkoutLaunched)
-        outState.putBoolean(STATE_CHECKOUT_LEFT_HOST, checkoutLeftHost)
+        terminalMessage?.let { outState.putString(STATE_TERMINAL_MESSAGE, it) }
     }
 
-    override fun onPause() {
-        if (checkoutLaunched) checkoutLeftHost = true
-        super.onPause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (!checkoutLeftHost || !checkoutLaunched || reconciling) return
-
-        // Cashfree normally invokes one of its callbacks. This delayed resume check covers an
-        // external UPI app returning without a callback and races safely with the normal callback
-        // through the reconciling guard.
-        lifecycleScope.launch {
-            delay(RETURN_STATUS_CHECK_DELAY_MS)
-            if (!reconciling && checkoutLeftHost && checkoutLaunched) {
-                reconcile(orderId, userCancelled = false)
-            }
+    /**
+     * Cashfree may need a fully foreground Activity while it prepares its WebView. Starting it
+     * from onCreate made the host's own lifecycle look like an early checkout return on some
+     * devices. Launch once from onPostResume, after FragmentManager and the window are resumed.
+     */
+    override fun onPostResume() {
+        super.onPostResume()
+        terminalMessage?.let {
+            showTerminalMessage(it)
+            return
+        }
+        if (!checkoutLaunched) {
+            paymentGateway?.let(::startCheckout)
+                ?: failFast(getString(R.string.payment_configuration_missing))
         }
     }
 
@@ -151,8 +144,7 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
                 .setOrderId(orderId)
                 .setPaymentSessionID(paymentSessionId)
                 .build()
-        }.getOrElse { error ->
-            Log.w(TAG, "Could not build Cashfree session for order $orderId", error)
+        }.getOrElse {
             failFast(getString(R.string.payment_configuration_missing))
             return
         }
@@ -162,22 +154,14 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
                 .setSession(session)
                 .setCFWebCheckoutUITheme(checkoutTheme())
                 .build()
-        }.getOrElse { error ->
-            Log.w(TAG, "Could not build Cashfree checkout for order $orderId", error)
+        }.getOrElse {
             failFast(getString(R.string.payment_configuration_missing))
             return
         }
 
-        if (BuildConfig.DEBUG) {
-            // Says out loud whether the backend put us in sandbox or against real money, so a
-            // QA top-up can be checked before anyone taps Pay.
-            Log.i(TAG, "Opening $sdkEnvironment checkout — order=$orderId amount=$amount")
-        }
-
         checkoutLaunched = true
         runCatching { gateway.doPayment(this, payment) }
-            .onFailure { error ->
-                Log.w(TAG, "Cashfree checkout failed to open for order $orderId", error)
+            .onFailure {
                 checkoutLaunched = false
                 failFast(getString(R.string.payment_could_not_be_started))
             }
@@ -188,7 +172,10 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
      * amount or whether the wallet moved — only the backend can answer that.
      */
     override fun onPaymentVerify(orderID: String?) {
-        reconcile(resolveCallbackOrderId(orderID), userCancelled = false)
+        reconcile(
+            reconcileOrderId = resolveCallbackOrderId(orderID),
+            trigger = CompletionTrigger.VERIFY,
+        )
     }
 
     /**
@@ -196,10 +183,15 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
      * went through but failed to confirm on the device must not be silently lost.
      */
     override fun onPaymentFailure(error: CFErrorResponse?, orderID: String?) {
-        Log.d(TAG, "Checkout reported failure for $orderID: ${error?.code} ${error?.message}")
+        val failureDiagnostic = error.failureDiagnostic()
         reconcile(
-            resolveCallbackOrderId(orderID),
-            userCancelled = error.isUserCancellation()
+            reconcileOrderId = resolveCallbackOrderId(orderID),
+            trigger = if (failureDiagnostic.kind == CashfreeCheckoutFailureClassifier.Kind.CANCELLED) {
+                CompletionTrigger.CANCELLED
+            } else {
+                CompletionTrigger.SDK_FAILURE
+            },
+            failureDiagnostic = failureDiagnostic,
         )
     }
 
@@ -208,129 +200,142 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
      * callback, so the code/type is the only way to tell "I changed my mind" apart from
      * "your card was declined" — and they deserve very different screens.
      */
-    private fun CFErrorResponse?.isUserCancellation(): Boolean {
-        if (this == null) return false
-        val haystack = listOf(code, type, message)
-            .joinToString(" ") { it.orEmpty() }
-            .lowercase(Locale.ROOT)
-        return CANCELLATION_MARKERS.any { haystack.contains(it) }
-    }
+    private fun CFErrorResponse?.failureDiagnostic(): CashfreeCheckoutFailureClassifier.Diagnostic =
+        CashfreeCheckoutFailureClassifier.diagnose(
+            status = this?.status,
+            code = this?.code,
+            type = this?.type,
+            message = this?.message,
+        )
 
     /** Never query an order id different from the one returned by our own backend initiation. */
-    private fun resolveCallbackOrderId(callbackOrderId: String?): String {
-        val candidate = callbackOrderId.normalizedOrNull()
-        if (candidate != null && candidate != orderId) {
-            Log.w(TAG, "Ignoring mismatched Cashfree callback order id")
-        }
-        return orderId
-    }
+    @Suppress("UNUSED_PARAMETER")
+    private fun resolveCallbackOrderId(callbackOrderId: String?): String = orderId
 
-    private fun reconcile(reconcileOrderId: String, userCancelled: Boolean) {
-        if (reconciling) return
-        reconciling = true
-
+    private fun reconcile(
+        reconcileOrderId: String,
+        trigger: CompletionTrigger,
+        failureDiagnostic: CashfreeCheckoutFailureClassifier.Diagnostic =
+            CashfreeCheckoutFailureClassifier.Diagnostic(
+                kind = CashfreeCheckoutFailureClassifier.Kind.OTHER,
+                supportCode = "CF_OTHER",
+            ),
+    ) {
         // The SDK does not promise which thread it calls back on, so every view touch below
-        // happens inside the coroutine, which lifecycleScope dispatches to main.
+        // and the reconciliation gate itself live inside this main-thread coroutine.
         lifecycleScope.launch {
-            progress.visibility = View.VISIBLE
-            val status = fetchPaymentStatus(reconcileOrderId)
+            if (reconciling) return@launch
+            reconciling = true
 
-            progress.visibility = View.GONE
+            try {
+                progress.visibility = View.VISIBLE
+                val verification = when (trigger) {
+                    // Cashfree explicitly requested verification, so allow the bounded settling
+                    // window before deciding that confirmation is still pending.
+                    CompletionTrigger.VERIFY ->
+                        PaymentStatusCoordinator.verify(reconcileOrderId)
 
-            when {
-                // Money moving is the only thing that outranks what the user just did.
-                status?.isPaid == true -> onTopUpConfirmed()
-
-                // Backend status is authoritative even if the user just closed the SDK. Some UPI
-                // payments remain in flight after checkout returns.
-                status?.isPending == true -> showOutcome(PaymentOutcomeBottomSheet.Outcome.PENDING)
-
-                // The user closing checkout is a fact; the order still reading "pending" only
-                // matters only when the backend has already returned a terminal non-paid state.
-                userCancelled && status != null ->
-                    showOutcome(PaymentOutcomeBottomSheet.Outcome.CANCELLED)
-
-                else -> showOutcome(PaymentOutcomeBottomSheet.Outcome.UNCONFIRMED)
-            }
-        }
-    }
-
-    /**
-     * Explains the outcome on a sheet instead of a toast.
-     *
-     * A toast disappears before it can answer "was I charged?", which is the only thing the user
-     * wants to know here. The sheet owns the rest of this screen's life: the activity finishes
-     * when it closes, so the user never lands back on a blank checkout host.
-     */
-    private fun showOutcome(outcome: PaymentOutcomeBottomSheet.Outcome) {
-        if (isFinishing || isDestroyed) return
-        val existing = supportFragmentManager.findFragmentByTag(PaymentOutcomeBottomSheet.TAG)
-            as? PaymentOutcomeBottomSheet
-        val sheet = existing ?: PaymentOutcomeBottomSheet.newInstance(outcome, amount, orderId)
-        configureOutcomeSheet(sheet)
-        if (existing == null) {
-            sheet.show(supportFragmentManager, PaymentOutcomeBottomSheet.TAG)
-        } else {
-            sheet.renderOutcome(outcome)
-        }
-    }
-
-    /** Reattaches non-persistable callbacks when Android recreates the outcome fragment. */
-    private fun configureOutcomeSheet(sheet: PaymentOutcomeBottomSheet) {
-        // Lets the sheet re-query the order without owning any networking itself.
-        sheet.statusChecker = { id ->
-            runCatching {
-                ApiClient.apiService.getPaymentStatus(id).takeIf { it.isSuccessful }?.body()
-            }.getOrNull()
-        }
-
-        sheet.onRetry = { retryAmount ->
-            retryTopUp(retryAmount)
-        }
-
-        sheet.onFinished = { paid ->
-            // A re-check that found the payment settled should land the user on the credited
-            // wallet, exactly as a first-time success would.
-            if (paid) onTopUpConfirmed() else finish()
-        }
-    }
-
-    /** Starts a fresh order for the same amount, so "Try again" costs one tap. */
-    private fun retryTopUp(retryAmount: Double) {
-        progress.visibility = View.VISIBLE
-        lifecycleScope.launch {
-            when (
-                val result = WalletTopUpLauncher.createTopUp(
-                    this@WalletTopUpActivity,
-                    retryAmount,
-                    parkingLotId = parkingLotId,
-                    organizationId = organizationId,
-                    locationId = locationId
-                )
-            ) {
-                is WalletTopUpLauncher.Result.Ready -> {
-                    startActivity(result.intent)
-                    finish()
+                    // A failure/cancel callback must not make the user stare at a 14-second
+                    // spinner for an order that never reached checkout. One server check still
+                    // protects a payment that settled immediately before the callback.
+                    CompletionTrigger.CANCELLED, CompletionTrigger.SDK_FAILURE ->
+                        withTimeoutOrNull(FAILURE_SAFETY_CHECK_TIMEOUT_MS) {
+                            PaymentStatusCoordinator.checkOnce(reconcileOrderId)
+                        } ?: PaymentStatusCoordinator.Verification(
+                            outcome = PaymentStatusCoordinator.Outcome.PENDING_OR_UNKNOWN,
+                            response = null,
+                            attempts = 0,
+                        )
                 }
 
-                is WalletTopUpLauncher.Result.Failed -> finishWith(result.message)
+                if (verification.outcome == PaymentStatusCoordinator.Outcome.PAID) {
+                    // The backend is the only authority allowed to claim that money was added.
+                    onTopUpConfirmed()
+                } else {
+                    finishWith(
+                        when (trigger) {
+                            CompletionTrigger.CANCELLED ->
+                                getString(R.string.payment_cancelled)
+
+                            CompletionTrigger.SDK_FAILURE ->
+                                checkoutFailureMessage(failureDiagnostic)
+
+                            CompletionTrigger.VERIFY ->
+                                getString(
+                                    if (verification.outcome ==
+                                        PaymentStatusCoordinator.Outcome.PENDING_OR_UNKNOWN
+                                    ) {
+                                        R.string.payment_pending_confirmation
+                                    } else {
+                                        R.string.payment_could_not_be_confirmed
+                                    }
+                                )
+                        }
+                    )
+                }
+            } finally {
+                reconciling = false
+                if (!isFinishing && !isDestroyed) progress.visibility = View.GONE
             }
         }
     }
 
-    /** The status endpoint is the only post-checkout source of truth. */
-    private suspend fun fetchPaymentStatus(reconcileOrderId: String): PaymentStatusResponse? =
-        runCatching {
-            ApiClient.apiService.getPaymentStatus(reconcileOrderId)
-                .takeIf { it.isSuccessful }
-                ?.body()
-        }.getOrNull()
+    /** Provides a useful remedy without exposing Cashfree's raw callback text. */
+    private fun checkoutFailureMessage(
+        diagnostic: CashfreeCheckoutFailureClassifier.Diagnostic,
+    ): String {
+        val message = when (diagnostic.kind) {
+            CashfreeCheckoutFailureClassifier.Kind.UNTRUSTED_INSTALLER -> getString(
+                if (BuildConfig.DEBUG) {
+                    R.string.payment_cashfree_debug_install_blocked
+                } else {
+                    R.string.payment_cashfree_play_install_required
+                }
+            )
+
+            CashfreeCheckoutFailureClassifier.Kind.INVALID_SESSION ->
+                getString(R.string.payment_cashfree_session_invalid)
+
+            CashfreeCheckoutFailureClassifier.Kind.INVALID_CALLING_CONTEXT ->
+                getString(R.string.payment_cashfree_calling_context_invalid)
+
+            CashfreeCheckoutFailureClassifier.Kind.INACTIVE_ORDER ->
+                getString(R.string.payment_cashfree_order_inactive)
+
+            CashfreeCheckoutFailureClassifier.Kind.GATEWAY_UNAVAILABLE ->
+                getString(R.string.payment_cashfree_gateway_unavailable)
+
+            CashfreeCheckoutFailureClassifier.Kind.CANCELLED ->
+                return getString(R.string.payment_cancelled)
+
+            CashfreeCheckoutFailureClassifier.Kind.OTHER ->
+                getString(R.string.payment_cashfree_checkout_incomplete)
+        }
+        return getString(
+            R.string.payment_cashfree_error_with_support_code,
+            message,
+            diagnostic.supportCode,
+        )
+    }
 
     /**
-     * The backend confirmed the credit. We only navigate — the wallet screen re-reads the
-     * balance and the transaction list from the backend when it resumes.
+     * The backend confirmed the credit. Invalidate once and publish one stable event; the wallet
+     * screen then refreshes its balance and transaction list so the completed top-up is visible.
      */
     private fun onTopUpConfirmed() {
+        if (!paymentSuccessHandled.compareAndSet(false, true)) return
+        val firstProcessConfirmation = WalletRefreshEvents.publish(
+            WalletRefreshEvent(
+                eventId = "payment:$orderId",
+                source = WalletRefreshSource.PAYMENT
+            )
+        )
+        // The stable order event is process-wide while this Activity's atomic flag is only tied
+        // to one instance. Invalidate only for the first publication so an Activity recreation or
+        // duplicated SDK callback cannot discard the wallet snapshot after its one refresh.
+        if (firstProcessConfirmation) {
+            userId.trim().takeIf { it.isNotEmpty() }?.let(WalletRepository::invalidateWallet)
+        }
         val intent = Intent(this, MainContainerActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("extra_show_wallet_transaction", true)
@@ -372,19 +377,35 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
             .orEmpty()
     }
 
-    private fun String?.normalizedOrNull(): String? =
-        this?.trim()?.takeIf { it.isNotEmpty() }
-
     private fun failFast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        finish()
+        finishWith(message)
     }
 
     private fun finishWith(message: String) {
-        if (!isFinishing && !isDestroyed) {
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        if (isFinishing || isDestroyed) return
+        terminalMessage = message
+        progress.visibility = View.GONE
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            showTerminalMessage(message)
         }
-        finish()
+    }
+
+    /** Keeps checkout failures readable and actionable instead of using a transient system toast. */
+    private fun showTerminalMessage(message: String) {
+        if (isFinishing || isDestroyed || terminalDialog?.isShowing == true) return
+        progress.visibility = View.GONE
+        terminalDialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.payment_cashfree_dialog_title)
+            .setMessage(message)
+            .setPositiveButton(R.string.close) { _, _ -> finish() }
+            .setOnCancelListener { finish() }
+            .show()
+    }
+
+    override fun onDestroy() {
+        terminalDialog?.dismiss()
+        terminalDialog = null
+        super.onDestroy()
     }
 
     /**
@@ -405,7 +426,7 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.CENTER
             )
-            visibility = View.GONE
+            visibility = View.VISIBLE
         }
         container.addView(progress)
         return container
@@ -430,20 +451,15 @@ class WalletTopUpActivity : AppCompatActivity(), CFCheckoutResponseCallback {
         const val EXTRA_PAYMENT_SESSION_ID = "PAYMENT_SESSION_ID"
         const val EXTRA_ENVIRONMENT = "ENVIRONMENT"
         const val EXTRA_GATEWAY = "GATEWAY"
-        const val EXTRA_PARKING_LOT_ID = "PARKING_LOT_ID"
-        const val EXTRA_ORGANIZATION_ID = "ORGANIZATION_ID"
-        const val EXTRA_LOCATION_ID = "LOCATION_ID"
 
         private const val STATE_CHECKOUT_LAUNCHED = "checkout_launched"
-        private const val STATE_CHECKOUT_LEFT_HOST = "checkout_left_host"
-        private const val TAG = "WalletTopUp"
+        private const val STATE_TERMINAL_MESSAGE = "terminal_message"
         private const val CASHFREE_GATEWAY = "CASHFREE"
-        private const val RETURN_STATUS_CHECK_DELAY_MS = 750L
-
-        /** Substrings Cashfree uses for a user-initiated exit, e.g. "action_cancelled". */
-        private val CANCELLATION_MARKERS = listOf("cancel", "user_dropped", "aborted")
+        private const val FAILURE_SAFETY_CHECK_TIMEOUT_MS = 5_000L
 
         private const val HEX_BLACK = "#000000"
         private const val HEX_WHITE = "#FFFFFF"
     }
+
+    private enum class CompletionTrigger { VERIFY, CANCELLED, SDK_FAILURE }
 }

@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -25,11 +24,17 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
 
     private lateinit var viewModel: EditProfileViewModel
 
-    private var selectedPhotoUri: android.net.Uri? = null
-    private var previousActivityNavBarColor: Int? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val requestedMode = arguments?.getString(ARG_MODE)
+            ?: if (tag == INFO_TAG) Mode.INFO.name else Mode.EDIT_PROFILE.name
+        mode = runCatching { Mode.valueOf(requestedMode) }.getOrDefault(Mode.EDIT_PROFILE)
+        if (mode == Mode.INFO) {
+            // Defaults preserve the only info flow shipped before its state moved to arguments.
+            infoLottieFile = arguments?.getString(ARG_INFO_LOTTIE) ?: DEFAULT_INFO_LOTTIE
+            infoTitle = arguments?.getString(ARG_INFO_TITLE) ?: DEFAULT_INFO_TITLE
+            infoMessage = arguments?.getString(ARG_INFO_MESSAGE) ?: DEFAULT_INFO_MESSAGE
+        }
         setStyle(STYLE_NORMAL, com.gridee.parking.R.style.BottomSheetDialogTheme)
     }
 
@@ -63,20 +68,13 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
             bottomSheetDialog.window?.let { window ->
                 WindowCompat.setDecorFitsSystemWindows(window, false)
                 window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
-                window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                window.isNavigationBarContrastEnforced = false
                 
                 // Ensure light nav bar (dark icons) since background is white
                 val wic = WindowCompat.getInsetsController(window, window.decorView)
                 wic.isAppearanceLightNavigationBars = true
                 
-                // Remove the black divider line above the nav bar (Android 9+)
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                    window.navigationBarDividerColor = android.graphics.Color.TRANSPARENT
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                        window.isNavigationBarContrastEnforced = false
-                    }
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
                 }
 
                 // Glassmorphism: Blur the screen behind the sheet (Android 12+)
@@ -87,29 +85,6 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
             }
         }
         return dialog
-    }
-
-    override fun onStart() {
-        super.onStart()
-        // Hard fallback: also force the host activity nav bar to white while this sheet is visible.
-        activity?.window?.let { hostWindow ->
-            previousActivityNavBarColor = hostWindow.navigationBarColor
-            hostWindow.navigationBarColor = ContextCompat.getColor(requireContext(), R.color.white)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                hostWindow.isNavigationBarContrastEnforced = false
-            }
-            WindowCompat.getInsetsController(hostWindow, hostWindow.decorView)
-                .isAppearanceLightNavigationBars = true
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        val previousColor = previousActivityNavBarColor
-        if (previousColor != null) {
-            activity?.window?.navigationBarColor = previousColor
-        }
-        previousActivityNavBarColor = null
     }
 
     override fun onCreateView(
@@ -237,14 +212,17 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
         // Edit photo
         binding.tvChangePhoto.setOnClickListener {
             it.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK)
-            
+
+            if (parentFragmentManager.isStateSaved ||
+                parentFragmentManager.findFragmentByTag(INFO_TAG) != null
+            ) return@setOnClickListener
             // Temporary: Open generic info sheet instead of edit photo sheet
             val infoSheet = newInstanceForInfo(
-                "central_icons_brush.json",
-                "Change Photo",
-                "This feature is currently under development."
+                DEFAULT_INFO_LOTTIE,
+                DEFAULT_INFO_TITLE,
+                DEFAULT_INFO_MESSAGE,
             )
-            infoSheet.show(parentFragmentManager, "ChangePhotoInfo")
+            infoSheet.show(parentFragmentManager, INFO_TAG)
         }        
     }
 
@@ -371,16 +349,6 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
     
 
     
-    private fun showEditPhotoBottomSheet() {
-        val bottomSheet = EditPhotoBottomSheet { uri ->
-            selectedPhotoUri = uri
-            binding.tvUserInitials.visibility = View.GONE
-            Toast.makeText(requireContext(), getString(R.string.photo_selected_save_to_apply), Toast.LENGTH_SHORT).show()
-        }
-        
-        bottomSheet.show(childFragmentManager, EditPhotoBottomSheet.TAG)
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -388,9 +356,20 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "ProfilePageBottomSheet"
+        const val INFO_TAG = "ChangePhotoInfo"
+
+        private const val ARG_MODE = "mode"
+        private const val ARG_INFO_LOTTIE = "info_lottie"
+        private const val ARG_INFO_TITLE = "info_title"
+        private const val ARG_INFO_MESSAGE = "info_message"
+        private const val DEFAULT_INFO_LOTTIE = "central_icons_brush.json"
+        private const val DEFAULT_INFO_TITLE = "Change Photo"
+        private const val DEFAULT_INFO_MESSAGE = "This feature is currently under development."
 
         fun newInstance(): ProfilePageBottomSheet {
-            return ProfilePageBottomSheet()
+            return ProfilePageBottomSheet().apply {
+                arguments = Bundle().apply { putString(ARG_MODE, Mode.EDIT_PROFILE.name) }
+            }
         }
         
         fun newInstanceForInfo(
@@ -398,12 +377,14 @@ class ProfilePageBottomSheet : BottomSheetDialogFragment() {
             title: String,
             message: String
         ): ProfilePageBottomSheet {
-            val fragment = ProfilePageBottomSheet()
-            fragment.mode = Mode.INFO
-            fragment.infoLottieFile = lottieFile
-            fragment.infoTitle = title
-            fragment.infoMessage = message
-            return fragment
+            return ProfilePageBottomSheet().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_MODE, Mode.INFO.name)
+                    putString(ARG_INFO_LOTTIE, lottieFile)
+                    putString(ARG_INFO_TITLE, title)
+                    putString(ARG_INFO_MESSAGE, message)
+                }
+            }
         }
     }
 }

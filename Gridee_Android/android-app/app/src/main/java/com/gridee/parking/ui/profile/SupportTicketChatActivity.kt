@@ -15,7 +15,6 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -788,11 +787,9 @@ class SupportTicketChatActivity : BaseActivity<ActivitySupportTicketChatBinding>
                 if (response.isSuccessful && ticket != null) {
                     renderTicket(ticket, forcePinToLatest = true)
                 } else {
-                    Log.w(TAG, "Ticket load failed: HTTP ${response.code()}")
                     showLoadError()
                 }
-            } catch (e: Exception) {
-                Log.w(TAG, "Ticket load failed", e)
+            } catch (_: Exception) {
                 showLoadError()
             } finally {
                 hideSkeleton()
